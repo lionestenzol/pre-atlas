@@ -29,9 +29,11 @@ const dataDir = process.env.DELTA_DATA_DIR || path.join(os.homedir(), '.delta-fa
 const storage = new Storage({ dataDir });
 
 // Repo root (for daemon)
+// From compiled dist/api/server.js: go up 4 levels to reach Pre Atlas root
+// dist/api → dist → delta-kernel → services → Pre Atlas
 const repoRoot = process.env.DELTA_DATA_DIR
   ? path.resolve(process.env.DELTA_DATA_DIR, '..')
-  : path.resolve(__dirname, '../../../../..');
+  : path.resolve(__dirname, '../../../..');
 
 // Initialize and start governance daemon
 const daemon = getDaemon(storage, repoRoot);

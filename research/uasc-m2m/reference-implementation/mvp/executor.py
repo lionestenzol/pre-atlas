@@ -24,6 +24,7 @@ class StepResult:
     output: Optional[str] = None
     error: Optional[str] = None
     duration_ms: int = 0
+    substeps: List["StepResult"] = field(default_factory=list)
 
 
 @dataclass
@@ -46,13 +47,14 @@ class ProfileExecutor:
     - shell: Run shell command
     - http: Make HTTP request
     - log: Log a message
-    - condition: Conditional branching (TODO)
+    - condition: Conditional branching
     """
 
     def __init__(self, working_dir: str = '.'):
         self.working_dir = working_dir
         self.variables: Dict[str, Any] = {}
         self.current_platform = 'windows' if platform.system() == 'Windows' else 'unix'
+        self._run_outputs: Optional[Dict[str, Any]] = None
 
     def execute(self, profile: dict, inputs: dict = None) -> ExecutionResult:
         """
@@ -87,6 +89,7 @@ class ProfileExecutor:
             version=profile['version'],
             status='success'
         )
+        self._run_outputs = result.outputs
 
         # Execute steps
         for step in profile.get('steps', []):
@@ -94,9 +97,7 @@ class ProfileExecutor:
             result.steps.append(step_result)
 
             # Store output if requested
-            if step.get('store_as') and step_result.output:
-                self.variables[step['store_as']] = step_result.output.strip()
-                result.outputs[step['store_as']] = step_result.output.strip()
+            self._record_step_output(step, step_result)
 
             # Check for failure
             if step_result.status == 'failed':
@@ -112,6 +113,7 @@ class ProfileExecutor:
         if handler:
             self._execute_step(handler)
 
+        self._run_outputs = None
         return result
 
     def _execute_step(self, step: dict) -> StepResult:
@@ -148,6 +150,8 @@ class ProfileExecutor:
                 result = self._execute_http(step)
             elif step_type == 'log':
                 result = self._execute_log(step)
+            elif step_type == 'condition':
+                result = self._execute_condition(step)
             else:
                 result = StepResult(
                     name=name,
@@ -296,11 +300,65 @@ class ProfileExecutor:
             output=message
         )
 
+    def _execute_condition(self, step: dict) -> StepResult:
+        """Execute a conditional branch step."""
+        condition_expr = step.get('if')
+        if condition_expr is None:
+            return StepResult(
+                name=step.get('name', 'condition'),
+                step_type='condition',
+                status='failed',
+                error='Condition step missing "if" expression'
+            )
+
+        condition_met = self._evaluate_condition(condition_expr)
+        branch_key = 'then' if condition_met else 'else'
+        branch_steps = step.get(branch_key, [])
+
+        substeps: List[StepResult] = []
+        status = 'success'
+        error = None
+
+        for branch_step in branch_steps:
+            branch_result = self._execute_step(branch_step)
+            substeps.append(branch_result)
+            self._record_step_output(branch_step, branch_result)
+
+            if branch_result.status == 'failed' and not branch_step.get('continue_on_error', False):
+                status = 'failed'
+                error = (
+                    f"Branch '{branch_key}' step '{branch_step.get('name', 'unnamed')}' "
+                    f"failed: {branch_result.error}"
+                )
+                break
+
+        output = (
+            f"Condition '{condition_expr}' evaluated "
+            f"{'true' if condition_met else 'false'}; "
+            f"executed {branch_key} branch with {len(substeps)} step(s)."
+        )
+
+        return StepResult(
+            name=step.get('name', 'condition'),
+            step_type='condition',
+            status=status,
+            output=output,
+            error=error,
+            substeps=substeps
+        )
+
     def _interpolate(self, text: str) -> str:
         """Replace {variable} placeholders with values."""
         for key, value in self.variables.items():
             text = text.replace(f'{{{key}}}', str(value))
         return text
+
+    def _record_step_output(self, step: dict, step_result: StepResult) -> None:
+        if step.get('store_as') and step_result.output:
+            value = step_result.output.strip()
+            self.variables[step['store_as']] = value
+            if self._run_outputs is not None:
+                self._run_outputs[step['store_as']] = value
 
     def _evaluate_condition(self, condition: str) -> bool:
         """

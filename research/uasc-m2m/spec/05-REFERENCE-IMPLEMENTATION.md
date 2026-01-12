@@ -1151,3 +1151,39 @@ cd reference-implementation
 python demo.py
 ```
 
+---
+
+## 9. MVP Profile Executor Condition Syntax
+
+The MVP executor (`reference-implementation/mvp/executor.py`) supports a minimal
+conditional step type that executes one of two step lists.
+
+### 9.1 Condition Step Shape
+
+```json
+{
+  "name": "branch_example",
+  "type": "condition",
+  "if": "run_mode == 'fast'",
+  "then": [
+    { "name": "fast_path", "type": "log", "message": "Fast branch selected." }
+  ],
+  "else": [
+    { "name": "slow_path", "type": "log", "message": "Slow branch selected." }
+  ]
+}
+```
+
+### 9.2 Supported Expressions
+
+The `if` expression uses the same minimal comparison syntax as step
+`condition` guards:
+
+- `variable == 'value'`
+- `variable != 'value'`
+- `variable == ''` / `variable != ''` (empty string checks)
+- Boolean variable checks (`feature_enabled`)
+- Literal `true` / `false`
+
+Variables come from inputs, defaults, and prior step outputs stored via
+`store_as`.

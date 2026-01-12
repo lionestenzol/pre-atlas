@@ -1,0 +1,1352 @@
+{
+  "summary": {
+    "total_unique_conversations": 78,
+    "total_in_database": 1397,
+    "coverage_percent": 5.6,
+    "strong_matches": 20,
+    "medium_matches": 43,
+    "weak_matches": 15,
+    "multi_category": 12
+  },
+  "clusters": {
+    "ENTREPRENEURSHIP & BUSINESS": [
+      {
+        "id": 513,
+        "title": "Starting a Business Roadmap",
+        "date": "2025-02-08",
+        "score": 60.7,
+        "category": "Business/Startup"
+      },
+      {
+        "id": 517,
+        "title": "SaaS Market Growth Trends",
+        "date": "2025-02-08",
+        "score": 54.2,
+        "category": "SaaS/Products/Pricing"
+      },
+      {
+        "id": 654,
+        "title": "Readiness for Startup",
+        "date": "2025-01-25",
+        "score": 49.2,
+        "category": "Business/Startup"
+      },
+      {
+        "id": 710,
+        "title": "SaaS Automation with Make",
+        "date": "2025-01-11",
+        "score": 47.6,
+        "category": "SaaS/Products/Pricing"
+      },
+      {
+        "id": 1139,
+        "title": "Business Conglomerate Blueprint",
+        "date": "2024-11-16",
+        "score": 46.8,
+        "category": "Business/Startup"
+      },
+      {
+        "id": 1142,
+        "title": "Business Ecosystem Integration",
+        "date": "2024-11-15",
+        "score": 43.4,
+        "category": "Business/Startup"
+      },
+      {
+        "id": 520,
+        "title": "Launch SaaS Business Guide",
+        "date": "2025-02-08",
+        "score": 42.0,
+        "category": "Business/Startup"
+      },
+      {
+        "id": 664,
+        "title": "Million Dollar Plan",
+        "date": "2025-01-24",
+        "score": 40.5,
+        "category": "Business/Startup"
+      },
+      {
+        "id": 534,
+        "title": "Pro Subscription Decision",
+        "date": "2025-02-06",
+        "score": 38.6,
+        "category": "SaaS/Products/Pricing"
+      },
+      {
+        "id": 799,
+        "title": "AI Business Solutions",
+        "date": "2025-01-02",
+        "score": 38.3,
+        "category": "Business/Startup"
+      },
+      {
+        "id": 102,
+        "title": "Donation-Based Business Model",
+        "date": "2025-03-07",
+        "score": 36.6,
+        "category": "SaaS/Products/Pricing"
+      },
+      {
+        "id": 737,
+        "title": "300k Income Subscriptions",
+        "date": "2025-01-11",
+        "score": 35.8,
+        "category": "SaaS/Products/Pricing"
+      },
+      {
+        "id": 939,
+        "title": "Business Plan Creation Guide",
+        "date": "2024-12-03",
+        "score": 35.0,
+        "category": "Business/Startup"
+      },
+      {
+        "id": 987,
+        "title": "ChatGPT Integration and AI Investment",
+        "date": "2024-11-28",
+        "score": 34.7,
+        "category": "SaaS/Products/Pricing"
+      },
+      {
+        "id": 185,
+        "title": "CEO's Struggles and Sacrifices",
+        "date": "2025-03-03",
+        "score": 34.6,
+        "category": "Business/Startup"
+      },
+      {
+        "id": 1140,
+        "title": "Business Model Breakdown",
+        "date": "2024-11-16",
+        "score": 33.3,
+        "category": "Business/Startup"
+      }
+    ],
+    "MONEY & WEALTH": [
+      {
+        "id": 228,
+        "title": "Crypto Coin Creation Time",
+        "date": "2025-03-01",
+        "score": 41.0,
+        "category": "Crypto/Trading"
+      },
+      {
+        "id": 282,
+        "title": "Money Mindset Analysis",
+        "date": "2025-02-27",
+        "score": 40.6,
+        "category": "Money/Finance/Wealth"
+      },
+      {
+        "id": 670,
+        "title": "Making $1M Fast",
+        "date": "2025-01-24",
+        "score": 39.0,
+        "category": "Money/Finance/Wealth"
+      },
+      {
+        "id": 379,
+        "title": "Revenue Function Equation",
+        "date": "2025-02-21",
+        "score": 33.5,
+        "category": "Income/Earnings"
+      },
+      {
+        "id": 588,
+        "title": "Exponential Functions Quiz Help",
+        "date": "2025-01-29",
+        "score": 33.2,
+        "category": "Money/Finance/Wealth"
+      },
+      {
+        "id": 885,
+        "title": "Deferred Compensation Overview",
+        "date": "2024-12-10",
+        "score": 29.9,
+        "category": "Income/Earnings"
+      },
+      {
+        "id": 225,
+        "title": "AI Hybrid Economy Concept",
+        "date": "2025-03-01",
+        "score": 29.6,
+        "category": "Money/Finance/Wealth"
+      },
+      {
+        "id": 718,
+        "title": "Wealth and Happiness Paradox",
+        "date": "2025-01-15",
+        "score": 29.5,
+        "category": "Money/Finance/Wealth"
+      },
+      {
+        "id": 418,
+        "title": "Tangible Bitcoin Value",
+        "date": "2025-02-18",
+        "score": 29.4,
+        "category": "Money/Finance/Wealth"
+      },
+      {
+        "id": 972,
+        "title": "Dynamic Pay with Crypto",
+        "date": "2024-11-29",
+        "score": 29.0,
+        "category": "Income/Earnings"
+      },
+      {
+        "id": 1144,
+        "title": "Debt Freedom in 4 Weeks",
+        "date": "2024-11-16",
+        "score": 28.8,
+        "category": "Money/Finance/Wealth"
+      },
+      {
+        "id": 981,
+        "title": "15 Days Work Earnings",
+        "date": "2024-11-29",
+        "score": 28.7,
+        "category": "Income/Earnings"
+      },
+      {
+        "id": 1394,
+        "title": "Creative Ways to Earn",
+        "date": "2024-08-21",
+        "score": 28.6,
+        "category": "Money/Finance/Wealth"
+      },
+      {
+        "id": 154,
+        "title": "Payroll Processing Schedule Analysis",
+        "date": "2025-03-05",
+        "score": 26.3,
+        "category": "Income/Earnings"
+      },
+      {
+        "id": 940,
+        "title": "Scalping Trading Strategy Explained",
+        "date": "2024-12-03",
+        "score": 23.4,
+        "category": "Crypto/Trading"
+      },
+      {
+        "id": 737,
+        "title": "300k Income Subscriptions",
+        "date": "2025-01-11",
+        "score": 22.1,
+        "category": "Income/Earnings"
+      },
+      {
+        "id": 84,
+        "title": "Make $500 by Tuesday",
+        "date": "2025-03-09",
+        "score": 21.3,
+        "category": "Income/Earnings"
+      },
+      {
+        "id": 1129,
+        "title": "Earnings Calculation",
+        "date": "2024-11-20",
+        "score": 20.0,
+        "category": "Income/Earnings"
+      }
+    ],
+    "WORK & CAREER": [
+      {
+        "id": 857,
+        "title": "Sales Approach Review",
+        "date": "2024-12-13",
+        "score": 55.3,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 914,
+        "title": "Unit 2 3 Crash Course",
+        "date": "2024-12-06",
+        "score": 53.0,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 873,
+        "title": "Simplified Definitions for Kids",
+        "date": "2024-12-11",
+        "score": 47.1,
+        "category": "Job/Career/Work"
+      },
+      {
+        "id": 879,
+        "title": "PA results analysis",
+        "date": "2024-12-10",
+        "score": 46.7,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 1171,
+        "title": "LinkedIn Career Explorer Tool",
+        "date": "2024-11-09",
+        "score": 46.2,
+        "category": "Job/Career/Work"
+      },
+      {
+        "id": 902,
+        "title": "Module 1 Overview",
+        "date": "2024-12-05",
+        "score": 46.0,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 840,
+        "title": "Door-to-Door to Real Estate",
+        "date": "2024-12-17",
+        "score": 40.5,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 47,
+        "title": "Sales Management Review",
+        "date": "2025-03-10",
+        "score": 39.9,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 775,
+        "title": "Law of Averages Guide",
+        "date": "2025-01-05",
+        "score": 39.8,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 918,
+        "title": "Social Styles Overview",
+        "date": "2024-12-05",
+        "score": 38.9,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 839,
+        "title": "Gaming and Sales Skills",
+        "date": "2024-12-17",
+        "score": 34.8,
+        "category": "Job/Career/Work"
+      },
+      {
+        "id": 1304,
+        "title": "Career Interests and Opportunities",
+        "date": "2024-10-14",
+        "score": 33.9,
+        "category": "Job/Career/Work"
+      },
+      {
+        "id": 321,
+        "title": "Sales Mastery Through Learning",
+        "date": "2025-02-26",
+        "score": 33.0,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 704,
+        "title": "Farming Gardening and Business",
+        "date": "2025-01-19",
+        "score": 32.8,
+        "category": "Job/Career/Work"
+      },
+      {
+        "id": 49,
+        "title": "Sales Management Assessment Analysis",
+        "date": "2025-03-09",
+        "score": 31.7,
+        "category": "Sales/Marketing"
+      },
+      {
+        "id": 1170,
+        "title": "Career Progression Analysis",
+        "date": "2024-11-09",
+        "score": 26.7,
+        "category": "Job/Career/Work"
+      },
+      {
+        "id": 1328,
+        "title": "Training Development Employee Engagement",
+        "date": "2024-10-11",
+        "score": 25.4,
+        "category": "Job/Career/Work"
+      }
+    ],
+    "SURVIVAL & STRUGGLE": [
+      {
+        "id": 84,
+        "title": "Make $500 by Tuesday",
+        "date": "2025-03-09",
+        "score": 55.2,
+        "category": "Side Hustle/Freelance"
+      },
+      {
+        "id": 150,
+        "title": "Make $200 a Day",
+        "date": "2025-03-05",
+        "score": 44.8,
+        "category": "Side Hustle/Freelance"
+      },
+      {
+        "id": 1394,
+        "title": "Creative Ways to Earn",
+        "date": "2024-08-21",
+        "score": 40.9,
+        "category": "Side Hustle/Freelance"
+      },
+      {
+        "id": 1115,
+        "title": "From Stress to Confidence",
+        "date": "2024-11-21",
+        "score": 34.1,
+        "category": "Poverty/Debt/Struggle"
+      },
+      {
+        "id": 82,
+        "title": "Phone Farming Overview",
+        "date": "2025-03-09",
+        "score": 33.6,
+        "category": "Side Hustle/Freelance"
+      },
+      {
+        "id": 1144,
+        "title": "Debt Freedom in 4 Weeks",
+        "date": "2024-11-16",
+        "score": 33.5,
+        "category": "Poverty/Debt/Struggle"
+      },
+      {
+        "id": 710,
+        "title": "SaaS Automation with Make",
+        "date": "2025-01-11",
+        "score": 32.6,
+        "category": "Side Hustle/Freelance"
+      },
+      {
+        "id": 718,
+        "title": "Wealth and Happiness Paradox",
+        "date": "2025-01-15",
+        "score": 31.5,
+        "category": "Poverty/Debt/Struggle"
+      },
+      {
+        "id": 37,
+        "title": "How to Get $10",
+        "date": "2025-03-11",
+        "score": 29.9,
+        "category": "Side Hustle/Freelance"
+      },
+      {
+        "id": 1395,
+        "title": "Liam's MOHELA Date Inquiry",
+        "date": "2024-08-21",
+        "score": 28.9,
+        "category": "Poverty/Debt/Struggle"
+      },
+      {
+        "id": 1296,
+        "title": "Life Organization and Planning",
+        "date": "2024-10-15",
+        "score": 27.5,
+        "category": "Poverty/Debt/Struggle"
+      },
+      {
+        "id": 733,
+        "title": "Resilience and Strategic Growth",
+        "date": "2025-01-11",
+        "score": 27.3,
+        "category": "Poverty/Debt/Struggle"
+      },
+      {
+        "id": 1392,
+        "title": "Loan Maxing and Adjustment",
+        "date": "2024-08-22",
+        "score": 25.4,
+        "category": "Poverty/Debt/Struggle"
+      },
+      {
+        "id": 92,
+        "title": "Money as Closure",
+        "date": "2025-03-08",
+        "score": 25.1,
+        "category": "Poverty/Debt/Struggle"
+      }
+    ],
+    "AI & AUTOMATION": [
+      {
+        "id": 708,
+        "title": "AI Productivity Platform Strategy",
+        "date": "2025-01-18",
+        "score": 69.1,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 611,
+        "title": "AI Systems Coordinator Role",
+        "date": "2025-01-29",
+        "score": 67.3,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 1163,
+        "title": "Taskade AI Agents Overview",
+        "date": "2024-11-09",
+        "score": 66.5,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 564,
+        "title": "AI-assisted coding execution",
+        "date": "2025-02-02",
+        "score": 62.2,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 628,
+        "title": "AI Prompt Generation System",
+        "date": "2025-01-27",
+        "score": 61.4,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 642,
+        "title": "AI Workflow Optimization Plan",
+        "date": "2025-01-27",
+        "score": 59.5,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 518,
+        "title": "AI Ideas Discussion",
+        "date": "2025-02-08",
+        "score": 59.3,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 1168,
+        "title": "Task Adequate AI Agents",
+        "date": "2024-11-09",
+        "score": 58.7,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 1169,
+        "title": "AI Self-Improvement and Automation",
+        "date": "2024-11-09",
+        "score": 58.3,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 651,
+        "title": "AI Agent Analysis Summary",
+        "date": "2025-01-26",
+        "score": 56.2,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 159,
+        "title": "Running Multiple AI Projects",
+        "date": "2025-03-04",
+        "score": 56.2,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 770,
+        "title": "No-Code AI App Development",
+        "date": "2025-01-06",
+        "score": 55.8,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 771,
+        "title": "UI Drafts to AI App",
+        "date": "2025-01-06",
+        "score": 55.8,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 799,
+        "title": "AI Business Solutions",
+        "date": "2025-01-02",
+        "score": 55.5,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 114,
+        "title": "AI Automation Consulting Blueprint",
+        "date": "2025-03-06",
+        "score": 31.8,
+        "category": "AI/Automation/Consulting"
+      },
+      {
+        "id": 119,
+        "title": "AI Content Systems Consultant",
+        "date": "2025-03-06",
+        "score": 31.8,
+        "category": "AI/Automation/Consulting"
+      }
+    ],
+    "ECONOMY & SYSTEMS": [
+      {
+        "id": 225,
+        "title": "AI Hybrid Economy Concept",
+        "date": "2025-03-01",
+        "score": 52.5,
+        "category": "Economy/Systems"
+      },
+      {
+        "id": 972,
+        "title": "Dynamic Pay with Crypto",
+        "date": "2024-11-29",
+        "score": 34.8,
+        "category": "Economy/Systems"
+      },
+      {
+        "id": 1173,
+        "title": "Bartering Dual Economy System",
+        "date": "2024-11-06",
+        "score": 34.2,
+        "category": "Economy/Systems"
+      },
+      {
+        "id": 519,
+        "title": "AI Industry Domination Strategy",
+        "date": "2025-02-08",
+        "score": 34.0,
+        "category": "Economy/Systems"
+      },
+      {
+        "id": 241,
+        "title": "How Monopoly Works",
+        "date": "2025-03-01",
+        "score": 29.6,
+        "category": "Economy/Systems"
+      },
+      {
+        "id": 454,
+        "title": "US Economy Overview 2025",
+        "date": "2025-02-12",
+        "score": 22.3,
+        "category": "Economy/Systems"
+      }
+    ]
+  },
+  "conversations": [
+    {
+      "id": 513,
+      "title": "Starting a Business Roadmap",
+      "date": "2025-02-08",
+      "best_score": 60.7,
+      "categories": [
+        "Business/Startup"
+      ]
+    },
+    {
+      "id": 654,
+      "title": "Readiness for Startup",
+      "date": "2025-01-25",
+      "best_score": 49.2,
+      "categories": [
+        "Business/Startup"
+      ]
+    },
+    {
+      "id": 1139,
+      "title": "Business Conglomerate Blueprint",
+      "date": "2024-11-16",
+      "best_score": 46.8,
+      "categories": [
+        "Business/Startup"
+      ]
+    },
+    {
+      "id": 1142,
+      "title": "Business Ecosystem Integration",
+      "date": "2024-11-15",
+      "best_score": 43.4,
+      "categories": [
+        "Business/Startup"
+      ]
+    },
+    {
+      "id": 520,
+      "title": "Launch SaaS Business Guide",
+      "date": "2025-02-08",
+      "best_score": 45.2,
+      "categories": [
+        "Business/Startup",
+        "SaaS/Products/Pricing"
+      ]
+    },
+    {
+      "id": 664,
+      "title": "Million Dollar Plan",
+      "date": "2025-01-24",
+      "best_score": 40.5,
+      "categories": [
+        "Business/Startup"
+      ]
+    },
+    {
+      "id": 799,
+      "title": "AI Business Solutions",
+      "date": "2025-01-02",
+      "best_score": 55.5,
+      "categories": [
+        "Business/Startup",
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 939,
+      "title": "Business Plan Creation Guide",
+      "date": "2024-12-03",
+      "best_score": 35.0,
+      "categories": [
+        "Business/Startup"
+      ]
+    },
+    {
+      "id": 185,
+      "title": "CEO's Struggles and Sacrifices",
+      "date": "2025-03-03",
+      "best_score": 34.6,
+      "categories": [
+        "Business/Startup"
+      ]
+    },
+    {
+      "id": 1140,
+      "title": "Business Model Breakdown",
+      "date": "2024-11-16",
+      "best_score": 33.3,
+      "categories": [
+        "Business/Startup"
+      ]
+    },
+    {
+      "id": 282,
+      "title": "Money Mindset Analysis",
+      "date": "2025-02-27",
+      "best_score": 40.6,
+      "categories": [
+        "Money/Finance/Wealth"
+      ]
+    },
+    {
+      "id": 670,
+      "title": "Making $1M Fast",
+      "date": "2025-01-24",
+      "best_score": 39.0,
+      "categories": [
+        "Money/Finance/Wealth",
+        "Crypto/Trading"
+      ]
+    },
+    {
+      "id": 588,
+      "title": "Exponential Functions Quiz Help",
+      "date": "2025-01-29",
+      "best_score": 33.2,
+      "categories": [
+        "Money/Finance/Wealth"
+      ]
+    },
+    {
+      "id": 225,
+      "title": "AI Hybrid Economy Concept",
+      "date": "2025-03-01",
+      "best_score": 52.5,
+      "categories": [
+        "Money/Finance/Wealth",
+        "Economy/Systems"
+      ]
+    },
+    {
+      "id": 718,
+      "title": "Wealth and Happiness Paradox",
+      "date": "2025-01-15",
+      "best_score": 31.5,
+      "categories": [
+        "Money/Finance/Wealth",
+        "Poverty/Debt/Struggle"
+      ]
+    },
+    {
+      "id": 418,
+      "title": "Tangible Bitcoin Value",
+      "date": "2025-02-18",
+      "best_score": 47.1,
+      "categories": [
+        "Money/Finance/Wealth",
+        "Crypto/Trading"
+      ]
+    },
+    {
+      "id": 1144,
+      "title": "Debt Freedom in 4 Weeks",
+      "date": "2024-11-16",
+      "best_score": 42.9,
+      "categories": [
+        "Money/Finance/Wealth",
+        "Poverty/Debt/Struggle",
+        "Side Hustle/Freelance"
+      ]
+    },
+    {
+      "id": 1394,
+      "title": "Creative Ways to Earn",
+      "date": "2024-08-21",
+      "best_score": 40.9,
+      "categories": [
+        "Money/Finance/Wealth",
+        "Side Hustle/Freelance"
+      ]
+    },
+    {
+      "id": 379,
+      "title": "Revenue Function Equation",
+      "date": "2025-02-21",
+      "best_score": 33.5,
+      "categories": [
+        "Income/Earnings"
+      ]
+    },
+    {
+      "id": 885,
+      "title": "Deferred Compensation Overview",
+      "date": "2024-12-10",
+      "best_score": 29.9,
+      "categories": [
+        "Income/Earnings"
+      ]
+    },
+    {
+      "id": 972,
+      "title": "Dynamic Pay with Crypto",
+      "date": "2024-11-29",
+      "best_score": 36.9,
+      "categories": [
+        "Income/Earnings",
+        "Crypto/Trading",
+        "Economy/Systems"
+      ]
+    },
+    {
+      "id": 981,
+      "title": "15 Days Work Earnings",
+      "date": "2024-11-29",
+      "best_score": 28.7,
+      "categories": [
+        "Income/Earnings"
+      ]
+    },
+    {
+      "id": 154,
+      "title": "Payroll Processing Schedule Analysis",
+      "date": "2025-03-05",
+      "best_score": 26.3,
+      "categories": [
+        "Income/Earnings"
+      ]
+    },
+    {
+      "id": 737,
+      "title": "300k Income Subscriptions",
+      "date": "2025-01-11",
+      "best_score": 35.8,
+      "categories": [
+        "Income/Earnings",
+        "SaaS/Products/Pricing"
+      ]
+    },
+    {
+      "id": 84,
+      "title": "Make $500 by Tuesday",
+      "date": "2025-03-09",
+      "best_score": 55.2,
+      "categories": [
+        "Income/Earnings",
+        "Side Hustle/Freelance"
+      ]
+    },
+    {
+      "id": 1129,
+      "title": "Earnings Calculation",
+      "date": "2024-11-20",
+      "best_score": 20.0,
+      "categories": [
+        "Income/Earnings"
+      ]
+    },
+    {
+      "id": 873,
+      "title": "Simplified Definitions for Kids",
+      "date": "2024-12-11",
+      "best_score": 47.1,
+      "categories": [
+        "Job/Career/Work"
+      ]
+    },
+    {
+      "id": 1171,
+      "title": "LinkedIn Career Explorer Tool",
+      "date": "2024-11-09",
+      "best_score": 46.2,
+      "categories": [
+        "Job/Career/Work"
+      ]
+    },
+    {
+      "id": 839,
+      "title": "Gaming and Sales Skills",
+      "date": "2024-12-17",
+      "best_score": 34.8,
+      "categories": [
+        "Job/Career/Work"
+      ]
+    },
+    {
+      "id": 1304,
+      "title": "Career Interests and Opportunities",
+      "date": "2024-10-14",
+      "best_score": 33.9,
+      "categories": [
+        "Job/Career/Work"
+      ]
+    },
+    {
+      "id": 704,
+      "title": "Farming Gardening and Business",
+      "date": "2025-01-19",
+      "best_score": 32.8,
+      "categories": [
+        "Job/Career/Work"
+      ]
+    },
+    {
+      "id": 1170,
+      "title": "Career Progression Analysis",
+      "date": "2024-11-09",
+      "best_score": 26.7,
+      "categories": [
+        "Job/Career/Work"
+      ]
+    },
+    {
+      "id": 1328,
+      "title": "Training Development Employee Engagement",
+      "date": "2024-10-11",
+      "best_score": 25.4,
+      "categories": [
+        "Job/Career/Work"
+      ]
+    },
+    {
+      "id": 1115,
+      "title": "From Stress to Confidence",
+      "date": "2024-11-21",
+      "best_score": 34.1,
+      "categories": [
+        "Poverty/Debt/Struggle"
+      ]
+    },
+    {
+      "id": 1395,
+      "title": "Liam's MOHELA Date Inquiry",
+      "date": "2024-08-21",
+      "best_score": 28.9,
+      "categories": [
+        "Poverty/Debt/Struggle"
+      ]
+    },
+    {
+      "id": 1296,
+      "title": "Life Organization and Planning",
+      "date": "2024-10-15",
+      "best_score": 27.5,
+      "categories": [
+        "Poverty/Debt/Struggle"
+      ]
+    },
+    {
+      "id": 733,
+      "title": "Resilience and Strategic Growth",
+      "date": "2025-01-11",
+      "best_score": 27.3,
+      "categories": [
+        "Poverty/Debt/Struggle"
+      ]
+    },
+    {
+      "id": 92,
+      "title": "Money as Closure",
+      "date": "2025-03-08",
+      "best_score": 25.1,
+      "categories": [
+        "Poverty/Debt/Struggle"
+      ]
+    },
+    {
+      "id": 1392,
+      "title": "Loan Maxing and Adjustment",
+      "date": "2024-08-22",
+      "best_score": 25.4,
+      "categories": [
+        "Poverty/Debt/Struggle"
+      ]
+    },
+    {
+      "id": 150,
+      "title": "Make $200 a Day",
+      "date": "2025-03-05",
+      "best_score": 44.8,
+      "categories": [
+        "Side Hustle/Freelance"
+      ]
+    },
+    {
+      "id": 82,
+      "title": "Phone Farming Overview",
+      "date": "2025-03-09",
+      "best_score": 33.6,
+      "categories": [
+        "Side Hustle/Freelance"
+      ]
+    },
+    {
+      "id": 710,
+      "title": "SaaS Automation with Make",
+      "date": "2025-01-11",
+      "best_score": 47.6,
+      "categories": [
+        "Side Hustle/Freelance",
+        "SaaS/Products/Pricing"
+      ]
+    },
+    {
+      "id": 37,
+      "title": "How to Get $10",
+      "date": "2025-03-11",
+      "best_score": 29.9,
+      "categories": [
+        "Side Hustle/Freelance"
+      ]
+    },
+    {
+      "id": 857,
+      "title": "Sales Approach Review",
+      "date": "2024-12-13",
+      "best_score": 55.3,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 914,
+      "title": "Unit 2 3 Crash Course",
+      "date": "2024-12-06",
+      "best_score": 53.0,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 879,
+      "title": "PA results analysis",
+      "date": "2024-12-10",
+      "best_score": 46.7,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 902,
+      "title": "Module 1 Overview",
+      "date": "2024-12-05",
+      "best_score": 46.0,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 840,
+      "title": "Door-to-Door to Real Estate",
+      "date": "2024-12-17",
+      "best_score": 40.5,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 47,
+      "title": "Sales Management Review",
+      "date": "2025-03-10",
+      "best_score": 39.9,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 775,
+      "title": "Law of Averages Guide",
+      "date": "2025-01-05",
+      "best_score": 39.8,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 918,
+      "title": "Social Styles Overview",
+      "date": "2024-12-05",
+      "best_score": 38.9,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 321,
+      "title": "Sales Mastery Through Learning",
+      "date": "2025-02-26",
+      "best_score": 33.0,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 49,
+      "title": "Sales Management Assessment Analysis",
+      "date": "2025-03-09",
+      "best_score": 31.7,
+      "categories": [
+        "Sales/Marketing"
+      ]
+    },
+    {
+      "id": 517,
+      "title": "SaaS Market Growth Trends",
+      "date": "2025-02-08",
+      "best_score": 54.2,
+      "categories": [
+        "SaaS/Products/Pricing"
+      ]
+    },
+    {
+      "id": 534,
+      "title": "Pro Subscription Decision",
+      "date": "2025-02-06",
+      "best_score": 38.6,
+      "categories": [
+        "SaaS/Products/Pricing"
+      ]
+    },
+    {
+      "id": 102,
+      "title": "Donation-Based Business Model",
+      "date": "2025-03-07",
+      "best_score": 36.6,
+      "categories": [
+        "SaaS/Products/Pricing"
+      ]
+    },
+    {
+      "id": 987,
+      "title": "ChatGPT Integration and AI Investment",
+      "date": "2024-11-28",
+      "best_score": 34.7,
+      "categories": [
+        "SaaS/Products/Pricing"
+      ]
+    },
+    {
+      "id": 708,
+      "title": "AI Productivity Platform Strategy",
+      "date": "2025-01-18",
+      "best_score": 69.1,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 611,
+      "title": "AI Systems Coordinator Role",
+      "date": "2025-01-29",
+      "best_score": 67.3,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 1163,
+      "title": "Taskade AI Agents Overview",
+      "date": "2024-11-09",
+      "best_score": 66.5,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 564,
+      "title": "AI-assisted coding execution",
+      "date": "2025-02-02",
+      "best_score": 62.2,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 628,
+      "title": "AI Prompt Generation System",
+      "date": "2025-01-27",
+      "best_score": 61.4,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 642,
+      "title": "AI Workflow Optimization Plan",
+      "date": "2025-01-27",
+      "best_score": 59.5,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 518,
+      "title": "AI Ideas Discussion",
+      "date": "2025-02-08",
+      "best_score": 59.3,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 1168,
+      "title": "Task Adequate AI Agents",
+      "date": "2024-11-09",
+      "best_score": 58.7,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 1169,
+      "title": "AI Self-Improvement and Automation",
+      "date": "2024-11-09",
+      "best_score": 58.3,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 651,
+      "title": "AI Agent Analysis Summary",
+      "date": "2025-01-26",
+      "best_score": 56.2,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 159,
+      "title": "Running Multiple AI Projects",
+      "date": "2025-03-04",
+      "best_score": 56.2,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 770,
+      "title": "No-Code AI App Development",
+      "date": "2025-01-06",
+      "best_score": 55.8,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 771,
+      "title": "UI Drafts to AI App",
+      "date": "2025-01-06",
+      "best_score": 55.8,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 114,
+      "title": "AI Automation Consulting Blueprint",
+      "date": "2025-03-06",
+      "best_score": 31.8,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 119,
+      "title": "AI Content Systems Consultant",
+      "date": "2025-03-06",
+      "best_score": 31.8,
+      "categories": [
+        "AI/Automation/Consulting"
+      ]
+    },
+    {
+      "id": 228,
+      "title": "Crypto Coin Creation Time",
+      "date": "2025-03-01",
+      "best_score": 41.0,
+      "categories": [
+        "Crypto/Trading"
+      ]
+    },
+    {
+      "id": 940,
+      "title": "Scalping Trading Strategy Explained",
+      "date": "2024-12-03",
+      "best_score": 23.4,
+      "categories": [
+        "Crypto/Trading"
+      ]
+    },
+    {
+      "id": 1173,
+      "title": "Bartering Dual Economy System",
+      "date": "2024-11-06",
+      "best_score": 34.2,
+      "categories": [
+        "Economy/Systems"
+      ]
+    },
+    {
+      "id": 519,
+      "title": "AI Industry Domination Strategy",
+      "date": "2025-02-08",
+      "best_score": 34.0,
+      "categories": [
+        "Economy/Systems"
+      ]
+    },
+    {
+      "id": 241,
+      "title": "How Monopoly Works",
+      "date": "2025-03-01",
+      "best_score": 29.6,
+      "categories": [
+        "Economy/Systems"
+      ]
+    },
+    {
+      "id": 454,
+      "title": "US Economy Overview 2025",
+      "date": "2025-02-12",
+      "best_score": 22.3,
+      "categories": [
+        "Economy/Systems"
+      ]
+    }
+  ]
+}

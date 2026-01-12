@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- Background -->
+  <rect width="900" height="600" fill="#f8f9fa" />
+  
+  <!-- Title -->
+  <text x="450" y="40" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">Website to Single Glyph Compression</text>
+  
+  <!-- Step 1: Website Files -->
+  <rect x="50" y="80" width="200" height="160" fill="#e6f7ff" rx="5" ry="5" stroke="#1890ff" stroke-width="2" />
+  <text x="150" y="105" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#1890ff">1. Basic Website</text>
+  
+  <rect x="75" y="125" width="150" height="30" fill="#f0f5ff" rx="3" ry="3" stroke="#597ef7" stroke-width="1" />
+  <text x="150" y="145" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">index.html</text>
+  
+  <rect x="75" y="165" width="150" height="30" fill="#f0f5ff" rx="3" ry="3" stroke="#597ef7" stroke-width="1" />
+  <text x="150" y="185" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">login.html</text>
+  
+  <rect x="75" y="205" width="150" height="30" fill="#f0f5ff" rx="3" ry="3" stroke="#597ef7" stroke-width="1" />
+  <text x="150" y="225" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">dashboard.html</text>
+  
+  <!-- Step 2: Bundled Files -->
+  <rect x="280" y="80" width="200" height="160" fill="#fff7e6" rx="5" ry="5" stroke="#fa8c16" stroke-width="2" />
+  <text x="380" y="105" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#fa8c16">2. Bundled Site</text>
+  
+  <rect x="305" y="135" width="150" height="70" fill="#fff2e8" rx="3" ry="3" stroke="#fa541c" stroke-width="1" />
+  <text x="380" y="175" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">offline_site.html</text>
+  
+  <!-- Step 3: Logic Blocks -->
+  <rect x="510" y="80" width="200" height="160" fill="#f6ffed" rx="5" ry="5" stroke="#52c41a" stroke-width="2" />
+  <text x="610" y="105" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#52c41a">3. Logic Blocks</text>
+  
+  <rect x="535" y="125" width="150" height="25" fill="#e6fffb" rx="3" ry="3" stroke="#13c2c2" stroke-width="1" />
+  <text x="610" y="142" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">BLOCK_Home (H)</text>
+  
+  <rect x="535" y="155" width="150" height="25" fill="#e6fffb" rx="3" ry="3" stroke="#13c2c2" stroke-width="1" />
+  <text x="610" y="172" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">BLOCK_Login (L)</text>
+  
+  <rect x="535" y="185" width="150" height="25" fill="#e6fffb" rx="3" ry="3" stroke="#13c2c2" stroke-width="1" />
+  <text x="610" y="202" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">BLOCK_Dashboard (D)</text>
+  
+  <rect x="535" y="215" width="150" height="25" fill="#e6fffb" rx="3" ry="3" stroke="#13c2c2" stroke-width="1" />
+  <text x="610" y="232" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">BLOCK_Auth (A)</text>
+  
+  <!-- Step 4: Stenographic Representation -->
+  <rect x="740" y="80" width="130" height="160" fill="#f9f0ff" rx="5" ry="5" stroke="#722ed1" stroke-width="2" />
+  <text x="805" y="105" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#722ed1">4. Shorthand</text>
+  
+  <rect x="750" y="135" width="110" height="70" fill="#f4edff" rx="3" ry="3" stroke="#642ab5" stroke-width="1" />
+  <text x="805" y="155" font-family="Arial" font-size="10" text-anchor="middle" fill="#333">H → T|?L → C1|{A → T → D}</text>
+  <text x="805" y="175" font-family="Arial" font-size="10" text-anchor="middle" fill="#333">| else { showErr(L) }</text>
+  <text x="805" y="195" font-family="Arial" font-size="10" text-anchor="middle" fill="#333">D → if(logout) { clear A → T → H }</text>
+  
+  <!-- Step 5: Novenary Encoding -->
+  <rect x="50" y="270" width="200" height="160" fill="#fcffe6" rx="5" ry="5" stroke="#a0d911" stroke-width="2" />
+  <text x="150" y="295" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#a0d911">5. Novenary Encoding</text>
+  
+  <rect x="75" y="315" width="150" height="25" fill="#f4ffb8" rx="3" ry="3" stroke="#7cb305" stroke-width="1" />
+  <text x="150" y="332" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">H (Home) = 1</text>
+  
+  <rect x="75" y="345" width="150" height="25" fill="#f4ffb8" rx="3" ry="3" stroke="#7cb305" stroke-width="1" />
+  <text x="150" y="362" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">L (Login) = 3</text>
+  
+  <rect x="75" y="375" width="150" height="25" fill="#f4ffb8" rx="3" ry="3" stroke="#7cb305" stroke-width="1" />
+  <text x="150" y="392" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">D (Dashboard) = 6</text>
+  
+  <rect x="75" y="405" width="150" height="25" fill="#f4ffb8" rx="3" ry="3" stroke="#7cb305" stroke-width="1" />
+  <text x="150" y="422" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">1 → 2|?3 → 4|? (5 → 2 → 6) || 8(3)</text>
+  
+  <!-- Step 6: Stroke-Based Mapping -->
+  <rect x="280" y="270" width="200" height="160" fill="#fff0f6" rx="5" ry="5" stroke="#eb2f96" stroke-width="2" />
+  <text x="380" y="295" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#eb2f96">6. Stroke Mapping</text>
+  
+  <rect x="290" y="315" width="180" height="25" fill="#ffd6e7" rx="3" ry="3" stroke="#c41d7f" stroke-width="1" />
+  <text x="380" y="332" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">一 (Horizontal) = Next Block</text>
+  
+  <rect x="290" y="345" width="180" height="25" fill="#ffd6e7" rx="3" ry="3" stroke="#c41d7f" stroke-width="1" />
+  <text x="380" y="362" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">丨 (Vertical) = Condition Check</text>
+  
+  <rect x="290" y="375" width="180" height="25" fill="#ffd6e7" rx="3" ry="3" stroke="#c41d7f" stroke-width="1" />
+  <text x="380" y="392" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">丿 (Diagonal Left) = If Success</text>
+  
+  <rect x="290" y="405" width="180" height="25" fill="#ffd6e7" rx="3" ry="3" stroke="#c41d7f" stroke-width="1" />
+  <text x="380" y="422" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">乀 (Diagonal Right) = Else/Fallback</text>
+  
+  <!-- Step 7: Final Symbol -->
+  <rect x="510" y="270" width="360" height="280" fill="#e6f7ff" rx="5" ry="5" stroke="#1890ff" stroke-width="2" />
+  <text x="690" y="295" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#1890ff">7. Final Single Symbol</text>
+  
+  <!-- Chinese Character for "net" -->
+  <text x="690" y="410" font-family="Arial" font-size="150" text-anchor="middle" fill="#333">网</text>
+  
+  <text x="690" y="530" font-family="Arial" font-size="16" text-anchor="middle" fill="#555">One glyph contains the entire website with all</text>
+  <text x="690" y="550" font-family="Arial" font-size="16" text-anchor="middle" fill="#555">structure, logic, state and transitions</text>
+  
+  <!-- Arrows -->
+  <line x1="250" y1="160" x2="280" y2="160" stroke="#333" stroke-width="2" stroke-dasharray="5,5" />
+  <line x1="480" y1="160" x2="510" y2="160" stroke="#333" stroke-width="2" stroke-dasharray="5,5" />
+  <line x1="710" y1="160" x2="740" y2="160" stroke="#333" stroke-width="2" stroke-dasharray="5,5" />
+  <line x1="805" y1="240" x2="150" y2="270" stroke="#333" stroke-width="2" stroke-dasharray="5,5" transform="curve" />
+  <line x1="250" y1="350" x2="280" y2="350" stroke="#333" stroke-width="2" stroke-dasharray="5,5" />
+  <line x1="480" y1="350" x2="510" y2="350" stroke="#333" stroke-width="2" stroke-dasharray="5,5" />
+</svg>

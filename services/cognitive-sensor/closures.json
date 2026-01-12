@@ -1,0 +1,18 @@
+{
+  "closures": [
+    {
+      "ts": 1767933809593,
+      "loop_id": null,
+      "title": "Phase 5B Test Closure",
+      "outcome": "closed"
+    }
+  ],
+  "stats": {
+    "total_closures": 1,
+    "closures_today": 1,
+    "last_closure_at": 1767933809593,
+    "streak_days": 1,
+    "last_streak_date": "2026-01-08",
+    "best_streak": 1
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "Closures.v1",
+  "title": "Closure Registry",
+  "description": "Persistent registry of closed loops with streak tracking. Phase 5B canonical schema.",
+  "type": "object",
+  "required": ["closures", "stats"],
+  "properties": {
+    "closures": {
+      "type": "array",
+      "description": "Array of closure events in chronological order",
+      "items": {
+        "type": "object",
+        "required": ["ts", "outcome"],
+        "properties": {
+          "ts": {
+            "type": "integer",
+            "description": "Unix timestamp (ms) when closure occurred"
+          },
+          "loop_id": {
+            "type": ["string", "null"],
+            "description": "Unique identifier of the closed loop (null if not tracked)"
+          },
+          "title": {
+            "type": ["string", "null"],
+            "description": "Human-readable title of the closed loop"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["closed", "archived"],
+            "description": "How the loop was resolved"
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "description": "Aggregate statistics computed from closure history",
+      "required": ["total_closures", "closures_today", "streak_days", "best_streak"],
+      "properties": {
+        "total_closures": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of closures ever recorded"
+        },
+        "closures_today": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of closures in current day (resets at day_start)"
+        },
+        "last_closure_at": {
+          "type": ["integer", "null"],
+          "description": "Unix timestamp (ms) of most recent closure"
+        },
+        "streak_days": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Current consecutive BUILD-mode closure streak"
+        },
+        "last_streak_date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Date (YYYY-MM-DD) of last streak increment"
+        },
+        "best_streak": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Highest streak ever achieved"
+        }
+      }
+    }
+  }
+}

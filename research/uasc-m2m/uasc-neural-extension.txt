@@ -1,0 +1,709 @@
+"""
+UASC-M2M Neural Network Extension
+
+This module implements neural network-based components for the UASC-M2M system,
+enabling more sophisticated glyph generation, recognition, and context-aware execution.
+"""
+
+import numpy as np
+import typing as t
+from dataclasses import dataclass
+from enum import Enum
+
+# Simulating neural network libraries
+# In a real implementation, these would be TensorFlow, PyTorch, etc.
+class NeuralNetwork:
+    def __init__(self, layers):
+        self.layers = layers
+        
+    def predict(self, input_data):
+        # Simplified prediction function
+        return input_data  # Just a placeholder for demonstration
+    
+    @classmethod
+    def load_model(cls, path):
+        # Simulate loading a pre-trained model
+        print(f"Loading neural model from {path}")
+        return cls([64, 128, 64])
+
+
+# =============================================================================
+# Neural Stroke Pattern Recognition
+# =============================================================================
+
+class NeuralStrokeRecognizer:
+    """Uses neural networks to recognize stroke patterns in glyphs."""
+    
+    def __init__(self, model_path="models/stroke_recognition.model"):
+        self.model = NeuralNetwork.load_model(model_path)
+        
+    def recognize_strokes(self, glyph_char: str) -> t.List[t.Dict[str, t.Any]]:
+        """Recognize stroke patterns in a glyph character."""
+        print(f"Recognizing strokes in glyph: {glyph_char}")
+        
+        # In a real implementation, this would:
+        # 1. Convert the character to an image
+        # 2. Process the image to extract stroke features
+        # 3. Use the neural network to identify stroke types and positions
+        
+        # Simulated stroke recognition results
+        stroke_patterns = {
+            '网': [
+                {'type': 'HORIZONTAL', 'position': (0, 0), 'confidence': 0.95},
+                {'type': 'VERTICAL', 'position': (0, 0), 'confidence': 0.93},
+                {'type': 'DIAGONAL_LEFT', 'position': (0.1, -0.1), 'confidence': 0.88},
+                {'type': 'DIAGONAL_RIGHT', 'position': (-0.1, -0.1), 'confidence': 0.91}
+            ],
+            '问': [
+                {'type': 'HORIZONTAL', 'position': (0, 0.2), 'confidence': 0.92},
+                {'type': 'VERTICAL', 'position': (0, 0), 'confidence': 0.96},
+                {'type': 'DOT', 'position': (0.3, 0.3), 'confidence': 0.99},
+                {'type': 'HOOK', 'position': (-0.2, -0.2), 'confidence': 0.87}
+            ],
+            '智': [
+                {'type': 'HORIZONTAL', 'position': (0, 0.2), 'confidence': 0.90},
+                {'type': 'VERTICAL', 'position': (0, 0), 'confidence': 0.94},
+                {'type': 'DIAGONAL_LEFT', 'position': (0.1, -0.1), 'confidence': 0.85},
+                {'type': 'DIAGONAL_RIGHT', 'position': (-0.1, -0.1), 'confidence': 0.88},
+                {'type': 'HOOK', 'position': (-0.2, -0.2), 'confidence': 0.82},
+                {'type': 'DOT', 'position': (0.3, 0.3), 'confidence': 0.97}
+            ],
+            '耀': [
+                {'type': 'HORIZONTAL', 'position': (0, 0.2), 'confidence': 0.91},
+                {'type': 'VERTICAL', 'position': (0, 0), 'confidence': 0.95},
+                {'type': 'DIAGONAL_LEFT', 'position': (0.1, -0.1), 'confidence': 0.86},
+                {'type': 'DIAGONAL_RIGHT', 'position': (-0.1, -0.1), 'confidence': 0.89},
+                {'type': 'HOOK', 'position': (-0.2, -0.2), 'confidence': 0.84},
+                {'type': 'DOT', 'position': (0.3, 0.3), 'confidence': 0.98},
+                {'type': 'HORIZONTAL', 'position': (0, -0.2), 'confidence': 0.90},
+                {'type': 'VERTICAL', 'position': (-0.2, 0), 'confidence': 0.92}
+            ]
+        }
+        
+        return stroke_patterns.get(glyph_char, [])
+
+
+# =============================================================================
+# Neural Context Sensitivity Analysis
+# =============================================================================
+
+class NeuralContextAnalyzer:
+    """Uses neural networks to analyze context and adjust execution accordingly."""
+    
+    def __init__(self, model_path="models/context_analysis.model"):
+        self.model = NeuralNetwork.load_model(model_path)
+        
+    def analyze_context(self, strokes: t.List[t.Dict[str, t.Any]], current_state: dict) -> dict:
+        """Analyze context and determine how to interpret strokes."""
+        print("Analyzing execution context")
+        
+        # In a real implementation, this would:
+        # 1. Convert strokes and state into feature vectors
+        # 2. Use the neural network to determine context dependencies
+        # 3. Return context modifications for execution
+        
+        # Count stroke types to determine basic context
+        stroke_types = [stroke['type'] for stroke in strokes]
+        has_horizontal = 'HORIZONTAL' in stroke_types
+        has_vertical = 'VERTICAL' in stroke_types
+        has_hook = 'HOOK' in stroke_types
+        has_dot = 'DOT' in stroke_types
+        
+        # Build context sensitivity map
+        context = {
+            'execution_mode': 'sequential' if has_horizontal else 'conditional',
+            'has_loops': has_hook,
+            'terminal_action': has_dot,
+            'priority_level': 'high' if current_state.get('critical', False) else 'normal'
+        }
+        
+        # Add context meters based on pattern analysis
+        context_meters = []
+        
+        if has_vertical and has_horizontal:
+            context_meters.append({
+                'type': 'CONDITION',
+                'target': stroke_types.index('VERTICAL'),
+                'confidence': 0.92
+            })
+        
+        if has_hook:
+            context_meters.append({
+                'type': 'LOOP',
+                'target': stroke_types.index('HOOK'),
+                'confidence': 0.88
+            })
+        
+        context['meters'] = context_meters
+        
+        return context
+
+
+# =============================================================================
+# Neural Glyph Generator
+# =============================================================================
+
+class NeuralGlyphGenerator:
+    """Uses neural networks to generate optimized glyphs for complex logic."""
+    
+    def __init__(self, model_path="models/glyph_generation.model"):
+        self.model = NeuralNetwork.load_model(model_path)
+        self.char_mapping = {
+            'website': '网',
+            'chatbot': '问',
+            'data': '传',
+            'ai': '智',
+            'control': '控',
+            'integrated': '耀',
+            'auth': '权',
+            'user': '人',
+            'system': '系',
+            'medical': '医',
+            'finance': '财',
+            'space': '航'
+        }
+        
+    def generate_glyph(self, logic_flow: dict) -> t.Tuple[str, t.List[t.Dict[str, t.Any]]]:
+        """Generate an optimal glyph for a given logic flow."""
+        print(f"Generating glyph for logic flow with {len(logic_flow.get('pages', []))} pages")
+        
+        # In a real implementation, this would:
+        # 1. Extract key features from the logic flow
+        # 2. Use the neural network to determine the optimal stroke pattern
+        # 3. Generate a character representation and stroke details
+        
+        # Determine function type
+        function = logic_flow.get('function', 'website')
+        
+        # Count various elements to determine complexity
+        pages = len(logic_flow.get('pages', []))
+        transitions = len(logic_flow.get('transitions', []))
+        conditions = len(logic_flow.get('conditions', []))
+        
+        # Select character based on function and complexity
+        if function in self.char_mapping:
+            char = self.char_mapping[function]
+        else:
+            if conditions > 0 and pages > 3:
+                char = self.char_mapping['integrated']  # Complex system
+            elif conditions > 0:
+                char = self.char_mapping['control']  # Control flow
+            else:
+                char = self.char_mapping['website']  # Default
+        
+        # Generate stroke pattern (simplified for demonstration)
+        strokes = []
+        
+        # Add horizontal strokes for pages
+        for i in range(min(pages, 3)):
+            strokes.append({
+                'type': 'HORIZONTAL',
+                'position': (0.1 * i, 0.2),
+                'confidence': 0.9 + 0.02 * i
+            })
+        
+        # Add vertical strokes for conditions
+        for i in range(min(conditions, 2)):
+            strokes.append({
+                'type': 'VERTICAL',
+                'position': (-0.2, -0.1 * i),
+                'confidence': 0.85 + 0.05 * i
+            })
+        
+        # Add hooks for loops
+        if 'loops' in logic_flow or any(t.get('from') == t.get('to') for t in logic_flow.get('transitions', [])):
+            strokes.append({
+                'type': 'HOOK',
+                'position': (0.2, -0.2),
+                'confidence': 0.88
+            })
+        
+        # Add dot for termination
+        strokes.append({
+            'type': 'DOT',
+            'position': (0.3, 0.3),
+            'confidence': 0.95
+        })
+        
+        return char, strokes
+
+
+# =============================================================================
+# Neural Logic Optimization
+# =============================================================================
+
+class NeuralLogicOptimizer:
+    """Uses neural networks to optimize logic flows for efficiency."""
+    
+    def __init__(self, model_path="models/logic_optimization.model"):
+        self.model = NeuralNetwork.load_model(model_path)
+        
+    def optimize_logic(self, blocks: t.List[dict]) -> t.List[dict]:
+        """Optimize a logical structure for efficiency."""
+        print(f"Optimizing logic flow with {len(blocks)} blocks")
+        
+        # In a real implementation, this would:
+        # 1. Analyze the blocks for inefficiencies
+        # 2. Use the neural network to identify optimization opportunities
+        # 3. Restructure the blocks for optimal execution
+        
+        # Simplified optimization (for demonstration)
+        optimized_blocks = blocks.copy()
+        
+        # Identify and remove redundant blocks
+        block_ids = [block['id'] for block in blocks]
+        connections = []
+        for block in blocks:
+            connections.extend(block.get('connections', []))
+        
+        # Find blocks that aren't connected to anything
+        unconnected = [b_id for b_id in block_ids if b_id not in connections]
+        
+        # Remove blocks that aren't in the main flow
+        optimized_blocks = [b for b in optimized_blocks if b['id'] not in unconnected]
+        
+        # Reorder blocks for optimal execution
+        optimized_blocks.sort(key=lambda b: 0 if b['type'] == 'page' else 1)
+        
+        print(f"Optimized to {len(optimized_blocks)} blocks")
+        return optimized_blocks
+
+
+# =============================================================================
+# Integrated Neural UASC-M2M System
+# =============================================================================
+
+class NeuralUASCM2M:
+    """Neural network enhanced UASC-M2M system."""
+    
+    def __init__(self):
+        self.stroke_recognizer = NeuralStrokeRecognizer()
+        self.context_analyzer = NeuralContextAnalyzer()
+        self.glyph_generator = NeuralGlyphGenerator()
+        self.logic_optimizer = NeuralLogicOptimizer()
+        
+        # Glyph repository
+        self.glyph_repository = {}
+        
+    def encode_logic_flow(self, logic_flow: dict) -> t.Tuple[str, dict]:
+        """Encode a logical flow into an optimized glyph using neural networks."""
+        # Optimize the logic flow
+        if 'blocks' in logic_flow:
+            logic_flow['blocks'] = self.logic_optimizer.optimize_logic(logic_flow['blocks'])
+        
+        # Generate the optimal glyph
+        glyph_char, strokes = self.glyph_generator.generate_glyph(logic_flow)
+        
+        # Store in repository with metadata
+        glyph_id = f"glyph_{hash(glyph_char)}"
+        self.glyph_repository[glyph_id] = {
+            'char': glyph_char,
+            'strokes': strokes,
+            'logic_flow': logic_flow,
+            'function': logic_flow.get('function', 'unknown')
+        }
+        
+        return glyph_char, {
+            'id': glyph_id,
+            'function': logic_flow.get('function', 'unknown'),
+            'complexity': len(strokes),
+            'strokes': [s['type'] for s in strokes]
+        }
+        
+    def decode_glyph(self, glyph_char: str, current_state: dict = None) -> t.Tuple[t.List[str], dict]:
+        """Decode a glyph into execution steps using neural networks."""
+        if current_state is None:
+            current_state = {'critical': False}
+        
+        # Recognize strokes in the glyph
+        strokes = self.stroke_recognizer.recognize_strokes(glyph_char)
+        
+        # Analyze context for execution
+        context = self.context_analyzer.analyze_context(strokes, current_state)
+        
+        # Generate execution steps based on strokes and context
+        execution_steps = self._generate_execution_steps(strokes, context)
+        
+        return execution_steps, context
+    
+    def combine_glyphs(self, glyph_chars: t.List[str]) -> str:
+        """Combine multiple glyphs into an integrated system using neural networks."""
+        # Collect all strokes from glyphs
+        all_strokes = []
+        all_functions = []
+        
+        for char in glyph_chars:
+            strokes = self.stroke_recognizer.recognize_strokes(char)
+            all_strokes.extend(strokes)
+            
+            # Get function if glyph is in repository
+            for glyph_data in self.glyph_repository.values():
+                if glyph_data['char'] == char:
+                    all_functions.append(glyph_data['function'])
+                    break
+        
+        # Create a combined logic flow
+        combined_flow = {
+            'function': 'integrated',
+            'components': all_functions,
+            'strokes': len(all_strokes)
+        }
+        
+        # Generate a new glyph for the combined flow
+        combined_char = self.glyph_generator.generate_glyph(combined_flow)[0]
+        
+        # Store the combined glyph
+        glyph_id = f"combined_{hash(combined_char)}"
+        self.glyph_repository[glyph_id] = {
+            'char': combined_char,
+            'strokes': all_strokes,
+            'logic_flow': combined_flow,
+            'function': 'integrated',
+            'components': all_functions
+        }
+        
+        return combined_char
+    
+    def _generate_execution_steps(self, strokes: t.List[t.Dict[str, t.Any]], context: dict) -> t.List[str]:
+        """Generate execution steps from strokes and context."""
+        steps = []
+        
+        # Determine basic execution mode
+        if context['execution_mode'] == 'sequential':
+            steps.append("Begin sequential execution")
+            
+            # Add steps for horizontal strokes (main flow)
+            horizontal_strokes = [s for s in strokes if s['type'] == 'HORIZONTAL']
+            for i, stroke in enumerate(horizontal_strokes):
+                steps.append(f"Step {i+1}: Execute sequential action")
+        
+        elif context['execution_mode'] == 'conditional':
+            steps.append("Begin conditional execution")
+            
+            # Add steps for vertical strokes (conditions)
+            vertical_strokes = [s for s in strokes if s['type'] == 'VERTICAL']
+            for i, stroke in enumerate(vertical_strokes):
+                steps.append(f"Check condition {i+1}")
+                steps.append(f"If condition {i+1} is true: proceed to next step")
+                steps.append(f"If condition {i+1} is false: skip to alternative path")
+        
+        # Handle loops if present
+        if context['has_loops']:
+            steps.append("Enter loop structure")
+            steps.append("Begin iteration 1")
+            steps.append("Check loop continuation condition")
+            steps.append("Begin iteration 2")
+            steps.append("Check loop continuation condition")
+            steps.append("Exit loop structure")
+        
+        # Add terminal action if needed
+        if context['terminal_action']:
+            steps.append("Execute final action")
+            steps.append("Confirm completion")
+        
+        return steps
+
+
+# =============================================================================
+# Example Usage
+# =============================================================================
+
+def neural_example():
+    """Demonstrate the neural UASC-M2M system."""
+    # Create the neural UASC-M2M system
+    neural_uasc = NeuralUASCM2M()
+    
+    # Define a website flow
+    website_flow = {
+        'function': 'website',
+        'pages': [
+            {'id': 'home', 'type': 'page'},
+            {'id': 'login', 'type': 'page'},
+            {'id': 'dashboard', 'type': 'page'}
+        ],
+        'transitions': [
+            {'from': 'home', 'to': 'login'},
+            {'from': 'login', 'to': 'dashboard'},
+            {'from': 'dashboard', 'to': 'home'}
+        ],
+        'conditions': [
+            {'check': 'auth', 'success': 'dashboard', 'failure': 'login'}
+        ]
+    }
+    
+    # Define a chatbot flow
+    chatbot_flow = {
+        'function': 'chatbot',
+        'pages': [
+            {'id': 'listen', 'type': 'input'},
+            {'id': 'process', 'type': 'process'},
+            {'id': 'respond', 'type': 'output'}
+        ],
+        'transitions': [
+            {'from': 'listen', 'to': 'process'},
+            {'from': 'process', 'to': 'respond'},
+            {'from': 'respond', 'to': 'listen'}  # Loop back
+        ]
+    }
+    
+    # Encode the flows using neural networks
+    print("\n=== Neural UASC-M2M Demonstration ===")
+    
+    print("\nEncoding website flow...")
+    website_char, website_meta = neural_uasc.encode_logic_flow(website_flow)
+    print(f"Generated website glyph: {website_char}")
+    print(f"Metadata: {website_meta}")
+    
+    print("\nEncoding chatbot flow...")
+    chatbot_char, chatbot_meta = neural_uasc.encode_logic_flow(chatbot_flow)
+    print(f"Generated chatbot glyph: {chatbot_char}")
+    print(f"Metadata: {chatbot_meta}")
+    
+    # Combine the glyphs
+    print("\nCombining glyphs...")
+    combined_char = neural_uasc.combine_glyphs([website_char, chatbot_char])
+    print(f"Generated combined glyph: {combined_char}")
+    
+    # Decode and execute
+    print("\nDecoding website glyph...")
+    steps, context = neural_uasc.decode_glyph(website_char)
+    
+    print(f"Execution context: {context['execution_mode']}")
+    for step in steps:
+        print(f"  {step}")
+    
+    print("\nDecoding combined glyph...")
+    steps, context = neural_uasc.decode_glyph(combined_char)
+    
+    print(f"Execution context: {context['execution_mode']}")
+    for step in steps:
+        print(f"  {step}")
+
+
+# =============================================================================
+# Advanced Neural Integration - Multi-Modal Learning
+# =============================================================================
+
+class AdvancedNeuralUASCM2M:
+    """Advanced neural implementation with multi-modal learning and quantum-inspired optimization."""
+    
+    def __init__(self):
+        self.stroke_recognizer = NeuralStrokeRecognizer()
+        self.context_analyzer = NeuralContextAnalyzer()
+        self.glyph_generator = NeuralGlyphGenerator()
+        self.logic_optimizer = NeuralLogicOptimizer()
+        
+        # Advanced capabilities
+        self.learning_enabled = True
+        self.adaptation_rate = 0.05
+        self.quantum_optimization = False  # Future feature
+        
+        # Storage for learned patterns
+        self.learned_patterns = {}
+        self.execution_history = []
+        
+    def enable_quantum_optimization(self):
+        """Enable quantum-inspired optimization for glyph processing."""
+        print("Enabling quantum-inspired optimization")
+        self.quantum_optimization = True
+        
+    def learn_from_execution(self, glyph_char: str, execution_steps: t.List[str], success: bool):
+        """Learn from execution success or failure to improve future performance."""
+        if not self.learning_enabled:
+            return
+            
+        print(f"Learning from execution of {glyph_char} (success: {success})")
+        
+        # Record execution in history
+        self.execution_history.append({
+            'glyph': glyph_char,
+            'steps': execution_steps,
+            'success': success,
+            'timestamp': 'now'  # In a real system, use actual timestamp
+        })
+        
+        # Update learned patterns
+        if glyph_char not in self.learned_patterns:
+            self.learned_patterns[glyph_char] = {
+                'executions': 0,
+                'success_rate': 0.0,
+                'avg_steps': 0,
+                'optimizations': []
+            }
+            
+        pattern = self.learned_patterns[glyph_char]
+        pattern['executions'] += 1
+        
+        # Update success rate with adaptation rate to avoid rapid changes
+        new_success_rate = ((pattern['success_rate'] * pattern['executions']) + (1.0 if success else 0.0)) / (pattern['executions'] + 1)
+        pattern['success_rate'] = ((1 - self.adaptation_rate) * pattern['success_rate']) + (self.adaptation_rate * new_success_rate)
+        
+        # Update average steps
+        new_avg_steps = ((pattern['avg_steps'] * pattern['executions']) + len(execution_steps)) / (pattern['executions'] + 1)
+        pattern['avg_steps'] = ((1 - self.adaptation_rate) * pattern['avg_steps']) + (self.adaptation_rate * new_avg_steps)
+        
+        # Look for optimization opportunities
+        if not success and pattern['executions'] > 5:
+            if pattern['success_rate'] < 0.7:  # If success rate is low, suggest optimization
+                pattern['optimizations'].append({
+                    'suggestion': 'Consider restructuring glyph for improved reliability',
+                    'confidence': 0.8 * (1.0 - pattern['success_rate'])
+                })
+            
+            if pattern['avg_steps'] > 10:  # If taking too many steps, suggest optimization
+                pattern['optimizations'].append({
+                    'suggestion': 'Glyph execution requires too many steps - consider simplification',
+                    'confidence': 0.6
+                })
+    
+    def generate_optimized_glyph(self, glyph_char: str) -> str:
+        """Generate an optimized version of a glyph based on learning."""
+        print(f"Generating optimized version of {glyph_char}")
+        
+        if glyph_char not in self.learned_patterns:
+            print("No learning data available for optimization")
+            return glyph_char
+            
+        pattern = self.learned_patterns[glyph_char]
+        
+        # If success rate is good and steps are reasonable, no need to optimize
+        if pattern['success_rate'] > 0.9 and pattern['avg_steps'] < 8:
+            print("Glyph already performing well - no optimization needed")
+            return glyph_char
+            
+        # Recognize existing strokes
+        strokes = self.stroke_recognizer.recognize_strokes(glyph_char)
+        
+        # Apply optimizations based on learning
+        if pattern['success_rate'] < 0.7:
+            # Enhance condition strokes for reliability
+            for stroke in strokes:
+                if stroke['type'] == 'VERTICAL':  # Condition checks
+                    stroke['confidence'] = max(0.95, stroke['confidence'])  # Boost confidence
+        
+        if pattern['avg_steps'] > 10:
+            # Remove redundant strokes to simplify
+            strokes = [s for s in strokes if s['confidence'] > 0.8]
+            
+        # In quantum mode, apply quantum-inspired optimization
+        if self.quantum_optimization:
+            # Simulate quantum optimization by considering multiple states simultaneously
+            print("Applying quantum-inspired optimization")
+            
+            # In a real implementation, this would use quantum algorithms
+            # For now, we'll add a special "quantum-optimized" stroke
+            strokes.append({
+                'type': 'DOT',  # Termination marker
+                'position': (0, 0),  # Center position
+                'confidence': 0.99  # High confidence
+            })
+        
+        # Create a new optimized flow based on the modified strokes
+        optimized_flow = {
+            'function': pattern.get('function', 'optimized'),
+            'components': [glyph_char],
+            'strokes': len(strokes),
+            'optimization_level': 'advanced'
+        }
+        
+        # Generate a new optimized glyph
+        new_char, _ = self.glyph_generator.generate_glyph(optimized_flow)
+        print(f"Optimized glyph generated: {new_char}")
+        
+        return new_char
+        
+    def process_natural_language(self, text: str) -> str:
+        """Process natural language to generate an appropriate glyph."""
+        print(f"Processing natural language: '{text}'")
+        
+        # In a real implementation, this would use NLP to extract key concepts
+        # For demonstration, use simple keyword matching
+        keywords = {
+            'website': ['website', 'page', 'login', 'user', 'web'],
+            'chatbot': ['chat', 'conversation', 'talk', 'message', 'respond'],
+            'data': ['data', 'information', 'process', 'analyze'],
+            'ai': ['intelligence', 'learn', 'predict', 'smart'],
+            'control': ['control', 'manage', 'automate', 'system'],
+            'medical': ['health', 'medical', 'doctor', 'patient']
+        }
+        
+        # Count keyword matches
+        function_scores = {}
+        text_lower = text.lower()
+        
+        for function, words in keywords.items():
+            score = sum(1 for word in words if word in text_lower)
+            if score > 0:
+                function_scores[function] = score
+        
+        # Find the highest scoring function
+        if not function_scores:
+            print("No specific function detected - using default")
+            function = 'website'
+        else:
+            function = max(function_scores.items(), key=lambda x: x[1])[0]
+            
+        print(f"Detected function: {function}")
+        
+        # Create a simple flow based on the detected function
+        if function == 'website':
+            flow = {
+                'function': 'website',
+                'pages': [{'id': 'home'}, {'id': 'content'}],
+                'transitions': [{'from': 'home', 'to': 'content'}]
+            }
+        elif function == 'chatbot':
+            flow = {
+                'function': 'chatbot',
+                'pages': [{'id': 'listen'}, {'id': 'respond'}],
+                'transitions': [{'from': 'listen', 'to': 'respond'}, {'from': 'respond', 'to': 'listen'}]
+            }
+        else:
+            flow = {
+                'function': function,
+                'components': [function],
+                'complexity': 'medium'
+            }
+            
+        # Generate a glyph for this flow
+        glyph_char, _ = self.glyph_generator.generate_glyph(flow)
+        return glyph_char
+
+
+if __name__ == "__main__":
+    # Run the neural example
+    neural_example()
+    
+    # Demonstrate advanced neural integration
+    print("\n=== Advanced Neural UASC-M2M Demonstration ===")
+    
+    # Create advanced system
+    advanced_uasc = AdvancedNeuralUASCM2M()
+    
+    # Process natural language
+    print("\nProcessing natural language...")
+    website_char = advanced_uasc.process_natural_language("Create a website with login functionality for users")
+    print(f"Generated website glyph: {website_char}")
+    
+    chatbot_char = advanced_uasc.process_natural_language("Build a chatbot that can answer customer questions")
+    print(f"Generated chatbot glyph: {chatbot_char}")
+    
+    # Simulate execution and learning
+    print("\nSimulating execution and learning...")
+    steps, context = advanced_uasc.decode_glyph(website_char)
+    advanced_uasc.learn_from_execution(website_char, steps, success=True)
+    
+    steps, context = advanced_uasc.decode_glyph(chatbot_char)
+    advanced_uasc.learn_from_execution(chatbot_char, steps, success=False)
+    
+    # Generate optimized version after learning
+    print("\nGenerating optimized glyphs based on learning...")
+    optimized_chatbot = advanced_uasc.generate_optimized_glyph(chatbot_char)
+    print(f"Original chatbot glyph: {chatbot_char}")
+    print(f"Optimized chatbot glyph: {optimized_chatbot}")
+    
+    # Enable quantum optimization
+    print("\nEnabling quantum optimization...")
+    advanced_uasc.enable_quantum_optimization()
+    quantum_optimized = advanced_uasc.generate_optimized_glyph(website_char)
+    print(f"Quantum-optimized website glyph: {quantum_optimized}")

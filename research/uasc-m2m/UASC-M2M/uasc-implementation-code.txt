@@ -1,0 +1,970 @@
+"""
+UASC-M2M: Ultra-Compressed High-Context Symbolic Encoding System
+
+This module implements the core components of the UASC-M2M system, allowing for:
+1. Encoding logical structures into stroke-based glyphs
+2. Decoding glyphs back into executable logic
+3. Executing glyphs in a runtime environment
+4. Combining multiple glyphs into integrated systems
+"""
+
+import typing as t
+from enum import Enum, auto
+from dataclasses import dataclass
+from collections import defaultdict
+import json
+import re
+import base64
+import hashlib
+
+
+# =============================================================================
+# Core Definitions
+# =============================================================================
+
+class StrokeType(Enum):
+    """Fundamental stroke types that form the basis of glyph encoding."""
+    HORIZONTAL = auto()  # 一 - Sequential execution
+    VERTICAL = auto()    # 丨 - Conditional check
+    DIAGONAL_LEFT = auto()  # 丿 - Data flow leftward / retrieval
+    DIAGONAL_RIGHT = auto()  # 乀 - Data flow rightward / store
+    HOOK = auto()        # 乙 - Looping/iterative logic
+    DOT = auto()         # 丶 - Confirmation/termination
+    
+
+class ContextMeterType(Enum):
+    """Context meters that modify how strokes are interpreted."""
+    CONDITION = auto()  # |? - If condition is true
+    ELSE = auto()       # || - Otherwise
+    THEN = auto()       # → - Then do
+    PARALLEL = auto()   # & - Execute in parallel
+    OPTIONAL = auto()   # ? - Optional operation
+    END = auto()        # . - End of sequence
+
+
+class CommandType(Enum):
+    """High-level command types for novenary encoding."""
+    SYSTEM = 0          # System Operation
+    DATA_RETRIEVE = 1   # Data Retrieval
+    DATA_TRANSMIT = 2   # Data Transmission
+    LOGIC = 3           # Logic Execution
+    ARITHMETIC = 4      # Arithmetic Operation
+    MEMORY = 5          # Memory Access
+    HARDWARE = 6        # Hardware Interaction
+    NETWORK = 7         # Network Communication
+    AI = 8              # AI Processing
+
+
+@dataclass
+class Stroke:
+    """A single stroke in a glyph."""
+    type: StrokeType
+    position: t.Tuple[float, float]  # (x, y) position relative to glyph center
+    length: float = 1.0
+    width: float = 1.0
+    
+    def encode(self) -> str:
+        """Encode the stroke to a string representation."""
+        stroke_chars = {
+            StrokeType.HORIZONTAL: '一',
+            StrokeType.VERTICAL: '丨',
+            StrokeType.DIAGONAL_LEFT: '丿',
+            StrokeType.DIAGONAL_RIGHT: '乀',
+            StrokeType.HOOK: '乙',
+            StrokeType.DOT: '丶',
+        }
+        return stroke_chars[self.type]
+
+
+@dataclass
+class ContextMeter:
+    """A context meter that modifies how strokes are interpreted."""
+    type: ContextMeterType
+    target_stroke: t.Optional[int] = None  # Index of the stroke this applies to
+    
+    def encode(self) -> str:
+        """Encode the context meter to a string representation."""
+        meter_chars = {
+            ContextMeterType.CONDITION: '|?',
+            ContextMeterType.ELSE: '||',
+            ContextMeterType.THEN: '→',
+            ContextMeterType.PARALLEL: '&',
+            ContextMeterType.OPTIONAL: '?',
+            ContextMeterType.END: '.',
+        }
+        return meter_chars[self.type]
+
+
+@dataclass
+class LogicBlock:
+    """A block of logic in the system."""
+    id: str
+    type: str
+    parameters: t.Dict[str, t.Any] = None
+    connections: t.List[str] = None
+    
+    def __post_init__(self):
+        if self.parameters is None:
+            self.parameters = {}
+        if self.connections is None:
+            self.connections = []
+
+
+@dataclass
+class Glyph:
+    """A complete glyph representing executable logic."""
+    id: str
+    strokes: t.List[Stroke]
+    context_meters: t.List[ContextMeter]
+    metadata: t.Dict[str, t.Any]
+    visual_char: str = None  # The visual character representation
+    
+    @property
+    def complexity(self) -> int:
+        """Calculate the complexity of the glyph."""
+        return len(self.strokes) + len(self.context_meters)
+    
+    def encode(self) -> str:
+        """Encode the glyph to a string representation."""
+        if self.visual_char:
+            return self.visual_char
+        
+        # If no predefined visual character, generate a unique hash
+        glyph_data = ''.join([s.encode() for s in self.strokes] + 
+                             [m.encode() for m in self.context_meters])
+        hash_obj = hashlib.md5(glyph_data.encode('utf-8'))
+        hash_b64 = base64.b64encode(hash_obj.digest()).decode('utf-8')
+        
+        # Map the hash to a Chinese-like character from a predefined set
+        # This is a simplified version - a real implementation would map to actual characters
+        char_map = {
+            'WEBSITE': '网',
+            'CHATBOT': '问',
+            'DATA_SYSTEM': '传',
+            'AI_DECISION': '智',
+            'AUTOMATION': '控',
+            'INTEGRATED': '耀',
+        }
+        
+        # Select a character based on metadata or complexity
+        if 'function' in self.metadata and self.metadata['function'] in char_map:
+            return char_map[self.metadata['function']]
+        
+        # Default to a character based on complexity
+        complexity_index = min(len(char_map) - 1, self.complexity // 3)
+        return list(char_map.values())[complexity_index]
+
+
+# =============================================================================
+# Parsing and Analysis
+# =============================================================================
+
+class NodeParser:
+    """Parses logical structures into nodes for encoding."""
+    
+    def __init__(self):
+        self.blocks = {}
+    
+    def parse_logic_flow(self, logic_flow: dict) -> t.List[LogicBlock]:
+        """Parse a logical flow into blocks."""
+        blocks = []
+        
+        # Parse pages/screens
+        if 'pages' in logic_flow:
+            for page in logic_flow['pages']:
+                block = LogicBlock(
+                    id=page.get('id', f"page_{len(blocks)}"),
+                    type=page.get('type', 'page'),
+                    parameters=page.get('data', {})
+                )
+                blocks.append(block)
+                self.blocks[block.id] = block
+        
+        # Parse transitions
+        if 'transitions' in logic_flow:
+            for trans in logic_flow['transitions']:
+                if 'from' in trans and 'to' in trans:
+                    from_block = self.blocks.get(trans['from'])
+                    to_block = self.blocks.get(trans['to'])
+                    if from_block and to_block:
+                        from_block.connections.append(to_block.id)
+        
+        # Parse conditions
+        if 'conditions' in logic_flow:
+            for cond in logic_flow['conditions']:
+                condition_id = f"condition_{len(blocks)}"
+                block = LogicBlock(
+                    id=condition_id,
+                    type='condition',
+                    parameters={
+                        'check': cond.get('check', ''),
+                        'success': cond.get('success', ''),
+                        'failure': cond.get('failure', '')
+                    }
+                )
+                blocks.append(block)
+                self.blocks[block.id] = block
+        
+        return blocks
+
+
+class LogicAnalyzer:
+    """Analyzes logical structures to determine optimal encoding."""
+    
+    def __init__(self):
+        self.complexity_thresholds = {
+            'simple': 5,    # Few blocks, linear flow
+            'medium': 10,   # Multiple blocks, some branching
+            'complex': 20   # Many blocks, complex branching
+        }
+    
+    def analyze(self, blocks: t.List[LogicBlock]) -> dict:
+        """Analyze blocks to determine complexity and features."""
+        analysis = {
+            'block_count': len(blocks),
+            'block_types': defaultdict(int),
+            'connection_count': 0,
+            'has_conditions': False,
+            'has_loops': False,
+            'max_depth': 0,
+            'complexity': 'simple'
+        }
+        
+        # Count block types
+        for block in blocks:
+            analysis['block_types'][block.type] += 1
+            analysis['connection_count'] += len(block.connections)
+            
+            if block.type == 'condition':
+                analysis['has_conditions'] = True
+            
+            # Check for loops (connections to self or previous blocks)
+            for conn in block.connections:
+                if conn == block.id or any(b.id == conn and b.id < block.id for b in blocks):
+                    analysis['has_loops'] = True
+        
+        # Calculate complexity score
+        complexity_score = (
+            analysis['block_count'] * 1.0 +
+            analysis['connection_count'] * 0.5 +
+            (5 if analysis['has_conditions'] else 0) +
+            (10 if analysis['has_loops'] else 0)
+        )
+        
+        # Determine complexity level
+        if complexity_score > self.complexity_thresholds['complex']:
+            analysis['complexity'] = 'complex'
+        elif complexity_score > self.complexity_thresholds['medium']:
+            analysis['complexity'] = 'medium'
+        
+        return analysis
+
+
+# =============================================================================
+# Stroke Generation and Glyph Compilation
+# =============================================================================
+
+class StrokeGenerator:
+    """Generates strokes based on logical structures."""
+    
+    def __init__(self):
+        # Mapping from block types to primary stroke types
+        self.block_stroke_map = {
+            'page': StrokeType.HORIZONTAL,
+            'condition': StrokeType.VERTICAL,
+            'data': StrokeType.DIAGONAL_LEFT,
+            'action': StrokeType.DIAGONAL_RIGHT,
+            'loop': StrokeType.HOOK,
+            'terminal': StrokeType.DOT
+        }
+        
+        # Standard positions for different complexity levels
+        self.position_templates = {
+            'simple': [
+                (0, 0), (0, 1), (1, 0), (0, -1), (-1, 0)
+            ],
+            'medium': [
+                (0, 0), (0, 1), (1, 1), (1, 0), (1, -1),
+                (0, -1), (-1, -1), (-1, 0), (-1, 1)
+            ],
+            'complex': [
+                (0, 0), (0, 1), (1, 1), (1, 0), (1, -1),
+                (0, -1), (-1, -1), (-1, 0), (-1, 1),
+                (0, 2), (2, 0), (0, -2), (-2, 0)
+            ]
+        }
+    
+    def generate_strokes(self, blocks: t.List[LogicBlock], analysis: dict) -> t.Tuple[t.List[Stroke], t.List[ContextMeter]]:
+        """Generate strokes and context meters based on blocks and analysis."""
+        strokes = []
+        context_meters = []
+        
+        # Use position template based on complexity
+        positions = self.position_templates[analysis['complexity']]
+        
+        # First pass: generate primary strokes for each block
+        for i, block in enumerate(blocks):
+            position = positions[i % len(positions)]
+            
+            # Determine stroke type based on block type
+            stroke_type = self.block_stroke_map.get(
+                block.type, StrokeType.HORIZONTAL)
+            
+            stroke = Stroke(
+                type=stroke_type,
+                position=position,
+                length=1.0 + (0.2 * len(block.connections)),
+                width=1.0
+            )
+            strokes.append(stroke)
+            
+            # Add context meters for conditions
+            if block.type == 'condition':
+                meter = ContextMeter(
+                    type=ContextMeterType.CONDITION,
+                    target_stroke=i
+                )
+                context_meters.append(meter)
+        
+        # Second pass: generate context meters for connections
+        for i, block in enumerate(blocks):
+            for j, connection in enumerate(block.connections):
+                # Find index of target block
+                target_idx = next((k for k, b in enumerate(blocks) if b.id == connection), None)
+                if target_idx is not None:
+                    meter = ContextMeter(
+                        type=ContextMeterType.THEN,
+                        target_stroke=target_idx
+                    )
+                    context_meters.append(meter)
+        
+        # If we have loops, add a special loop context meter
+        if analysis['has_loops']:
+            loop_meter = ContextMeter(
+                type=ContextMeterType.PARALLEL,
+                target_stroke=0  # Apply to the first stroke
+            )
+            context_meters.append(loop_meter)
+        
+        return strokes, context_meters
+
+
+class GlyphCompiler:
+    """Compiles strokes and context meters into a complete glyph."""
+    
+    def __init__(self):
+        # Character mapping for different functions
+        self.char_mapping = {
+            'website': '网',
+            'chatbot': '问',
+            'data': '传',
+            'ai': '智',
+            'control': '控',
+            'integrated': '耀',
+            'auth': '权',
+            'user': '人',
+            'system': '系',
+            'medical': '医',
+            'finance': '财',
+            'space': '航'
+        }
+    
+    def compile(self, strokes: t.List[Stroke], context_meters: t.List[ContextMeter], 
+                metadata: dict) -> Glyph:
+        """Compile strokes and context meters into a complete glyph."""
+        # Generate a unique ID for the glyph
+        glyph_id = f"glyph_{hashlib.md5(json.dumps(metadata).encode()).hexdigest()[:8]}"
+        
+        # Determine the visual character
+        visual_char = None
+        if 'function' in metadata and metadata['function'] in self.char_mapping:
+            visual_char = self.char_mapping[metadata['function']]
+        else:
+            # Determine the best character based on stroke patterns
+            horizontal_count = sum(1 for s in strokes if s.type == StrokeType.HORIZONTAL)
+            vertical_count = sum(1 for s in strokes if s.type == StrokeType.VERTICAL)
+            diagonal_count = sum(1 for s in strokes if s.type in 
+                                [StrokeType.DIAGONAL_LEFT, StrokeType.DIAGONAL_RIGHT])
+            hook_count = sum(1 for s in strokes if s.type == StrokeType.HOOK)
+            
+            if hook_count > 0:
+                visual_char = self.char_mapping['integrated']
+            elif vertical_count > horizontal_count:
+                visual_char = self.char_mapping['system']
+            elif diagonal_count > (horizontal_count + vertical_count):
+                visual_char = self.char_mapping['data']
+            else:
+                visual_char = self.char_mapping['website']
+        
+        # Create the glyph
+        glyph = Glyph(
+            id=glyph_id,
+            strokes=strokes,
+            context_meters=context_meters,
+            metadata=metadata,
+            visual_char=visual_char
+        )
+        
+        return glyph
+
+
+# =============================================================================
+# Glyph Scanning and Stroke Analysis
+# =============================================================================
+
+class GlyphScanner:
+    """Scans glyphs to extract their stroke patterns."""
+    
+    def __init__(self):
+        # Define the mapping from characters to stroke patterns
+        self.char_stroke_patterns = {
+            '网': [
+                StrokeType.HORIZONTAL,
+                StrokeType.VERTICAL,
+                StrokeType.DIAGONAL_LEFT,
+                StrokeType.DIAGONAL_RIGHT
+            ],
+            '问': [
+                StrokeType.HORIZONTAL,
+                StrokeType.VERTICAL,
+                StrokeType.DOT,
+                StrokeType.HOOK
+            ],
+            '传': [
+                StrokeType.HORIZONTAL,
+                StrokeType.VERTICAL,
+                StrokeType.DIAGONAL_LEFT,
+                StrokeType.DIAGONAL_RIGHT,
+                StrokeType.DOT
+            ],
+            '智': [
+                StrokeType.HORIZONTAL,
+                StrokeType.VERTICAL,
+                StrokeType.DIAGONAL_LEFT,
+                StrokeType.DIAGONAL_RIGHT,
+                StrokeType.HOOK,
+                StrokeType.DOT
+            ],
+            '控': [
+                StrokeType.HORIZONTAL,
+                StrokeType.VERTICAL,
+                StrokeType.DIAGONAL_LEFT,
+                StrokeType.DIAGONAL_RIGHT,
+                StrokeType.HOOK
+            ],
+            '耀': [
+                StrokeType.HORIZONTAL,
+                StrokeType.VERTICAL,
+                StrokeType.DIAGONAL_LEFT,
+                StrokeType.DIAGONAL_RIGHT,
+                StrokeType.HOOK,
+                StrokeType.DOT,
+                StrokeType.HORIZONTAL,  # Additional strokes for complex character
+                StrokeType.VERTICAL
+            ]
+        }
+        
+        # Add more characters to the mapping as needed
+        self.function_mapping = {
+            '网': 'website',
+            '问': 'chatbot',
+            '传': 'data',
+            '智': 'ai',
+            '控': 'control',
+            '耀': 'integrated'
+        }
+    
+    def scan(self, glyph_char: str) -> t.Tuple[t.List[Stroke], dict]:
+        """Scan a glyph character to extract its strokes and function."""
+        if glyph_char not in self.char_stroke_patterns:
+            raise ValueError(f"Unknown glyph character: {glyph_char}")
+        
+        stroke_types = self.char_stroke_patterns[glyph_char]
+        
+        # Create strokes with default positions
+        strokes = []
+        for i, stroke_type in enumerate(stroke_types):
+            # Create a spiral pattern for positions
+            angle = i * (2 * 3.14159 / len(stroke_types))
+            x = 0.5 * (i % 3) * (1 if i % 2 == 0 else -1)
+            y = 0.5 * (i % 3) * (1 if i % 4 < 2 else -1)
+            
+            stroke = Stroke(
+                type=stroke_type,
+                position=(x, y),
+                length=1.0,
+                width=1.0
+            )
+            strokes.append(stroke)
+        
+        # Extract metadata
+        metadata = {
+            'function': self.function_mapping.get(glyph_char, 'unknown'),
+            'complexity': len(stroke_types)
+        }
+        
+        return strokes, metadata
+
+
+class StrokeAnalyzer:
+    """Analyzes stroke patterns to extract meaning."""
+    
+    def __init__(self):
+        # Mapping from stroke patterns to logical structures
+        self.pattern_logic_map = {
+            # Simple patterns
+            (StrokeType.HORIZONTAL,): {'type': 'linear_flow', 'steps': 1},
+            (StrokeType.VERTICAL,): {'type': 'condition', 'branches': 1},
+            (StrokeType.HOOK,): {'type': 'loop', 'iterations': 'variable'},
+            
+            # Common combinations
+            (StrokeType.HORIZONTAL, StrokeType.VERTICAL): {
+                'type': 'conditional_flow', 
+                'steps': 1, 
+                'conditions': 1
+            },
+            (StrokeType.HORIZONTAL, StrokeType.HOOK): {
+                'type': 'iterative_sequence', 
+                'steps': 1, 
+                'loops': 1
+            },
+            (StrokeType.VERTICAL, StrokeType.HOOK): {
+                'type': 'conditional_loop', 
+                'conditions': 1, 
+                'loops': 1
+            },
+            
+            # Complex combinations
+            (StrokeType.HORIZONTAL, StrokeType.VERTICAL, StrokeType.HOOK): {
+                'type': 'conditional_iterative_flow',
+                'steps': 1,
+                'conditions': 1,
+                'loops': 1
+            }
+        }
+    
+    def analyze(self, strokes: t.List[Stroke], context_meters: t.List[ContextMeter]) -> dict:
+        """Analyze strokes and context meters to determine logical structure."""
+        # Extract stroke types and create a tuple for pattern matching
+        stroke_types = tuple(stroke.type for stroke in strokes)
+        
+        # Try to match against known patterns
+        logic_structure = None
+        for pattern, structure in self.pattern_logic_map.items():
+            # Check if the stroke types contain this pattern
+            if all(t in stroke_types for t in pattern):
+                logic_structure = structure.copy()
+                break
+        
+        # If no match found, use a default structure
+        if logic_structure is None:
+            logic_structure = {
+                'type': 'custom_flow',
+                'steps': len(strokes),
+                'complexity': 'high'
+            }
+        
+        # Enhance with context meter information
+        condition_count = sum(1 for m in context_meters if m.type == ContextMeterType.CONDITION)
+        parallel_count = sum(1 for m in context_meters if m.type == ContextMeterType.PARALLEL)
+        
+        if condition_count > 0:
+            logic_structure['conditions'] = condition_count
+        
+        if parallel_count > 0:
+            logic_structure['parallel_execution'] = True
+        
+        return logic_structure
+
+
+# =============================================================================
+# Logic Reconstruction and Execution
+# =============================================================================
+
+class LogicReconstructor:
+    """Reconstructs logical structures from stroke patterns."""
+    
+    def __init__(self):
+        # Define basic block templates for different logical structures
+        self.block_templates = {
+            'linear_flow': [
+                {'type': 'page', 'id': 'start'},
+                {'type': 'page', 'id': 'end'}
+            ],
+            'condition': [
+                {'type': 'condition', 'id': 'check'}
+            ],
+            'loop': [
+                {'type': 'loop', 'id': 'iterate'}
+            ],
+            'conditional_flow': [
+                {'type': 'page', 'id': 'start'},
+                {'type': 'condition', 'id': 'check'},
+                {'type': 'page', 'id': 'true_branch'},
+                {'type': 'page', 'id': 'false_branch'}
+            ],
+            'iterative_sequence': [
+                {'type': 'page', 'id': 'start'},
+                {'type': 'loop', 'id': 'iterate'},
+                {'type': 'page', 'id': 'end'}
+            ]
+        }
+    
+    def reconstruct(self, logic_structure: dict) -> t.List[LogicBlock]:
+        """Reconstruct logical blocks from a structure analysis."""
+        flow_type = logic_structure.get('type', 'linear_flow')
+        
+        # Get template blocks for this flow type
+        template = self.block_templates.get(flow_type, self.block_templates['linear_flow'])
+        
+        # Create blocks from template
+        blocks = []
+        for i, template_block in enumerate(template):
+            block = LogicBlock(
+                id=f"{template_block['id']}_{i}",
+                type=template_block['type'],
+                parameters={},
+                connections=[]
+            )
+            blocks.append(block)
+        
+        # Connect blocks based on flow type
+        if flow_type == 'linear_flow':
+            for i in range(len(blocks) - 1):
+                blocks[i].connections.append(blocks[i + 1].id)
+        
+        elif flow_type == 'conditional_flow':
+            # Connect start to condition
+            blocks[0].connections.append(blocks[1].id)
+            # Connect condition to true/false branches
+            blocks[1].connections.append(blocks[2].id)
+            blocks[1].connections.append(blocks[3].id)
+        
+        elif flow_type == 'iterative_sequence':
+            # Connect start to loop
+            blocks[0].connections.append(blocks[1].id)
+            # Connect loop to itself and to end
+            blocks[1].connections.append(blocks[1].id)
+            blocks[1].connections.append(blocks[2].id)
+        
+        # Add any additional parameters based on logic structure
+        if 'conditions' in logic_structure:
+            for block in blocks:
+                if block.type == 'condition':
+                    block.parameters['conditions'] = logic_structure['conditions']
+        
+        if 'loops' in logic_structure:
+            for block in blocks:
+                if block.type == 'loop':
+                    block.parameters['iterations'] = logic_structure.get('iterations', 1)
+        
+        return blocks
+
+
+class ExecutionEngine:
+    """Executes reconstructed logical structures."""
+    
+    def __init__(self):
+        self.execution_context = {}
+    
+    def execute(self, blocks: t.List[LogicBlock]) -> t.List[str]:
+        """Execute a sequence of logical blocks and return execution log."""
+        execution_log = []
+        visited = set()
+        
+        # Find the start block (usually the first one)
+        current_block = blocks[0]
+        
+        # Execute blocks until we've visited all or reached a terminal block
+        while current_block and current_block.id not in visited:
+            # Log the execution of this block
+            execution_log.append(f"Executing block: {current_block.id} ({current_block.type})")
+            
+            # Perform block-specific execution
+            if current_block.type == 'page':
+                execution_log.append(f"Rendering page: {current_block.id}")
+            
+            elif current_block.type == 'condition':
+                condition_result = self._evaluate_condition(current_block)
+                execution_log.append(f"Condition check: {condition_result}")
+            
+            elif current_block.type == 'loop':
+                iterations = current_block.parameters.get('iterations', 1)
+                if iterations == 'variable':
+                    iterations = 3  # Default to 3 iterations for variable loops
+                
+                for i in range(iterations):
+                    execution_log.append(f"Loop iteration: {i+1}/{iterations}")
+            
+            # Mark this block as visited
+            visited.add(current_block.id)
+            
+            # Determine the next block to execute
+            next_block_id = None
+            if current_block.connections:
+                next_block_id = current_block.connections[0]
+            
+            # Find the next block
+            current_block = next((b for b in blocks if b.id == next_block_id), None)
+        
+        return execution_log
+    
+    def _evaluate_condition(self, block: LogicBlock) -> bool:
+        """Evaluate a condition block and return the result."""
+        # For demonstration, randomly return True or False
+        # In a real implementation, this would evaluate the actual condition
+        import random
+        return random.choice([True, False])
+
+
+# =============================================================================
+# Glyph Combination and Integration
+# =============================================================================
+
+class GlyphCombiner:
+    """Combines multiple glyphs into integrated systems."""
+    
+    def __init__(self):
+        # Character to use for combined glyphs
+        self.combined_char = '耀'
+        
+        # Maximum number of strokes in a combined glyph
+        self.max_strokes = 20
+    
+    def combine(self, glyphs: t.List[Glyph]) -> Glyph:
+        """Combine multiple glyphs into a single integrated glyph."""
+        # Collect all strokes and context meters
+        combined_strokes = []
+        combined_context_meters = []
+        combined_metadata = {'functions': [], 'integration_level': 'multi-system'}
+        
+        # Keep track of stroke indices for proper context meter references
+        stroke_index_map = {}
+        current_index = 0
+        
+        for i, glyph in enumerate(glyphs):
+            # Record the original stroke indices
+            stroke_indices = {}
+            for j, stroke in enumerate(glyph.strokes):
+                stroke_indices[j] = current_index + j
+            
+            stroke_index_map[i] = stroke_indices
+            
+            # Add strokes with adjusted positions
+            for stroke in glyph.strokes:
+                # Adjust position to avoid overlap
+                adjusted_pos = (
+                    stroke.position[0] + (i - len(glyphs)/2) * 2.0,
+                    stroke.position[1]
+                )
+                
+                new_stroke = Stroke(
+                    type=stroke.type,
+                    position=adjusted_pos,
+                    length=stroke.length,
+                    width=stroke.width
+                )
+                combined_strokes.append(new_stroke)
+            
+            # Add context meters with adjusted target indices
+            for meter in glyph.context_meters:
+                if meter.target_stroke is not None:
+                    new_target = stroke_indices.get(meter.target_stroke, None)
+                    new_meter = ContextMeter(
+                        type=meter.type,
+                        target_stroke=new_target
+                    )
+                    combined_context_meters.append(new_meter)
+            
+            # Add metadata
+            if 'function' in glyph.metadata:
+                combined_metadata['functions'].append(glyph.metadata['function'])
+            
+            # Update the current index
+            current_index += len(glyph.strokes)
+        
+        # Add integration context meters to connect the glyphs
+        for i in range(len(glyphs) - 1):
+            # Connect the last stroke of each glyph to the first of the next
+            last_stroke_idx = stroke_index_map[i].get(len(glyphs[i].strokes) - 1, None)
+            first_stroke_next_idx = stroke_index_map[i+1].get(0, None)
+            
+            if last_stroke_idx is not None and first_stroke_next_idx is not None:
+                integration_meter = ContextMeter(
+                    type=ContextMeterType.THEN,
+                    target_stroke=first_stroke_next_idx
+                )
+                combined_context_meters.append(integration_meter)
+        
+        # Cap the number of strokes to avoid overflow
+        if len(combined_strokes) > self.max_strokes:
+            combined_strokes = combined_strokes[:self.max_strokes]
+        
+        # Create the combined glyph
+        combined_glyph = Glyph(
+            id=f"combined_{'_'.join(g.id for g in glyphs)}",
+            strokes=combined_strokes,
+            context_meters=combined_context_meters,
+            metadata=combined_metadata,
+            visual_char=self.combined_char
+        )
+        
+        return combined_glyph
+
+
+# =============================================================================
+# API and Utility Functions
+# =============================================================================
+
+class UASCM2M:
+    """Main API for the UASC-M2M system."""
+    
+    def __init__(self):
+        self.node_parser = NodeParser()
+        self.logic_analyzer = LogicAnalyzer()
+        self.stroke_generator = StrokeGenerator()
+        self.glyph_compiler = GlyphCompiler()
+        self.glyph_scanner = GlyphScanner()
+        self.stroke_analyzer = StrokeAnalyzer()
+        self.logic_reconstructor = LogicReconstructor()
+        self.execution_engine = ExecutionEngine()
+        self.glyph_combiner = GlyphCombiner()
+        
+        # Repository for stored glyphs
+        self.glyph_repository = {}
+    
+    def encode_logic_flow(self, logic_flow: dict) -> Glyph:
+        """Encode a logical flow into a glyph."""
+        # Parse the logic flow into blocks
+        blocks = self.node_parser.parse_logic_flow(logic_flow)
+        
+        # Analyze the blocks
+        analysis = self.logic_analyzer.analyze(blocks)
+        
+        # Generate strokes and context meters
+        strokes, context_meters = self.stroke_generator.generate_strokes(blocks, analysis)
+        
+        # Create metadata
+        metadata = {
+            'function': logic_flow.get('function', 'website'),
+            'blocks': len(blocks),
+            'complexity': analysis['complexity'],
+            'has_conditions': analysis['has_conditions'],
+            'has_loops': analysis['has_loops']
+        }
+        
+        # Compile the glyph
+        glyph = self.glyph_compiler.compile(strokes, context_meters, metadata)
+        
+        # Store the glyph in the repository
+        self.glyph_repository[glyph.id] = glyph
+        
+        return glyph
+    
+    def decode_glyph(self, glyph_char: str) -> t.List[str]:
+        """Decode a glyph character into execution steps."""
+        # Scan the glyph to extract strokes and metadata
+        strokes, metadata = self.glyph_scanner.scan(glyph_char)
+        
+        # Generate default context meters for demonstration
+        context_meters = [
+            ContextMeter(type=ContextMeterType.THEN, target_stroke=1),
+            ContextMeter(type=ContextMeterType.CONDITION, target_stroke=2)
+        ]
+        
+        # Analyze the strokes to determine logical structure
+        logic_structure = self.stroke_analyzer.analyze(strokes, context_meters)
+        
+        # Reconstruct logical blocks
+        blocks = self.logic_reconstructor.reconstruct(logic_structure)
+        
+        # Execute the blocks
+        execution_log = self.execution_engine.execute(blocks)
+        
+        return execution_log
+    
+    def combine_glyphs(self, glyph_ids: t.List[str]) -> Glyph:
+        """Combine multiple glyphs into an integrated system."""
+        glyphs = [self.glyph_repository.get(gid) for gid in glyph_ids if gid in self.glyph_repository]
+        
+        if not glyphs:
+            raise ValueError("No valid glyphs found for combination")
+        
+        combined_glyph = self.glyph_combiner.combine(glyphs)
+        
+        # Store the combined glyph
+        self.glyph_repository[combined_glyph.id] = combined_glyph
+        
+        return combined_glyph
+
+
+# =============================================================================
+# Example Usage
+# =============================================================================
+
+def example_website_flow():
+    """Create an example website flow with login and dashboard."""
+    return {
+        'function': 'website',
+        'pages': [
+            {'id': 'home', 'type': 'home', 'data': {'title': 'Welcome'}},
+            {'id': 'login', 'type': 'login', 'data': {'title': 'Login'}},
+            {'id': 'dashboard', 'type': 'dashboard', 'data': {'title': 'Dashboard'}}
+        ],
+        'transitions': [
+            {'from': 'home', 'to': 'login', 'trigger': 'click'},
+            {'from': 'login', 'to': 'dashboard', 'trigger': 'login'},
+            {'from': 'dashboard', 'to': 'home', 'trigger': 'logout'}
+        ],
+        'conditions': [
+            {'check': 'credentials', 'success': 'dashboard', 'failure': 'login'}
+        ]
+    }
+
+
+def example_chatbot_flow():
+    """Create an example chatbot flow."""
+    return {
+        'function': 'chatbot',
+        'states': [
+            {'id': 'idle', 'type': 'state'},
+            {'id': 'listening', 'type': 'state'},
+            {'id': 'processing', 'type': 'state'},
+            {'id': 'responding', 'type': 'state'}
+        ],
+        'transitions': [
+            {'from': 'idle', 'to': 'listening', 'trigger': 'user_input'},
+            {'from': 'listening', 'to': 'processing', 'trigger': 'input_received'},
+            {'from': 'processing', 'to': 'responding', 'trigger': 'analysis_complete'},
+            {'from': 'responding', 'to': 'idle', 'trigger': 'response_sent'}
+        ],
+        'conditions': [
+            {'check': 'input_valid', 'success': 'processing', 'failure': 'idle'}
+        ]
+    }
+
+
+if __name__ == "__main__":
+    # Create the UASC-M2M system
+    uasc = UASCM2M()
+    
+    # Encode website flow
+    print("Encoding website flow...")
+    website_glyph = uasc.encode_logic_flow(example_website_flow())
+    print(f"Generated website glyph: {website_glyph.encode()}")
+    
+    # Encode chatbot flow
+    print("\nEncoding chatbot flow...")
+    chatbot_glyph = uasc.encode_logic_flow(example_chatbot_flow())
+    print(f"Generated chatbot glyph: {chatbot_glyph.encode()}")
+    
+    # Combine glyphs
+    print("\nCombining glyphs...")
+    combined_glyph = uasc.combine_glyphs([website_glyph.id, chatbot_glyph.id])
+    print(f"Generated combined glyph: {combined_glyph.encode()}")
+    
+    # Decode and execute a glyph
+    print("\nDecoding and executing website glyph...")
+    execution_log = uasc.decode_glyph('网')
+    for step in execution_log:
+        print(f"  {step}")

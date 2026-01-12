@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 900">
+  <!-- Background -->
+  <rect width="800" height="900" fill="#f8f9fa" />
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">UASC-M2M: Complete Compression Workflow</text>
+  
+  <!-- Step 1: Human Text -->
+  <rect x="50" y="70" width="700" height="80" fill="#e6f7ff" rx="5" ry="5" stroke="#1890ff" stroke-width="2" />
+  <text x="180" y="100" font-family="Arial" font-size="16" font-weight="bold" fill="#1890ff">1. Plain Text Instruction</text>
+  <text x="180" y="130" font-family="Arial" font-size="14" fill="#333">Check battery, fly to coordinate X, if blocked reroute, if mission completes return to base</text>
+  
+  <!-- Step 2: Phonemes/Machine Instructions -->
+  <rect x="50" y="170" width="700" height="80" fill="#f6ffed" rx="5" ry="5" stroke="#52c41a" stroke-width="2" />
+  <text x="180" y="200" font-family="Arial" font-size="16" font-weight="bold" fill="#52c41a">2. Machine Instructions (Pseudo-Code)</text>
+  <text x="180" y="225" font-family="Arial" font-size="14" fill="#333">IF (BATTERY > 50%) {</text>
+  <text x="180" y="245" font-family="Arial" font-size="14" fill="#333">  TAKE_OFF(); GO_TO_COORDINATE(X); IF BLOCKED { REROUTE(); } IF COMPLETE { RETURN(); }</text>
+  
+  <!-- Step 3: Binary -->
+  <rect x="50" y="270" width="700" height="80" fill="#fff2e8" rx="5" ry="5" stroke="#fa541c" stroke-width="2" />
+  <text x="180" y="300" font-family="Arial" font-size="16" font-weight="bold" fill="#fa541c">3. Binary Representation</text>
+  <text x="180" y="330" font-family="Arial" font-size="14" fill="#333">1011 1100 1110 0111 1011 0101 1001 1010 0110 0011 1111...</text>
+  
+  <!-- Step 4: Novenary -->
+  <rect x="50" y="370" width="700" height="80" fill="#f9f0ff" rx="5" ry="5" stroke="#722ed1" stroke-width="2" />
+  <text x="180" y="400" font-family="Arial" font-size="16" font-weight="bold" fill="#722ed1">4. Novenary Encoding (Base 9)</text>
+  <text x="180" y="430" font-family="Arial" font-size="14" fill="#333">1 → 2 → 3 → 4 → 5 || 6 (BAT_OK → TAKEOFF → FLY_X → IF_BLKD_REROUTE → IF_DONE_RTB || FAIL)</text>
+  
+  <!-- Step 5: Context Meters -->
+  <rect x="50" y="470" width="700" height="80" fill="#e6fffb" rx="5" ry="5" stroke="#13c2c2" stroke-width="2" />
+  <text x="180" y="500" font-family="Arial" font-size="16" font-weight="bold" fill="#13c2c2">5. Context Meters & Flow</text>
+  <text x="180" y="530" font-family="Arial" font-size="14" fill="#333">1|?2 → 3|?4|?5 || 6  (Condition meters show relationships and flow control)</text>
+  
+  <!-- Step 6: Stroke-Based Logic -->
+  <rect x="50" y="570" width="700" height="120" fill="#fff7e6" rx="5" ry="5" stroke="#fa8c16" stroke-width="2" />
+  <text x="180" y="600" font-family="Arial" font-size="16" font-weight="bold" fill="#fa8c16">6. Stroke-Based Logic Mapping</text>
+  <text x="100" y="630" font-family="Arial" font-size="14" fill="#333">一 Horizontal: Action (Take off, Fly)</text>
+  <text x="400" y="630" font-family="Arial" font-size="14" fill="#333">丨 Vertical: Condition (Battery check)</text>
+  <text x="100" y="660" font-family="Arial" font-size="14" fill="#333">丿 Diagonal Left: Fallback (Reroute)</text>
+  <text x="400" y="660" font-family="Arial" font-size="14" fill="#333">乀 Diagonal Right: Next step</text>
+  
+  <!-- Step 7: Final Symbol -->
+  <rect x="50" y="710" width="700" height="160" fill="#fcffe6" rx="5" ry="5" stroke="#a0d911" stroke-width="2" />
+  <text x="400" y="740" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#a0d911">7. Single AI-Interpretable Symbol</text>
+  
+  <!-- Example Symbol -->
+  <text x="400" y="820" font-family="Arial" font-size="100" text-anchor="middle" fill="#333">扇</text>
+  <text x="400" y="850" font-family="Arial" font-size="14" text-anchor="middle" fill="#555">Complete flight instructions encoded in one glyph</text>
+</svg>

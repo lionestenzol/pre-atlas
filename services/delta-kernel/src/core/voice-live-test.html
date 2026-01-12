@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Delta Voice - Codec2/LPC Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #1a1a1a;
+      color: #00ff00;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .panel {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 15px 0;
+    }
+    h1, h2 { color: #0f0; margin-top: 0; }
+    button {
+      background: #0f0;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      font-family: monospace;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #0c0; }
+    button:disabled { background: #333; color: #666; }
+    .waveform {
+      height: 100px;
+      background: #000;
+      border: 1px solid #333;
+      position: relative;
+      overflow: hidden;
+    }
+    .waveform canvas {
+      width: 100%;
+      height: 100%;
+    }
+    #stats {
+      white-space: pre;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .speaking { color: #ff0; font-weight: bold; }
+    .silent { color: #666; }
+    .receiver-panel { border-color: #0ff; }
+    .receiver-panel h2 { color: #0ff; }
+    .frame-log {
+      height: 120px;
+      overflow-y: auto;
+      font-size: 10px;
+      background: #000;
+      padding: 10px;
+      border: 1px solid #333;
+    }
+    .frame-entry { margin: 1px 0; color: #0f0; }
+    .mode-selector {
+      margin: 10px 0;
+    }
+    .mode-selector label {
+      margin-right: 15px;
+      cursor: pointer;
+    }
+    .bandwidth-bar {
+      height: 20px;
+      background: #333;
+      margin: 10px 0;
+      position: relative;
+    }
+    .bandwidth-fill {
+      height: 100%;
+      background: #0f0;
+      transition: width 0.2s;
+    }
+    .bandwidth-limit {
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      width: 2px;
+      background: #f00;
+    }
+    .bandwidth-label {
+      position: absolute;
+      right: 5px;
+      top: 2px;
+      font-size: 10px;
+      color: #f00;
+    }
+  </style>
+</head>
+<body>
+  <h1>Delta Voice Streaming - LPC/Codec2 Test</h1>
+  <p>Real voice compression. Intelligible speech over LoRa (~100-400 bytes/sec).</p>
+
+  <div>
+    <button id="startBtn">Start Microphone</button>
+    <button id="stopBtn" disabled>Stop</button>
+    <button id="playbackBtn" disabled>Play Receiver</button>
+  </div>
+
+  <div class="mode-selector">
+    <strong>Codec Mode:</strong>
+    <label><input type="radio" name="mode" value="3200"> 3200 bps (400 B/s)</label>
+    <label><input type="radio" name="mode" value="1300" checked> 1300 bps (163 B/s)</label>
+    <label><input type="radio" name="mode" value="700C"> 700C bps (88 B/s)</label>
+    <label><input type="radio" name="mode" value="lpc"> LPC-14 Improved (900 B/s)</label>
+  </div>
+
+  <div class="panel">
+    <h2>Sender (Your Voice)</h2>
+    <div class="waveform">
+      <canvas id="senderWaveform"></canvas>
+    </div>
+    <div id="speakingStatus" class="silent" style="margin-top: 10px;">Silent</div>
+
+    <h3 style="margin-top: 15px;">Bandwidth Usage</h3>
+    <div class="bandwidth-bar">
+      <div class="bandwidth-fill" id="bandwidthFill" style="width: 0%;"></div>
+      <div class="bandwidth-limit"></div>
+      <div class="bandwidth-label">LoRa max: 300 B/s</div>
+    </div>
+    <div id="bandwidthText">0 bytes/sec</div>
+  </div>
+
+  <div class="panel receiver-panel">
+    <h2>Receiver (Decoded from Frames)</h2>
+    <div class="waveform">
+      <canvas id="receiverWaveform"></canvas>
+    </div>
+    <div id="receiverStatus" class="silent">Waiting...</div>
+  </div>
+
+  <div class="panel">
+    <h2>Statistics</h2>
+    <div id="stats">Waiting for microphone...</div>
+  </div>
+
+  <div class="panel">
+    <h2>Frame Log (last 20)</h2>
+    <div id="frameLog" class="frame-log"></div>
+  </div>
+
+  <script>
+    // === CONSTANTS ===
+    const SAMPLE_RATE = 8000;
+    const FRAME_SIZE = 160; // 20ms at 8kHz
+    const SILENCE_THRESHOLD = 500;
+    const LORA_MAX_BYTES_SEC = 300;
+
+    // === IMPROVED LPC CODEC (Pure JS) ===
+    const LPC_ORDER = 14;
+    const PRE_EMPHASIS = 0.95;
+    const FRAME_BYTES = 18;
+
+    class SimpleLPCCodec {
+      constructor() {
+        this.prevSamples = new Float32Array(LPC_ORDER);
+        this.prevLPC = new Float32Array(LPC_ORDER);
+        this.prevEnergy = 0;
+        this.prevPitch = 0;
+        this.deEmphasisState = 0;
+      }
+
+      encode(samples) {
+        // Pre-emphasis filter
+        const emphasized = new Float32Array(samples.length);
+        emphasized[0] = samples[0];
+        for (let i = 1; i < samples.length; i++) {
+          emphasized[i] = samples[i] - PRE_EMPHASIS * samples[i - 1];
+        }
+
+        const energy = this.computeEnergy(emphasized);
+        const { pitch, voicedConfidence } = this.estimatePitchRobust(emphasized);
+        const lpcCoeffs = this.computeLPC(emphasized, LPC_ORDER);
+        const gain = this.computeGain(emphasized, lpcCoeffs);
+
+        const output = new Uint8Array(FRAME_BYTES);
+        output[0] = this.muLawEncode(Math.sqrt(energy) / 32768);
+        output[1] = pitch > 0 ? Math.min(255, Math.max(0, Math.floor(pitch))) : 0;
+        output[2] = Math.floor(voicedConfidence * 255);
+        output[3] = this.muLawEncode(gain / 10000);
+
+        for (let i = 0; i < LPC_ORDER; i++) {
+          const clamped = Math.max(-1, Math.min(1, lpcCoeffs[i]));
+          output[4 + i] = Math.floor((clamped + 1) * 127.5);
+        }
+
+        return output;
+      }
+
+      decode(encoded) {
+        const samples = new Int16Array(FRAME_SIZE);
+        if (encoded.length < FRAME_BYTES) return samples;
+
+        const energy = this.muLawDecode(encoded[0]) * 32768;
+        const pitch = encoded[1];
+        const voicedConf = encoded[2] / 255;
+        const gain = this.muLawDecode(encoded[3]) * 10000;
+
+        const lpcCoeffs = new Float32Array(LPC_ORDER);
+        for (let i = 0; i < LPC_ORDER; i++) {
+          lpcCoeffs[i] = (encoded[4 + i] / 127.5) - 1;
+        }
+
+        const interpLPC = new Float32Array(LPC_ORDER);
+        const interpPitch = pitch > 0 && this.prevPitch > 0 ? (this.prevPitch + pitch) / 2 : pitch;
+
+        // Mixed excitation
+        const excitation = new Float32Array(FRAME_SIZE);
+        const voiceAmt = voicedConf > 0.5 ? voicedConf : 0;
+        const noiseAmt = 1 - voiceAmt;
+
+        let pulsePhase = 0;
+        for (let i = 0; i < FRAME_SIZE; i++) {
+          const t = i / FRAME_SIZE;
+          for (let j = 0; j < LPC_ORDER; j++) {
+            interpLPC[j] = this.prevLPC[j] * (1 - t) + lpcCoeffs[j] * t;
+          }
+
+          let voiced = 0;
+          if (interpPitch > 0) {
+            pulsePhase += 1;
+            if (pulsePhase >= interpPitch) {
+              voiced = 1;
+              pulsePhase = 0;
+            }
+          }
+
+          const noise = Math.random() * 2 - 1;
+          excitation[i] = voiced * voiceAmt * 2 + noise * noiseAmt * 0.3;
+        }
+
+        // LPC synthesis with interpolation
+        const output = new Float32Array(FRAME_SIZE);
+        for (let i = 0; i < FRAME_SIZE; i++) {
+          const t = i / FRAME_SIZE;
+          for (let j = 0; j < LPC_ORDER; j++) {
+            interpLPC[j] = this.prevLPC[j] * (1 - t) + lpcCoeffs[j] * t;
+          }
+
+          output[i] = excitation[i] * (gain || 1);
+          for (let j = 0; j < LPC_ORDER; j++) {
+            const prevIdx = i - j - 1;
+            if (prevIdx >= 0) {
+              output[i] += interpLPC[j] * output[prevIdx];
+            } else {
+              output[i] += interpLPC[j] * this.prevSamples[LPC_ORDER + prevIdx];
+            }
+          }
+        }
+
+        // Store state
+        for (let i = 0; i < LPC_ORDER; i++) {
+          this.prevSamples[i] = output[FRAME_SIZE - LPC_ORDER + i];
+          this.prevLPC[i] = lpcCoeffs[i];
+        }
+        this.prevEnergy = energy;
+        this.prevPitch = pitch;
+
+        // De-emphasis filter
+        for (let i = 0; i < FRAME_SIZE; i++) {
+          output[i] = output[i] + PRE_EMPHASIS * this.deEmphasisState;
+          this.deEmphasisState = output[i];
+        }
+
+        // Normalize
+        const maxAbs = Math.max(...output.map(Math.abs)) || 1;
+        const scale = Math.min(1, (energy * 0.00001) / maxAbs);
+        for (let i = 0; i < FRAME_SIZE; i++) {
+          samples[i] = Math.max(-32768, Math.min(32767, Math.floor(output[i] * scale * 32767)));
+        }
+
+        return samples;
+      }
+
+      muLawEncode(x) {
+        const mu = 255;
+        const sign = x < 0 ? -1 : 1;
+        const absX = Math.min(1, Math.abs(x));
+        const compressed = sign * Math.log1p(mu * absX) / Math.log1p(mu);
+        return Math.floor((compressed + 1) * 127.5);
+      }
+
+      muLawDecode(byte) {
+        const mu = 255;
+        const compressed = (byte / 127.5) - 1;
+        const sign = compressed < 0 ? -1 : 1;
+        return sign * (Math.pow(1 + mu, Math.abs(compressed)) - 1) / mu;
+      }
+
+      computeEnergy(samples) {
+        let sum = 0;
+        for (let i = 0; i < samples.length; i++) {
+          sum += samples[i] * samples[i];
+        }
+        return sum / samples.length;
+      }
+
+      estimatePitchRobust(samples) {
+        const minPeriod = 20;
+        const maxPeriod = 150;
+
+        const r0 = this.computeAutocorr(samples, 0);
+        if (r0 === 0) return { pitch: 0, voicedConfidence: 0 };
+
+        let maxCorr = -1;
+        let bestPeriod = 0;
+        const correlations = [];
+
+        for (let period = minPeriod; period < maxPeriod; period++) {
+          const corr = this.computeAutocorr(samples, period) / r0;
+          correlations[period] = corr;
+          if (corr > maxCorr) {
+            maxCorr = corr;
+            bestPeriod = period;
+          }
+        }
+
+        // Parabolic interpolation
+        if (bestPeriod > minPeriod && bestPeriod < maxPeriod - 1) {
+          const y0 = correlations[bestPeriod - 1] || 0;
+          const y1 = correlations[bestPeriod];
+          const y2 = correlations[bestPeriod + 1] || 0;
+          const d = (y0 - y2) / (2 * (y0 - 2 * y1 + y2));
+          if (Math.abs(d) < 1) bestPeriod += d;
+        }
+
+        const voicedConfidence = Math.max(0, Math.min(1, (maxCorr - 0.3) / 0.5));
+        return {
+          pitch: voicedConfidence > 0.3 ? bestPeriod : 0,
+          voicedConfidence
+        };
+      }
+
+      computeAutocorr(samples, lag) {
+        let sum = 0;
+        for (let i = 0; i < samples.length - lag; i++) {
+          sum += samples[i] * samples[i + lag];
+        }
+        return sum;
+      }
+
+      computeGain(samples, lpcCoeffs) {
+        let residualEnergy = 0;
+        for (let i = LPC_ORDER; i < samples.length; i++) {
+          let predicted = 0;
+          for (let j = 0; j < LPC_ORDER; j++) {
+            predicted += lpcCoeffs[j] * samples[i - j - 1];
+          }
+          const residual = samples[i] - predicted;
+          residualEnergy += residual * residual;
+        }
+        return Math.sqrt(residualEnergy / (samples.length - LPC_ORDER));
+      }
+
+      computeLPC(samples, order) {
+        const r = new Float32Array(order + 1);
+        for (let i = 0; i <= order; i++) {
+          for (let j = 0; j < samples.length - i; j++) {
+            r[i] += samples[j] * samples[j + i];
+          }
+        }
+
+        if (r[0] === 0) return new Float32Array(order);
+
+        const a = new Float32Array(order);
+        const aTemp = new Float32Array(order);
+        let e = r[0];
+
+        for (let i = 0; i < order; i++) {
+          let lambda = 0;
+          for (let j = 0; j < i; j++) {
+            lambda += a[j] * r[i - j];
+          }
+          lambda = (r[i + 1] - lambda) / e;
+          aTemp[i] = lambda;
+          for (let j = 0; j < i; j++) {
+            aTemp[j] = a[j] - lambda * a[i - 1 - j];
+          }
+          for (let j = 0; j <= i; j++) {
+            a[j] = aTemp[j];
+          }
+          e *= (1 - lambda * lambda);
+          if (e <= 0) break;
+        }
+
+        return a;
+      }
+    }
+
+    // === STATE ===
+    let audioCtx = null;
+    let stream = null;
+    let processor = null;
+    let running = false;
+    let encoder = new SimpleLPCCodec();
+    let decoder = new SimpleLPCCodec();
+
+    let frameCount = 0;
+    let bytesSent = 0;
+    let startTime = 0;
+    let frameLog = [];
+    let frameBuffer = [];
+    let isSpeaking = false;
+
+    // Playback
+    let playbackCtx = null;
+    let isPlaying = false;
+    let playbackQueue = [];
+
+    // DOM
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const playbackBtn = document.getElementById('playbackBtn');
+    const statsEl = document.getElementById('stats');
+    const speakingEl = document.getElementById('speakingStatus');
+    const receiverStatusEl = document.getElementById('receiverStatus');
+    const frameLogEl = document.getElementById('frameLog');
+    const bandwidthFill = document.getElementById('bandwidthFill');
+    const bandwidthText = document.getElementById('bandwidthText');
+    const senderCanvas = document.getElementById('senderWaveform');
+    const receiverCanvas = document.getElementById('receiverWaveform');
+    const senderCtx = senderCanvas.getContext('2d');
+    const receiverCtx = receiverCanvas.getContext('2d');
+
+    // === WAVEFORM DRAWING ===
+    function drawWaveform(ctx, samples, color = '#0f0') {
+      const canvas = ctx.canvas;
+      const width = canvas.width = canvas.offsetWidth;
+      const height = canvas.height = canvas.offsetHeight;
+
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+
+      const step = Math.ceil(samples.length / width);
+      const centerY = height / 2;
+
+      for (let i = 0; i < width; i++) {
+        const idx = i * step;
+        const sample = samples[idx] || 0;
+        const y = centerY - (sample / 32768) * centerY * 0.9;
+
+        if (i === 0) {
+          ctx.moveTo(i, y);
+        } else {
+          ctx.lineTo(i, y);
+        }
+      }
+
+      ctx.stroke();
+    }
+
+    // === PROCESSING ===
+    function processAudio(inputBuffer) {
+      if (!running) return;
+
+      // Convert to int16
+      const float32 = inputBuffer.getChannelData(0);
+      const samples = new Int16Array(float32.length);
+      for (let i = 0; i < float32.length; i++) {
+        samples[i] = Math.max(-32768, Math.min(32767, Math.floor(float32[i] * 32767)));
+      }
+
+      // Draw sender waveform
+      drawWaveform(senderCtx, samples, '#0f0');
+
+      // Check energy
+      let energy = 0;
+      for (let i = 0; i < samples.length; i++) {
+        energy += Math.abs(samples[i]);
+      }
+      energy /= samples.length;
+
+      const wasSpeaking = isSpeaking;
+      isSpeaking = energy > SILENCE_THRESHOLD;
+
+      if (isSpeaking) {
+        speakingEl.textContent = 'SPEAKING';
+        speakingEl.className = 'speaking';
+      } else {
+        speakingEl.textContent = 'Silent';
+        speakingEl.className = 'silent';
+      }
+
+      // Only encode if speaking
+      if (!isSpeaking && !wasSpeaking) {
+        return;
+      }
+
+      frameCount++;
+
+      // Encode
+      const encoded = encoder.encode(samples);
+      bytesSent += encoded.length;
+
+      // Log
+      const logEntry = `Frame ${frameCount}: ${encoded.length}B [E:${encoded[0]} P:${encoded[1]} V:${encoded[2]}]`;
+      frameLog.unshift(logEntry);
+      frameLog = frameLog.slice(0, 20);
+      frameLogEl.innerHTML = frameLog.map(e => `<div class="frame-entry">${e}</div>`).join('');
+
+      // Simulate transmission -> decode on receiver
+      const decoded = decoder.decode(encoded);
+      drawWaveform(receiverCtx, decoded, '#0ff');
+
+      if (isPlaying) {
+        playbackQueue.push(decoded);
+      }
+
+      receiverStatusEl.textContent = `Frame ${frameCount} received`;
+      receiverStatusEl.className = 'speaking';
+
+      // Update stats
+      updateStats();
+    }
+
+    function updateStats() {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const bytesPerSec = elapsed > 0 ? bytesSent / elapsed : 0;
+      const framesPerSec = elapsed > 0 ? frameCount / elapsed : 0;
+
+      // Bandwidth bar
+      const pct = Math.min(100, (bytesPerSec / LORA_MAX_BYTES_SEC) * 100);
+      bandwidthFill.style.width = `${pct}%`;
+      bandwidthFill.style.background = bytesPerSec > LORA_MAX_BYTES_SEC ? '#f00' : '#0f0';
+      bandwidthText.textContent = `${bytesPerSec.toFixed(0)} bytes/sec ${bytesPerSec > LORA_MAX_BYTES_SEC ? '(OVER LIMIT!)' : ''}`;
+
+      statsEl.textContent = `
+Elapsed:         ${elapsed.toFixed(1)}s
+Frames:          ${frameCount}
+Frames/sec:      ${framesPerSec.toFixed(1)}
+
+Total bytes:     ${bytesSent}
+Bytes/sec:       ${bytesPerSec.toFixed(0)}
+Bytes/frame:     ${FRAME_BYTES} (improved LPC)
+
+LoRa capacity:   ${LORA_MAX_BYTES_SEC} bytes/sec
+Utilization:     ${pct.toFixed(1)}%
+
+Codec:           LPC-14 with pre-emphasis
+Quality:         Improved speech clarity
+`.trim();
+    }
+
+    // === PLAYBACK ===
+    function playNextFrame() {
+      if (!isPlaying || !playbackCtx) return;
+
+      if (playbackQueue.length === 0) {
+        setTimeout(playNextFrame, 20);
+        return;
+      }
+
+      const samples = playbackQueue.shift();
+
+      const buffer = playbackCtx.createBuffer(1, samples.length, SAMPLE_RATE);
+      const channelData = buffer.getChannelData(0);
+      for (let i = 0; i < samples.length; i++) {
+        channelData[i] = samples[i] / 32768;
+      }
+
+      const source = playbackCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(playbackCtx.destination);
+      source.start();
+
+      setTimeout(playNextFrame, 20);
+    }
+
+    // === CONTROLS ===
+    async function startCapture() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            sampleRate: SAMPLE_RATE,
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+          }
+        });
+
+        audioCtx = new AudioContext({ sampleRate: SAMPLE_RATE });
+        const source = audioCtx.createMediaStreamSource(stream);
+
+        processor = audioCtx.createScriptProcessor(FRAME_SIZE, 1, 1);
+        source.connect(processor);
+        processor.connect(audioCtx.destination);
+
+        processor.onaudioprocess = (e) => processAudio(e.inputBuffer);
+
+        running = true;
+        startTime = Date.now();
+        frameCount = 0;
+        bytesSent = 0;
+        frameLog = [];
+        encoder = new SimpleLPCCodec();
+        decoder = new SimpleLPCCodec();
+
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        playbackBtn.disabled = false;
+
+      } catch (err) {
+        alert('Microphone error: ' + err.message);
+      }
+    }
+
+    function stopCapture() {
+      running = false;
+      if (processor) processor.disconnect();
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      if (audioCtx) audioCtx.close();
+      if (playbackCtx) playbackCtx.close();
+
+      isPlaying = false;
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      playbackBtn.disabled = true;
+      playbackBtn.textContent = 'Play Receiver';
+    }
+
+    function togglePlayback() {
+      if (isPlaying) {
+        isPlaying = false;
+        if (playbackCtx) {
+          playbackCtx.close();
+          playbackCtx = null;
+        }
+        playbackBtn.textContent = 'Play Receiver';
+      } else {
+        playbackCtx = new AudioContext({ sampleRate: SAMPLE_RATE });
+        isPlaying = true;
+        playbackQueue = [];
+        playbackBtn.textContent = 'Mute Receiver';
+        playNextFrame();
+      }
+    }
+
+    startBtn.addEventListener('click', startCapture);
+    stopBtn.addEventListener('click', stopCapture);
+    playbackBtn.addEventListener('click', togglePlayback);
+  </script>
+</body>
+</html>

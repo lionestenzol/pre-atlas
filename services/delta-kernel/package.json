@@ -1,0 +1,29 @@
+{
+  "name": "delta-state-fabric",
+  "version": "0.1.0",
+  "description": "Delta-State Fabric v0 — Deterministic, delta-driven personal operating system",
+  "type": "module",
+  "bin": {
+    "delta": "./src/cli/index.ts"
+  },
+  "scripts": {
+    "start": "tsx src/cli/index.ts",
+    "api": "tsx src/api/server.ts",
+    "gate": "tsx src/tools/gate.ts",
+    "test": "tsx src/core/run-tests.ts",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.10.0",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "node-cron": "^4.2.1"
+  }
+}

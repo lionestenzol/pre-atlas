@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATLAS CORE</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* === TOP DIRECTIVE BAR === */
+    .directive-bar {
+      background: linear-gradient(180deg, #1a1a2e 0%, #16162a 100%);
+      border-bottom: 1px solid #2a2a4a;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-shrink: 0;
+    }
+
+    .system-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #8888aa;
+      text-transform: uppercase;
+    }
+
+    .directive-metrics {
+      display: flex;
+      gap: 32px;
+      flex: 1;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #666680;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .metric-value.mode-closure { color: #ff4444; }
+    .metric-value.mode-maintenance { color: #ffaa00; }
+    .metric-value.mode-build { color: #44ff88; }
+    .metric-value.risk-high { color: #ff4444; }
+    .metric-value.risk-medium { color: #ffaa00; }
+    .metric-value.risk-low { color: #44ff88; }
+
+    .primary-order {
+      flex: 2;
+      background: rgba(255, 68, 68, 0.15);
+      border: 1px solid rgba(255, 68, 68, 0.3);
+      border-radius: 6px;
+      padding: 8px 16px;
+    }
+
+    .primary-order-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #ff6666;
+    }
+
+    .primary-order-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffaaaa;
+    }
+
+    /* === MAIN CONTENT AREA === */
+    .main-content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .center-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #2a2a4a;
+    }
+
+    .viewport-tabs {
+      display: flex;
+      background: #12121a;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    .viewport-tab {
+      padding: 10px 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #666680;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .viewport-tab:hover {
+      color: #8888aa;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .viewport-tab.active {
+      color: #aaaacc;
+      border-bottom-color: #6666aa;
+    }
+
+    .viewport-frame {
+      flex: 1;
+      border: none;
+      background: #0f0f18;
+    }
+
+    /* === RIGHT PANEL (DASHBOARD) === */
+    .right-panel {
+      width: 400px;
+      display: flex;
+      flex-direction: column;
+      background: #0f0f18;
+      transition: width 0.3s;
+    }
+
+    .right-panel.collapsed {
+      width: 40px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #12121a;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #666680;
+    }
+
+    .right-panel.collapsed .panel-title {
+      display: none;
+    }
+
+    .panel-toggle {
+      background: none;
+      border: none;
+      color: #666680;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-size: 14px;
+    }
+
+    .panel-toggle:hover {
+      color: #aaaacc;
+    }
+
+    .panel-frame {
+      flex: 1;
+      border: none;
+      background: #0f0f18;
+    }
+
+    .right-panel.collapsed .panel-frame {
+      display: none;
+    }
+
+    /* === CONTROL PANEL MODAL === */
+    .control-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .control-modal.active {
+      display: flex;
+    }
+
+    .control-modal-content {
+      width: 90%;
+      max-width: 900px;
+      height: 80%;
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .control-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #12121a;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    .control-modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #8888aa;
+    }
+
+    .control-modal-close {
+      background: none;
+      border: none;
+      color: #666680;
+      cursor: pointer;
+      font-size: 20px;
+      padding: 4px 8px;
+    }
+
+    .control-modal-close:hover {
+      color: #ff4444;
+    }
+
+    .control-modal-frame {
+      flex: 1;
+      border: none;
+    }
+
+    /* === DESKTOP OVERLAY (WEBOS) === */
+    .desktop-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #000;
+      display: none;
+      z-index: 200;
+    }
+
+    .desktop-overlay.active {
+      display: block;
+    }
+
+    .desktop-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .desktop-exit {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 68, 68, 0.9);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border-radius: 4px;
+      z-index: 201;
+    }
+
+    .desktop-exit:hover {
+      background: #ff4444;
+    }
+
+    /* === BOTTOM COMMAND STRIP === */
+    .command-strip {
+      background: linear-gradient(180deg, #16162a 0%, #1a1a2e 100%);
+      border-top: 1px solid #2a2a4a;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .command-btn {
+      padding: 10px 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 1px solid;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .command-btn.primary {
+      background: rgba(255, 68, 68, 0.2);
+      border-color: rgba(255, 68, 68, 0.5);
+      color: #ff8888;
+    }
+
+    .command-btn.primary:hover {
+      background: rgba(255, 68, 68, 0.3);
+      border-color: #ff4444;
+    }
+
+    .command-btn.secondary {
+      background: rgba(100, 100, 150, 0.2);
+      border-color: rgba(100, 100, 150, 0.5);
+      color: #aaaacc;
+    }
+
+    .command-btn.secondary:hover {
+      background: rgba(100, 100, 150, 0.3);
+      border-color: #8888aa;
+    }
+
+    .command-btn.accent {
+      background: rgba(68, 255, 136, 0.2);
+      border-color: rgba(68, 255, 136, 0.5);
+      color: #88ffaa;
+    }
+
+    .command-btn.accent:hover {
+      background: rgba(68, 255, 136, 0.3);
+      border-color: #44ff88;
+    }
+
+    .command-spacer {
+      flex: 1;
+    }
+
+    .system-status {
+      font-size: 10px;
+      color: #444466;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      background: #44ff88;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .daemon-status {
+      font-size: 10px;
+      color: #444466;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-left: 16px;
+      padding-left: 16px;
+      border-left: 1px solid #2a2a4a;
+    }
+
+    .daemon-status.running .status-dot { background: #44ff88; }
+    .daemon-status.stopped .status-dot { background: #ff4444; animation: none; }
+    .daemon-status.job-running .status-dot { background: #ffaa00; }
+
+    .enforcement-badge {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      margin-left: 16px;
+    }
+
+    .enforcement-badge.level-0 { background: rgba(68, 255, 136, 0.2); color: #44ff88; }
+    .enforcement-badge.level-1 { background: rgba(255, 170, 0, 0.2); color: #ffaa00; }
+    .enforcement-badge.level-2 { background: rgba(255, 136, 68, 0.2); color: #ff8844; }
+    .enforcement-badge.level-3 { background: rgba(255, 68, 68, 0.3); color: #ff4444; animation: pulse 1s infinite; }
+
+    /* === NOTIFICATIONS === */
+    .notification {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 300;
+      animation: slideDown 0.3s ease;
+    }
+
+    .notification-success {
+      background: rgba(68, 255, 136, 0.2);
+      border: 1px solid rgba(68, 255, 136, 0.5);
+      color: #88ffaa;
+    }
+
+    .notification-error {
+      background: rgba(255, 68, 68, 0.2);
+      border: 1px solid rgba(255, 68, 68, 0.5);
+      color: #ff8888;
+    }
+
+    .notification-info {
+      background: rgba(100, 100, 150, 0.2);
+      border: 1px solid rgba(100, 100, 150, 0.5);
+      color: #aaaacc;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- DIRECTIVE BAR -->
+  <div class="directive-bar">
+    <div class="system-title">ATLAS CORE</div>
+    <div class="directive-metrics">
+      <div class="metric">
+        <div class="metric-label">Mode</div>
+        <div class="metric-value mode-closure" id="metric-mode">CLOSURE</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Risk</div>
+        <div class="metric-value risk-high" id="metric-risk">HIGH</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Open Loops</div>
+        <div class="metric-value" id="metric-loops">14</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Closure Ratio</div>
+        <div class="metric-value" id="metric-ratio">6.67%</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Enforcement</div>
+        <div class="metric-value" id="metric-enforcement">
+          <span class="enforcement-badge level-0" id="enforcement-badge">CLEAR</span>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Today</div>
+        <div class="metric-value" id="metric-closures-today" style="color: #88ffaa;">0</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Streak</div>
+        <div class="metric-value" id="metric-streak" style="color: #ffcc44;">0d</div>
+      </div>
+      <div class="primary-order">
+        <div class="primary-order-label">Primary Order</div>
+        <div class="primary-order-text" id="primary-order">Close or archive "Extrinsic vs Intrinsic Rewards"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <!-- CENTER VIEWPORT -->
+    <div class="center-viewport">
+      <div class="viewport-tabs">
+        <div class="viewport-tab active" onclick="switchTab('cycleboard')">CycleBoard</div>
+        <div class="viewport-tab" onclick="switchTab('control')">Control Panel</div>
+      </div>
+      <iframe id="viewport-frame" class="viewport-frame" src="services/cognitive-sensor/cycleboard_app3.html"></iframe>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel" id="right-panel">
+      <div class="panel-header">
+        <span class="panel-title">Telemetry</span>
+        <button class="panel-toggle" onclick="toggleRightPanel()">◀</button>
+      </div>
+      <iframe class="panel-frame" src="services/cognitive-sensor/dashboard.html"></iframe>
+    </div>
+  </div>
+
+  <!-- CONTROL MODAL (hidden by default) -->
+  <div class="control-modal" id="control-modal">
+    <div class="control-modal-content">
+      <div class="control-modal-header">
+        <span class="control-modal-title">System Control</span>
+        <button class="control-modal-close" onclick="closeControlModal()">&times;</button>
+      </div>
+      <iframe class="control-modal-frame" src="services/cognitive-sensor/control_panel.html"></iframe>
+    </div>
+  </div>
+
+  <!-- DESKTOP OVERLAY (WebOS) -->
+  <div class="desktop-overlay" id="desktop-overlay">
+    <button class="desktop-exit" onclick="exitDesktop()">Exit Desktop</button>
+    <iframe class="desktop-frame" id="desktop-frame"></iframe>
+  </div>
+
+  <!-- COMMAND STRIP -->
+  <div class="command-strip">
+    <button class="command-btn primary" onclick="acknowledgeOrder()">Acknowledge</button>
+    <button class="command-btn secondary" onclick="archiveLoop()">Archive Loop</button>
+    <button class="command-btn secondary" onclick="openControlModal()">System Control</button>
+    <button class="command-btn secondary" onclick="refreshSystem()">Refresh</button>
+    <div class="command-spacer"></div>
+    <button class="command-btn accent" onclick="enterDesktop()">Enter Desktop</button>
+    <div class="system-status">
+      <span class="status-dot"></span>
+      System Online
+    </div>
+    <div class="daemon-status running" id="daemon-status">
+      <span class="status-dot"></span>
+      <span id="daemon-label">Daemon Active</span>
+    </div>
+  </div>
+
+  <script>
+    // === STATE ===
+    let currentTab = 'cycleboard';
+    let systemState = {
+      mode: 'CLOSURE',
+      risk: 'HIGH',
+      openLoops: 14,
+      closureRatio: 6.67,
+      primaryAction: 'Close or archive "Extrinsic vs Intrinsic Rewards"'
+    };
+
+    // === TAB SWITCHING ===
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.viewport-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const frame = document.getElementById('viewport-frame');
+      if (tab === 'cycleboard') {
+        frame.src = 'services/cognitive-sensor/cycleboard_app3.html';
+      } else if (tab === 'control') {
+        frame.src = 'services/cognitive-sensor/control_panel.html';
+      }
+    }
+
+    // === RIGHT PANEL ===
+    function toggleRightPanel() {
+      const panel = document.getElementById('right-panel');
+      const btn = panel.querySelector('.panel-toggle');
+      panel.classList.toggle('collapsed');
+      btn.textContent = panel.classList.contains('collapsed') ? '▶' : '◀';
+    }
+
+    // === CONTROL MODAL ===
+    function openControlModal() {
+      document.getElementById('control-modal').classList.add('active');
+    }
+
+    function closeControlModal() {
+      document.getElementById('control-modal').classList.remove('active');
+    }
+
+    // === DESKTOP (WEBOS) ===
+    function enterDesktop() {
+      const overlay = document.getElementById('desktop-overlay');
+      const frame = document.getElementById('desktop-frame');
+      frame.src = 'apps/webos-333/web-os-simulator.html';
+      overlay.classList.add('active');
+    }
+
+    function exitDesktop() {
+      const overlay = document.getElementById('desktop-overlay');
+      const frame = document.getElementById('desktop-frame');
+      overlay.classList.remove('active');
+      frame.src = '';
+    }
+
+    // === API CONFIG ===
+    const API_BASE = 'http://localhost:3001';
+
+    // === COMMAND HANDLERS ===
+    async function acknowledgeOrder() {
+      const order = document.getElementById('primary-order').textContent;
+      try {
+        const response = await fetch(`${API_BASE}/api/law/acknowledge`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order })
+        });
+        const result = await response.json();
+        if (result.success) {
+          showNotification('Order acknowledged. Execute your primary action.', 'success');
+          // Re-poll to get updated state
+          loadUnifiedState();
+        } else {
+          showNotification('Failed to acknowledge: ' + (result.error || 'Unknown error'), 'error');
+        }
+      } catch (e) {
+        showNotification('API unavailable. Start Delta API with: .\\scripts\\run_delta_api.ps1', 'error');
+        console.error('Acknowledge failed:', e);
+      }
+    }
+
+    async function archiveLoop() {
+      const loopTitle = document.getElementById('primary-order').textContent;
+      const reason = prompt('Reason for archiving (optional):');
+      if (reason === null) return; // User cancelled
+
+      try {
+        const response = await fetch(`${API_BASE}/api/law/archive`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            loop_title: loopTitle,
+            reason: reason || 'Archived via ATLAS cockpit'
+          })
+        });
+        const result = await response.json();
+        if (result.success) {
+          showNotification('Loop archived. Run refresh to update state.', 'success');
+          // Re-poll to get updated state
+          loadUnifiedState();
+        } else {
+          showNotification('Failed to archive: ' + (result.error || 'Unknown error'), 'error');
+        }
+      } catch (e) {
+        showNotification('API unavailable. Start Delta API with: .\\scripts\\run_delta_api.ps1', 'error');
+        console.error('Archive failed:', e);
+      }
+    }
+
+    async function refreshSystem() {
+      if (!confirm('Run system refresh? This will update all cognitive metrics.')) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/law/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+        if (result.success) {
+          showNotification('Refresh requested. Run .\\scripts\\run_all.ps1 to complete.', 'success');
+          // Re-poll to get updated state
+          loadUnifiedState();
+        } else {
+          showNotification('Failed to request refresh: ' + (result.error || 'Unknown error'), 'error');
+        }
+      } catch (e) {
+        showNotification('API unavailable. Run refresh manually: .\\scripts\\run_all.ps1', 'error');
+        console.error('Refresh failed:', e);
+      }
+    }
+
+    // === NOTIFICATION SYSTEM ===
+    function showNotification(message, type = 'info') {
+      // Remove existing notification
+      const existing = document.querySelector('.notification');
+      if (existing) existing.remove();
+
+      const notification = document.createElement('div');
+      notification.className = `notification notification-${type}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      // Auto-remove after 4 seconds
+      setTimeout(() => notification.remove(), 4000);
+    }
+
+    // === UNIFIED STATE POLLING ===
+    let apiOnline = false;
+    let pollInterval = null;
+    const POLL_INTERVAL_MS = 30000; // 30 seconds
+
+    async function loadUnifiedState() {
+      try {
+        const response = await fetch(`${API_BASE}/api/state/unified`);
+        const data = await response.json();
+
+        if (data.ok) {
+          apiOnline = true;
+          updateStatusIndicator(true);
+
+          // Update UI from derived values (single truth)
+          const { mode, risk, open_loops, closure_ratio, primary_order,
+                  build_allowed, enforcement_level, violations_count,
+                  closures_today, total_closures, streak_days, best_streak } = data.derived;
+
+          // Mode
+          const modeEl = document.getElementById('metric-mode');
+          modeEl.textContent = mode;
+          modeEl.className = 'metric-value mode-' + mode.toLowerCase();
+
+          // Risk
+          const riskEl = document.getElementById('metric-risk');
+          riskEl.textContent = risk;
+          riskEl.className = 'metric-value risk-' + risk.toLowerCase();
+
+          // Open Loops
+          document.getElementById('metric-loops').textContent = open_loops;
+
+          // Closure Ratio (as percentage)
+          const ratioPercent = (typeof closure_ratio === 'number' ? closure_ratio * 100 : closure_ratio);
+          document.getElementById('metric-ratio').textContent =
+            (typeof ratioPercent === 'number' ? ratioPercent.toFixed(1) : ratioPercent) + '%';
+
+          // Primary Order
+          document.getElementById('primary-order').textContent = primary_order;
+
+          // Enforcement Badge
+          const enforcementBadge = document.getElementById('enforcement-badge');
+          if (enforcementBadge) {
+            const levelLabels = ['CLEAR', 'WARN', 'LOCKED', 'HARD LOCK'];
+            enforcementBadge.textContent = violations_count > 0
+              ? `${levelLabels[enforcement_level]} (${violations_count})`
+              : levelLabels[enforcement_level];
+            enforcementBadge.className = `enforcement-badge level-${enforcement_level}`;
+          }
+
+          // Closures Today
+          const closuresTodayEl = document.getElementById('metric-closures-today');
+          if (closuresTodayEl) {
+            closuresTodayEl.textContent = closures_today;
+            // Color based on productivity: green if >= 3, yellow if 1-2, gray if 0
+            if (closures_today >= 3) {
+              closuresTodayEl.style.color = '#44ff88';
+            } else if (closures_today > 0) {
+              closuresTodayEl.style.color = '#ffcc44';
+            } else {
+              closuresTodayEl.style.color = '#666680';
+            }
+          }
+
+          // Streak
+          const streakEl = document.getElementById('metric-streak');
+          if (streakEl) {
+            streakEl.textContent = streak_days + 'd';
+            // Color based on streak: gold if >= 7, green if >= 3, yellow otherwise
+            if (streak_days >= 7) {
+              streakEl.style.color = '#ffd700';
+            } else if (streak_days >= 3) {
+              streakEl.style.color = '#44ff88';
+            } else {
+              streakEl.style.color = '#ffcc44';
+            }
+            // Show best streak on hover
+            streakEl.title = `Best: ${best_streak}d | Total: ${total_closures}`;
+          }
+
+          // Update local state cache
+          systemState = {
+            mode,
+            risk,
+            openLoops: open_loops,
+            closureRatio: closure_ratio,
+            primaryAction: primary_order,
+            buildAllowed: build_allowed,
+            enforcementLevel: enforcement_level,
+            violationsCount: violations_count,
+            closuresToday: closures_today,
+            streakDays: streak_days,
+            bestStreak: best_streak,
+            totalClosures: total_closures
+          };
+
+          // Log any non-fatal errors
+          if (data.errors && data.errors.length > 0) {
+            console.log('Unified state warnings:', data.errors);
+          }
+        }
+      } catch (e) {
+        if (apiOnline) {
+          // Only show notification on transition from online to offline
+          showNotification('API offline - using cached values', 'info');
+        }
+        apiOnline = false;
+        updateStatusIndicator(false);
+        console.log('Unified state fetch failed, keeping cached values:', e.message);
+      }
+    }
+
+    function updateStatusIndicator(online) {
+      const statusDot = document.querySelector('.status-dot');
+      const statusText = document.querySelector('.system-status');
+      if (online) {
+        statusDot.style.background = '#44ff88';
+        statusText.innerHTML = '<span class="status-dot" style="background:#44ff88"></span>System Online';
+      } else {
+        statusDot.style.background = '#ff4444';
+        statusText.innerHTML = '<span class="status-dot" style="background:#ff4444"></span>API Offline';
+      }
+    }
+
+    function startPolling() {
+      // Initial load
+      loadUnifiedState();
+      loadDaemonStatus();
+      // Poll every 30 seconds
+      pollInterval = setInterval(() => {
+        loadUnifiedState();
+        loadDaemonStatus();
+      }, POLL_INTERVAL_MS);
+    }
+
+    function stopPolling() {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    }
+
+    // === DAEMON STATUS POLLING ===
+    let daemonOnline = false;
+
+    async function loadDaemonStatus() {
+      try {
+        const response = await fetch(`${API_BASE}/api/daemon/status`);
+        const data = await response.json();
+
+        if (data.ok) {
+          daemonOnline = true;
+          updateDaemonIndicator(data);
+        }
+      } catch (e) {
+        daemonOnline = false;
+        updateDaemonIndicator(null);
+      }
+    }
+
+    function updateDaemonIndicator(status) {
+      const container = document.getElementById('daemon-status');
+      const label = document.getElementById('daemon-label');
+
+      if (!status) {
+        container.className = 'daemon-status stopped';
+        label.textContent = 'Daemon Offline';
+        return;
+      }
+
+      if (status.current_job) {
+        container.className = 'daemon-status job-running';
+        label.textContent = `Running: ${status.current_job.job}`;
+      } else if (status.running) {
+        container.className = 'daemon-status running';
+        // Show time since last heartbeat
+        if (status.last_heartbeat) {
+          const ago = Math.floor((Date.now() - status.last_heartbeat) / 1000);
+          label.textContent = `Daemon Active (${ago}s ago)`;
+        } else {
+          label.textContent = 'Daemon Active';
+        }
+      } else {
+        container.className = 'daemon-status stopped';
+        label.textContent = 'Daemon Stopped';
+      }
+    }
+
+    // === KEYBOARD SHORTCUTS ===
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeControlModal();
+        exitDesktop();
+      }
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        enterDesktop();
+      }
+      if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        refreshSystem();
+      }
+    });
+
+    // === INIT ===
+    startPolling();
+  </script>
+</body>
+</html>

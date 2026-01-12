@@ -1,0 +1,54 @@
+{
+  "id": "WORK",
+  "version": 1,
+  "description": "Bring system into work state - open tools, set focus mode",
+  "author": "system",
+  "created": "2025-01-05",
+  "steps": [
+    {
+      "name": "launch_editor",
+      "type": "shell",
+      "cmd": "code .",
+      "description": "Open VS Code in current directory",
+      "continue_on_error": true
+    },
+    {
+      "name": "launch_browser",
+      "type": "shell",
+      "cmd": "start chrome --new-window",
+      "description": "Open browser",
+      "continue_on_error": true,
+      "platform": "windows"
+    },
+    {
+      "name": "launch_notes",
+      "type": "shell",
+      "cmd": "start obsidian://open",
+      "description": "Open notes app",
+      "continue_on_error": true,
+      "platform": "windows"
+    },
+    {
+      "name": "set_dnd",
+      "type": "shell",
+      "cmd": "echo 'Focus mode: ON'",
+      "description": "Enable do-not-disturb (placeholder)",
+      "continue_on_error": true
+    },
+    {
+      "name": "log_start",
+      "type": "log",
+      "message": "Work session started at {timestamp}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Work environment ready"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Work setup completed with warnings",
+    "level": "warn"
+  }
+}

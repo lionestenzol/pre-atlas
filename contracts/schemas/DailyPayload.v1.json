@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "DailyPayload.v1",
+  "title": "Daily Payload (CycleBoard)",
+  "description": "The payload consumed by CycleBoard UI. Current format as of 2026-01-08.",
+  "type": "object",
+  "required": ["mode", "build_allowed", "primary_action", "generated_at"],
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["CLOSURE", "MAINTENANCE", "BUILD"],
+      "description": "Current cognitive mode"
+    },
+    "build_allowed": {
+      "type": "boolean",
+      "description": "Whether the user is allowed to start new projects"
+    },
+    "primary_action": {
+      "type": "string",
+      "description": "The single most important action for today"
+    },
+    "open_loops": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Titles of top open loops"
+    },
+    "open_loop_count": {
+      "type": "integer",
+      "description": "Total number of detected open loops"
+    },
+    "closure_ratio": {
+      "type": "number",
+      "description": "Closure ratio as percentage (0-100)"
+    },
+    "risk": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "description": "Risk level for cognitive overload"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Date payload was generated (YYYY-MM-DD)"
+    }
+  }
+}

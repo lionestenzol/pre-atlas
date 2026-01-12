@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Delta Camera - Live Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #1a1a1a;
+      color: #00ff00;
+      padding: 20px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .panel {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    h2 { margin-top: 0; color: #0f0; }
+    video, canvas {
+      border: 1px solid #444;
+      background: #000;
+    }
+    #stats {
+      white-space: pre;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    button {
+      background: #0f0;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      font-family: monospace;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #0c0; }
+    button:disabled { background: #333; color: #666; }
+    .delta-log {
+      height: 200px;
+      overflow-y: auto;
+      font-size: 11px;
+      background: #000;
+      padding: 10px;
+      border: 1px solid #333;
+    }
+    .delta-entry { margin: 2px 0; }
+    .delta-tile { color: #888; }
+    .delta-object { color: #ff0; }
+    .delta-light { color: #0ff; }
+  </style>
+</head>
+<body>
+  <h1>Delta-State Camera Streaming - Live Test</h1>
+
+  <div>
+    <button id="startBtn">Start Camera</button>
+    <button id="stopBtn" disabled>Stop</button>
+    <button id="resetBaselineBtn" disabled>Reset Baseline</button>
+  </div>
+
+  <div class="container">
+    <div class="panel">
+      <h2>Camera Input</h2>
+      <video id="video" width="256" height="192" autoplay playsinline muted></video>
+    </div>
+
+    <div class="panel">
+      <h2>Reconstructed (from deltas)</h2>
+      <canvas id="reconstructed" width="256" height="192"></canvas>
+    </div>
+
+    <div class="panel">
+      <h2>Baseline</h2>
+      <canvas id="baseline" width="256" height="192"></canvas>
+    </div>
+
+    <div class="panel">
+      <h2>Diff (motion)</h2>
+      <canvas id="diff" width="256" height="192"></canvas>
+    </div>
+  </div>
+
+  <div class="container" style="margin-top: 20px;">
+    <div class="panel" style="flex: 1;">
+      <h2>Statistics</h2>
+      <div id="stats">Waiting for camera...</div>
+    </div>
+
+    <div class="panel" style="flex: 1;">
+      <h2>Delta Log (last 50)</h2>
+      <div id="deltaLog" class="delta-log"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Grid configuration (matches Module 9 tests)
+    const GRID_W = 16;
+    const GRID_H = 12;
+    const TILE_SIZE = 16;
+
+    // State
+    let video = null;
+    let stream = null;
+    let running = false;
+    let baselineFrame = null;
+    let baselineTiles = new Map();
+    let frameCount = 0;
+    let deltaCount = 0;
+    let totalBytes = 0;
+    let startTime = 0;
+    let deltaLog = [];
+
+    // DOM elements
+    const videoEl = document.getElementById('video');
+    const reconstructedCanvas = document.getElementById('reconstructed');
+    const baselineCanvas = document.getElementById('baseline');
+    const diffCanvas = document.getElementById('diff');
+    const statsEl = document.getElementById('stats');
+    const deltaLogEl = document.getElementById('deltaLog');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resetBaselineBtn = document.getElementById('resetBaselineBtn');
+
+    const reconstructedCtx = reconstructedCanvas.getContext('2d');
+    const baselineCtx = baselineCanvas.getContext('2d');
+    const diffCtx = diffCanvas.getContext('2d');
+
+    // Capture frame from video
+    function captureFrame() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = GRID_W * TILE_SIZE;
+      canvas.height = GRID_H * TILE_SIZE;
+
+      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const rgba = imageData.data;
+
+      const tiles = new Map();
+
+      for (let gy = 0; gy < GRID_H; gy++) {
+        for (let gx = 0; gx < GRID_W; gx++) {
+          const pixels = [];
+
+          for (let ty = 0; ty < TILE_SIZE; ty++) {
+            for (let tx = 0; tx < TILE_SIZE; tx++) {
+              const px = gx * TILE_SIZE + tx;
+              const py = gy * TILE_SIZE + ty;
+              const idx = (py * canvas.width + px) * 4;
+
+              // Grayscale luminance
+              const r = rgba[idx];
+              const g = rgba[idx + 1];
+              const b = rgba[idx + 2];
+              const lum = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+              pixels.push(lum);
+            }
+          }
+
+          tiles.set(`${gx},${gy}`, pixels);
+        }
+      }
+
+      return { tiles, imageData };
+    }
+
+    // Compute tile hash (simple)
+    function hashTile(pixels) {
+      let h = 0;
+      for (let i = 0; i < pixels.length; i += 4) {
+        h = ((h << 5) - h + pixels[i]) | 0;
+      }
+      return h;
+    }
+
+    // Extract deltas by comparing to baseline
+    function extractDeltas(currentTiles) {
+      const deltas = [];
+
+      for (const [key, currentPixels] of currentTiles) {
+        const baselinePixels = baselineTiles.get(key);
+        if (!baselinePixels) continue;
+
+        // Calculate mean absolute difference
+        let diff = 0;
+        for (let i = 0; i < currentPixels.length; i++) {
+          diff += Math.abs(currentPixels[i] - baselinePixels[i]);
+        }
+        const meanDiff = diff / currentPixels.length;
+
+        // Threshold for change detection
+        if (meanDiff > 15) {
+          const [x, y] = key.split(',').map(Number);
+          const hash = hashTile(currentPixels);
+
+          deltas.push({
+            type: meanDiff > 40 ? 'object' : 'tile',
+            key,
+            x,
+            y,
+            meanDiff: meanDiff.toFixed(1),
+            hash,
+            // Simulate compact delta format
+            bytes: 20 + Math.ceil(meanDiff / 10)
+          });
+        }
+      }
+
+      return deltas;
+    }
+
+    // Render tiles to canvas
+    function renderTilesToCanvas(tiles, ctx) {
+      const imageData = ctx.createImageData(GRID_W * TILE_SIZE, GRID_H * TILE_SIZE);
+      const data = imageData.data;
+
+      for (const [key, pixels] of tiles) {
+        const [gx, gy] = key.split(',').map(Number);
+
+        for (let ty = 0; ty < TILE_SIZE; ty++) {
+          for (let tx = 0; tx < TILE_SIZE; tx++) {
+            const px = gx * TILE_SIZE + tx;
+            const py = gy * TILE_SIZE + ty;
+            const idx = (py * imageData.width + px) * 4;
+            const lum = pixels[ty * TILE_SIZE + tx];
+
+            data[idx] = lum;
+            data[idx + 1] = lum;
+            data[idx + 2] = lum;
+            data[idx + 3] = 255;
+          }
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    // Render diff visualization
+    function renderDiff(currentTiles, deltas, ctx) {
+      const imageData = ctx.createImageData(GRID_W * TILE_SIZE, GRID_H * TILE_SIZE);
+      const data = imageData.data;
+
+      // Fill with black
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = 0;
+        data[i + 1] = 0;
+        data[i + 2] = 0;
+        data[i + 3] = 255;
+      }
+
+      // Highlight changed tiles
+      for (const delta of deltas) {
+        const pixels = currentTiles.get(delta.key);
+        if (!pixels) continue;
+
+        for (let ty = 0; ty < TILE_SIZE; ty++) {
+          for (let tx = 0; tx < TILE_SIZE; tx++) {
+            const px = delta.x * TILE_SIZE + tx;
+            const py = delta.y * TILE_SIZE + ty;
+            const idx = (py * imageData.width + px) * 4;
+            const lum = pixels[ty * TILE_SIZE + tx];
+
+            if (delta.type === 'object') {
+              // Yellow for significant motion
+              data[idx] = lum;
+              data[idx + 1] = lum;
+              data[idx + 2] = 0;
+            } else {
+              // Green for minor change
+              data[idx] = 0;
+              data[idx + 1] = lum;
+              data[idx + 2] = 0;
+            }
+          }
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    // Update stats display
+    function updateStats(deltas) {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const fps = frameCount / elapsed;
+      const deltasPerSec = deltaCount / elapsed;
+      const bytesPerSec = totalBytes / elapsed;
+
+      statsEl.textContent = `
+Frames:       ${frameCount}
+Elapsed:      ${elapsed.toFixed(1)}s
+FPS:          ${fps.toFixed(1)}
+
+Deltas:       ${deltaCount}
+Deltas/sec:   ${deltasPerSec.toFixed(1)}
+
+Bytes:        ${totalBytes}
+Bytes/sec:    ${bytesPerSec.toFixed(1)}
+KB/sec:       ${(bytesPerSec / 1024).toFixed(3)}
+
+Grid:         ${GRID_W}x${GRID_H} (${GRID_W * GRID_H} tiles)
+Tile size:    ${TILE_SIZE}x${TILE_SIZE}
+
+This frame:   ${deltas.length} deltas
+`.trim();
+    }
+
+    // Add to delta log
+    function logDeltas(deltas) {
+      for (const delta of deltas) {
+        deltaLog.unshift(delta);
+      }
+      deltaLog = deltaLog.slice(0, 50);
+
+      deltaLogEl.innerHTML = deltaLog.map(d =>
+        `<div class="delta-entry delta-${d.type}">[${d.key}] ${d.type} diff=${d.meanDiff} bytes=${d.bytes}</div>`
+      ).join('');
+    }
+
+    // Reconstructed state (simulates receiver)
+    let reconstructedTiles = new Map();
+
+    // Apply deltas to reconstructed state
+    function applyDeltas(deltas, currentTiles) {
+      for (const delta of deltas) {
+        reconstructedTiles.set(delta.key, currentTiles.get(delta.key));
+      }
+    }
+
+    // Main loop
+    function processFrame() {
+      if (!running) return;
+
+      frameCount++;
+
+      const { tiles: currentTiles, imageData } = captureFrame();
+
+      if (!baselineFrame) {
+        // First frame becomes baseline
+        baselineFrame = currentTiles;
+        baselineTiles = new Map(currentTiles);
+        reconstructedTiles = new Map(currentTiles);
+        renderTilesToCanvas(baselineTiles, baselineCtx);
+      }
+
+      // Extract deltas
+      const deltas = extractDeltas(currentTiles);
+
+      // Apply to reconstructed state
+      applyDeltas(deltas, currentTiles);
+
+      // Update counters
+      deltaCount += deltas.length;
+      for (const d of deltas) {
+        totalBytes += d.bytes;
+      }
+
+      // Render
+      renderTilesToCanvas(reconstructedTiles, reconstructedCtx);
+      renderDiff(currentTiles, deltas, diffCtx);
+
+      // Update UI
+      updateStats(deltas);
+      if (deltas.length > 0) {
+        logDeltas(deltas);
+      }
+
+      requestAnimationFrame(processFrame);
+    }
+
+    // Start camera
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: GRID_W * TILE_SIZE },
+            height: { ideal: GRID_H * TILE_SIZE },
+            frameRate: { ideal: 10 }
+          },
+          audio: false
+        });
+
+        videoEl.srcObject = stream;
+        await videoEl.play();
+
+        running = true;
+        frameCount = 0;
+        deltaCount = 0;
+        totalBytes = 0;
+        startTime = Date.now();
+        deltaLog = [];
+        baselineFrame = null;
+
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        resetBaselineBtn.disabled = false;
+
+        processFrame();
+
+      } catch (err) {
+        alert('Camera error: ' + err.message);
+      }
+    }
+
+    // Stop camera
+    function stopCamera() {
+      running = false;
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      videoEl.srcObject = null;
+
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      resetBaselineBtn.disabled = true;
+    }
+
+    // Reset baseline
+    function resetBaseline() {
+      baselineFrame = null;
+      baselineTiles.clear();
+      reconstructedTiles.clear();
+      deltaCount = 0;
+      totalBytes = 0;
+      startTime = Date.now();
+      frameCount = 0;
+      deltaLog = [];
+      deltaLogEl.innerHTML = '';
+    }
+
+    // Event listeners
+    startBtn.addEventListener('click', startCamera);
+    stopBtn.addEventListener('click', stopCamera);
+    resetBaselineBtn.addEventListener('click', resetBaseline);
+  </script>
+</body>
+</html>

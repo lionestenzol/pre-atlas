@@ -1,0 +1,60 @@
+flowchart TB
+    subgraph "Core Components"
+        E[Logic Input] --> A
+        A[Node Parser] --> B[Logic Analyzer]
+        B --> C[Stroke Generator]
+        C --> D[Glyph Compiler]
+        
+        E1[Glyph Input] --> A1
+        A1[Glyph Scanner] --> B1[Stroke Analyzer]
+        B1 --> C1[Logic Reconstructor]
+        C1 --> D1[Execution Engine]
+    end
+    
+    subgraph "Neural Components"
+        N1[Stroke Pattern Recognition Model]
+        N2[Context Sensitivity Model]
+        N3[Glyph Generation Model]
+        N4[Logic Optimization Model]
+    end
+    
+    subgraph "Development Tools"
+        T1[Visual Glyph Editor]
+        T2[Debugging Visualizer]
+        T3[Testing Framework]
+        T4[Documentation Generator]
+    end
+    
+    subgraph "Runtime Environment"
+        R1[Glyph Execution Context]
+        R2[State Management]
+        R3[Glyph Repository]
+        R4[Security Validator]
+    end
+    
+    B <--> N1
+    C <--> N3
+    B1 <--> N1
+    C1 <--> N2
+    D <--> N4
+    D1 <--> N4
+    
+    D --> R3
+    D1 --> R1
+    R1 --> R2
+    R3 --> R4
+    
+    A --> T1
+    D --> T2
+    R1 --> T3
+    R3 --> T4
+    
+    classDef core fill:#f5f5f5,stroke:#333,stroke-width:2px
+    classDef neural fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    classDef tools fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef runtime fill:#fff8e1,stroke:#ffa000,stroke-width:2px
+    
+    class A,B,C,D,A1,B1,C1,D1,E,E1 core
+    class N1,N2,N3,N4 neural
+    class T1,T2,T3,T4 tools
+    class R1,R2,R3,R4 runtime

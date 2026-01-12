@@ -1,0 +1,44 @@
+graph TD
+    subgraph "Phase 1: Core Framework Development"
+        A1[Define Stroke Types & Meanings] --> A2[Build Novenary Mapping System]
+        A2 --> A3[Create Context Meters]
+        A3 --> A4[Implement Logic Block System]
+        A4 --> A5[Develop Glyph Mapping]
+    end
+    
+    subgraph "Phase 2: Encoding Implementation"
+        B1[Build Logic Flow Parser] --> B2[Generate Shorthand Representation]
+        B2 --> B3[Convert to Novenary]
+        B3 --> B4[Map to Stroke Patterns]
+        B4 --> B5[Generate Final Glyph]
+    end
+    
+    subgraph "Phase 3: Execution Engine"
+        C1[Develop Glyph Interpreter] --> C2[Implement State Management]
+        C2 --> C3[Build Flow Execution Logic]
+        C3 --> C4[Integrate Error Handling]
+        C4 --> C5[Support Multiple Execution Models]
+    end
+    
+    subgraph "Phase 4: Advanced Features"
+        D1[Implement Glyph Combination] --> D2[Create Visual Editor]
+        D2 --> D3[Develop Debug Tools]
+        D3 --> D4[Build Real-time Monitoring]
+    end
+    
+    subgraph "Phase 5: Integration & Deployment"
+        E1[Create API Layer] --> E2[Develop SDK for Developers]
+        E2 --> E3[Build Cloud Execution Service]
+        E3 --> E4[Implement Security Features]
+    end
+    
+    A5 --> B1
+    B5 --> C1
+    C5 --> D1
+    D4 --> E1
+    
+    style A1 fill:#f9d6d6,stroke:#d33
+    style B1 fill:#d6e8f9,stroke:#36a
+    style C1 fill:#e4f9d6,stroke:#4c1
+    style D1 fill:#f9ecd6,stroke:#d60
+    style E1 fill:#e6d6f9,stroke:#93c

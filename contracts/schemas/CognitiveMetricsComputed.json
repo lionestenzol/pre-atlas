@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "CognitiveMetricsComputed.v1",
+  "title": "Cognitive Metrics (Computed)",
+  "description": "Metrics computed from conversation analysis. Source: cognitive-sensor/cognitive_api.py",
+  "type": "object",
+  "required": ["state", "loops", "drift", "closure"],
+  "properties": {
+    "state": {
+      "type": "object",
+      "required": ["first_activity", "last_activity", "total_convos"],
+      "properties": {
+        "first_activity": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of first recorded conversation"
+        },
+        "last_activity": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of most recent conversation"
+        },
+        "total_convos": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of conversations in database"
+        }
+      }
+    },
+    "loops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["convo_id", "title", "score"],
+        "properties": {
+          "convo_id": {
+            "type": "string",
+            "description": "Conversation identifier"
+          },
+          "title": {
+            "type": "string",
+            "description": "Conversation title"
+          },
+          "score": {
+            "type": "number",
+            "description": "Abandonment score (higher = more likely unfinished)"
+          }
+        }
+      },
+      "description": "Top open loops by abandonment score"
+    },
+    "drift": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Topic weights from recent conversations (last 90 days)"
+    },
+    "closure": {
+      "type": "object",
+      "required": ["open", "closed", "ratio"],
+      "properties": {
+        "open": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of open loops"
+        },
+        "closed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of closed/archived loops"
+        },
+        "ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Closure ratio as percentage (closed / total * 100)"
+        }
+      }
+    }
+  }
+}

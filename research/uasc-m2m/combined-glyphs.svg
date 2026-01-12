@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- Background -->
+  <rect width="900" height="600" fill="#f8f9fa" />
+  
+  <!-- Title -->
+  <text x="450" y="40" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">Combined UASC-M2M Glyphs: Creating Integrated Intelligent Systems</text>
+  
+  <!-- Single Glyphs Section -->
+  <rect x="50" y="80" width="800" height="130" fill="#e6f7ff" rx="5" ry="5" stroke="#1890ff" stroke-width="2" />
+  <text x="450" y="105" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#1890ff">Individual Intelligence Glyphs</text>
+  
+  <g transform="translate(100, 150)">
+    <circle cx="0" cy="0" r="40" fill="#f0f5ff" stroke="#597ef7" stroke-width="1" />
+    <text x="0" y="10" font-family="Arial" font-size="30" text-anchor="middle" fill="#333">网</text>
+    <text x="0" y="60" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Website UI</text>
+  </g>
+  
+  <g transform="translate(250, 150)">
+    <circle cx="0" cy="0" r="40" fill="#f0f5ff" stroke="#597ef7" stroke-width="1" />
+    <text x="0" y="10" font-family="Arial" font-size="30" text-anchor="middle" fill="#333">问</text>
+    <text x="0" y="60" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Chatbot AI</text>
+  </g>
+  
+  <g transform="translate(400, 150)">
+    <circle cx="0" cy="0" r="40" fill="#f0f5ff" stroke="#597ef7" stroke-width="1" />
+    <text x="0" y="10" font-family="Arial" font-size="30" text-anchor="middle" fill="#333">传</text>
+    <text x="0" y="60" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Data Collection</text>
+  </g>
+  
+  <g transform="translate(550, 150)">
+    <circle cx="0" cy="0" r="40" fill="#f0f5ff" stroke="#597ef7" stroke-width="1" />
+    <text x="0" y="10" font-family="Arial" font-size="30" text-anchor="middle" fill="#333">智</text>
+    <text x="0" y="60" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Decision AI</text>
+  </g>
+  
+  <g transform="translate(700, 150)">
+    <circle cx="0" cy="0" r="40" fill="#f0f5ff" stroke="#597ef7" stroke-width="1" />
+    <text x="0" y="10" font-family="Arial" font-size="30" text-anchor="middle" fill="#333">控</text>
+    <text x="0" y="60" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Automation</text>
+  </g>
+  
+  <!-- Combining Process -->
+  <rect x="300" y="230" width="300" height="80" fill="#fff7e6" rx="5" ry="5" stroke="#fa8c16" stroke-width="2" />
+  <text x="450" y="270" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#fa8c16">Combined Integration Process</text>
+  
+  <!-- Down arrow -->
+  <polygon points="450,320 430,330 450,350 470,330" fill="#fa8c16" />
+  
+  <!-- Layered Combination Section -->
+  <rect x="150" y="360" width="600" height="220" fill="#f6ffed" rx="5" ry="5" stroke="#52c41a" stroke-width="2" />
+  <text x="450" y="385" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#52c41a">Integrated Intelligent System</text>
+  
+  <g transform="translate(450, 470)">
+    <circle cx="0" cy="0" r="75" fill="#e6fffb" stroke="#13c2c2" stroke-width="2" />
+    <text x="0" y="15" font-family="Arial" font-size="60" text-anchor="middle" fill="#333">耀</text>
+  </g>
+  
+  <text x="450" y="560" font-family="Arial" font-size="16" text-anchor="middle" fill="#555">One hyper-symbol containing multiple integrated intelligences</text>
+  
+  <!-- Connection lines -->
+  <line x1="100" y1="195" x2="400" y2="300" stroke="#1890ff" stroke-width="1.5" stroke-dasharray="5,3" />
+  <line x1="250" y1="195" x2="410" y2="290" stroke="#1890ff" stroke-width="1.5" stroke-dasharray="5,3" />
+  <line x1="400" y1="195" x2="430" y2="265" stroke="#1890ff" stroke-width="1.5" stroke-dasharray="5,3" />
+  <line x1="550" y1="195" x2="450" y2="265" stroke="#1890ff" stroke-width="1.5" stroke-dasharray="5,3" />
+  <line x1="700" y1="195" x2="480" y2="290" stroke="#1890ff" stroke-width="1.5" stroke-dasharray="5,3" />
+</svg>

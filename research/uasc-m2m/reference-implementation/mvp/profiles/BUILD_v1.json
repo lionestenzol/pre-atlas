@@ -1,0 +1,79 @@
+{
+  "id": "BUILD",
+  "version": 1,
+  "description": "Build and test pipeline - install deps, build, test, artifacts",
+  "author": "system",
+  "created": "2025-01-05",
+  "inputs": [
+    {
+      "name": "project_dir",
+      "type": "string",
+      "default": ".",
+      "description": "Project directory"
+    }
+  ],
+  "steps": [
+    {
+      "name": "detect_package_manager",
+      "type": "shell",
+      "cmd": "if exist package.json (echo npm) else if exist requirements.txt (echo pip) else if exist Cargo.toml (echo cargo) else (echo unknown)",
+      "description": "Detect build system",
+      "capture_output": true,
+      "store_as": "pkg_manager",
+      "platform": "windows"
+    },
+    {
+      "name": "install_deps_npm",
+      "type": "shell",
+      "cmd": "npm install",
+      "description": "Install npm dependencies",
+      "condition": "pkg_manager == 'npm'",
+      "timeout_seconds": 300
+    },
+    {
+      "name": "install_deps_pip",
+      "type": "shell",
+      "cmd": "pip install -r requirements.txt",
+      "description": "Install pip dependencies",
+      "condition": "pkg_manager == 'pip'",
+      "timeout_seconds": 300
+    },
+    {
+      "name": "build_npm",
+      "type": "shell",
+      "cmd": "npm run build",
+      "description": "Run npm build",
+      "condition": "pkg_manager == 'npm'",
+      "continue_on_error": false
+    },
+    {
+      "name": "test_npm",
+      "type": "shell",
+      "cmd": "npm test",
+      "description": "Run npm tests",
+      "condition": "pkg_manager == 'npm'",
+      "continue_on_error": true,
+      "capture_output": true,
+      "store_as": "test_results"
+    },
+    {
+      "name": "test_pytest",
+      "type": "shell",
+      "cmd": "pytest -v",
+      "description": "Run pytest",
+      "condition": "pkg_manager == 'pip'",
+      "continue_on_error": true,
+      "capture_output": true,
+      "store_as": "test_results"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Build completed successfully"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Build failed - check test results",
+    "level": "error"
+  }
+}

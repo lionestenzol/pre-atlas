@@ -1,0 +1,16 @@
+{
+  "mode": "CLOSURE",
+  "build_allowed": false,
+  "primary_action": "Close or archive: Extrinsic vs Intrinsic Rewards",
+  "open_loops": [
+    "ChatGPT o1 Overview",
+    "Extrinsic vs Intrinsic Rewards",
+    "Irritation and Hunger Struggles",
+    "Universal Programming Table Setup",
+    "Understanding Gaslighting Effects"
+  ],
+  "open_loop_count": 14,
+  "closure_ratio": 6.67,
+  "risk": "HIGH",
+  "generated_at": "2026-01-08"
+}

@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "TimelineEvents.v1.json",
+  "title": "Timeline Events Log",
+  "description": "Phase 6C: Append-only log of system events for temporal visibility",
+  "type": "object",
+  "required": ["events", "meta"],
+  "properties": {
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TimelineEvent"
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["version", "created_at", "last_event_at"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "1.0"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_event_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "event_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "definitions": {
+    "TimelineEvent": {
+      "type": "object",
+      "required": ["id", "ts", "type", "source"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique event ID (e_<nanoid>)"
+        },
+        "ts": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp when event occurred"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "WORK_REQUESTED",
+            "WORK_APPROVED",
+            "WORK_DENIED",
+            "WORK_QUEUED",
+            "WORK_COMPLETED",
+            "WORK_FAILED",
+            "WORK_ABANDONED",
+            "WORK_TIMEOUT",
+            "WORK_CANCELLED",
+            "LOOP_OPENED",
+            "LOOP_CLOSED",
+            "MODE_CHANGED",
+            "STREAK_UPDATED",
+            "DAEMON_HEARTBEAT",
+            "SYSTEM_START"
+          ],
+          "description": "Type of event"
+        },
+        "source": {
+          "type": "string",
+          "enum": ["work_controller", "governance_daemon", "api", "cli", "system"],
+          "description": "Component that emitted the event"
+        },
+        "data": {
+          "type": "object",
+          "description": "Event-specific payload",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

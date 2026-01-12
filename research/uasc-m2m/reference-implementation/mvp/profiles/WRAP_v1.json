@@ -1,0 +1,61 @@
+{
+  "id": "WRAP",
+  "version": 1,
+  "description": "End-of-day wrap-up - backup, commit, sync, notify",
+  "author": "system",
+  "created": "2025-01-05",
+  "steps": [
+    {
+      "name": "git_status",
+      "type": "shell",
+      "cmd": "git status --porcelain",
+      "description": "Check for uncommitted changes",
+      "capture_output": true,
+      "store_as": "git_changes"
+    },
+    {
+      "name": "git_add",
+      "type": "shell",
+      "cmd": "git add -A",
+      "description": "Stage all changes",
+      "condition": "git_changes != ''"
+    },
+    {
+      "name": "git_commit",
+      "type": "shell",
+      "cmd": "git commit -m \"wrap: auto-commit {date}\"",
+      "description": "Commit with timestamp",
+      "condition": "git_changes != ''",
+      "continue_on_error": true
+    },
+    {
+      "name": "git_push",
+      "type": "shell",
+      "cmd": "git push",
+      "description": "Push to remote",
+      "continue_on_error": true
+    },
+    {
+      "name": "backup_notes",
+      "type": "shell",
+      "cmd": "echo 'Notes sync: placeholder'",
+      "description": "Sync notes to backup location",
+      "continue_on_error": true
+    },
+    {
+      "name": "notify_done",
+      "type": "log",
+      "message": "Wrap complete at {timestamp}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Day wrapped successfully - all changes saved"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Wrap completed with errors - check logs",
+    "level": "error"
+  }
+}

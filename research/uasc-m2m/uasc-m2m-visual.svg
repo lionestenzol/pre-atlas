@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">UASC-M2M Symbolic Language System</text>
+  
+  <!-- Basic Strokes Section -->
+  <rect x="50" y="70" width="300" height="180" fill="#e6f3ff" rx="5" ry="5" stroke="#2980b9" stroke-width="2" />
+  <text x="200" y="95" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#2980b9">Basic Strokes = LOGIN SYSTEM</text>
+  
+  <text x="70" y="125" font-family="Arial" font-size="16" fill="#333">一 (horizontal) = Initial connection</text>
+  <text x="70" y="155" font-family="Arial" font-size="16" fill="#333">丨 (vertical) = Authentication pathway</text>
+  <text x="70" y="185" font-family="Arial" font-size="16" fill="#333">乀 (diagonal) = Credential processing</text>
+  <text x="70" y="215" font-family="Arial" font-size="16" fill="#333">丶 (dot) = Completion marker</text>
+  
+  <!-- Network Control Section -->
+  <rect x="450" y="70" width="300" height="180" fill="#e6ffe6" rx="5" ry="5" stroke="#27ae60" stroke-width="2" />
+  <text x="600" y="95" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#27ae60">「网智控」= NETWORK CONTROL</text>
+  
+  <text x="470" y="125" font-family="Arial" font-size="16" fill="#333">网 = Network infrastructure</text>
+  <text x="470" y="155" font-family="Arial" font-size="16" fill="#333">智 = Intelligence processing</text>
+  <text x="470" y="185" font-family="Arial" font-size="16" fill="#333">控 = Management authority</text>
+  
+  <!-- Layered Encoding Section -->
+  <rect x="50" y="280" width="700" height="120" fill="#fff0e6" rx="5" ry="5" stroke="#d35400" stroke-width="2" />
+  <text x="400" y="305" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#d35400">Ultra-Compressed Layered Encoding</text>
+  
+  <text x="70" y="335" font-family="Arial" font-size="16" fill="#333">Core Command Layer (CCL): Primary function (e.g., UAV Deployment)</text>
+  <text x="70" y="365" font-family="Arial" font-size="16" fill="#333">Action Modifier Layer (AML): Execution context (e.g., Strike if target confirmed)</text>
+  <text x="70" y="395" font-family="Arial" font-size="16" fill="#333">Parameter Layer (PL): Specific details (e.g., coordinates, altitude)</text>
+  
+  <!-- Example Character -->
+  <rect x="250" y="430" width="300" height="150" fill="#f0e6ff" rx="5" ry="5" stroke="#8e44ad" stroke-width="2" />
+  <text x="400" y="455" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#8e44ad">Example: UAV Strike Command</text>
+  
+  <text x="400" y="515" font-family="Arial" font-size="50" text-anchor="middle" fill="#333">乙丶丿丨丿乀</text>
+  <text x="400" y="565" font-family="Arial" font-size="14" text-anchor="middle" fill="#555">One character representing deploy, strike, and return sequence</text>
+</svg>

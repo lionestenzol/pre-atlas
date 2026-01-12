@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Pre-Atlas Timeline</title>
+  <style>
+    body {
+      font-family: system-ui, monospace;
+      background: #0b0f14;
+      color: #d7dde5;
+      padding: 24px;
+      margin: 0;
+    }
+    h1 { color: #8cf2ff; margin-bottom: 8px; }
+    .subtitle { color: #6a7a8a; margin-bottom: 24px; }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .controls select, .controls input {
+      background: #1a2332;
+      color: #d7dde5;
+      border: 1px solid #2a3a4a;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .controls button {
+      background: #2a4a6a;
+      color: #d7dde5;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .controls button:hover { background: #3a5a7a; }
+
+    .stats {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .stat {
+      background: #1a2332;
+      padding: 12px 16px;
+      border-radius: 6px;
+    }
+    .stat-label { color: #6a7a8a; font-size: 12px; }
+    .stat-value { color: #8cf2ff; font-size: 24px; font-weight: bold; }
+
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #2a3a4a;
+    }
+
+    .event {
+      position: relative;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      background: #1a2332;
+      border-radius: 6px;
+      border-left: 3px solid #4a6a8a;
+    }
+    .event::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 18px;
+      width: 10px;
+      height: 10px;
+      background: #4a6a8a;
+      border-radius: 50%;
+    }
+
+    .event.WORK_APPROVED { border-left-color: #7dff9b; }
+    .event.WORK_APPROVED::before { background: #7dff9b; }
+
+    .event.WORK_COMPLETED { border-left-color: #7dff9b; }
+    .event.WORK_COMPLETED::before { background: #7dff9b; }
+
+    .event.WORK_DENIED { border-left-color: #ff6b6b; }
+    .event.WORK_DENIED::before { background: #ff6b6b; }
+
+    .event.WORK_FAILED { border-left-color: #ff6b6b; }
+    .event.WORK_FAILED::before { background: #ff6b6b; }
+
+    .event.WORK_TIMEOUT { border-left-color: #ffaa6b; }
+    .event.WORK_TIMEOUT::before { background: #ffaa6b; }
+
+    .event.MODE_CHANGED { border-left-color: #c49bff; }
+    .event.MODE_CHANGED::before { background: #c49bff; }
+
+    .event.LOOP_CLOSED { border-left-color: #7dff9b; }
+    .event.LOOP_CLOSED::before { background: #7dff9b; }
+
+    .event.SYSTEM_START { border-left-color: #8cf2ff; }
+    .event.SYSTEM_START::before { background: #8cf2ff; }
+
+    .event-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .event-type {
+      font-weight: bold;
+      color: #8cf2ff;
+    }
+    .event-time {
+      color: #6a7a8a;
+      font-size: 12px;
+    }
+    .event-data {
+      color: #8a9aaa;
+      font-size: 13px;
+    }
+    .event-data code {
+      background: #0d1520;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .empty {
+      color: #6a7a8a;
+      text-align: center;
+      padding: 48px;
+    }
+
+    .nav {
+      margin-bottom: 16px;
+    }
+    .nav a {
+      color: #6da8ff;
+      text-decoration: none;
+      margin-right: 16px;
+    }
+    .nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="/control/control.html">Control Panel</a>
+  <a href="/control/timeline.html">Timeline</a>
+</div>
+
+<h1>SYSTEM TIMELINE</h1>
+<p class="subtitle">What actually happened — the machine's memory</p>
+
+<div class="controls">
+  <select id="typeFilter">
+    <option value="">All Events</option>
+    <option value="WORK_REQUESTED">Work Requested</option>
+    <option value="WORK_APPROVED">Work Approved</option>
+    <option value="WORK_DENIED">Work Denied</option>
+    <option value="WORK_COMPLETED">Work Completed</option>
+    <option value="WORK_FAILED">Work Failed</option>
+    <option value="WORK_TIMEOUT">Work Timeout</option>
+    <option value="MODE_CHANGED">Mode Changed</option>
+    <option value="LOOP_OPENED">Loop Opened</option>
+    <option value="LOOP_CLOSED">Loop Closed</option>
+    <option value="SYSTEM_START">System Start</option>
+  </select>
+  <select id="limitFilter">
+    <option value="25">25 events</option>
+    <option value="50">50 events</option>
+    <option value="100" selected>100 events</option>
+    <option value="500">500 events</option>
+  </select>
+  <button onclick="refresh()">Refresh</button>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="timeline" id="timeline"></div>
+
+<script>
+function formatTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString() + ' ' + d.toLocaleDateString();
+}
+
+function formatRelative(ts) {
+  const now = Date.now();
+  const diff = now - new Date(ts).getTime();
+  if (diff < 60000) return Math.round(diff / 1000) + 's ago';
+  if (diff < 3600000) return Math.round(diff / 60000) + 'm ago';
+  if (diff < 86400000) return Math.round(diff / 3600000) + 'h ago';
+  return Math.round(diff / 86400000) + 'd ago';
+}
+
+function formatData(data) {
+  if (!data) return '';
+  const parts = [];
+  if (data.job_id) parts.push(`<code>${data.job_id}</code>`);
+  if (data.title) parts.push(data.title);
+  if (data.type) parts.push(`type: ${data.type}`);
+  if (data.agent) parts.push(`agent: ${data.agent}`);
+  if (data.reason) parts.push(`reason: ${data.reason}`);
+  if (data.duration_ms) parts.push(`${Math.round(data.duration_ms / 1000)}s`);
+  if (data.previous_mode && data.new_mode) parts.push(`${data.previous_mode} → ${data.new_mode}`);
+  if (data.closure_ratio !== undefined) parts.push(`ratio: ${(data.closure_ratio * 100).toFixed(0)}%`);
+  return parts.join(' · ');
+}
+
+async function loadStats() {
+  try {
+    const res = await fetch('/api/timeline/stats');
+    const stats = await res.json();
+
+    document.getElementById('stats').innerHTML = `
+      <div class="stat">
+        <div class="stat-label">Total Events</div>
+        <div class="stat-value">${stats.total}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Work Approved</div>
+        <div class="stat-value">${stats.by_type?.WORK_APPROVED || 0}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Work Denied</div>
+        <div class="stat-value">${stats.by_type?.WORK_DENIED || 0}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Mode Changes</div>
+        <div class="stat-value">${stats.by_type?.MODE_CHANGED || 0}</div>
+      </div>
+    `;
+  } catch (e) {
+    console.error('Failed to load stats:', e);
+  }
+}
+
+async function refresh() {
+  const type = document.getElementById('typeFilter').value;
+  const limit = document.getElementById('limitFilter').value;
+
+  let url = `/api/timeline?limit=${limit}`;
+  if (type) url += `&type=${type}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.events.length === 0) {
+      document.getElementById('timeline').innerHTML = '<div class="empty">No events yet</div>';
+      return;
+    }
+
+    document.getElementById('timeline').innerHTML = data.events.map(e => `
+      <div class="event ${e.type}">
+        <div class="event-header">
+          <span class="event-type">${e.type}</span>
+          <span class="event-time" title="${e.ts}">${formatRelative(e.ts)}</span>
+        </div>
+        <div class="event-data">${formatData(e.data)}</div>
+      </div>
+    `).join('');
+  } catch (e) {
+    document.getElementById('timeline').innerHTML = '<div class="empty">Failed to load timeline</div>';
+    console.error('Failed to load timeline:', e);
+  }
+}
+
+// Initial load
+loadStats();
+refresh();
+
+// Auto-refresh every 10 seconds
+setInterval(() => {
+  loadStats();
+  refresh();
+}, 10000);
+</script>
+
+</body>
+</html>

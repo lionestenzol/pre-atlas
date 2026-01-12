@@ -1,0 +1,119 @@
+{
+  "id": "DEPLOY",
+  "version": 1,
+  "description": "Production deploy - package, push, migrate, restart, notify",
+  "author": "system",
+  "created": "2025-01-05",
+  "required_roles": ["admin", "deployer"],
+  "inputs": [
+    {
+      "name": "environment",
+      "type": "string",
+      "default": "production",
+      "description": "Target environment"
+    },
+    {
+      "name": "skip_tests",
+      "type": "boolean",
+      "default": false,
+      "description": "Skip test run before deploy"
+    }
+  ],
+  "steps": [
+    {
+      "name": "pre_deploy_check",
+      "type": "shell",
+      "cmd": "git status --porcelain",
+      "description": "Ensure clean working directory",
+      "capture_output": true,
+      "store_as": "dirty_files",
+      "fail_if": "dirty_files != ''"
+    },
+    {
+      "name": "run_tests",
+      "type": "shell",
+      "cmd": "npm test || pytest -v",
+      "description": "Run test suite",
+      "condition": "skip_tests == false",
+      "continue_on_error": false,
+      "timeout_seconds": 600
+    },
+    {
+      "name": "build_artifacts",
+      "type": "shell",
+      "cmd": "echo 'Building artifacts...'",
+      "description": "Build deployment artifacts",
+      "continue_on_error": false
+    },
+    {
+      "name": "backup_current",
+      "type": "shell",
+      "cmd": "echo 'Creating backup of current deployment...'",
+      "description": "Backup current version for rollback",
+      "continue_on_error": true
+    },
+    {
+      "name": "push_artifacts",
+      "type": "shell",
+      "cmd": "echo 'Pushing to {environment}...'",
+      "description": "Push artifacts to target environment",
+      "continue_on_error": false
+    },
+    {
+      "name": "run_migrations",
+      "type": "shell",
+      "cmd": "echo 'Running database migrations...'",
+      "description": "Apply database migrations",
+      "continue_on_error": false
+    },
+    {
+      "name": "restart_services",
+      "type": "shell",
+      "cmd": "echo 'Restarting services...'",
+      "description": "Restart application services",
+      "continue_on_error": false
+    },
+    {
+      "name": "health_check",
+      "type": "http",
+      "method": "GET",
+      "url": "http://localhost:8080/health",
+      "description": "Verify deployment health",
+      "expected_status": 200,
+      "timeout_seconds": 30,
+      "retries": 3,
+      "continue_on_error": true
+    },
+    {
+      "name": "notify_complete",
+      "type": "log",
+      "message": "Deploy to {environment} completed at {timestamp}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Deployment successful!"
+  },
+  "on_failure": {
+    "type": "shell",
+    "cmd": "echo 'DEPLOY FAILED - initiating rollback...'",
+    "description": "Trigger rollback on failure"
+  },
+  "rollback": {
+    "steps": [
+      {
+        "name": "restore_backup",
+        "type": "shell",
+        "cmd": "echo 'Restoring previous version...'",
+        "description": "Restore from backup"
+      },
+      {
+        "name": "restart_services",
+        "type": "shell",
+        "cmd": "echo 'Restarting with previous version...'",
+        "description": "Restart services"
+      }
+    ]
+  }
+}

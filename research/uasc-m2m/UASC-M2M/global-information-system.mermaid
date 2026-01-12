@@ -1,0 +1,46 @@
+flowchart TB
+    subgraph "Real-Time Data Sources"
+        A1[Social Media Streams]
+        A2[News Networks]
+        A3[Scientific Publications]
+        A4[Diplomatic Channels]
+        A5[Economic Indicators]
+        A6[Internet of Things]
+    end
+    
+    subgraph "AI Processing Layers"
+        B1[Language Understanding]
+        B2[Pattern Recognition]
+        B3[Sentiment Analysis]
+        B4[Knowledge Distillation]
+        B5[Trend Prediction]
+        B6[Cross-Domain Integration]
+    end
+    
+    subgraph "World Symbol Encoder '世'"
+        C1[Level 1: Core Information]
+        C2[Level 2: Contextual Relationships]
+        C3[Level 3: Time-Series Patterns]
+        C4[Level 4: Cultural/Regional Variations]
+        C5[Level 5: Predictive Models]
+        C6[Level 6: Full Workflow Instructions]
+    end
+    
+    subgraph "Global Applications"
+        D1[Disaster Response Coordination]
+        D2[Pandemic Early Warning System]
+        D3[Economic Crisis Prevention]
+        D4[Global Cooperation Enhancement]
+        D5[Cultural Understanding Bridge]
+        D6[Unified Scientific Knowledge Base]
+    end
+    
+    A1 & A2 & A3 & A4 & A5 & A6 --> B1
+    B1 --> B2 --> B3 --> B4 --> B5 --> B6
+    
+    B6 --> C1
+    C1 --> C2 --> C3 --> C4 --> C5 --> C6
+    
+    C6 --> D1 & D2 & D3 & D4 & D5 & D6
+    
+    style C6 fill:#f96,stroke:#f63,stroke-width:4px

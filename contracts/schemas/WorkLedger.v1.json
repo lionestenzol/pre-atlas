@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "WorkLedger.v1",
+  "title": "Work Ledger",
+  "description": "Universal work admission and completion registry. Phase 6A.",
+  "type": "object",
+  "required": ["active", "queued", "completed", "stats", "config"],
+  "properties": {
+    "active": {
+      "type": "array",
+      "description": "Currently running jobs",
+      "items": { "$ref": "#/definitions/ActiveJob" }
+    },
+    "queued": {
+      "type": "array",
+      "description": "Jobs waiting for capacity or dependencies",
+      "items": { "$ref": "#/definitions/QueuedJob" }
+    },
+    "completed": {
+      "type": "array",
+      "description": "Finished jobs (completed, failed, abandoned)",
+      "items": { "$ref": "#/definitions/CompletedJob" }
+    },
+    "stats": {
+      "type": "object",
+      "description": "Aggregate statistics",
+      "required": ["total_completed", "total_failed", "total_abandoned"],
+      "properties": {
+        "total_completed": { "type": "integer", "minimum": 0 },
+        "total_failed": { "type": "integer", "minimum": 0 },
+        "total_abandoned": { "type": "integer", "minimum": 0 },
+        "total_denied": { "type": "integer", "minimum": 0 },
+        "avg_duration_ms": { "type": "number" },
+        "total_cost_usd": { "type": "number" },
+        "total_tokens_used": { "type": "integer" }
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": "Work controller configuration",
+      "required": ["max_concurrent_jobs", "max_queue_depth"],
+      "properties": {
+        "max_concurrent_jobs": { "type": "integer", "minimum": 1, "default": 1 },
+        "max_queue_depth": { "type": "integer", "minimum": 1, "default": 5 },
+        "default_timeout_ms": { "type": "integer", "default": 600000 },
+        "allow_ai_in_closure_mode": { "type": "boolean", "default": false }
+      }
+    }
+  },
+  "definitions": {
+    "JobType": {
+      "type": "string",
+      "enum": ["human", "ai", "system"],
+      "description": "Category of work"
+    },
+    "JobOutcome": {
+      "type": "string",
+      "enum": ["completed", "failed", "abandoned"],
+      "description": "How job ended"
+    },
+    "ActiveJob": {
+      "type": "object",
+      "required": ["job_id", "type", "title", "started_at"],
+      "properties": {
+        "job_id": { "type": "string", "description": "Unique job identifier" },
+        "type": { "$ref": "#/definitions/JobType" },
+        "title": { "type": "string", "description": "Human-readable job name" },
+        "agent": { "type": "string", "description": "Agent running the job (claude, openai, human, daemon)" },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 10, "default": 1 },
+        "started_at": { "type": "integer", "description": "Unix timestamp ms" },
+        "timeout_at": { "type": ["integer", "null"], "description": "When job expires" },
+        "depends_on": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "metadata": { "type": "object", "default": {} }
+      }
+    },
+    "QueuedJob": {
+      "type": "object",
+      "required": ["job_id", "type", "title", "queued_at", "position"],
+      "properties": {
+        "job_id": { "type": "string" },
+        "type": { "$ref": "#/definitions/JobType" },
+        "title": { "type": "string" },
+        "agent": { "type": "string" },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 10, "default": 1 },
+        "queued_at": { "type": "integer" },
+        "depends_on": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "position": { "type": "integer", "minimum": 1 },
+        "reason": { "type": "string", "description": "Why queued (capacity, dependency)" },
+        "blocked_by": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "metadata": { "type": "object", "default": {} }
+      }
+    },
+    "CompletedJob": {
+      "type": "object",
+      "required": ["job_id", "type", "title", "outcome", "started_at", "completed_at"],
+      "properties": {
+        "job_id": { "type": "string" },
+        "type": { "$ref": "#/definitions/JobType" },
+        "title": { "type": "string" },
+        "agent": { "type": "string" },
+        "outcome": { "$ref": "#/definitions/JobOutcome" },
+        "started_at": { "type": "integer" },
+        "completed_at": { "type": "integer" },
+        "duration_ms": { "type": "integer" },
+        "error": { "type": ["string", "null"] },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "tokens_used": { "type": "integer" },
+            "cost_usd": { "type": "number" }
+          }
+        },
+        "metadata": { "type": "object", "default": {} }
+      }
+    }
+  }
+}

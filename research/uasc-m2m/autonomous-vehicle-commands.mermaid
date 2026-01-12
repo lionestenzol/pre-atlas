@@ -1,0 +1,25 @@
+graph TD
+    A[Central AI Control] -->|乙丿丨丶一| B[Vehicle 1: Passenger Pickup]
+    A -->|丨乀一丶乙| C[Vehicle 2: Route Optimization]
+    A -->|丿一乙丨乀| D[Vehicle 3: Emergency Response]
+    
+    subgraph "Command: 乙丿丨丶一"
+    B1[CCL: Navigate to Location] --> B2[AML: Priority Pickup]
+    B2 --> B3[PL: Coordinates 34.05, -118.25]
+    B3 --> B4[CFL: Notify when 2 minutes away]
+    B4 --> B5[ERL: Reroute if traffic detected]
+    end
+    
+    subgraph "Command: 丨乀一丶乙"
+    C1[CCL: Optimize Route] --> C2[AML: Energy Conservation]
+    C2 --> C3[PL: Destination Parameters]
+    C3 --> C4[CFL: Update every 30 seconds]
+    C4 --> C5[ERL: Switch to time optimization if battery < 20%]
+    end
+    
+    subgraph "Command: 丿一乙丨乀"
+    D1[CCL: Emergency Protocol] --> D2[AML: Override Traffic Signals]
+    D2 --> D3[PL: Hospital Route]
+    D3 --> D4[CFL: Maximum Priority]
+    D4 --> D5[ERL: Request police escort if ETA > 10 min]
+    end

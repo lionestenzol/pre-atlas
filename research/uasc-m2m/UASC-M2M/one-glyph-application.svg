@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">One-Glyph Application Architecture</text>
+  
+  <!-- Input Layer: Code -->
+  <rect x="50" y="80" width="700" height="110" fill="#e6f7ff" rx="5" ry="5" stroke="#1890ff" stroke-width="2" />
+  <text x="400" y="100" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#1890ff">Application Components</text>
+  
+  <!-- Code Component Boxes -->
+  <rect x="70" y="120" width="150" height="50" fill="#f0f5ff" rx="3" ry="3" stroke="#597ef7" stroke-width="1" />
+  <text x="145" y="150" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">Front-End UI</text>
+  
+  <rect x="240" y="120" width="150" height="50" fill="#f0f5ff" rx="3" ry="3" stroke="#597ef7" stroke-width="1" />
+  <text x="315" y="150" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">Back-End Logic</text>
+  
+  <rect x="410" y="120" width="150" height="50" fill="#f0f5ff" rx="3" ry="3" stroke="#597ef7" stroke-width="1" />
+  <text x="485" y="150" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">Database Schema</text>
+  
+  <rect x="580" y="120" width="150" height="50" fill="#f0f5ff" rx="3" ry="3" stroke="#597ef7" stroke-width="1" />
+  <text x="655" y="150" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">Configuration</text>
+  
+  <!-- Abstraction Layer -->
+  <rect x="50" y="210" width="700" height="90" fill="#fff7e6" rx="5" ry="5" stroke="#fa8c16" stroke-width="2" />
+  <text x="400" y="235" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#fa8c16">Logic Abstraction</text>
+  
+  <rect x="85" y="255" width="630" height="30" fill="#fff2e8" rx="3" ry="3" stroke="#fa541c" stroke-width="1" />
+  <text x="400" y="275" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">AUTH_FLOW → PROFILE_FLOW → DB_CORE → ERROR_MANAGE</text>
+  
+  <!-- Encoding Layer -->
+  <rect x="50" y="320" width="700" height="90" fill="#f6ffed" rx="5" ry="5" stroke="#52c41a" stroke-width="2" />
+  <text x="400" y="345" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#52c41a">Novenary + Context Meters</text>
+  
+  <rect x="150" y="365" width="500" height="30" fill="#e6fffb" rx="3" ry="3" stroke="#13c2c2" stroke-width="1" />
+  <text x="400" y="385" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">1|?2 → 3 → 4|?5|?6 → 7|?8 → 9</text>
+  
+  <!-- Stroke Mapping -->
+  <rect x="50" y="430" width="700" height="50" fill="#f9f0ff" rx="5" ry="5" stroke="#722ed1" stroke-width="2" />
+  <text x="400" y="460" font-family="Arial" font-size="18" text-anchor="middle" font-weight="bold" fill="#722ed1">Stroke Mapping Layer</text>
+  
+  <!-- Final Symbol -->
+  <rect x="280" y="500" width="240" height="80" fill="#fff0f6" rx="5" ry="5" stroke="#eb2f96" stroke-width="2" />
+  <text x="400" y="530" font-family="Arial" font-size="22" text-anchor="middle" font-weight="bold" fill="#eb2f96">耀</text>
+  <text x="400" y="560" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">One Single AI-Executable Glyph</text>
+  
+  <!-- Arrows -->
+  <line x1="400" y1="190" x2="400" y2="210" stroke="#333" stroke-width="2" stroke-dasharray="5,5" />
+  <line x1="400" y1="300" x2="400" y2="320" stroke="#333" stroke-width="2" stroke-dasharray="5,5" />
+  <line x1="400" y1="410" x2="400" y2="430" stroke="#333" stroke-width="2" stroke-dasharray="5,5" />
+  <line x1="400" y1="480" x2="400" y2="500" stroke="#333" stroke-width="2" stroke-dasharray="5,5" />
+</svg>

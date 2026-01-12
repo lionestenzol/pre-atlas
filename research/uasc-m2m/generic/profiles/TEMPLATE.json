@@ -1,0 +1,82 @@
+{
+  "id": "TEMPLATE",
+  "name": "Template Command",
+  "version": 1,
+  "description": "A template for creating new UASC commands",
+  "author": "your-name",
+  "created": "2025-01-08",
+
+  "inputs": [
+    {
+      "name": "param1",
+      "type": "string",
+      "description": "First parameter",
+      "required": false,
+      "default": "default_value"
+    },
+    {
+      "name": "param2",
+      "type": "integer",
+      "description": "Second parameter",
+      "required": false,
+      "default": 0
+    }
+  ],
+
+  "steps": [
+    {
+      "name": "step_1_log",
+      "action": "log",
+      "params": {
+        "message": "Starting with param1={param1}, param2={param2}",
+        "level": "info"
+      }
+    },
+    {
+      "name": "step_2_shell",
+      "action": "shell",
+      "params": {
+        "cmd": "echo Running on {platform}",
+        "timeout": 30
+      },
+      "store_as": "shell_output",
+      "continue_on_error": false
+    },
+    {
+      "name": "step_3_conditional",
+      "action": "shell",
+      "params": {
+        "cmd": "echo This only runs on Windows"
+      },
+      "platform": "windows",
+      "condition": "param2 != 0"
+    },
+    {
+      "name": "step_4_http",
+      "action": "http",
+      "params": {
+        "url": "https://httpbin.org/get",
+        "method": "GET",
+        "timeout": 10
+      },
+      "store_as": "http_response",
+      "continue_on_error": true
+    }
+  ],
+
+  "on_success": {
+    "action": "log",
+    "params": {
+      "message": "Command completed successfully!",
+      "level": "info"
+    }
+  },
+
+  "on_failure": {
+    "action": "log",
+    "params": {
+      "message": "Command failed!",
+      "level": "error"
+    }
+  }
+}

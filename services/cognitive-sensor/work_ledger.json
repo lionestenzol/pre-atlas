@@ -1,0 +1,20 @@
+{
+  "active": [],
+  "queued": [],
+  "completed": [],
+  "stats": {
+    "total_completed": 0,
+    "total_failed": 0,
+    "total_abandoned": 0,
+    "total_denied": 0,
+    "avg_duration_ms": 0,
+    "total_cost_usd": 0,
+    "total_tokens_used": 0
+  },
+  "config": {
+    "max_concurrent_jobs": 1,
+    "max_queue_depth": 5,
+    "default_timeout_ms": 600000,
+    "allow_ai_in_closure_mode": false
+  }
+}

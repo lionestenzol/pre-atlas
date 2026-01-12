@@ -1,0 +1,70 @@
+{
+  "version": "1",
+  "generated_at": "2026-01-12T09:50:22.118677",
+  "cognitive": {
+    "state": {
+      "first_activity": "2024-08-21",
+      "last_activity": "2025-03-12",
+      "total_convos": 1397
+    },
+    "loops": [
+      {
+        "convo_id": "1356",
+        "title": "Extrinsic vs Intrinsic Rewards",
+        "score": 60406
+      },
+      {
+        "convo_id": "1209",
+        "title": "Irritation and Hunger Struggles",
+        "score": 37229
+      },
+      {
+        "convo_id": "81",
+        "title": "Universal Programming Table Setup",
+        "score": 34490
+      },
+      {
+        "convo_id": "1247",
+        "title": "Understanding Gaslighting Effects",
+        "score": 32195
+      },
+      {
+        "convo_id": "1136",
+        "title": "Understanding Doublespeak",
+        "score": 31960
+      }
+    ],
+    "drift": {
+      "like": 48182,
+      "just": 35978,
+      "execution": 35568,
+      "what": 28081,
+      "can": 24290,
+      "system": 22367,
+      "but": 22154,
+      "data": 20818,
+      "because": 18434,
+      "people": 15670
+    },
+    "closure": {
+      "open": 14,
+      "closed": 1,
+      "ratio": 6.67
+    }
+  },
+  "directive": {
+    "mode": "CLOSURE",
+    "build_allowed": false,
+    "primary_action": "Close or archive: Extrinsic vs Intrinsic Rewards",
+    "open_loops": [
+      "Extrinsic vs Intrinsic Rewards",
+      "Irritation and Hunger Struggles",
+      "Universal Programming Table Setup",
+      "Understanding Gaslighting Effects",
+      "Understanding Doublespeak"
+    ],
+    "open_loop_count": 14,
+    "closure_ratio": 6.67,
+    "risk": "HIGH"
+  }
+}

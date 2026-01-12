@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "DirectiveProposed.v1",
+  "title": "Directive (Proposed)",
+  "description": "A proposed behavioral directive based on cognitive state. Does not enforce — proposes.",
+  "type": "object",
+  "required": ["proposed_mode", "rationale", "generated_at"],
+  "properties": {
+    "proposed_mode": {
+      "type": "string",
+      "enum": ["CLOSURE", "MAINTENANCE", "BUILD", "RECOVER", "COMPOUND", "SCALE"],
+      "description": "The mode the system recommends"
+    },
+    "proposed_actions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Specific actions recommended for today"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Human-readable explanation of why this mode was chosen"
+    },
+    "build_allowed": {
+      "type": "boolean",
+      "description": "Whether BUILD-type actions are permitted in this mode"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "description": "Cognitive load risk assessment"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

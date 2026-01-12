@@ -1,0 +1,137 @@
+[
+  {
+    "convo_id": "266",
+    "title": "ChatGPT o1 Overview",
+    "score": 33622.48046875,
+    "semantic_score": -0.5400000214576721,
+    "keyword_score": 84057.0,
+    "intent_similarity": 0.09000000357627869,
+    "done_similarity": 0.0949999988079071
+  },
+  {
+    "convo_id": "1356",
+    "title": "Extrinsic vs Intrinsic Rewards",
+    "score": 24160.9609375,
+    "semantic_score": -2.390000104904175,
+    "keyword_score": 60406.0,
+    "intent_similarity": -0.03999999910593033,
+    "done_similarity": -0.01600000075995922
+  },
+  {
+    "convo_id": "1209",
+    "title": "Irritation and Hunger Struggles",
+    "score": 14896.76953125,
+    "semantic_score": 8.619999885559082,
+    "keyword_score": 37229.0,
+    "intent_similarity": 0.18000000715255737,
+    "done_similarity": 0.09300000220537186
+  },
+  {
+    "convo_id": "81",
+    "title": "Universal Programming Table Setup",
+    "score": 13807.8603515625,
+    "semantic_score": 19.760000228881836,
+    "keyword_score": 34490.0,
+    "intent_similarity": 0.18400000035762787,
+    "done_similarity": -0.013000000268220901
+  },
+  {
+    "convo_id": "1247",
+    "title": "Understanding Gaslighting Effects",
+    "score": 12881.9697265625,
+    "semantic_score": 6.619999885559082,
+    "keyword_score": 32195.0,
+    "intent_similarity": -0.009999999776482582,
+    "done_similarity": -0.07599999755620956
+  },
+  {
+    "convo_id": "1136",
+    "title": "Understanding Doublespeak",
+    "score": 12784.6796875,
+    "semantic_score": 1.1299999952316284,
+    "keyword_score": 31960.0,
+    "intent_similarity": -0.04100000113248825,
+    "done_similarity": -0.05299999937415123
+  },
+  {
+    "convo_id": "1075",
+    "title": "What is Psychology",
+    "score": 12281.83984375,
+    "semantic_score": 1.7300000190734863,
+    "keyword_score": 30702.0,
+    "intent_similarity": 0.00800000037997961,
+    "done_similarity": -0.008999999612569809
+  },
+  {
+    "convo_id": "1222",
+    "title": "Awkward Growth Calibration Phase",
+    "score": 12237.8701171875,
+    "semantic_score": 12.460000038146973,
+    "keyword_score": 30576.0,
+    "intent_similarity": -0.003000000026077032,
+    "done_similarity": -0.12700000405311584
+  },
+  {
+    "convo_id": "715",
+    "title": "C957 Knowledge Base Summary",
+    "score": 10760.8798828125,
+    "semantic_score": 1.4700000286102295,
+    "keyword_score": 26900.0,
+    "intent_similarity": 0.16899999976158142,
+    "done_similarity": 0.15399999916553497
+  },
+  {
+    "convo_id": "546",
+    "title": "Anger and Intensity",
+    "score": 10276.490234375,
+    "semantic_score": 8.149999618530273,
+    "keyword_score": 25679.0,
+    "intent_similarity": 0.04800000041723251,
+    "done_similarity": -0.032999999821186066
+  },
+  {
+    "convo_id": "889",
+    "title": "CRM Process Analysis",
+    "score": 9752.4501953125,
+    "semantic_score": 6.079999923706055,
+    "keyword_score": 24372.0,
+    "intent_similarity": 0.20000000298023224,
+    "done_similarity": 0.13899999856948853
+  },
+  {
+    "convo_id": "430",
+    "title": "The Power of Pleasing",
+    "score": 8886.1103515625,
+    "semantic_score": 8.859999656677246,
+    "keyword_score": 22202.0,
+    "intent_similarity": -0.014999999664723873,
+    "done_similarity": -0.10400000214576721
+  },
+  {
+    "convo_id": "717",
+    "title": "Quiz Solutions and Explanations",
+    "score": 8780.7197265625,
+    "semantic_score": 3.869999885559082,
+    "keyword_score": 21946.0,
+    "intent_similarity": 0.12200000137090683,
+    "done_similarity": 0.08299999684095383
+  },
+  {
+    "convo_id": "143",
+    "title": "AI Workflow Orchestration",
+    "score": 8621.26953125,
+    "semantic_score": 10.119999885559082,
+    "keyword_score": 21538.0,
+    "intent_similarity": 0.13699999451637268,
+    "done_similarity": 0.035999998450279236
+  },
+  {
+    "convo_id": "1207",
+    "title": "Understanding Relationship Dynamics",
+    "score": 8466.4599609375,
+    "semantic_score": 5.429999828338623,
+    "keyword_score": 21158.0,
+    "intent_similarity": -0.07100000232458115,
+    "done_similarity": -0.12600000202655792
+  }
+]

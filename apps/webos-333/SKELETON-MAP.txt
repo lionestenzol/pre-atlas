@@ -1,0 +1,589 @@
+================================================================================
+                        WEB OS SIMULATOR - SKELETON MAP
+================================================================================
+                           web-os-simulator.html
+                            Total: ~3443 Lines
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              FILE OVERVIEW                                    │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Lines 1-6        DOCTYPE & HTML Head Start                                 │
+│   Lines 7-1368     CSS STYLES                                                │
+│   Lines 1369-1462  HTML BODY STRUCTURE                                       │
+│   Lines 1463-3440  JAVASCRIPT                                                │
+│   Lines 3441-3443  Closing Tags                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                              CSS SECTION (7-1368)
+================================================================================
+
+[THEMES & VARIABLES] ─────────────────────────────────────────────── Lines 8-67
+│
+├── :root (Default Windows 95)                                          8-27
+│   └── 18 CSS custom properties for colors
+│
+├── .theme-xp (Windows XP Blue)                                        29-47
+│   └── Override variables for XP look
+│
+└── .theme-dark (Modern Dark)                                          49-67
+    └── Override variables for dark mode
+
+[GLOBAL STYLES] ──────────────────────────────────────────────────── Lines 69-81
+│
+├── * (box-sizing reset)                                               69-74
+└── body (viewport setup)                                              76-81
+
+[BOOT SCREEN] ────────────────────────────────────────────────────── Lines 83-137
+│
+├── #boot-screen (black background container)                          83-96
+├── #boot-screen.hidden                                                98-100
+├── #boot-text (BIOS-style text)                                      102-106
+├── #boot-loader (loading area)                                       108-121
+├── .progress-bar (outer bar)                                         123-130
+└── .progress-fill (animated fill)                                    132-137
+
+[LOGIN SCREEN] ──────────────────────────────────────────────────── Lines 139-203
+│
+├── #login-screen (gradient background)                               139-151
+├── #login-screen.show                                                153-155
+├── .login-box (white card)                                           157-163
+├── .login-avatar (user icon)                                         165-175
+├── .login-box h2                                                     177-180
+├── .login-box input                                                  182-189
+└── .login-box button                                                 191-203
+
+[DESKTOP] ────────────────────────────────────────────────────────── Lines 205-254
+│
+├── #desktop (main area)                                              205-213
+├── .desktop-icon (icon wrapper)                                      215-228
+├── .desktop-icon .icon-img                                           230-238
+├── .desktop-icon span (label)                                        240-246
+├── .desktop-icon:hover                                               248-250
+└── .desktop-icon.selected                                            252-254
+
+[CONTEXT MENU] ──────────────────────────────────────────────────── Lines 256-287
+│
+├── .context-menu                                                     256-265
+├── .context-menu.show                                                267-269
+├── .context-menu-item                                                271-276
+├── .context-menu-item:hover                                          278-281
+└── .context-menu-separator                                           283-287
+
+[TASKBAR] ────────────────────────────────────────────────────────── Lines 289-366
+│
+├── #taskbar                                                          289-301
+├── #start-button                                                     303-316
+├── #start-button:hover                                               318-320
+├── #taskbar-apps                                                     322-328
+├── .taskbar-item                                                     330-344
+├── .taskbar-item.active                                              346-349
+├── #system-tray                                                      351-357
+├── .tray-icon                                                        359-362
+└── #clock                                                            364-366
+
+[START MENU] ─────────────────────────────────────────────────────── Lines 368-425
+│
+├── #start-menu                                                       368-380
+├── #start-menu.show                                                  382-385
+├── @keyframes slideUp                                                387-390
+├── .start-menu-header                                                392-398
+├── .start-menu-item                                                  400-408
+├── .start-menu-item:hover                                            410-413
+├── .start-menu-item .icon                                            415-419
+└── .start-menu-separator                                             421-425
+
+[WINDOWS] ────────────────────────────────────────────────────────── Lines 427-545
+│
+├── .window                                                           427-439
+├── .window.minimized                                                 441-443
+├── .window-titlebar                                                  445-453
+├── .window.inactive .window-titlebar                                 455-457
+├── .window-icon                                                      459-462
+├── .window-title                                                     464-472
+├── .window-controls                                                  474-477
+├── .window-control                                                   479-492
+├── .window-control:hover                                             494-496
+├── .window-control.close:hover                                       498-501
+├── .window-menubar                                                   503-520
+├── .window-content                                                   522-527
+├── .window-statusbar                                                 529-535
+└── .resizer                                                          537-545
+
+[FILE EXPLORER STYLES] ───────────────────────────────────────────── Lines 547-620
+
+[NOTEPAD STYLES] ─────────────────────────────────────────────────── Lines 622-640
+
+[CALCULATOR STYLES] ──────────────────────────────────────────────── Lines 642-694
+
+[TERMINAL STYLES] ────────────────────────────────────────────────── Lines 696-731
+
+[PAINT STYLES] ───────────────────────────────────────────────────── Lines 733-796
+
+[SETTINGS STYLES] ────────────────────────────────────────────────── Lines 798-890
+
+[MINESWEEPER STYLES] ─────────────────────────────────────────────── Lines 892-972
+
+[SOLITAIRE STYLES] ───────────────────────────────────────────────── Lines 974-1058
+
+[NOTIFICATIONS STYLES] ───────────────────────────────────────────── Lines 1060-1095
+
+[TASK MANAGER STYLES] ────────────────────────────────────────────── Lines 1097-1146
+
+[MUSIC PLAYER STYLES] ────────────────────────────────────────────── Lines 1148-1249
+
+[IMAGE VIEWER STYLES] ────────────────────────────────────────────── Lines 1251-1290
+
+[ANIMATIONS] ─────────────────────────────────────────────────────── Lines 1292-1319
+│
+├── .window-opening / @keyframes windowOpen                          1292-1300
+├── .window-closing / @keyframes windowClose                         1302-1309
+└── .snap-indicator                                                  1311-1319
+
+[BROWSER STYLES] ─────────────────────────────────────────────────── Lines 1321-1367
+
+
+================================================================================
+                            HTML SECTION (1369-1462)
+================================================================================
+
+<body>                                                                    1370
+│
+├── <!-- Boot Screen -->                                             1371-1380
+│   └── #boot-screen
+│       ├── #boot-text
+│       └── #boot-loader
+│           └── .progress-bar > .progress-fill
+│
+├── <!-- Login Screen -->                                            1382-1391
+│   └── #login-screen
+│       └── .login-box
+│           ├── .login-avatar
+│           ├── #login-username
+│           ├── #login-password (input)
+│           └── #login-btn
+│
+├── <!-- Desktop -->                                                 1393-1394
+│   └── #desktop (empty, populated by JS)
+│
+├── <!-- Taskbar -->                                                 1396-1408
+│   └── #taskbar
+│       ├── #start-button
+│       ├── #taskbar-apps
+│       └── #system-tray
+│           ├── #sound-toggle
+│           ├── #notification-icon
+│           └── #clock
+│
+├── <!-- Start Menu -->                                              1410-1452
+│   └── #start-menu
+│       ├── .start-menu-header
+│       ├── .start-menu-item[data-app="file-explorer"]
+│       ├── .start-menu-item[data-app="notepad"]
+│       ├── .start-menu-item[data-app="calculator"]
+│       ├── .start-menu-item[data-app="terminal"]
+│       ├── .start-menu-item[data-app="browser"]
+│       ├── .start-menu-item[data-app="paint"]
+│       ├── .start-menu-item[data-app="music"]
+│       ├── .start-menu-separator
+│       ├── .start-menu-item[data-app="minesweeper"]
+│       ├── .start-menu-item[data-app="solitaire"]
+│       ├── .start-menu-separator
+│       ├── .start-menu-item[data-app="settings"]
+│       ├── .start-menu-item[data-app="task-manager"]
+│       ├── .start-menu-separator
+│       └── #power-button
+│
+├── <!-- Context Menu -->                                                 1455
+│   └── #context-menu (populated dynamically)
+│
+├── <!-- Snap Indicator -->                                               1458
+│   └── #snap-indicator
+│
+└── <!-- Notifications -->                                                1461
+    └── #notification-container
+
+
+================================================================================
+                          JAVASCRIPT SECTION (1463-3440)
+================================================================================
+
+<script>                                                                  1463
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           CORE OS (1464-1660)                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+const OS = { ... }                                                   1465-1476
+│   Global state object containing:
+│   - windows[]        : Open window tracking
+│   - nextZIndex       : Window stacking order
+│   - nextWindowId     : Unique ID generator
+│   - activeWindow     : Currently focused window
+│   - soundEnabled     : Sound toggle state
+│   - theme            : Current theme name
+│   - wallpaper        : Custom wallpaper URL
+│   - fileSystem       : FileSystem instance
+│   - clipboard        : Clipboard data
+│   - desktopIcons     : Icon position data
+
+class FileSystem { ... }                                             1478-1598
+│   ├── constructor()                                                1479-1481
+│   ├── getDefaultFS()                                               1483-1513
+│   ├── load()                                                       1515-1518
+│   ├── save()                                                       1520-1522
+│   ├── getFolder(path)                                              1524-1537
+│   ├── getFile(path)                                                1539-1543
+│   ├── createFile(path, name, content)                              1545-1553
+│   ├── createFolder(path, name)                                     1555-1563
+│   ├── deleteItem(path, name)                                       1565-1573
+│   ├── renameItem(path, oldName, newName)                           1575-1584
+│   └── updateFile(path, content)                                    1586-1597
+
+function showNotification(title, body, duration)                     1600-1617
+│   Creates toast notification in bottom-right
+
+function playSound(type)                                             1619-1660
+    Uses Web Audio API for: click, notification, error, startup
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                       BOOT & LOGIN (1662-1721)                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+async function bootSequence()                                        1662-1703
+│   ├── Display BIOS messages line by line
+│   ├── Show loading bar with progress animation
+│   ├── Hide boot screen
+│   ├── Play startup sound
+│   └── Call showLoginScreen()
+
+function showLoginScreen()                                           1705-1714
+│   ├── Load saved username from localStorage
+│   ├── Display login screen
+│   └── Attach login button handlers
+
+function doLogin()                                                   1716-1721
+    ├── Hide login screen
+    ├── Call initDesktop()
+    └── Show welcome notification
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    DESKTOP INITIALIZATION (1723-1792)                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+function initDesktop()                                               1723-1742
+│   ├── Create FileSystem instance
+│   ├── Load theme from localStorage
+│   ├── Load wallpaper from localStorage
+│   ├── Load sound preference
+│   ├── Apply theme
+│   ├── Set wallpaper
+│   ├── Update sound icon
+│   ├── Setup desktop icons
+│   ├── Setup event listeners
+│   └── Start clock interval
+
+function applyTheme(theme)                                           1744-1750
+│   Apply theme class to body and save to localStorage
+
+function setupDesktopIcons()                                         1752-1792
+    ├── Clear desktop
+    ├── Define icon array (id, name, icon, top, left)
+    ├── Create icon elements
+    ├── Attach double-click handlers
+    ├── Attach context menu handlers
+    └── Make icons draggable
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        CONTEXT MENU (1794-1863)                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+function showContextMenu(e, type, data)                              1794-1847
+│   ├── Prevent default
+│   ├── Build menu items based on type:
+│   │   ├── 'desktop' : New Folder, New File, Refresh, Personalize
+│   │   ├── 'icon'    : Open, Delete
+│   │   └── 'file'    : Open, Rename, Copy, Delete
+│   ├── Render menu HTML
+│   ├── Attach click handlers
+│   └── Position and show menu
+
+function createNewFolder()                                           1849-1855
+│   Prompt for name, create via FileSystem
+
+function createNewFile()                                             1857-1863
+    Prompt for name, create via FileSystem
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                       EVENT LISTENERS (1865-1944)                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+function setupEventListeners()                                       1865-1901
+│   ├── Start button click → toggleStartMenu
+│   ├── Power button click → shutDown
+│   ├── Start menu items click → launchApp
+│   ├── Document click → close menus
+│   ├── Sound toggle click
+│   └── Keyboard shortcuts → handleKeyboardShortcuts
+
+function handleKeyboardShortcuts(e)                                  1903-1915
+│   ├── Alt+F4 → close active window
+│   └── Meta (Win) key → toggle start menu
+
+function updateSoundIcon()                                           1917-1919
+│   Update tray icon based on soundEnabled state
+
+function updateClock()                                               1921-1927
+│   Format and display current time
+
+function toggleStartMenu()                                           1929-1933
+│   Toggle start menu visibility
+
+function shutDown()                                                  1935-1944
+    Confirm and display shutdown screen
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      WINDOW MANAGEMENT (1946-2246)                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+function launchApp(appName)                                          1946-1957
+│   ├── Check if app already open → focus
+│   ├── Get app config
+│   └── Create window
+
+function getAppConfig(appName)                                       1959-2063
+│   Returns config object for each app:
+│   ├── file-explorer   (600x400)
+│   ├── notepad         (500x400, menubar)
+│   ├── calculator      (250x350, not resizable)
+│   ├── terminal        (600x400)
+│   ├── browser         (700x500)
+│   ├── paint           (700x500)
+│   ├── music           (350x450, not resizable)
+│   ├── minesweeper     (300x380, not resizable)
+│   ├── solitaire       (700x550)
+│   ├── settings        (600x450)
+│   ├── task-manager    (400x350)
+│   └── image-viewer    (600x450)
+
+function createWindow(config)                                        2065-2152
+│   ├── Generate window ID
+│   ├── Create window element
+│   ├── Set size and position
+│   ├── Create titlebar with controls
+│   ├── Create optional menubar
+│   ├── Create content area
+│   ├── Call config.content() for app UI
+│   ├── Create optional statusbar
+│   ├── Create optional resizer
+│   ├── Attach button handlers
+│   ├── Make draggable
+│   ├── Add to desktop DOM
+│   ├── Add to taskbar
+│   ├── Add to OS.windows array
+│   ├── Focus window
+│   └── Return window ID
+
+function addToTaskbar(windowId, title, icon, appId)                  2154-2169
+│   Create taskbar item with click handler
+
+function focusWindow(windowId)                                       2171-2187
+│   ├── Mark all windows inactive
+│   ├── Mark target window active
+│   ├── Bring to front (z-index)
+│   ├── Update taskbar active state
+│   └── Set OS.activeWindow
+
+function minimizeWindow(windowId)                                    2189-2197
+│   ├── Add minimized class
+│   ├── Update window state
+│   └── Update taskbar
+
+function restoreWindow(windowId)                                     2199-2207
+│   ├── Remove minimized class
+│   ├── Update window state
+│   └── Focus window
+
+function maximizeWindow(windowId)                                    2209-2235
+│   ├── If maximized → restore previous size
+│   └── If normal → save size, maximize
+
+function closeWindow(windowId)                                       2237-2246
+    ├── Add closing animation
+    ├── Remove from DOM
+    ├── Remove from taskbar
+    └── Remove from OS.windows
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      DRAGGING & RESIZING (2248-2357)                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+function makeDraggable(element, handle, isWindow)                    2248-2324
+│   ├── mousedown → startDrag
+│   │   ├── Record start position
+│   │   └── Add mousemove/mouseup listeners
+│   ├── mousemove → doDrag
+│   │   ├── Calculate delta
+│   │   ├── Update position
+│   │   └── Show snap indicator if near edge
+│   └── mouseup → stopDrag
+│       ├── Apply snap if indicator visible
+│       └── Remove listeners
+
+function makeResizable(element, handle)                              2326-2357
+    ├── mousedown → startResize
+    ├── mousemove → doResize (with min size)
+    └── mouseup → stopResize
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         APPLICATIONS (2359-3436)                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+function createFileExplorer()                                        2359-2436
+│   ├── Create sidebar with folder list
+│   ├── Create file list area
+│   ├── renderFiles() - display folder contents
+│   │   ├── Show folders and files with icons
+│   │   ├── Double-click folder → navigate
+│   │   ├── Double-click .txt → open in notepad
+│   │   └── Right-click → context menu
+│   └── Return container
+
+function openFileInNotepad(path, content)                            2438-2447
+│   Close existing notepad, open with file content
+
+function createNotepad()                                             2449-2466
+│   Simple textarea editor
+
+function createCalculator()                                          2468-2550
+│   ├── Display element
+│   ├── Button grid (C, ±, %, ÷, 0-9, +, -, ×, =)
+│   └── Calculator logic
+
+function createTerminal()                                            2552-2700
+│   ├── Command history
+│   ├── processCommand() with commands:
+│   │   help, ls/dir, cd, pwd, cat, mkdir,
+│   │   touch, rm, clear, echo, whoami, date, matrix
+│   └── Input line with prompt
+
+function createBrowser()                                             2702-2767
+│   ├── Navigation buttons
+│   ├── Address bar
+│   └── Content area (simulated)
+
+function createPaint()                                               2769-2887
+│   ├── Tool buttons (pencil, brush, eraser, fill, clear)
+│   ├── Color palette
+│   ├── Size slider
+│   └── Canvas with drawing logic
+
+function createMusicPlayer()                                         2889-2928
+│   ├── Album artwork
+│   ├── Track info
+│   ├── Progress bar
+│   ├── Play/pause/skip controls
+│   └── Volume slider
+
+function createMinesweeper()                                         2930-3113
+│   ├── Mine counter, reset button, timer
+│   ├── 9x9 grid with 10 mines
+│   ├── initGame() - setup grid
+│   ├── renderGrid() - display cells
+│   ├── revealCell() - click handler with flood fill
+│   ├── toggleFlag() - right-click handler
+│   └── Win/lose detection
+
+function createSolitaire()                                           3115-3223
+│   ├── Deck and waste piles
+│   ├── 4 foundation piles
+│   ├── 7 tableau piles
+│   ├── createDeck() - 52 cards, shuffle
+│   ├── dealCards() - initial layout
+│   └── render() - display and click handlers
+
+function createSettings()                                            3225-3374
+│   ├── Sidebar navigation
+│   └── Sections:
+│       ├── Personalization (themes, wallpaper)
+│       ├── System (info, username, reset)
+│       ├── Sound (toggle, test)
+│       └── About
+
+function createTaskManager()                                         3376-3416
+│   ├── Running apps list with End Task
+│   └── Fake CPU/Memory stats
+
+function createImageViewer()                                         3418-3436
+    ├── Toolbar (Open, Zoom, Rotate)
+    └── Image display area
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           STARTUP (3438-3439)                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+document.addEventListener('DOMContentLoaded', bootSequence);              3439
+    Entry point - starts boot sequence when page loads
+
+</script>                                                                 3440
+</body>                                                                   3441
+</html>                                                                   3442
+
+
+================================================================================
+                              DEPENDENCY GRAPH
+================================================================================
+
+bootSequence()
+    └── showLoginScreen()
+            └── doLogin()
+                    └── initDesktop()
+                            ├── new FileSystem()
+                            ├── applyTheme()
+                            ├── setupDesktopIcons()
+                            │       └── makeDraggable()
+                            ├── setupEventListeners()
+                            │       ├── toggleStartMenu()
+                            │       ├── shutDown()
+                            │       ├── launchApp() ────────┐
+                            │       └── handleKeyboardShortcuts()
+                            └── updateClock()               │
+                                                            │
+launchApp(appName) ◄────────────────────────────────────────┘
+    ├── getAppConfig(appName)
+    └── createWindow(config)
+            ├── config.content() ─── create[AppName]()
+            ├── makeDraggable()
+            ├── makeResizable()
+            ├── addToTaskbar()
+            └── focusWindow()
+
+Window Operations:
+    ├── focusWindow()
+    ├── minimizeWindow()
+    ├── restoreWindow()
+    ├── maximizeWindow()
+    └── closeWindow()
+
+Context Menus:
+    showContextMenu()
+        ├── createNewFolder() → FileSystem.createFolder()
+        └── createNewFile() → FileSystem.createFile()
+
+Notifications:
+    showNotification() ─── playSound()
+
+================================================================================
+                                  END OF MAP
+================================================================================

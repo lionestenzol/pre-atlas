@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python demo.py:*)",
+      "Bash(python cli.py:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)"
+    ]
+  }
+}

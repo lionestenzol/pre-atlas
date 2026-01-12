@@ -1,0 +1,38 @@
+flowchart TB
+    A[Command Generation Engine] --> B[Symbol Construction]
+    B --> C[Context-Aware Encoding]
+    C --> D[Transmission Layer]
+    D --> E[Symbol Decoding]
+    E --> F[Execution Engine]
+    
+    subgraph "Symbol Generation"
+    A --> A1[Workflow Analysis]
+    A1 --> A2[Process Abstraction]
+    A2 --> A3[Command Sequencing]
+    A3 --> B
+    end
+    
+    subgraph "Symbol Construction Process"
+    B --> B1[Layer 1: Core Process]
+    B1 --> B2[Layer 2: Conditional Logic]
+    B2 --> B3[Layer 3: Parameter Data]
+    B3 --> B4[Layer 4: Error Handling]
+    B4 --> B5[Layer 5: Workflow Compression]
+    B5 --> C
+    end
+    
+    subgraph "AI Interpretation"
+    E --> E1[Visual Pattern Recognition]
+    E1 --> E2[Contextual Analysis]
+    E2 --> E3[Parameter Extraction]
+    E3 --> E4[Logic Construction]
+    E4 --> F
+    end
+    
+    subgraph "Execution Engine"
+    F --> F1[Command Expansion]
+    F1 --> F2[Parameter Application]
+    F2 --> F3[Logic Execution]
+    F3 --> F4[Error Monitoring]
+    F4 --> F5[Completion Verification]
+    end

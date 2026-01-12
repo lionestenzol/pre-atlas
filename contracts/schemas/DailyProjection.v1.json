@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "DailyProjection.v1",
+  "title": "Daily Projection",
+  "description": "Single stamped artifact combining cognitive metrics and daily payload. Produced by run_all.ps1.",
+  "type": "object",
+  "required": ["version", "generated_at", "cognitive", "directive"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1",
+      "description": "Schema version"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when projection was generated"
+    },
+    "cognitive": {
+      "type": "object",
+      "required": ["state", "loops", "drift", "closure"],
+      "description": "Cognitive metrics snapshot (from CognitiveMetricsComputed)",
+      "properties": {
+        "state": {
+          "type": "object",
+          "properties": {
+            "first_activity": { "type": "string" },
+            "last_activity": { "type": "string" },
+            "total_convos": { "type": "integer" }
+          }
+        },
+        "loops": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "convo_id": { "type": "string" },
+              "title": { "type": "string" },
+              "score": { "type": "number" }
+            }
+          }
+        },
+        "drift": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "closure": {
+          "type": "object",
+          "properties": {
+            "open": { "type": "integer" },
+            "closed": { "type": "integer" },
+            "ratio": { "type": "number" }
+          }
+        }
+      }
+    },
+    "directive": {
+      "type": "object",
+      "required": ["mode", "build_allowed", "primary_action", "risk"],
+      "description": "Daily directive (from DailyPayload)",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["CLOSURE", "MAINTENANCE", "BUILD"]
+        },
+        "build_allowed": { "type": "boolean" },
+        "primary_action": { "type": "string" },
+        "open_loops": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "open_loop_count": { "type": "integer" },
+        "closure_ratio": { "type": "number" },
+        "risk": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "id": "CLEAN",
+  "version": 1,
+  "description": "System hygiene - clear temp, organize downloads, free disk",
+  "author": "system",
+  "created": "2025-01-05",
+  "steps": [
+    {
+      "name": "clear_temp",
+      "type": "shell",
+      "cmd": "del /q/f/s %TEMP%\\* 2>nul",
+      "description": "Clear Windows temp folder",
+      "continue_on_error": true,
+      "platform": "windows"
+    },
+    {
+      "name": "clear_temp_unix",
+      "type": "shell",
+      "cmd": "rm -rf /tmp/* 2>/dev/null || true",
+      "description": "Clear Unix temp folder",
+      "continue_on_error": true,
+      "platform": "unix"
+    },
+    {
+      "name": "organize_downloads",
+      "type": "shell",
+      "cmd": "echo 'Downloads organization: placeholder'",
+      "description": "Move old downloads to archive",
+      "continue_on_error": true
+    },
+    {
+      "name": "clear_caches",
+      "type": "shell",
+      "cmd": "echo 'Cache cleanup: placeholder'",
+      "description": "Clear application caches",
+      "continue_on_error": true
+    },
+    {
+      "name": "empty_trash",
+      "type": "shell",
+      "cmd": "echo 'Trash emptied: placeholder'",
+      "description": "Empty recycle bin / trash",
+      "continue_on_error": true
+    },
+    {
+      "name": "report_disk",
+      "type": "shell",
+      "cmd": "wmic logicaldisk get size,freespace,caption",
+      "description": "Report disk space",
+      "capture_output": true,
+      "platform": "windows"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "System cleaned successfully"
+  }
+}

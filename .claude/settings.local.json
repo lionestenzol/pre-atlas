@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(npm run start:*)",
+      "Bash(python refresh.py:*)",
+      "Bash(python:*)",
+      "Bash(cat:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(npx tsc:*)",
+      "Bash(curl:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist:*)",
+      "Bash(powershell -File:*)",
+      "Bash(find:*)",
+      "Bash(sqlite3:*)",
+      "Bash(wc:*)",
+      "Bash(npm run gate:*)",
+      "Bash(npm run api:*)",
+      "Bash( grep -r \"C:\\\\\\\\Users\\\\\\\\bruke\" \"C:/Users/bruke/Pre Atlas\" --include=\"*.py\" --include=\"*.ts\" --include=\"*.js\" --include=\"*.ps1\" --include=\"*.html\" --include=\"*.bat\")",
+      "Bash( du -sh \"C:/Users/bruke/Pre Atlas\"/*)",
+      "Bash( ls -la \"C:/Users/bruke/Pre Atlas\"/*.md)",
+      "Bash(del \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\nul\")",
+      "Bash(del \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\research\\\\uasc-m2m\\\\nul\")",
+      "Bash(del \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\research\\\\uasc-m2m\\\\reference-implementation\\\\nul\")",
+      "Bash(del \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\services\\\\cognitive-sensor\\\\nul\")",
+      "Bash(del \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\services\\\\delta-kernel\\\\nul\")",
+      "Bash(cmd /c type \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\services\\\\delta-kernel\\\\nul\")",
+      "Bash(cmd /c dir \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\nul\")",
+      "Bash(git init:*)"
+    ]
+  }
+}

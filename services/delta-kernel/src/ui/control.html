@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Pre-Atlas Control Panel</title>
+  <style>
+    body {
+      font-family: system-ui, monospace;
+      background: #0b0f14;
+      color: #d7dde5;
+      padding: 24px;
+    }
+    h1 { color: #8cf2ff; }
+    section { margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { padding: 6px 10px; border-bottom: 1px solid #1e2633; }
+    th { text-align: left; color: #6da8ff; }
+    .bad { color: #ff6b6b; }
+    .good { color: #7dff9b; }
+  </style>
+</head>
+<body>
+
+<h1>PRE-ATLAS CONTROL PANEL</h1>
+
+<section>
+  <h2>System State</h2>
+  <table id="state"></table>
+</section>
+
+<section>
+  <h2>Active Job</h2>
+  <table id="active"></table>
+</section>
+
+<section>
+  <h2>Queue</h2>
+  <table id="queue"></table>
+</section>
+
+<section>
+  <h2>Recent Completions</h2>
+  <table id="closed"></table>
+</section>
+
+<script>
+async function refresh() {
+  const res = await fetch("/api/work/status");
+  const s = await res.json();
+
+  document.getElementById("state").innerHTML = `
+    <tr><th>Mode</th><td>${s.mode}</td></tr>
+    <tr><th>build_allowed</th><td class="${s.build_allowed ? "good":"bad"}">${s.build_allowed}</td></tr>
+    <tr><th>Closure Ratio</th><td>${(s.closure_ratio * 100).toFixed(0)}%</td></tr>
+    <tr><th>Active Jobs</th><td>${s.capacity.active}/${s.capacity.max_concurrent}</td></tr>
+    <tr><th>Queue Depth</th><td>${s.capacity.queue_depth}/${s.capacity.max_queue}</td></tr>
+  `;
+
+  const active = s.active_jobs || [];
+  document.getElementById("active").innerHTML =
+    active.length === 0 ? "<tr><td>None</td></tr>" :
+    active.map(j => {
+      const timeLeft = Math.max(0, Math.round((j.expires_at - Date.now()) / 1000));
+      return `<tr><td>${j.job_id}</td><td>${j.type}</td><td>${j.title}</td><td>${timeLeft}s</td></tr>`;
+    }).join("");
+
+  const queue = s.queued_jobs || [];
+  document.getElementById("queue").innerHTML =
+    queue.length === 0 ? "<tr><td>Empty</td></tr>" :
+    queue.map((j,i) => `<tr><td>${i+1}</td><td>${j.job_id}</td><td>${j.type}</td><td>${j.title}</td></tr>`).join("");
+}
+
+async function loadCompletions() {
+  try {
+    const res = await fetch("/api/work/history");
+    if (res.ok) {
+      const h = await res.json();
+      const closed = h.completed || [];
+      document.getElementById("closed").innerHTML =
+        closed.length === 0 ? "<tr><td>None</td></tr>" :
+        closed.slice(0,5).map(j => `<tr><td>${j.job_id}</td><td>${j.outcome}</td><td>${j.title || ''}</td></tr>`).join("");
+    } else {
+      document.getElementById("closed").innerHTML = "<tr><td>-</td></tr>";
+    }
+  } catch {
+    document.getElementById("closed").innerHTML = "<tr><td>-</td></tr>";
+  }
+}
+
+setInterval(refresh, 5000);
+refresh();
+loadCompletions();
+</script>
+
+</body>
+</html>

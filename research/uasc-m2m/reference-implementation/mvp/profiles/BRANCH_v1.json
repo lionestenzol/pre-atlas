@@ -1,0 +1,66 @@
+{
+  "id": "BRANCH",
+  "version": 1,
+  "description": "Demonstrates conditional branching in the MVP executor",
+  "author": "system",
+  "created": "2025-01-05",
+  "inputs": [
+    {
+      "name": "run_mode",
+      "default": "fast"
+    },
+    {
+      "name": "flag",
+      "default": ""
+    }
+  ],
+  "steps": [
+    {
+      "name": "log_inputs",
+      "type": "log",
+      "message": "Run mode is {run_mode} with flag '{flag}'."
+    },
+    {
+      "name": "branch_on_mode",
+      "type": "condition",
+      "if": "run_mode == 'fast'",
+      "then": [
+        {
+          "name": "fast_path",
+          "type": "log",
+          "message": "Fast branch selected."
+        }
+      ],
+      "else": [
+        {
+          "name": "slow_path",
+          "type": "log",
+          "message": "Slow branch selected."
+        }
+      ]
+    },
+    {
+      "name": "branch_on_flag",
+      "type": "condition",
+      "if": "flag != ''",
+      "then": [
+        {
+          "name": "flag_present",
+          "type": "log",
+          "message": "Flag provided: {flag}."
+        }
+      ],
+      "else": [
+        {
+          "name": "flag_missing",
+          "type": "log",
+          "message": "No flag provided."
+        }
+      ]
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Branching demo completed."
+  }
+}

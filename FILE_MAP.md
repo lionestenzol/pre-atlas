@@ -372,6 +372,7 @@ cognitive_state.json ─────┐
 | `/api/state` | GET | Get system state | CLI, Web UI |
 | `/api/state` | PUT | Update state | CLI, Web UI |
 | `/api/state/unified` | GET | Merged Delta + Cognitive state | atlas_boot.html |
+| `/api/state/unified/stream` | GET (SSE) | Realtime unified_state + delta_created events | atlas_boot.html |
 | `/api/ingest/cognitive` | POST | Ingest from cognitive-sensor | push_to_delta.py |
 | `/api/tasks` | GET | List tasks | CLI, Web UI |
 | `/api/tasks` | POST | Create task | CLI, Web UI |

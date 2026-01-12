@@ -61,6 +61,19 @@ delta-kernel/
 | `/api/state` | GET | Get current system state |
 | `/api/state` | PUT | Update system state |
 | `/api/state/unified` | GET | Merged Delta + Cognitive state |
+| `/api/state/unified/stream` | GET (SSE) | Stream unified state + delta events |
+
+**Realtime (SSE) event format**
+
+The `/api/state/unified/stream` endpoint emits server-sent events with JSON payloads:
+
+```
+event: unified_state
+data: {"ok":true,"ts":"2024-01-01T00:00:00.000Z","delta":{...},"cognitive":{...},"derived":{...},"errors":[]}
+
+event: delta_created
+data: {"ok":true,"ts":"2024-01-01T00:00:00.000Z","delta":{...}}
+```
 
 ### Task Management
 | Endpoint | Method | Description |

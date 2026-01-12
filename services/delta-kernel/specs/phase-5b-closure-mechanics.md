@@ -272,6 +272,7 @@ if (isFirstClosureToday && (newMode === 'BUILD' || newMode === 'SCALE')) {
 | `/api/daemon/status` | GET | Daemon state + job history |
 | `/api/daemon/run` | POST | Manually trigger a job |
 | `/api/state/unified` | GET | Merged Delta + Cognitive state |
+| `/api/state/unified/stream` | GET (SSE) | Realtime unified_state + delta_created events |
 
 ---
 

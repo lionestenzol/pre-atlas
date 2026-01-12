@@ -5117,6 +5117,9 @@
       payload: null,
       bannerVisible: true,
       API_BASE: 'http://localhost:3001',
+      eventSource: null,
+      pollInterval: null,
+      pollMs: 30000,
       // Enforcement state
       buildAllowed: true,
       enforcementLevel: 0,
@@ -5126,49 +5129,96 @@
       primaryOrder: '',
 
       async init() {
-        try {
-          // Try unified API first (Delta + Cognitive merged)
-          const response = await fetch(`${this.API_BASE}/api/state/unified`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.ok) {
-              // Store enforcement state
-              this.buildAllowed = data.derived.build_allowed;
-              this.enforcementLevel = data.derived.enforcement_level;
-              this.violationsCount = data.derived.violations_count;
-              this.overridesCount = data.derived.overrides_count;
-              this.overrideAvailable = data.derived.override_available;
-              this.primaryOrder = data.derived.primary_order;
-
-              // Build payload from unified data
-              this.payload = {
-                closure: {
-                  open: data.derived.open_loops,
-                  ratio: data.derived.closure_ratio
-                },
-                loops: data.cognitive?.loops_latest || []
-              };
-              this.mode = data.derived.mode;
-              this.risk = data.derived.risk;
-              this.applyGovernance();
-              console.log('[CognitiveController] Loaded from unified API');
-              return;
-            }
-          }
-        } catch (e) {
-          console.log('[CognitiveController] Unified API unavailable:', e.message);
-        }
+        const loadedUnified = await this.loadUnifiedState();
 
         // Fallback: Try to load cognitive state from local file
-        try {
-          const response = await fetch('cognitive_state.json');
-          if (!response.ok) throw new Error('Not found');
-          this.payload = await response.json();
-          this.applyGovernance();
-          console.log('[CognitiveController] Loaded from local file (fallback)');
-        } catch (error) {
-          console.log('Cognitive system offline. Banner hidden. Run: python refresh.py');
+        if (!loadedUnified) {
+          try {
+            const response = await fetch('cognitive_state.json');
+            if (!response.ok) throw new Error('Not found');
+            this.payload = await response.json();
+            this.applyGovernance();
+            console.log('[CognitiveController] Loaded from local file (fallback)');
+          } catch (error) {
+            console.log('Cognitive system offline. Banner hidden. Run: python refresh.py');
+          }
         }
+
+        this.startUnifiedSubscription();
+      },
+
+      applyUnifiedPayload(data) {
+        if (!data || !data.ok) return;
+
+        // Store enforcement state
+        this.buildAllowed = data.derived.build_allowed;
+        this.enforcementLevel = data.derived.enforcement_level;
+        this.violationsCount = data.derived.violations_count;
+        this.overridesCount = data.derived.overrides_count;
+        this.overrideAvailable = data.derived.override_available;
+        this.primaryOrder = data.derived.primary_order;
+
+        // Build payload from unified data
+        this.payload = {
+          closure: {
+            open: data.derived.open_loops,
+            ratio: data.derived.closure_ratio
+          },
+          loops: data.cognitive?.loops_latest || []
+        };
+        this.mode = data.derived.mode;
+        this.risk = data.derived.risk;
+        this.applyGovernance();
+      },
+
+      async loadUnifiedState() {
+        try {
+          const response = await fetch(`${this.API_BASE}/api/state/unified`);
+          if (!response.ok) return false;
+          const data = await response.json();
+          if (!data.ok) return false;
+          this.applyUnifiedPayload(data);
+          console.log('[CognitiveController] Loaded from unified API');
+          return true;
+        } catch (e) {
+          console.log('[CognitiveController] Unified API unavailable:', e.message);
+          return false;
+        }
+      },
+
+      startUnifiedPolling() {
+        if (this.pollInterval) return;
+        this.loadUnifiedState();
+        this.pollInterval = setInterval(() => {
+          this.loadUnifiedState();
+        }, this.pollMs);
+      },
+
+      startUnifiedSubscription() {
+        if (!('EventSource' in window)) {
+          this.startUnifiedPolling();
+          return;
+        }
+
+        const streamUrl = `${this.API_BASE}/api/state/unified/stream`;
+        this.eventSource = new EventSource(streamUrl);
+
+        this.eventSource.addEventListener('unified_state', (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            this.applyUnifiedPayload(data);
+          } catch (error) {
+            console.log('[CognitiveController] Stream parse error:', error);
+          }
+        });
+
+        this.eventSource.onerror = () => {
+          if (this.eventSource) {
+            this.eventSource.close();
+            this.eventSource = null;
+          }
+          this.startUnifiedPolling();
+        };
       },
 
       /**

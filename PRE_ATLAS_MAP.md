@@ -295,6 +295,7 @@ npm run build    # Compile TypeScript
 | `/api/state` | GET | Get system state |
 | `/api/state` | PUT | Update system state |
 | `/api/state/unified` | GET | Merged Delta + Cognitive state |
+| `/api/state/unified/stream` | GET (SSE) | Realtime unified_state + delta_created events |
 | `/api/ingest/cognitive` | POST | Ingest cognitive metrics |
 | `/api/tasks` | GET | List tasks |
 | `/api/tasks` | POST | Create task |

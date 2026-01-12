@@ -362,6 +362,7 @@ Phase 5B establishes closure as a **real state-transition event** with automatic
 | `/api/daemon/status` | GET | Governance daemon status |
 | `/api/daemon/run` | POST | Manually trigger daemon job |
 | `/api/state/unified` | GET | Merged Delta + Cognitive state |
+| `/api/state/unified/stream` | GET (SSE) | Realtime unified_state + delta_created events |
 | `/api/health` | GET | Health check endpoint |
 | `/api/work/request` | POST | Request permission to start a job (Phase 6A) |
 | `/api/work/complete` | POST | Report job completion (Phase 6A) |

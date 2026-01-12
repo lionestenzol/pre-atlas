@@ -94,6 +94,7 @@ export interface JsonPatch {
 
 export interface SystemStateData {
   mode: Mode;
+  mode_since?: Timestamp;
   signals: {
     sleep_hours: number;
     open_loops: number;

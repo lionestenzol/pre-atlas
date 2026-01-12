@@ -306,8 +306,8 @@ export function createCockpitShellState(
       const bOverdue = b.state.due_at && b.state.due_at < currentTime;
       if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
       // Then by priority
-      const priorityOrder = { HIGH: 0, NORMAL: 1, LOW: 2 };
-      return priorityOrder[a.state.priority] - priorityOrder[b.state.priority];
+      const priorityOrder: Record<string, number> = { CRITICAL: 0, HIGH: 1, NORMAL: 2, LOW: 3 };
+      return (priorityOrder[a.state.priority] || 2) - (priorityOrder[b.state.priority] || 2);
     })
     .slice(0, MAX_SHELL_TASKS)
     .map((t) => ({
@@ -383,8 +383,11 @@ export function createCockpitShellState(
 
 function renderTaskTitle(task: TaskData): string {
   // Simple template rendering
-  let title = task.title_template;
-  for (const [key, value] of Object.entries(task.title_params)) {
+  if (task.title) {
+    return task.title.slice(0, 30);
+  }
+  let title = task.title_template || 'Task';
+  for (const [key, value] of Object.entries(task.title_params || {})) {
     title = title.replace(`{${key}}`, value);
   }
   return title.slice(0, 30); // Truncate for shell display

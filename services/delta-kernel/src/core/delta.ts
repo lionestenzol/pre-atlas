@@ -47,7 +47,7 @@ export async function hashState(state: unknown): Promise<SHA256> {
 
 // === ENTITY CREATION ===
 
-export async function createEntity<T extends EntityType>(
+export async function createEntity<T extends keyof EntityDataMap>(
   entityType: T,
   initialState: EntityDataMap[T]
 ): Promise<{ entity: Entity; delta: Delta; state: EntityDataMap[T] }> {
@@ -65,7 +65,7 @@ export async function createEntity<T extends EntityType>(
   };
 
   // Creation delta: all fields as "add" operations
-  const patch: JsonPatch[] = Object.entries(initialState).map(([key, value]) => ({
+  const patch: JsonPatch[] = Object.entries(initialState as Record<string, unknown>).map(([key, value]) => ({
     op: 'add' as const,
     path: `/${key}`,
     value,

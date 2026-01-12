@@ -145,14 +145,14 @@ function buildModeReason(
 function buildTransitionHints(
   mode: Mode,
   buckets: BucketedSignals,
-  rawSignals: SystemStateData['signals']
+  rawSignals: NonNullable<SystemStateData['signals']>
 ): TransitionHint[] {
   const hints: TransitionHint[] = [];
 
   switch (mode) {
     case 'RECOVER':
       if (buckets.sleep_hours === 'LOW') {
-        const needed = 6 - rawSignals.sleep_hours;
+        const needed = 6 - (rawSignals?.sleep_hours ?? 0);
         hints.push({
           target_mode: 'CLOSE_LOOPS',
           condition: 'sleep_hours reaches OK (≥6h)',
@@ -163,7 +163,7 @@ function buildTransitionHints(
 
     case 'CLOSE_LOOPS':
       if (buckets.open_loops === 'LOW' || buckets.open_loops === 'OK') {
-        const needed = rawSignals.open_loops - 1;
+        const needed = (rawSignals?.open_loops ?? 0) - 1;
         hints.push({
           target_mode: 'BUILD',
           condition: 'open_loops reaches HIGH (≤1)',
@@ -209,11 +209,11 @@ function buildTransitionHints(
   }
 
   // Always show RECOVER risk if sleep is borderline
-  if (mode !== 'RECOVER' && rawSignals.sleep_hours < 6.5) {
+  if (mode !== 'RECOVER' && (rawSignals?.sleep_hours ?? 0) < 6.5) {
     hints.push({
       target_mode: 'RECOVER',
       condition: 'sleep_hours drops to LOW (<6h)',
-      distance: `${(rawSignals.sleep_hours - 6).toFixed(1)}h buffer remaining`,
+      distance: `${((rawSignals?.sleep_hours ?? 0) - 6).toFixed(1)}h buffer remaining`,
     });
   }
 
@@ -227,7 +227,7 @@ export function buildTaskAction(
   currentTime: Timestamp
 ): PreparedAction {
   const isOverdue =
-    task.state.due_at !== null && task.state.due_at < currentTime;
+    task.state.due_at != null && task.state.due_at < currentTime;
 
   return {
     action_id: task.entity.entity_id,
@@ -270,38 +270,47 @@ export function buildDailyScreen(ctx: ScreenBuildContext): DailyScreenData {
   const { systemState, inbox, tasks, threads, config } = ctx;
   const currentTime = now();
 
+  // Get signals from nested object or flat fields
+  const rawSignals = systemState.state.signals || {
+    sleep_hours: systemState.state.sleep_hours || 0,
+    open_loops: systemState.state.open_loops || 0,
+    assets_shipped: systemState.state.assets_shipped || 0,
+    deep_work_blocks: systemState.state.deep_work_blocks || 0,
+    money_delta: systemState.state.money_delta || 0,
+  };
+
   // 1. Bucket signals
-  const buckets = bucketSignals(systemState.state.signals, config);
+  const buckets = bucketSignals(rawSignals, config);
 
   // 2. Build signal display
   const signals = {
     sleep_hours: {
-      raw: systemState.state.signals.sleep_hours,
+      raw: rawSignals.sleep_hours,
       bucket: buckets.sleep_hours,
-      label: `${systemState.state.signals.sleep_hours}h`,
+      label: `${rawSignals.sleep_hours}h`,
     },
     open_loops: {
-      raw: systemState.state.signals.open_loops,
+      raw: rawSignals.open_loops,
       bucket: buckets.open_loops,
-      label: `${systemState.state.signals.open_loops} open`,
+      label: `${rawSignals.open_loops} open`,
     },
     assets_shipped: {
-      raw: systemState.state.signals.assets_shipped,
+      raw: rawSignals.assets_shipped,
       bucket: buckets.assets_shipped,
-      label: `${systemState.state.signals.assets_shipped} shipped`,
+      label: `${rawSignals.assets_shipped} shipped`,
     },
     deep_work_blocks: {
-      raw: systemState.state.signals.deep_work_blocks,
+      raw: rawSignals.deep_work_blocks,
       bucket: buckets.deep_work_blocks,
-      label: `${systemState.state.signals.deep_work_blocks} blocks`,
+      label: `${rawSignals.deep_work_blocks} blocks`,
     },
     money_delta: {
-      raw: systemState.state.signals.money_delta,
+      raw: rawSignals.money_delta,
       bucket: buckets.money_delta,
       label:
-        systemState.state.signals.money_delta >= 0
-          ? `+$${systemState.state.signals.money_delta}`
-          : `-$${Math.abs(systemState.state.signals.money_delta)}`,
+        rawSignals.money_delta >= 0
+          ? `+$${rawSignals.money_delta}`
+          : `-$${Math.abs(rawSignals.money_delta)}`,
     },
   };
 

@@ -227,7 +227,7 @@ app.put('/api/state', async (req, res) => {
   const newState: SimpleState = req.body;
 
   const stateData = {
-    mode: newState.mode,
+    mode: newState.mode as import('../core/types').Mode,
     sleep_hours: newState.sleepHours,
     open_loops: newState.openLoops,
     leverage_balance: newState.leverageBalance,
@@ -297,8 +297,8 @@ app.post('/api/tasks', async (req, res) => {
 
   const taskData = {
     title,
-    status: 'OPEN',
-    priority,
+    status: 'OPEN' as import('../core/types').TaskStatus,
+    priority: priority as import('../core/types').Priority,
     created_at: now(),
     due_at: null,
     closed_at: null,
@@ -1199,8 +1199,8 @@ app.get('/api/timeline', (req, res) => {
   const events = timeline.query({
     from: from as string | undefined,
     to: to as string | undefined,
-    type: type as string | undefined,
-    source: source as string | undefined,
+    type: type as import('../core/timeline-logger').TimelineEventType | undefined,
+    source: source as import('../core/timeline-logger').TimelineSource | undefined,
     limit: limit ? parseInt(limit as string, 10) : 100,
   });
 

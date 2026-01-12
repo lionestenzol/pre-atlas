@@ -183,7 +183,7 @@ function renderActionItem(
 function renderTaskItem(task: TaskData, width: number): string {
   const priority = task.priority === 'HIGH' ? `${COLORS.red}!${COLORS.reset}` : ' ';
   const status = task.status === 'IN_PROGRESS' ? `${COLORS.yellow}►${COLORS.reset}` : '○';
-  const title = truncate(task.title, width - 10);
+  const title = truncate(task.title || task.title_template || 'Untitled', width - 10);
   const content = `${priority}${status} ${title}`;
   const padding = width - stripAnsi(content).length - 2;
 
@@ -256,7 +256,7 @@ function buildActionList(ctx: RenderContext): ActionItem[] {
   for (const task of inProgress.slice(0, 2)) {
     actions.push({
       type: 'complete_task',
-      label: `Complete: ${truncate(task.state.title, 40)}`,
+      label: `Complete: ${truncate(task.state.title || task.state.title_template || 'Task', 40)}`,
       entityId: task.entity.entity_id,
     });
   }

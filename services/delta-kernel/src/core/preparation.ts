@@ -239,34 +239,34 @@ interface ModeRelevanceRule {
 const MODE_RELEVANCE_LUT: Record<Mode, ModeRelevanceRule[]> = {
   RECOVER: [
     { check: (t) => t.priority === 'LOW', score: 100 },
-    { check: (t) => t.title_template.includes('health'), score: 90 },
-    { check: (t) => t.title_template.includes('admin'), score: 80 },
-    { check: (t) => t.due_at !== null && t.due_at < now() + 3600000, score: 70 },
+    { check: (t) => (t.title_template ?? '').includes('health'), score: 90 },
+    { check: (t) => (t.title_template ?? '').includes('admin'), score: 80 },
+    { check: (t) => t.due_at != null && t.due_at < now() + 3600000, score: 70 },
   ],
   CLOSE_LOOPS: [
     { check: (t) => t.linked_thread !== null, score: 100 },
-    { check: (t) => t.title_template.includes('reply'), score: 95 },
-    { check: (t) => t.title_template.includes('finish'), score: 90 },
-    { check: (t) => t.title_template.includes('cleanup'), score: 85 },
+    { check: (t) => (t.title_template ?? '').includes('reply'), score: 95 },
+    { check: (t) => (t.title_template ?? '').includes('finish'), score: 90 },
+    { check: (t) => (t.title_template ?? '').includes('cleanup'), score: 85 },
     { check: (t) => t.priority === 'HIGH', score: 80 },
   ],
   BUILD: [
-    { check: (t) => t.title_template.includes('CREATE'), score: 100 },
-    { check: (t) => t.title_template.includes('BUILD'), score: 95 },
-    { check: (t) => t.title_template.includes('draft'), score: 90 },
-    { check: (t) => t.title_template.includes('outline'), score: 85 },
+    { check: (t) => (t.title_template ?? '').includes('CREATE'), score: 100 },
+    { check: (t) => (t.title_template ?? '').includes('BUILD'), score: 95 },
+    { check: (t) => (t.title_template ?? '').includes('draft'), score: 90 },
+    { check: (t) => (t.title_template ?? '').includes('outline'), score: 85 },
   ],
   COMPOUND: [
-    { check: (t) => t.title_template.includes('EXTEND'), score: 100 },
-    { check: (t) => t.title_template.includes('improve'), score: 95 },
-    { check: (t) => t.title_template.includes('expand'), score: 90 },
-    { check: (t) => t.title_template.includes('leverage'), score: 85 },
+    { check: (t) => (t.title_template ?? '').includes('EXTEND'), score: 100 },
+    { check: (t) => (t.title_template ?? '').includes('improve'), score: 95 },
+    { check: (t) => (t.title_template ?? '').includes('expand'), score: 90 },
+    { check: (t) => (t.title_template ?? '').includes('leverage'), score: 85 },
   ],
   SCALE: [
-    { check: (t) => t.title_template.includes('DELEGATE'), score: 100 },
-    { check: (t) => t.title_template.includes('hire'), score: 95 },
-    { check: (t) => t.title_template.includes('systemize'), score: 90 },
-    { check: (t) => t.title_template.includes('automate'), score: 85 },
+    { check: (t) => (t.title_template ?? '').includes('DELEGATE'), score: 100 },
+    { check: (t) => (t.title_template ?? '').includes('hire'), score: 95 },
+    { check: (t) => (t.title_template ?? '').includes('systemize'), score: 90 },
+    { check: (t) => (t.title_template ?? '').includes('automate'), score: 85 },
   ],
 };
 
@@ -379,7 +379,7 @@ export function triageTasks(
   const scored = openTasks.map((t) => ({
     task: t,
     modeRelevance: calculateModeRelevance(t.state, mode),
-    isOverdue: t.state.due_at !== null && t.state.due_at < currentTime,
+    isOverdue: t.state.due_at != null && t.state.due_at < currentTime,
   }));
 
   // Sort by: overdue first, then mode relevance, then priority
@@ -643,10 +643,11 @@ export async function runPreparationEngine(
   jobs.push(draftGenJob);
 
   // Get existing fingerprints to prevent duplicates
-  const existingFingerprints = new Set(
+  const existingFingerprints: Set<string> = new Set(
     ctx.existingDrafts
       .filter((d) => d.state.status === 'READY' || d.state.status === 'QUEUED')
       .map((d) => d.state.fingerprint)
+      .filter((f): f is string => f !== undefined)
   );
 
   const candidates = await generateDraftCandidates(
@@ -724,7 +725,7 @@ export function getExpiredDrafts(
   return drafts.filter(
     (d) =>
       d.state.status === 'READY' &&
-      d.state.expires_at !== null &&
+      d.state.expires_at != null &&
       d.state.expires_at < currentTime
   );
 }

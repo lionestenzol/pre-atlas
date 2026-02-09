@@ -382,7 +382,7 @@ export interface RoutingPatchStructure {
 }
 
 export interface RoutingConditionPatch {
-  signal: keyof SystemStateData['signals'];
+  signal: keyof NonNullable<SystemStateData['signals']>;
   current_threshold: string;
   proposed_threshold: string;
   effect: string;

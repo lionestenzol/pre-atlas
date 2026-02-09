@@ -260,7 +260,7 @@ export function extractTextFromNote(entity: Entity, state: NoteData): TextSource
 }
 
 export function extractTextFromTask(entity: Entity, state: TaskData): TextSource {
-  const renderedParams = Object.entries(state.title_params)
+  const renderedParams = Object.entries(state.title_params || {})
     .map(([k, v]) => `${k}=${v}`)
     .join(' ');
   return {

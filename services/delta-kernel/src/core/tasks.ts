@@ -227,7 +227,7 @@ export async function completeTask(
 
   // Decrement open_loops signal
   const signalPatches = buildOpenLoopsDecrementPatch(
-    systemState.signals.open_loops
+    systemState.signals!.open_loops
   );
   const systemStateDelta = await createDelta(
     systemStateEntity,
@@ -275,7 +275,7 @@ export function getOverdueTasks(
     (t) =>
       t.state.status === 'OPEN' &&
       t.state.due_at !== null &&
-      t.state.due_at < currentTime
+      t.state.due_at! < currentTime
   );
 }
 

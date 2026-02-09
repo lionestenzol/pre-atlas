@@ -95,7 +95,7 @@ interface Codec2Module {
 }
 
 let codec2Module: Codec2Module | null = null;
-let moduleLoadPromise: Promise<Codec2Module> | null = null;
+let moduleLoadPromise: Promise<Codec2Module | null> | null = null;
 
 /**
  * Load Codec2 WASM module.
@@ -105,7 +105,7 @@ export async function loadCodec2(): Promise<Codec2Module | null> {
   if (codec2Module) return codec2Module;
   if (moduleLoadPromise) return moduleLoadPromise;
 
-  moduleLoadPromise = new Promise(async (resolve) => {
+  moduleLoadPromise = new Promise<Codec2Module | null>(async (resolve) => {
     try {
       // Try loading from CDN or local path
       const wasmPaths = [

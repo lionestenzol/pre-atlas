@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>My Cognitive Dashboard</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    h2 { font-size: 14px; margin: 22px 0 8px; }
+    .box { border: 1px solid #ddd; border-radius: 10px; padding: 12px; background: #fff; }
+    pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.35; }
+    .muted { color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>My Cognitive Dashboard</h1>
+  <div class="muted">Generated from results.db + STATE_HISTORY.md</div>
+
+  <h2>Latest State Snapshot</h2>
+  <div class="box"><pre>## 2026-01-12 09:49
+
+=== YOUR PERSONAL RADAR ===
+
+WHAT IS RISING:
+  execution       +35568
+  system          +19388
+  data            +17795
+  png             +12916
+  user            +10595
+
+WHAT IS FADING:
+  feel            -11968
+  control         -5295
+  none            -4650
+  customer        -3867
+  brand           -3853
+
+WHAT STAYS CONSTANT:
+  execution        35588
+  people           26270
+  system           25346
+  data             23899
+  feel             15530</pre></div>
+
+  <h2>Open Loops (Top 10)</h2>
+  <div class="box"><pre> 1. ChatGPT o1 Overview                            score=84057\n 2. Extrinsic vs Intrinsic Rewards                 score=60406\n 3. Irritation and Hunger Struggles                score=37229\n 4. Universal Programming Table Setup              score=34490\n 5. Understanding Gaslighting Effects              score=32195\n 6. Understanding Doublespeak                      score=31960\n 7. What is Psychology                             score=30702\n 8. Awkward Growth Calibration Phase               score=30576\n 9. C957 Knowledge Base Summary                    score=26900\n10. Anger and Intensity                            score=25679</pre></div>
+
+  <h2>Completion Analytics</h2>
+  <div class="box"><pre>Closed this week:   0\nArchived this week: 0\nClosed lifetime:    0\nArchived lifetime:  1\nClosure ratio:      0.0%</pre></div>
+
+  <h2>Lifetime Anchors (Top 15 Topics)</h2>
+  <div class="box"><pre>execution          35588\npeople             26270\nsystem             25346\ndata               23899\nfeel               15530\nuser               14009\npng                12916\ncode               12404\nfile               11857\nstep               10541\ndon                10415\nusers              9848\ntime               8460\ncontent            7675\nbased              7560</pre></div>
+
+  <div class="muted" style="margin-top:18px;">
+    To refresh: run <b>python loops.py</b>, <b>python reporter.py</b>, then <b>python build_dashboard.py</b>.
+  </div>
+</body>
+</html>

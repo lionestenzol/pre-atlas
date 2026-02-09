@@ -5,7 +5,7 @@
  * Runs heartbeat, refresh, and day boundary jobs on schedule.
  */
 
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -46,7 +46,7 @@ export class GovernanceDaemon {
   private storage: Storage;
   private repoRoot: string;
   private state: DaemonState;
-  private cronJobs: cron.ScheduledTask[] = [];
+  private cronJobs: ScheduledTask[] = [];
   private refreshProcess: ChildProcess | null = null;
   private workController: WorkController;
   private timeline: TimelineLogger;
@@ -618,7 +618,7 @@ export class GovernanceDaemon {
     } else {
       // Create new system_state with expanded fields
       const expandedFields = expandFields(fields);
-      const result = await createEntity('system_state', expandedFields);
+      const result = await createEntity('system_state', expandedFields as any);
       this.storage.saveEntity(result.entity, result.state);
       this.storage.appendDelta(result.delta);
     }

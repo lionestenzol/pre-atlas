@@ -360,7 +360,7 @@ export function buildDailyScreen(ctx: ScreenBuildContext): DailyScreenData {
   const transition_hints = buildTransitionHints(
     mode,
     buckets,
-    systemState.state.signals
+    systemState.state.signals!
   );
 
   return {

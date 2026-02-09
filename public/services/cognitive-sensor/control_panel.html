@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cognitive Control Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white p-8">
+  <div class="max-w-4xl mx-auto">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">Cognitive Control Panel</h1>
+      <p class="text-gray-400">Master controls for your personal operating system</p>
+    </header>
+
+    <!-- System Status -->
+    <div class="bg-gray-800 rounded-lg p-6 mb-6">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <i class="fas fa-brain"></i> System Status
+      </h2>
+      <div id="status" class="grid grid-cols-2 gap-4">
+        <div class="bg-gray-700 p-4 rounded">
+          <div class="text-sm text-gray-400">Current Mode</div>
+          <div id="current-mode" class="text-2xl font-bold">LOADING...</div>
+        </div>
+        <div class="bg-gray-700 p-4 rounded">
+          <div class="text-sm text-gray-400">Risk Level</div>
+          <div id="risk-level" class="text-2xl font-bold">LOADING...</div>
+        </div>
+        <div class="bg-gray-700 p-4 rounded">
+          <div class="text-sm text-gray-400">Open Loops</div>
+          <div id="open-count" class="text-2xl font-bold">--</div>
+        </div>
+        <div class="bg-gray-700 p-4 rounded">
+          <div class="text-sm text-gray-400">Closure Ratio</div>
+          <div id="closure-ratio" class="text-2xl font-bold">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Primary Action -->
+    <div id="primary-action-card" class="bg-red-900 border-2 border-red-500 rounded-lg p-6 mb-6">
+      <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
+        <i class="fas fa-exclamation-triangle"></i> Required Action
+      </h2>
+      <p id="primary-action-text" class="text-lg mb-4">Loading...</p>
+      <button onclick="acknowledgeAction()" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded font-bold">
+        I'll Do This Now
+      </button>
+    </div>
+
+    <!-- Open Loops Management -->
+    <div class="bg-gray-800 rounded-lg p-6 mb-6">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <i class="fas fa-list"></i> Open Loops
+      </h2>
+      <div id="loops-list" class="space-y-2">
+        <div class="text-gray-400">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-gray-800 rounded-lg p-6">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <i class="fas fa-bolt"></i> Quick Actions
+      </h2>
+      <div class="grid grid-cols-2 gap-4">
+        <button onclick="refreshSystem()" class="bg-blue-600 hover:bg-blue-700 p-4 rounded font-bold flex items-center justify-center gap-2">
+          <i class="fas fa-sync"></i> Refresh System
+        </button>
+        <button onclick="openDashboard()" class="bg-purple-600 hover:bg-purple-700 p-4 rounded font-bold flex items-center justify-center gap-2">
+          <i class="fas fa-chart-line"></i> View Dashboard
+        </button>
+        <button onclick="runDecide()" class="bg-green-600 hover:bg-green-700 p-4 rounded font-bold flex items-center justify-center gap-2">
+          <i class="fas fa-check"></i> Close a Loop
+        </button>
+        <button onclick="openCycleBoard()" class="bg-indigo-600 hover:bg-indigo-700 p-4 rounded font-bold flex items-center justify-center gap-2">
+          <i class="fas fa-calendar-alt"></i> Open CycleBoard
+        </button>
+      </div>
+    </div>
+
+    <!-- System Info -->
+    <div class="mt-6 text-center text-sm text-gray-500">
+      <p>Last updated: <span id="last-updated">--</span></p>
+      <p class="mt-2">Control panel connects to: services/cognitive-sensor/</p>
+    </div>
+  </div>
+
+  <script>
+    let currentState = null;
+
+    async function loadState() {
+      try {
+        // Try to load from workspace first, fallback to relative path
+        let data;
+        try {
+          const response = await fetch('cognitive_state.json');
+          data = await response.json();
+        } catch {
+          // Fallback failed - state file not available
+          throw new Error('Could not load cognitive_state.json');
+        }
+
+        currentState = data;
+        updateUI();
+      } catch (error) {
+        console.error('Failed to load state:', error);
+        document.getElementById('current-mode').textContent = 'OFFLINE';
+        document.getElementById('primary-action-text').textContent = 'Run: python refresh.py';
+      }
+    }
+
+    function updateUI() {
+      if (!currentState) return;
+
+      const payload = {
+        mode: currentState.closure.ratio < 15 ? 'CLOSURE' :
+              currentState.closure.open > 10 ? 'MAINTENANCE' : 'BUILD',
+        risk: currentState.closure.ratio < 15 ? 'HIGH' :
+              currentState.closure.open > 10 ? 'MEDIUM' : 'LOW',
+        open: currentState.closure.open,
+        ratio: currentState.closure.ratio,
+        action: currentState.loops[0]?.title || 'No loops'
+      };
+
+      document.getElementById('current-mode').textContent = payload.mode;
+      document.getElementById('risk-level').textContent = payload.risk;
+      document.getElementById('open-count').textContent = payload.open;
+      document.getElementById('closure-ratio').textContent = payload.ratio.toFixed(1) + '%';
+
+      document.getElementById('primary-action-text').textContent =
+        payload.mode === 'CLOSURE'
+          ? `Close or archive: ${payload.action}`
+          : payload.mode === 'MAINTENANCE'
+          ? `Review: ${payload.action}`
+          : 'Focus on creation today';
+
+      // Update card color
+      const card = document.getElementById('primary-action-card');
+      if (payload.mode === 'BUILD') {
+        card.className = 'bg-green-900 border-2 border-green-500 rounded-lg p-6 mb-6';
+      } else if (payload.mode === 'MAINTENANCE') {
+        card.className = 'bg-yellow-900 border-2 border-yellow-500 rounded-lg p-6 mb-6';
+      }
+
+      // Update loops list
+      const loopsList = document.getElementById('loops-list');
+      if (currentState.loops.length > 0) {
+        loopsList.innerHTML = currentState.loops.map((loop, i) => `
+          <div class="bg-gray-700 p-3 rounded flex justify-between items-center">
+            <div>
+              <span class="text-gray-400 text-sm">#${i + 1}</span>
+              <span class="ml-2">${loop.title}</span>
+            </div>
+            <button onclick="closeLoop('${loop.convo_id}')"
+                    class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+              Close
+            </button>
+          </div>
+        `).join('');
+      } else {
+        loopsList.innerHTML = '<div class="text-gray-400">No open loops detected</div>';
+      }
+
+      document.getElementById('last-updated').textContent = new Date().toLocaleString();
+    }
+
+    function acknowledgeAction() {
+      alert('Great! Focus on: ' + (currentState.loops[0]?.title || 'your primary task'));
+    }
+
+    function refreshSystem() {
+      alert('Run this command:\n\npython refresh.py\n\n(from services/cognitive-sensor/)');
+    }
+
+    function openDashboard() {
+      window.open('dashboard.html', '_blank');
+    }
+
+    function runDecide() {
+      alert('Run this command:\n\npython decide.py\n\n(from services/cognitive-sensor/)');
+    }
+
+    function openCycleBoard() {
+      window.open('cycleboard_app3.html', '_blank');
+    }
+
+    function closeLoop(convoId) {
+      alert(`To close loop ${convoId}:\n\n1. Run: python decide.py\n2. Choose option 1 (CLOSE) or 3 (ARCHIVE)`);
+    }
+
+    // Load on page load
+    loadState();
+
+    // Refresh every 30 seconds
+    setInterval(loadState, 30000);
+  </script>
+</body>
+</html>

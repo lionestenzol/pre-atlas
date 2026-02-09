@@ -696,107 +696,111 @@
       setTimeout(() => notification.remove(), 4000);
     }
 
-    // === UNIFIED STATE POLLING ===
+    // === UNIFIED STATE UPDATES ===
     let apiOnline = false;
-    let pollInterval = null;
+    let unifiedPollInterval = null;
+    let unifiedEventSource = null;
     const POLL_INTERVAL_MS = 30000; // 30 seconds
+
+    function applyUnifiedState(data) {
+      if (!data || !data.ok) return;
+
+      apiOnline = true;
+      updateStatusIndicator(true);
+
+      // Update UI from derived values (single truth)
+      const { mode, risk, open_loops, closure_ratio, primary_order,
+              build_allowed, enforcement_level, violations_count,
+              closures_today, total_closures, streak_days, best_streak } = data.derived;
+
+      // Mode
+      const modeEl = document.getElementById('metric-mode');
+      modeEl.textContent = mode;
+      modeEl.className = 'metric-value mode-' + mode.toLowerCase();
+
+      // Risk
+      const riskEl = document.getElementById('metric-risk');
+      riskEl.textContent = risk;
+      riskEl.className = 'metric-value risk-' + risk.toLowerCase();
+
+      // Open Loops
+      document.getElementById('metric-loops').textContent = open_loops;
+
+      // Closure Ratio (as percentage)
+      const ratioPercent = (typeof closure_ratio === 'number' ? closure_ratio * 100 : closure_ratio);
+      document.getElementById('metric-ratio').textContent =
+        (typeof ratioPercent === 'number' ? ratioPercent.toFixed(1) : ratioPercent) + '%';
+
+      // Primary Order
+      document.getElementById('primary-order').textContent = primary_order;
+
+      // Enforcement Badge
+      const enforcementBadge = document.getElementById('enforcement-badge');
+      if (enforcementBadge) {
+        const levelLabels = ['CLEAR', 'WARN', 'LOCKED', 'HARD LOCK'];
+        enforcementBadge.textContent = violations_count > 0
+          ? `${levelLabels[enforcement_level]} (${violations_count})`
+          : levelLabels[enforcement_level];
+        enforcementBadge.className = `enforcement-badge level-${enforcement_level}`;
+      }
+
+      // Closures Today
+      const closuresTodayEl = document.getElementById('metric-closures-today');
+      if (closuresTodayEl) {
+        closuresTodayEl.textContent = closures_today;
+        // Color based on productivity: green if >= 3, yellow if 1-2, gray if 0
+        if (closures_today >= 3) {
+          closuresTodayEl.style.color = '#44ff88';
+        } else if (closures_today > 0) {
+          closuresTodayEl.style.color = '#ffcc44';
+        } else {
+          closuresTodayEl.style.color = '#666680';
+        }
+      }
+
+      // Streak
+      const streakEl = document.getElementById('metric-streak');
+      if (streakEl) {
+        streakEl.textContent = streak_days + 'd';
+        // Color based on streak: gold if >= 7, green if >= 3, yellow otherwise
+        if (streak_days >= 7) {
+          streakEl.style.color = '#ffd700';
+        } else if (streak_days >= 3) {
+          streakEl.style.color = '#44ff88';
+        } else {
+          streakEl.style.color = '#ffcc44';
+        }
+        // Show best streak on hover
+        streakEl.title = `Best: ${best_streak}d | Total: ${total_closures}`;
+      }
+
+      // Update local state cache
+      systemState = {
+        mode,
+        risk,
+        openLoops: open_loops,
+        closureRatio: closure_ratio,
+        primaryAction: primary_order,
+        buildAllowed: build_allowed,
+        enforcementLevel: enforcement_level,
+        violationsCount: violations_count,
+        closuresToday: closures_today,
+        streakDays: streak_days,
+        bestStreak: best_streak,
+        totalClosures: total_closures
+      };
+
+      // Log any non-fatal errors
+      if (data.errors && data.errors.length > 0) {
+        console.log('Unified state warnings:', data.errors);
+      }
+    }
 
     async function loadUnifiedState() {
       try {
         const response = await fetch(`${API_BASE}/api/state/unified`);
         const data = await response.json();
-
-        if (data.ok) {
-          apiOnline = true;
-          updateStatusIndicator(true);
-
-          // Update UI from derived values (single truth)
-          const { mode, risk, open_loops, closure_ratio, primary_order,
-                  build_allowed, enforcement_level, violations_count,
-                  closures_today, total_closures, streak_days, best_streak } = data.derived;
-
-          // Mode
-          const modeEl = document.getElementById('metric-mode');
-          modeEl.textContent = mode;
-          modeEl.className = 'metric-value mode-' + mode.toLowerCase();
-
-          // Risk
-          const riskEl = document.getElementById('metric-risk');
-          riskEl.textContent = risk;
-          riskEl.className = 'metric-value risk-' + risk.toLowerCase();
-
-          // Open Loops
-          document.getElementById('metric-loops').textContent = open_loops;
-
-          // Closure Ratio (as percentage)
-          const ratioPercent = (typeof closure_ratio === 'number' ? closure_ratio * 100 : closure_ratio);
-          document.getElementById('metric-ratio').textContent =
-            (typeof ratioPercent === 'number' ? ratioPercent.toFixed(1) : ratioPercent) + '%';
-
-          // Primary Order
-          document.getElementById('primary-order').textContent = primary_order;
-
-          // Enforcement Badge
-          const enforcementBadge = document.getElementById('enforcement-badge');
-          if (enforcementBadge) {
-            const levelLabels = ['CLEAR', 'WARN', 'LOCKED', 'HARD LOCK'];
-            enforcementBadge.textContent = violations_count > 0
-              ? `${levelLabels[enforcement_level]} (${violations_count})`
-              : levelLabels[enforcement_level];
-            enforcementBadge.className = `enforcement-badge level-${enforcement_level}`;
-          }
-
-          // Closures Today
-          const closuresTodayEl = document.getElementById('metric-closures-today');
-          if (closuresTodayEl) {
-            closuresTodayEl.textContent = closures_today;
-            // Color based on productivity: green if >= 3, yellow if 1-2, gray if 0
-            if (closures_today >= 3) {
-              closuresTodayEl.style.color = '#44ff88';
-            } else if (closures_today > 0) {
-              closuresTodayEl.style.color = '#ffcc44';
-            } else {
-              closuresTodayEl.style.color = '#666680';
-            }
-          }
-
-          // Streak
-          const streakEl = document.getElementById('metric-streak');
-          if (streakEl) {
-            streakEl.textContent = streak_days + 'd';
-            // Color based on streak: gold if >= 7, green if >= 3, yellow otherwise
-            if (streak_days >= 7) {
-              streakEl.style.color = '#ffd700';
-            } else if (streak_days >= 3) {
-              streakEl.style.color = '#44ff88';
-            } else {
-              streakEl.style.color = '#ffcc44';
-            }
-            // Show best streak on hover
-            streakEl.title = `Best: ${best_streak}d | Total: ${total_closures}`;
-          }
-
-          // Update local state cache
-          systemState = {
-            mode,
-            risk,
-            openLoops: open_loops,
-            closureRatio: closure_ratio,
-            primaryAction: primary_order,
-            buildAllowed: build_allowed,
-            enforcementLevel: enforcement_level,
-            violationsCount: violations_count,
-            closuresToday: closures_today,
-            streakDays: streak_days,
-            bestStreak: best_streak,
-            totalClosures: total_closures
-          };
-
-          // Log any non-fatal errors
-          if (data.errors && data.errors.length > 0) {
-            console.log('Unified state warnings:', data.errors);
-          }
-        }
+        applyUnifiedState(data);
       } catch (e) {
         if (apiOnline) {
           // Only show notification on transition from online to offline
@@ -820,26 +824,50 @@
       }
     }
 
-    function startPolling() {
-      // Initial load
+    function startUnifiedPolling() {
       loadUnifiedState();
-      loadDaemonStatus();
-      // Poll every 30 seconds
-      pollInterval = setInterval(() => {
-        loadUnifiedState();
-        loadDaemonStatus();
-      }, POLL_INTERVAL_MS);
+      unifiedPollInterval = setInterval(loadUnifiedState, POLL_INTERVAL_MS);
     }
 
-    function stopPolling() {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
+    function stopUnifiedPolling() {
+      if (unifiedPollInterval) {
+        clearInterval(unifiedPollInterval);
+        unifiedPollInterval = null;
       }
+    }
+
+    function startUnifiedStream() {
+      if (!('EventSource' in window)) {
+        startUnifiedPolling();
+        return;
+      }
+
+      const streamUrl = `${API_BASE}/api/state/unified/stream`;
+      unifiedEventSource = new EventSource(streamUrl);
+
+      unifiedEventSource.addEventListener('unified_state', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          applyUnifiedState(data);
+        } catch (err) {
+          console.log('Unified state stream parse error:', err);
+        }
+      });
+
+      unifiedEventSource.onerror = () => {
+        if (unifiedEventSource) {
+          unifiedEventSource.close();
+          unifiedEventSource = null;
+        }
+        if (!unifiedPollInterval) {
+          startUnifiedPolling();
+        }
+      };
     }
 
     // === DAEMON STATUS POLLING ===
     let daemonOnline = false;
+    let daemonPollInterval = null;
 
     async function loadDaemonStatus() {
       try {
@@ -900,8 +928,14 @@
       }
     });
 
+    function startDaemonPolling() {
+      loadDaemonStatus();
+      daemonPollInterval = setInterval(loadDaemonStatus, POLL_INTERVAL_MS);
+    }
+
     // === INIT ===
-    startPolling();
+    startUnifiedStream();
+    startDaemonPolling();
   </script>
 </body>
 </html>

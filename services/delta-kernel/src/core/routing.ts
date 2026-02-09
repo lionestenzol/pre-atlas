@@ -70,12 +70,13 @@ export function bucketSignals(
   signals: SystemStateData['signals'],
   config: RoutingConfig = DEFAULT_CONFIG
 ): BucketedSignals {
+  const s = signals || { sleep_hours: 0, open_loops: 0, assets_shipped: 0, deep_work_blocks: 0, money_delta: 0 };
   return {
-    sleep_hours: bucketSleepHours(signals.sleep_hours),
-    open_loops: bucketOpenLoops(signals.open_loops),
-    assets_shipped: bucketAssetsShipped(signals.assets_shipped),
-    deep_work_blocks: bucketDeepWorkBlocks(signals.deep_work_blocks),
-    money_delta: bucketMoneyDelta(signals.money_delta, config.money_target),
+    sleep_hours: bucketSleepHours(s.sleep_hours),
+    open_loops: bucketOpenLoops(s.open_loops),
+    assets_shipped: bucketAssetsShipped(s.assets_shipped),
+    deep_work_blocks: bucketDeepWorkBlocks(s.deep_work_blocks),
+    money_delta: bucketMoneyDelta(s.money_delta, config.money_target),
   };
 }
 

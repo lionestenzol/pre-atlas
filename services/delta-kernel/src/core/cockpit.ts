@@ -75,7 +75,7 @@ export interface DraftDisplay {
   draft_type: 'MESSAGE' | 'ASSET' | 'PLAN' | 'SYSTEM';
   label: string;
   target_entity_id: UUID | null;
-  status: 'READY' | 'QUEUED' | 'APPLIED';
+  status: 'READY' | 'QUEUED' | 'APPLIED' | 'DISMISSED' | 'PENDING';
 }
 
 export interface LeverageMove {
@@ -100,6 +100,7 @@ export interface CockpitState {
   top_tasks: TaskDisplay[];
   drafts: DraftDisplay[];
   leverage_moves: LeverageMove[];
+  leverage_hint?: string | null;
   pending_action: {
     pending_id: UUID;
     action: PreparedAction;
@@ -138,24 +139,25 @@ const PRIORITY_ORDER: Record<Priority, number> = {
 // === MODE RELEVANCE CALCULATION ===
 
 function calculateModeRelevance(task: TaskData, mode: Mode): number {
+  const titleTemplate = task.title_template || task.title || '';
   switch (mode) {
     case 'RECOVER':
       return task.priority === 'LOW' ? 100 : 20;
     case 'CLOSE_LOOPS':
       return task.linked_thread ? 100 : 80;
     case 'BUILD':
-      return task.title_template.includes('CREATE') ||
-        task.title_template.includes('BUILD')
+      return titleTemplate.includes('CREATE') ||
+        titleTemplate.includes('BUILD')
         ? 100
         : 50;
     case 'COMPOUND':
-      return task.title_template.includes('EXTEND') ||
-        task.title_template.includes('IMPROVE')
+      return titleTemplate.includes('EXTEND') ||
+        titleTemplate.includes('IMPROVE')
         ? 100
         : 50;
     case 'SCALE':
-      return task.title_template.includes('DELEGATE') ||
-        task.title_template.includes('HIRE')
+      return titleTemplate.includes('DELEGATE') ||
+        titleTemplate.includes('HIRE')
         ? 100
         : 30;
     default:
@@ -258,41 +260,50 @@ export interface CockpitBuildContext {
 export function buildCockpit(ctx: CockpitBuildContext): CockpitState {
   const currentTime = now();
   const mode = ctx.systemState.state.mode;
-  const buckets = bucketSignals(ctx.systemState.state.signals, ctx.config);
+
+  // Get signals from nested object or flat fields
+  const rawSignals = ctx.systemState.state.signals || {
+    sleep_hours: ctx.systemState.state.sleep_hours || 0,
+    open_loops: ctx.systemState.state.open_loops || 0,
+    assets_shipped: ctx.systemState.state.assets_shipped || 0,
+    deep_work_blocks: ctx.systemState.state.deep_work_blocks || 0,
+    money_delta: ctx.systemState.state.money_delta || 0,
+  };
+  const buckets = bucketSignals(rawSignals, ctx.config);
 
   // 1. Build signal displays
   const signals = {
     sleep_hours: {
-      raw: ctx.systemState.state.signals.sleep_hours,
+      raw: rawSignals.sleep_hours,
       bucket: buckets.sleep_hours,
-      label: `${ctx.systemState.state.signals.sleep_hours}h`,
+      label: `${rawSignals.sleep_hours}h`,
       is_critical: buckets.sleep_hours === 'LOW',
     },
     open_loops: {
-      raw: ctx.systemState.state.signals.open_loops,
+      raw: rawSignals.open_loops,
       bucket: buckets.open_loops,
-      label: `${ctx.systemState.state.signals.open_loops} open`,
+      label: `${rawSignals.open_loops} open`,
       is_critical: buckets.open_loops === 'LOW',
     },
     assets_shipped: {
-      raw: ctx.systemState.state.signals.assets_shipped,
+      raw: rawSignals.assets_shipped,
       bucket: buckets.assets_shipped,
-      label: `${ctx.systemState.state.signals.assets_shipped} shipped`,
+      label: `${rawSignals.assets_shipped} shipped`,
       is_critical: false,
     },
     deep_work_blocks: {
-      raw: ctx.systemState.state.signals.deep_work_blocks,
+      raw: rawSignals.deep_work_blocks,
       bucket: buckets.deep_work_blocks,
-      label: `${ctx.systemState.state.signals.deep_work_blocks} blocks`,
+      label: `${rawSignals.deep_work_blocks} blocks`,
       is_critical: false,
     },
     money_delta: {
-      raw: ctx.systemState.state.signals.money_delta,
+      raw: rawSignals.money_delta,
       bucket: buckets.money_delta,
       label:
-        ctx.systemState.state.signals.money_delta >= 0
-          ? `+$${ctx.systemState.state.signals.money_delta}`
-          : `-$${Math.abs(ctx.systemState.state.signals.money_delta)}`,
+        rawSignals.money_delta >= 0
+          ? `+$${rawSignals.money_delta}`
+          : `-$${Math.abs(rawSignals.money_delta)}`,
       is_critical: buckets.money_delta === 'LOW',
     },
   };
@@ -306,12 +317,12 @@ export function buildCockpit(ctx: CockpitBuildContext): CockpitState {
       const actionType: ActionType = 'complete_task';
       if (isActionAllowedInMode(actionType, mode)) {
         const isOverdue =
-          task.state.due_at !== null && task.state.due_at < currentTime;
+          task.state.due_at != null && task.state.due_at < currentTime;
         allActions.push({
           slot: 0, // Will be assigned after sorting
           action_id: task.entity.entity_id,
           action_type: actionType,
-          label: `Complete: ${renderTemplate(task.state.title_template, task.state.title_params)}`,
+          label: `Complete: ${task.state.title || renderTemplate(task.state.title_template || '', task.state.title_params || {})}`,
           entity_id: task.entity.entity_id,
           priority: task.state.priority === 'HIGH' ? 'HIGH' : 'NORMAL',
           is_overdue: isOverdue,
@@ -376,10 +387,10 @@ export function buildCockpit(ctx: CockpitBuildContext): CockpitState {
     .filter((t) => t.state.status === 'OPEN')
     .map((t) => ({
       task_id: t.entity.entity_id,
-      title: renderTemplate(t.state.title_template, t.state.title_params),
-      priority: t.state.priority === 'HIGH' ? 'HIGH' : t.state.priority,
-      due_at: t.state.due_at,
-      is_overdue: t.state.due_at !== null && t.state.due_at < currentTime,
+      title: t.state.title || renderTemplate(t.state.title_template || '', t.state.title_params || {}),
+      priority: (t.state.priority === 'HIGH' ? 'HIGH' : t.state.priority) as Priority,
+      due_at: t.state.due_at ?? null,
+      is_overdue: t.state.due_at != null && t.state.due_at < currentTime,
       mode_relevance: calculateModeRelevance(t.state, mode),
     }))
     .sort((a, b) => {
@@ -395,8 +406,8 @@ export function buildCockpit(ctx: CockpitBuildContext): CockpitState {
       }
       // Then due date
       if (a.due_at !== b.due_at) {
-        if (a.due_at === null) return 1;
-        if (b.due_at === null) return -1;
+        if (a.due_at == null) return 1;
+        if (b.due_at == null) return -1;
         return a.due_at - b.due_at;
       }
       return 0;
@@ -440,7 +451,7 @@ export function buildCockpit(ctx: CockpitBuildContext): CockpitState {
   return {
     timestamp: currentTime,
     mode,
-    mode_since: ctx.systemState.entity.created_at, // TODO: track mode changes
+    mode_since: ctx.systemState.state.mode_since ?? ctx.systemState.entity.created_at,
     signals,
     prepared_actions,
     top_tasks,

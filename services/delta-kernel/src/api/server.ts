@@ -51,6 +51,20 @@ app.use(express.json());
 // Serve control panel UI
 app.use('/control', express.static(path.join(__dirname, '../ui')));
 
+const realtimeClients = new Set<express.Response>();
+let lastUnifiedStateSnapshot: string | null = null;
+
+const sendSseEvent = (res: express.Response, event: string, payload: unknown) => {
+  res.write(`event: ${event}\n`);
+  res.write(`data: ${JSON.stringify(payload)}\n\n`);
+};
+
+const broadcastSseEvent = (event: string, payload: unknown) => {
+  for (const client of realtimeClients) {
+    sendSseEvent(client, event, payload);
+  }
+};
+
 // === UNIFIED STATE (must be before /api/state to avoid route conflict) ===
 
 /**
@@ -58,17 +72,12 @@ app.use('/control', express.static(path.join(__dirname, '../ui')));
  * Single truth payload merging Delta authoritative state + cognitive snapshots.
  * Gracefully handles missing files.
  */
-app.get('/api/state/unified', (req, res) => {
+const buildUnifiedState = () => {
   const errors: string[] = [];
 
   // A) Load Delta authoritative state
   const entities = storage.loadEntitiesByType<Record<string, unknown>>('system_state');
   const deltaState = entities.length > 0 ? entities[0].state : null;
-
-  // B) Determine repo root (go up from delta-kernel/src/api to repo root)
-  const repoRoot = process.env.DELTA_DATA_DIR
-    ? path.resolve(process.env.DELTA_DATA_DIR, '..')
-    : path.resolve(__dirname, '../../../../..');
 
   // Helper to safely read JSON files
   const readJsonFile = (filePath: string, name: string): unknown | null => {
@@ -153,9 +162,7 @@ app.get('/api/state/unified', (req, res) => {
   const streakDays = (closureStats.streak_days as number) ?? (deltaState?.streak_days as number) ?? 0;
   const bestStreak = (closureStats.best_streak as number) || 0;
 
-  res.json({
-    ok: true,
-    ts: new Date().toISOString(),
+  return {
     delta: {
       system_state: deltaState,
     },
@@ -183,6 +190,59 @@ app.get('/api/state/unified', (req, res) => {
       best_streak: bestStreak,
     },
     errors,
+  };
+};
+
+const emitUnifiedStateIfChanged = () => {
+  const unifiedState = buildUnifiedState();
+  const snapshot = JSON.stringify(unifiedState);
+  if (snapshot === lastUnifiedStateSnapshot) {
+    return;
+  }
+  lastUnifiedStateSnapshot = snapshot;
+  broadcastSseEvent('unified_state', {
+    ok: true,
+    ts: new Date().toISOString(),
+    ...unifiedState,
+  });
+};
+
+const emitDeltaCreated = (delta: unknown) => {
+  broadcastSseEvent('delta_created', {
+    ok: true,
+    ts: new Date().toISOString(),
+    delta,
+  });
+};
+
+app.get('/api/state/unified', (req, res) => {
+  const unifiedState = buildUnifiedState();
+  res.json({
+    ok: true,
+    ts: new Date().toISOString(),
+    ...unifiedState,
+  });
+});
+
+app.get('/api/state/unified/stream', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+
+  res.write('retry: 10000\n\n');
+  realtimeClients.add(res);
+
+  const initialState = buildUnifiedState();
+  sendSseEvent(res, 'unified_state', {
+    ok: true,
+    ts: new Date().toISOString(),
+    ...initialState,
+  });
+
+  req.on('close', () => {
+    realtimeClients.delete(res);
   });
 });
 
@@ -225,9 +285,10 @@ app.get('/api/state', (req, res) => {
 // Update system state
 app.put('/api/state', async (req, res) => {
   const newState: SimpleState = req.body;
+  const currentTime = now();
 
   const stateData = {
-    mode: newState.mode,
+    mode: newState.mode as import('../core/types').Mode,
     sleep_hours: newState.sleepHours,
     open_loops: newState.openLoops,
     leverage_balance: newState.leverageBalance,
@@ -239,23 +300,34 @@ app.put('/api/state', async (req, res) => {
   if (entities.length > 0) {
     // Update existing
     const existing = entities[0];
+    const patches = Object.entries(stateData).map(([key, value]) => ({
+      op: 'replace' as const,
+      path: `/${key}`,
+      value,
+    }));
+    if ((existing.state.mode as string | undefined) !== stateData.mode) {
+      patches.push({ op: 'replace', path: '/mode_since', value: currentTime });
+    }
     const result = await createDelta(
       existing.entity,
       existing.state,
-      Object.entries(stateData).map(([key, value]) => ({
-        op: 'replace' as const,
-        path: `/${key}`,
-        value,
-      })),
+      patches,
       'user'
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     // Create new
-    const result = await createEntity('system_state', stateData);
+    const result = await createEntity('system_state', {
+      ...stateData,
+      mode_since: currentTime,
+    });
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({ success: true });
@@ -297,8 +369,8 @@ app.post('/api/tasks', async (req, res) => {
 
   const taskData = {
     title,
-    status: 'OPEN',
-    priority,
+    status: 'OPEN' as import('../core/types').TaskStatus,
+    priority: priority as import('../core/types').Priority,
     created_at: now(),
     due_at: null,
     closed_at: null,
@@ -311,6 +383,8 @@ app.post('/api/tasks', async (req, res) => {
   const result = await createEntity('task', taskData);
   storage.saveEntity(result.entity, result.state);
   storage.appendDelta(result.delta);
+  emitDeltaCreated(result.delta);
+  emitUnifiedStateIfChanged();
 
   res.json({
     id: result.entity.entity_id,
@@ -386,6 +460,7 @@ app.post('/api/ingest/cognitive', async (req, res) => {
   }
 
   const { cognitive, directive } = projection;
+  const ingestTime = now();
 
   // Map to system_state format (partial - uses any cast for flexibility)
   const stateData: Record<string, unknown> = {
@@ -395,7 +470,7 @@ app.post('/api/ingest/cognitive', async (req, res) => {
     risk: directive.risk,
     build_allowed: directive.build_allowed,
     primary_action: directive.primary_action,
-    last_ingest: now(),
+    last_ingest: ingestTime,
   };
 
   const entities = storage.loadEntitiesByType<Record<string, unknown>>('system_state');
@@ -403,23 +478,34 @@ app.post('/api/ingest/cognitive', async (req, res) => {
   if (entities.length > 0) {
     // Update existing
     const existing = entities[0];
+    const patches = Object.entries(stateData).map(([key, value]) => ({
+      op: 'replace' as const,
+      path: `/${key}`,
+      value,
+    }));
+    if ((existing.state.mode as string | undefined) !== directive.mode) {
+      patches.push({ op: 'replace', path: '/mode_since', value: ingestTime });
+    }
     const result = await createDelta(
       existing.entity,
       existing.state,
-      Object.entries(stateData).map(([key, value]) => ({
-        op: 'replace' as const,
-        path: `/${key}`,
-        value,
-      })),
+      patches,
       'cognitive-sensor'
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     // Create new (cast since cognitive state differs from full SystemStateData)
-    const result = await createEntity('system_state', stateData as any);
+    const result = await createEntity('system_state', {
+      ...stateData,
+      mode_since: ingestTime,
+    } as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({
@@ -459,10 +545,14 @@ app.post('/api/law/acknowledge', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     const result = await createEntity('system_state', acknowledgeData as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({
@@ -505,10 +595,14 @@ app.post('/api/law/archive', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     const result = await createEntity('system_state', { archived_loops: [archiveEntry] } as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({
@@ -539,10 +633,14 @@ app.post('/api/law/refresh', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     const result = await createEntity('system_state', refreshData as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({
@@ -613,6 +711,8 @@ app.post('/api/law/violation', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -631,6 +731,8 @@ app.post('/api/law/violation', async (req, res) => {
     const result = await createEntity('system_state', { enforcement: newEnforcement } as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -701,6 +803,8 @@ app.post('/api/law/override', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -719,6 +823,8 @@ app.post('/api/law/override', async (req, res) => {
     const result = await createEntity('system_state', { enforcement: newEnforcement } as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -944,6 +1050,7 @@ app.post('/api/law/close_loop', async (req, res) => {
     const modeChanged = currentMode !== newMode;
     if (modeChanged) {
       patches.push({ op: 'replace', path: '/mode', value: newMode });
+      patches.push({ op: 'replace', path: '/mode_since', value: timestamp });
       patches.push({ op: 'replace', path: '/last_mode_transition_at', value: timestamp });
       patches.push({ op: 'replace', path: '/last_mode_transition_reason', value: `Closure event: ratio=${closureRatio.toFixed(2)}` });
     }
@@ -965,6 +1072,8 @@ app.post('/api/law/close_loop', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -991,6 +1100,7 @@ app.post('/api/law/close_loop', async (req, res) => {
     // No existing system_state — create genesis state
     const genesisState = {
       mode: newMode,
+      mode_since: timestamp,
       build_allowed: buildAllowed,
       streak_days: streakUpdated ? 1 : 0,
       best_streak: streakUpdated ? 1 : 0,
@@ -1016,6 +1126,8 @@ app.post('/api/law/close_loop', async (req, res) => {
     const result = await createEntity('system_state', genesisState as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -1199,8 +1311,8 @@ app.get('/api/timeline', (req, res) => {
   const events = timeline.query({
     from: from as string | undefined,
     to: to as string | undefined,
-    type: type as string | undefined,
-    source: source as string | undefined,
+    type: type as import('../core/timeline-logger').TimelineEventType | undefined,
+    source: source as import('../core/timeline-logger').TimelineSource | undefined,
     limit: limit ? parseInt(limit as string, 10) : 100,
   });
 

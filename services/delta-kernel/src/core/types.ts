@@ -51,13 +51,13 @@ export type Mode =
   | 'COMPOUND'
   | 'SCALE';
 
-export type Author = 'user' | 'system' | 'ai' | 'cognitive-sensor';
+export type Author = 'user' | 'system' | 'ai' | 'cognitive-sensor' | 'enforcement_system' | 'closure_engine' | 'governance_daemon';
 
 export type Priority = 'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
 
 export type MessageStatus = 'SENT' | 'DELIVERED' | 'READ';
 
-export type TaskStatus = 'OPEN' | 'DONE' | 'BLOCKED';
+export type TaskStatus = 'OPEN' | 'DONE' | 'BLOCKED' | 'IN_PROGRESS' | 'ARCHIVED';
 
 export type ProjectStatus = 'ACTIVE' | 'PAUSED' | 'DONE';
 
@@ -90,20 +90,34 @@ export interface JsonPatch {
   from?: string;
 }
 
+// === BASE TYPE FOR INDEX SIGNATURE COMPATIBILITY ===
+
+export interface BaseEntityData {
+  [key: string]: unknown;
+}
+
 // === ENTITY STATE TYPES ===
 
-export interface SystemStateData {
+export interface SystemStateData extends BaseEntityData {
   mode: Mode;
-  signals: {
+  signals?: {
     sleep_hours: number;
     open_loops: number;
     assets_shipped: number;
     deep_work_blocks: number;
     money_delta: number;
   };
+  // Flat fields (alternative to signals object, used by API)
+  sleep_hours?: number;
+  open_loops?: number;
+  assets_shipped?: number;
+  deep_work_blocks?: number;
+  money_delta?: number;
+  leverage_balance?: number;
+  streak_days?: number;
 }
 
-export interface ThreadData {
+export interface ThreadData extends BaseEntityData {
   title: string;
   participants: UUID[];
   last_message_id: UUID | null;
@@ -112,7 +126,7 @@ export interface ThreadData {
   task_flag: boolean;
 }
 
-export interface MessageData {
+export interface MessageData extends BaseEntityData {
   thread_id: UUID;
   template_id: string;
   params: Record<string, string>;
@@ -120,22 +134,29 @@ export interface MessageData {
   status: MessageStatus;
 }
 
-export interface TaskData {
-  title_template: string;
-  title_params: Record<string, string>;
+export interface TaskData extends BaseEntityData {
+  title?: string;
+  title_template?: string;
+  title_params?: Record<string, string>;
   status: TaskStatus;
-  priority: Exclude<Priority, 'CRITICAL'>;
-  due_at: Timestamp | null;
-  linked_thread: UUID | null;
+  priority: Priority;
+  due_at?: Timestamp | null;
+  linked_thread?: UUID | null;
+  created_at?: Timestamp;
+  closed_at?: Timestamp | null;
+  project_id?: UUID | null;
+  parent_task_id?: UUID | null;
+  template_id?: string | null;
+  params?: Record<string, unknown>;
 }
 
-export interface NoteData {
+export interface NoteData extends BaseEntityData {
   template_id: string;
   params: Record<string, string>;
   tags: string[];
 }
 
-export interface ProjectData {
+export interface ProjectData extends BaseEntityData {
   name_template: string;
   name_params: Record<string, string>;
   status: ProjectStatus;
@@ -152,7 +173,7 @@ export interface Template {
 
 // === INBOX ===
 
-export interface InboxData {
+export interface InboxData extends BaseEntityData {
   unread_count: number;
   priority_queue: UUID[];
   task_queue: UUID[];
@@ -164,20 +185,21 @@ export interface InboxData {
 
 export type DraftType = 'MESSAGE' | 'ASSET' | 'PLAN' | 'SYSTEM';
 
-export type DraftStatus = 'READY' | 'QUEUED' | 'APPLIED' | 'DISMISSED';
+export type DraftStatus = 'READY' | 'QUEUED' | 'APPLIED' | 'DISMISSED' | 'PENDING';
 
-export interface DraftData {
+export interface DraftData extends BaseEntityData {
   draft_type: DraftType;
   template_id: string;
   params: Record<string, string>;
   target_entity_id: UUID | null;
-  source_entity_id: UUID | null;
-  fingerprint: SHA256;
+  source_entity_id?: UUID | null;
+  fingerprint?: SHA256;
   status: DraftStatus;
   created_by: Author;
   mode_context: Mode;
-  created_at: Timestamp;
-  expires_at: Timestamp | null;
+  created_at?: Timestamp;
+  expires_at?: Timestamp | null;
+  summary?: string;
 }
 
 // === PENDING ACTION ===
@@ -193,7 +215,7 @@ export type ActionType =
 
 export type PendingActionStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
 
-export interface PendingActionData {
+export interface PendingActionData extends BaseEntityData {
   action_type: ActionType;
   target_entity_id: UUID;
   payload: Record<string, unknown>;
@@ -206,7 +228,7 @@ export interface PendingActionData {
 // === MATRYOSHKA DICTIONARY (Compression Tiers) ===
 
 // Tier 1: Token Dictionary — atomic units
-export interface TokenData {
+export interface TokenData extends BaseEntityData {
   token_id: string;
   value: string;
   frequency: number;
@@ -214,7 +236,7 @@ export interface TokenData {
 }
 
 // Tier 2: Pattern Dictionary — sequences of tokens
-export interface PatternData {
+export interface PatternData extends BaseEntityData {
   pattern_id: string;
   token_sequence: string[]; // token_ids
   frequency: number;
@@ -222,7 +244,7 @@ export interface PatternData {
 }
 
 // Tier 3: Motif Dictionary — sequences of patterns
-export interface MotifData {
+export interface MotifData extends BaseEntityData {
   motif_id: string;
   pattern_sequence: string[]; // pattern_ids
   slots: string[]; // parameter slots in this motif
@@ -248,7 +270,7 @@ export type DiscoveryProposalType =
 
 export type DiscoveryProposalStatus = 'NEW' | 'REVIEWED' | 'ACCEPTED' | 'REJECTED';
 
-export interface DiscoveryProposalData {
+export interface DiscoveryProposalData extends BaseEntityData {
   proposal_type: DiscoveryProposalType;
   source_entity_ids: UUID[];
   proposed_structure: ProposedStructure;
@@ -316,7 +338,7 @@ export type DesignProposalType =
 
 export type DesignProposalStatus = 'NEW' | 'REVIEWED' | 'ACCEPTED' | 'REJECTED';
 
-export interface DesignProposalData {
+export interface DesignProposalData extends BaseEntityData {
   proposal_type: DesignProposalType;
   description: string;
   proposed_structure: DesignStructure;
@@ -827,7 +849,7 @@ export type UIStateIndicator = 'OK' | 'WARN' | 'ALERT';
 export type UITextStyle = 'PLAIN' | 'BOLD' | 'MUTED';
 
 // UI Surface (a "screen")
-export interface UISurfaceData {
+export interface UISurfaceData extends BaseEntityData {
   name: string;
   schema_version: '0.1.0';
   root_component_id: UUID;
@@ -835,7 +857,7 @@ export interface UISurfaceData {
 }
 
 // UI Component State (each widget instance)
-export interface UIComponentStateData {
+export interface UIComponentStateData extends BaseEntityData {
   surface_id: UUID;
   kind: UIComponentKind;
   props: UIComponentProps;
@@ -910,7 +932,7 @@ export interface UIButtonProps {
 }
 
 // UI Render Tick (optional grouping marker)
-export interface UIRenderTickData {
+export interface UIRenderTickData extends BaseEntityData {
   surface_id: UUID;
   tick: number;
   created_at: Timestamp;
@@ -919,7 +941,7 @@ export interface UIRenderTickData {
 // UI Surface Link (who is mirroring whom)
 export type UISurfaceLinkStatus = 'ACTIVE' | 'PAUSED' | 'CLOSED';
 
-export interface UISurfaceLinkData {
+export interface UISurfaceLinkData extends BaseEntityData {
   surface_id: UUID;
   sender_node_id: UUID;
   receiver_node_id: UUID;
@@ -951,7 +973,7 @@ export type UIStreamOp =
 // === CAMERA TILE DELTA STREAMING (Module 9) ===
 
 // Camera Surface (a camera scene)
-export interface CameraSurfaceData {
+export interface CameraSurfaceData extends BaseEntityData {
   name: string;
   grid_w: number;           // Grid width in tiles
   grid_h: number;           // Grid height in tiles
@@ -960,7 +982,7 @@ export interface CameraSurfaceData {
 }
 
 // Scene Tile State (static or residual tile)
-export interface SceneTileData {
+export interface SceneTileData extends BaseEntityData {
   surface_id: UUID;
   x: number;                // Grid x position
   y: number;                // Grid y position
@@ -972,7 +994,7 @@ export interface SceneTileData {
 }
 
 // Scene Object State (moving objects)
-export interface SceneObjectData {
+export interface SceneObjectData extends BaseEntityData {
   surface_id: UUID;
   shape_tiles: UUID[];      // References to SceneTileData
   x: number;                // Current position
@@ -993,7 +1015,7 @@ export type LightRegion = 'GLOBAL' | {
 };
 
 // Scene Light State (global or regional lighting)
-export interface SceneLightData {
+export interface SceneLightData extends BaseEntityData {
   surface_id: UUID;
   region: LightRegion;
   brightness: number;       // -16..+16
@@ -1002,7 +1024,7 @@ export interface SceneLightData {
 }
 
 // Camera Tick (optional grouping marker)
-export interface CameraTickData {
+export interface CameraTickData extends BaseEntityData {
   surface_id: UUID;
   tick: number;
   created_at: Timestamp;
@@ -1042,7 +1064,7 @@ export type ActuatorKind =
   | 'SOFTWARE_PARAM';
 
 // Actuator Definition (a controllable thing)
-export interface ActuatorData {
+export interface ActuatorData extends BaseEntityData {
   name: string;
   kind: ActuatorKind;
   owner_node_id: UUID;          // Device that can physically execute
@@ -1058,7 +1080,7 @@ export interface ActuatorData {
 // Actuator State (measured/confirmed state)
 export type ActuatorStateValue = 'UNKNOWN' | 'OFF' | 'ON' | 'MOVING' | 'ERROR';
 
-export interface ActuatorStateData {
+export interface ActuatorStateData extends BaseEntityData {
   actuator_id: UUID;
   owner_node_id: UUID;
   state: ActuatorStateValue;
@@ -1068,7 +1090,7 @@ export interface ActuatorStateData {
 }
 
 // Control Surface (UI control panel)
-export interface ControlSurfaceData {
+export interface ControlSurfaceData extends BaseEntityData {
   name: string;
   schema_version: '0.1.0';
   created_at: Timestamp;
@@ -1078,7 +1100,7 @@ export interface ControlSurfaceData {
 export type ControlWidgetKind = 'BUTTON' | 'TOGGLE' | 'SLIDER' | 'SELECT';
 
 // Control Widget (button/slider/toggle mapped to actuator)
-export interface ControlWidgetData {
+export interface ControlWidgetData extends BaseEntityData {
   surface_id: UUID;
   kind: ControlWidgetKind;
   label: string;
@@ -1107,7 +1129,7 @@ export type ActuationIntentStatus =
 export type ActuationAction = 'SET_ON' | 'SET_OFF' | 'SET_VALUE';
 
 // Actuation Intent (requested change; NOT execution)
-export interface ActuationIntentData {
+export interface ActuationIntentData extends BaseEntityData {
   actuator_id: UUID;
   requested_by_node_id: UUID;
   requested_by_actor: Author;
@@ -1129,7 +1151,7 @@ export interface ActuationIntentData {
 export type ActuationOutcome = 'APPLIED' | 'FAILED';
 
 // Actuation Receipt (proof of execution)
-export interface ActuationReceiptData {
+export interface ActuationReceiptData extends BaseEntityData {
   intent_id: UUID;
   actuator_id: UUID;
   owner_node_id: UUID;

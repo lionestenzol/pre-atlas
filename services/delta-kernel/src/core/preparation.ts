@@ -387,10 +387,10 @@ export function triageTasks(
     if (a.isOverdue !== b.isOverdue) return a.isOverdue ? -1 : 1;
     if (a.modeRelevance !== b.modeRelevance)
       return b.modeRelevance - a.modeRelevance;
-    const priorityOrder = { HIGH: 0, NORMAL: 1, LOW: 2 };
+    const priorityOrder: Record<string, number> = { CRITICAL: 0, HIGH: 1, NORMAL: 2, LOW: 3 };
     return (
-      priorityOrder[a.task.state.priority] -
-      priorityOrder[b.task.state.priority]
+      (priorityOrder[a.task.state.priority] || 2) -
+      (priorityOrder[b.task.state.priority] || 2)
     );
   });
 

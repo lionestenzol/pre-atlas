@@ -100,6 +100,7 @@ export interface BaseEntityData {
 
 export interface SystemStateData extends BaseEntityData {
   mode: Mode;
+  mode_since?: Timestamp;
   signals?: {
     sleep_hours: number;
     open_loops: number;

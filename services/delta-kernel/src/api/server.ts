@@ -225,6 +225,7 @@ app.get('/api/state', (req, res) => {
 // Update system state
 app.put('/api/state', async (req, res) => {
   const newState: SimpleState = req.body;
+  const currentTime = now();
 
   const stateData = {
     mode: newState.mode as import('../core/types').Mode,
@@ -239,21 +240,28 @@ app.put('/api/state', async (req, res) => {
   if (entities.length > 0) {
     // Update existing
     const existing = entities[0];
+    const patches = Object.entries(stateData).map(([key, value]) => ({
+      op: 'replace' as const,
+      path: `/${key}`,
+      value,
+    }));
+    if ((existing.state.mode as string | undefined) !== stateData.mode) {
+      patches.push({ op: 'replace', path: '/mode_since', value: currentTime });
+    }
     const result = await createDelta(
       existing.entity,
       existing.state,
-      Object.entries(stateData).map(([key, value]) => ({
-        op: 'replace' as const,
-        path: `/${key}`,
-        value,
-      })),
+      patches,
       'user'
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
   } else {
     // Create new
-    const result = await createEntity('system_state', stateData);
+    const result = await createEntity('system_state', {
+      ...stateData,
+      mode_since: currentTime,
+    });
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
   }
@@ -386,6 +394,7 @@ app.post('/api/ingest/cognitive', async (req, res) => {
   }
 
   const { cognitive, directive } = projection;
+  const ingestTime = now();
 
   // Map to system_state format (partial - uses any cast for flexibility)
   const stateData: Record<string, unknown> = {
@@ -395,7 +404,7 @@ app.post('/api/ingest/cognitive', async (req, res) => {
     risk: directive.risk,
     build_allowed: directive.build_allowed,
     primary_action: directive.primary_action,
-    last_ingest: now(),
+    last_ingest: ingestTime,
   };
 
   const entities = storage.loadEntitiesByType<Record<string, unknown>>('system_state');
@@ -403,21 +412,28 @@ app.post('/api/ingest/cognitive', async (req, res) => {
   if (entities.length > 0) {
     // Update existing
     const existing = entities[0];
+    const patches = Object.entries(stateData).map(([key, value]) => ({
+      op: 'replace' as const,
+      path: `/${key}`,
+      value,
+    }));
+    if ((existing.state.mode as string | undefined) !== directive.mode) {
+      patches.push({ op: 'replace', path: '/mode_since', value: ingestTime });
+    }
     const result = await createDelta(
       existing.entity,
       existing.state,
-      Object.entries(stateData).map(([key, value]) => ({
-        op: 'replace' as const,
-        path: `/${key}`,
-        value,
-      })),
+      patches,
       'cognitive-sensor'
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
   } else {
     // Create new (cast since cognitive state differs from full SystemStateData)
-    const result = await createEntity('system_state', stateData as any);
+    const result = await createEntity('system_state', {
+      ...stateData,
+      mode_since: ingestTime,
+    } as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
   }
@@ -944,6 +960,7 @@ app.post('/api/law/close_loop', async (req, res) => {
     const modeChanged = currentMode !== newMode;
     if (modeChanged) {
       patches.push({ op: 'replace', path: '/mode', value: newMode });
+      patches.push({ op: 'replace', path: '/mode_since', value: timestamp });
       patches.push({ op: 'replace', path: '/last_mode_transition_at', value: timestamp });
       patches.push({ op: 'replace', path: '/last_mode_transition_reason', value: `Closure event: ratio=${closureRatio.toFixed(2)}` });
     }
@@ -991,6 +1008,7 @@ app.post('/api/law/close_loop', async (req, res) => {
     // No existing system_state — create genesis state
     const genesisState = {
       mode: newMode,
+      mode_since: timestamp,
       build_allowed: buildAllowed,
       streak_days: streakUpdated ? 1 : 0,
       best_streak: streakUpdated ? 1 : 0,

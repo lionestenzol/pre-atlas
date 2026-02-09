@@ -448,6 +448,133 @@
       from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
       to { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
+
+    /* === MOBILE RESPONSIVE === */
+    @media (max-width: 768px) {
+      body {
+        overflow: auto;
+        height: auto;
+        min-height: 100vh;
+      }
+
+      /* Directive bar: stack vertically */
+      .directive-bar {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 12px;
+      }
+
+      .system-title {
+        width: 100%;
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+
+      .directive-metrics {
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .metric {
+        min-width: calc(33% - 12px);
+      }
+
+      .metric-value {
+        font-size: 15px;
+      }
+
+      .primary-order {
+        flex-basis: 100%;
+        margin-top: 4px;
+      }
+
+      .primary-order-text {
+        font-size: 13px;
+      }
+
+      /* Main content: stack vertically */
+      .main-content {
+        flex-direction: column;
+        overflow: auto;
+        min-height: 0;
+      }
+
+      .center-viewport {
+        border-right: none;
+        border-bottom: 1px solid #2a2a4a;
+        min-height: 60vh;
+      }
+
+      .viewport-frame {
+        min-height: 55vh;
+      }
+
+      /* Right panel: full width below */
+      .right-panel {
+        width: 100% !important;
+        min-height: 40vh;
+      }
+
+      .right-panel.collapsed {
+        width: 100% !important;
+        min-height: 40px;
+      }
+
+      .panel-frame {
+        min-height: 35vh;
+      }
+
+      /* Command strip: wrap buttons */
+      .command-strip {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 12px;
+      }
+
+      .command-btn {
+        padding: 8px 14px;
+        font-size: 10px;
+        flex: 1 1 auto;
+        min-width: fit-content;
+        text-align: center;
+      }
+
+      .command-spacer {
+        display: none;
+      }
+
+      .system-status,
+      .daemon-status {
+        width: 100%;
+        text-align: center;
+        margin-left: 0;
+        padding-left: 0;
+        border-left: none;
+        border-top: 1px solid #2a2a4a;
+        padding-top: 8px;
+      }
+
+      /* Control modal: full screen on mobile */
+      .control-modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        border-radius: 0;
+      }
+
+      /* Notifications */
+      .notification {
+        left: 10px;
+        right: 10px;
+        transform: none;
+        text-align: center;
+      }
+
+      @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    }
   </style>
 </head>
 <body>

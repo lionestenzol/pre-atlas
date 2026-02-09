@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 
-const API_URL = 'http://localhost:3001/api'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 type Mode = 'RECOVER' | 'CLOSE_LOOPS' | 'BUILD' | 'COMPOUND' | 'SCALE'
-type TaskStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE'
+type TaskStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE' | 'ARCHIVED'
 
 interface Task {
   id: string

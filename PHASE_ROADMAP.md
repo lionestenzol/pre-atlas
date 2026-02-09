@@ -118,6 +118,7 @@ All exports now validate against JSON Schema before writing.
 |-----------|----------|---------|
 | `governance_daemon.ts` | `services/delta-kernel/src/governance/` | Scheduled job runner |
 | `/api/state/unified` | `server.ts` | Merged Delta + Cognitive state |
+| `/api/state/unified/stream` | `server.ts` | SSE stream for unified_state + delta_created events |
 | `/api/daemon/status` | `server.ts` | Daemon status endpoint |
 | `/api/daemon/run` | `server.ts` | Manual job trigger |
 

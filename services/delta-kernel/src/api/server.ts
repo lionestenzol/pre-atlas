@@ -51,6 +51,20 @@ app.use(express.json());
 // Serve control panel UI
 app.use('/control', express.static(path.join(__dirname, '../ui')));
 
+const realtimeClients = new Set<express.Response>();
+let lastUnifiedStateSnapshot: string | null = null;
+
+const sendSseEvent = (res: express.Response, event: string, payload: unknown) => {
+  res.write(`event: ${event}\n`);
+  res.write(`data: ${JSON.stringify(payload)}\n\n`);
+};
+
+const broadcastSseEvent = (event: string, payload: unknown) => {
+  for (const client of realtimeClients) {
+    sendSseEvent(client, event, payload);
+  }
+};
+
 // === UNIFIED STATE (must be before /api/state to avoid route conflict) ===
 
 /**
@@ -58,17 +72,12 @@ app.use('/control', express.static(path.join(__dirname, '../ui')));
  * Single truth payload merging Delta authoritative state + cognitive snapshots.
  * Gracefully handles missing files.
  */
-app.get('/api/state/unified', (req, res) => {
+const buildUnifiedState = () => {
   const errors: string[] = [];
 
   // A) Load Delta authoritative state
   const entities = storage.loadEntitiesByType<Record<string, unknown>>('system_state');
   const deltaState = entities.length > 0 ? entities[0].state : null;
-
-  // B) Determine repo root (go up from delta-kernel/src/api to repo root)
-  const repoRoot = process.env.DELTA_DATA_DIR
-    ? path.resolve(process.env.DELTA_DATA_DIR, '..')
-    : path.resolve(__dirname, '../../../../..');
 
   // Helper to safely read JSON files
   const readJsonFile = (filePath: string, name: string): unknown | null => {
@@ -153,9 +162,7 @@ app.get('/api/state/unified', (req, res) => {
   const streakDays = (closureStats.streak_days as number) ?? (deltaState?.streak_days as number) ?? 0;
   const bestStreak = (closureStats.best_streak as number) || 0;
 
-  res.json({
-    ok: true,
-    ts: new Date().toISOString(),
+  return {
     delta: {
       system_state: deltaState,
     },
@@ -183,6 +190,59 @@ app.get('/api/state/unified', (req, res) => {
       best_streak: bestStreak,
     },
     errors,
+  };
+};
+
+const emitUnifiedStateIfChanged = () => {
+  const unifiedState = buildUnifiedState();
+  const snapshot = JSON.stringify(unifiedState);
+  if (snapshot === lastUnifiedStateSnapshot) {
+    return;
+  }
+  lastUnifiedStateSnapshot = snapshot;
+  broadcastSseEvent('unified_state', {
+    ok: true,
+    ts: new Date().toISOString(),
+    ...unifiedState,
+  });
+};
+
+const emitDeltaCreated = (delta: unknown) => {
+  broadcastSseEvent('delta_created', {
+    ok: true,
+    ts: new Date().toISOString(),
+    delta,
+  });
+};
+
+app.get('/api/state/unified', (req, res) => {
+  const unifiedState = buildUnifiedState();
+  res.json({
+    ok: true,
+    ts: new Date().toISOString(),
+    ...unifiedState,
+  });
+});
+
+app.get('/api/state/unified/stream', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+
+  res.write('retry: 10000\n\n');
+  realtimeClients.add(res);
+
+  const initialState = buildUnifiedState();
+  sendSseEvent(res, 'unified_state', {
+    ok: true,
+    ts: new Date().toISOString(),
+    ...initialState,
+  });
+
+  req.on('close', () => {
+    realtimeClients.delete(res);
   });
 });
 
@@ -256,6 +316,8 @@ app.put('/api/state', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     // Create new
     const result = await createEntity('system_state', {
@@ -264,6 +326,8 @@ app.put('/api/state', async (req, res) => {
     });
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({ success: true });
@@ -319,6 +383,8 @@ app.post('/api/tasks', async (req, res) => {
   const result = await createEntity('task', taskData);
   storage.saveEntity(result.entity, result.state);
   storage.appendDelta(result.delta);
+  emitDeltaCreated(result.delta);
+  emitUnifiedStateIfChanged();
 
   res.json({
     id: result.entity.entity_id,
@@ -428,6 +494,8 @@ app.post('/api/ingest/cognitive', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     // Create new (cast since cognitive state differs from full SystemStateData)
     const result = await createEntity('system_state', {
@@ -436,6 +504,8 @@ app.post('/api/ingest/cognitive', async (req, res) => {
     } as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({
@@ -475,10 +545,14 @@ app.post('/api/law/acknowledge', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     const result = await createEntity('system_state', acknowledgeData as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({
@@ -521,10 +595,14 @@ app.post('/api/law/archive', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     const result = await createEntity('system_state', { archived_loops: [archiveEntry] } as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({
@@ -555,10 +633,14 @@ app.post('/api/law/refresh', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   } else {
     const result = await createEntity('system_state', refreshData as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
   }
 
   res.json({
@@ -629,6 +711,8 @@ app.post('/api/law/violation', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -647,6 +731,8 @@ app.post('/api/law/violation', async (req, res) => {
     const result = await createEntity('system_state', { enforcement: newEnforcement } as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -717,6 +803,8 @@ app.post('/api/law/override', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -735,6 +823,8 @@ app.post('/api/law/override', async (req, res) => {
     const result = await createEntity('system_state', { enforcement: newEnforcement } as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -982,6 +1072,8 @@ app.post('/api/law/close_loop', async (req, res) => {
     );
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,
@@ -1034,6 +1126,8 @@ app.post('/api/law/close_loop', async (req, res) => {
     const result = await createEntity('system_state', genesisState as any);
     storage.saveEntity(result.entity, result.state);
     storage.appendDelta(result.delta);
+    emitDeltaCreated(result.delta);
+    emitUnifiedStateIfChanged();
 
     res.json({
       success: true,

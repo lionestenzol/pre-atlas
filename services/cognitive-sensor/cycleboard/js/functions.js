@@ -534,6 +534,7 @@ function toggleGoalCompletion(type) {
 }
 
 function openCreateModal() {
+  if (typeof CognitiveController !== 'undefined' && !CognitiveController.canCreate()) return;
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const usedLetters = state.AZTask.map(t => t.letter);
   const availableLetters = letters.filter(l => !usedLetters.includes(l));
@@ -845,19 +846,13 @@ function updateSetting(setting, value) {
 }
 
 function toggleDarkMode() {
-  state.Settings.darkMode = !state.Settings.darkMode;
+  // Dark mode is always on — matches atlas boot theme
+  // Toggle is kept as no-op to avoid breaking onclick handlers
+  state.Settings.darkMode = true;
   stateManager.update({ Settings: state.Settings });
-  
-  if (state.Settings.darkMode) {
-    document.documentElement.classList.add('dark');
-    document.body.classList.add('bg-gray-900', 'text-white');
-    document.body.classList.remove('bg-slate-50');
-  } else {
-    document.documentElement.classList.remove('dark');
-    document.body.classList.remove('bg-gray-900', 'text-white');
-    document.body.classList.add('bg-slate-50');
-  }
-  
+  document.documentElement.classList.add('dark');
+  document.body.classList.add('bg-gray-900', 'text-white');
+  document.body.classList.remove('bg-slate-50');
   render();
 }
 
@@ -1336,6 +1331,7 @@ function addFocusTask(areaId) {
 }
 
 function createFocusTask(areaId) {
+  if (typeof CognitiveController !== 'undefined' && !CognitiveController.canCreate()) return;
   const text = document.getElementById('focus-task-text').value.trim();
   if (!text) {
     UI.showToast('Error', 'Task description is required', 'error');

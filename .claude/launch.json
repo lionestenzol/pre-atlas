@@ -1,0 +1,51 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "delta-api",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "src/api/server.ts"],
+      "port": 3001,
+      "cwd": "services/delta-kernel"
+    },
+    {
+      "name": "delta-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite"],
+      "port": 5173,
+      "cwd": "services/delta-kernel/web"
+    },
+    {
+      "name": "aegis-api",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "src/api/server.ts"],
+      "port": 3002,
+      "cwd": "services/aegis-fabric"
+    },
+    {
+      "name": "blueprint-generator",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev"],
+      "port": 3000,
+      "cwd": "apps/blueprint-generator"
+    },
+    {
+      "name": "atlas-shell",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", ".", "-p", "8888", "-c-1", "--cors"],
+      "port": 8888
+    },
+    {
+      "name": "cycleboard",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/cognitive-sensor/cycleboard", "-p", "8889", "-c-1", "--cors"],
+      "port": 8889
+    },
+    {
+      "name": "aegis-landing",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/aegis-fabric/landing", "-p", "8890", "-c-1", "--cors"],
+      "port": 8890
+    }
+  ]
+}

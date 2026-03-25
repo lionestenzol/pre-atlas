@@ -7,7 +7,7 @@
 
 import express from 'express';
 import cors from 'cors';
-import { Storage } from '../cli/storage';
+import { Storage } from '../cli/sqlite-storage';
 import { createEntity, createDelta, now } from '../core/delta';
 import { getDaemon, JobName } from '../governance/governance_daemon';
 import { WorkController } from '../core/work-controller';
@@ -16,6 +16,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
+import { spawn as spawnChild } from 'child_process';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -28,12 +29,15 @@ const PORT = 3001;
 const dataDir = process.env.DELTA_DATA_DIR || path.join(os.homedir(), '.delta-fabric');
 const storage = new Storage({ dataDir });
 
-// Repo root (for daemon)
+// Repo root (for daemon and cross-service file reads)
 // From compiled dist/api/server.js: go up 4 levels to reach Pre Atlas root
 // dist/api → dist → delta-kernel → services → Pre Atlas
-const repoRoot = process.env.DELTA_DATA_DIR
-  ? path.resolve(process.env.DELTA_DATA_DIR, '..')
-  : path.resolve(__dirname, '../../../..');
+const repoRoot = process.env.DELTA_REPO_ROOT
+  || (process.env.DELTA_DATA_DIR ? path.resolve(process.env.DELTA_DATA_DIR, '..') : path.resolve(__dirname, '../../../..'));
+
+// Cognitive sensor directory (configurable for standalone operation)
+const cognitiveSensorDir = process.env.COGNITIVE_SENSOR_DIR
+  || path.join(repoRoot, 'services', 'cognitive-sensor');
 
 // Initialize and start governance daemon
 const daemon = getDaemon(storage, repoRoot);
@@ -96,10 +100,10 @@ const buildUnifiedState = () => {
   };
 
   // C) Read cognitive snapshot files
-  const cognitiveStatePath = path.join(repoRoot, 'services/cognitive-sensor/cognitive_state.json');
-  const loopsLatestPath = path.join(repoRoot, 'services/cognitive-sensor/loops_latest.json');
+  const cognitiveStatePath = path.join(cognitiveSensorDir, 'cognitive_state.json');
+  const loopsLatestPath = path.join(cognitiveSensorDir, 'loops_latest.json');
   const todayPath = path.join(repoRoot, 'data/projections/today.json');
-  const closuresPath = path.join(repoRoot, 'services/cognitive-sensor/closures.json');
+  const closuresPath = path.join(cognitiveSensorDir, 'closures.json');
 
   const cognitiveState = readJsonFile(cognitiveStatePath, 'cognitive_state.json') as Record<string, unknown> | null;
   const loopsLatest = readJsonFile(loopsLatestPath, 'loops_latest.json') as unknown[] | null;
@@ -128,10 +132,12 @@ const buildUnifiedState = () => {
     ?? 0;
 
   // Closure ratio: cognitive_state > today.json > delta state > default
-  const closureRatio = (closureData?.ratio as number)
+  // Cognitive files store ratio as percentage (e.g. 72.0); normalize to decimal (0.0-1.0)
+  const rawRatio = (closureData?.ratio as number)
     ?? (todayCognitive?.closure as Record<string, unknown>)?.ratio as number
     ?? (deltaState?.closure_ratio as number)
     ?? 0;
+  const closureRatio = rawRatio > 1 ? rawRatio / 100 : rawRatio;
 
   // Primary order: today.json > delta state > default
   const primaryOrder = (todayDirective?.primary_action as string)
@@ -462,6 +468,15 @@ app.post('/api/ingest/cognitive', async (req, res) => {
   const { cognitive, directive } = projection;
   const ingestTime = now();
 
+  // Schema version validation
+  const PYTHON_VALID_MODES = ['CLOSURE', 'MAINTENANCE', 'BUILD'];
+  if (directive.mode_source === 'cognitive-sensor' && !PYTHON_VALID_MODES.includes(directive.mode)) {
+    console.warn(`[Ingest] Warning: cognitive-sensor sent mode '${directive.mode}' which is outside its valid set (${PYTHON_VALID_MODES.join(', ')})`);
+  }
+  if (directive.schema_version) {
+    console.log(`[Ingest] Received payload schema_version=${directive.schema_version} from ${directive.mode_source || 'unknown'}`);
+  }
+
   // Map to system_state format (partial - uses any cast for flexibility)
   const stateData: Record<string, unknown> = {
     mode: directive.mode,
@@ -613,8 +628,7 @@ app.post('/api/law/archive', async (req, res) => {
 
 /**
  * POST /api/law/refresh
- * Request a cognitive sensor refresh. Records timestamp.
- * Does not spawn Python directly - caller handles that.
+ * Request a cognitive sensor refresh. Records timestamp and spawns refresh.py.
  */
 app.post('/api/law/refresh', async (req, res) => {
   const entities = storage.loadEntitiesByType<Record<string, unknown>>('system_state');
@@ -643,9 +657,34 @@ app.post('/api/law/refresh', async (req, res) => {
     emitUnifiedStateIfChanged();
   }
 
+  // Spawn refresh.py in background (fire-and-forget with logging)
+  const refreshPath = path.join(cognitiveSensorDir, 'refresh.py');
+  if (fs.existsSync(refreshPath)) {
+    const proc = spawnChild('python', [refreshPath], {
+      cwd: cognitiveSensorDir,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stdout = '';
+    let stderr = '';
+    proc.stdout?.on('data', (d: Buffer) => { stdout += d.toString(); });
+    proc.stderr?.on('data', (d: Buffer) => { stderr += d.toString(); });
+
+    const timeout = setTimeout(() => { proc.kill(); }, 120_000);
+    proc.on('close', (code: number | null) => {
+      clearTimeout(timeout);
+      if (code === 0) {
+        timeline.emit('REFRESH_COMPLETED', 'api', { triggered_by: 'law/refresh', output: stdout.slice(-200) });
+      } else {
+        timeline.emit('REFRESH_FAILED', 'api', { code, stderr: stderr.slice(-200) });
+      }
+    });
+  }
+
   res.json({
     success: true,
     refresh_requested_at: refreshData.last_refresh_requested_at,
+    refresh_spawned: fs.existsSync(refreshPath),
   });
 });
 
@@ -864,7 +903,7 @@ app.post('/api/law/close_loop', async (req, res) => {
   const todayStr = todayStart.toISOString().split('T')[0];
 
   // === A) COGNITIVE REGISTRY — closures.json ===
-  const closuresPath = path.join(repoRoot, 'services/cognitive-sensor/closures.json');
+  const closuresPath = path.join(cognitiveSensorDir, 'closures.json');
   let closuresRegistry: {
     closures: Array<{ ts: number; loop_id: string | null; title: string | null; outcome: string }>;
     stats: {
@@ -926,7 +965,7 @@ app.post('/api/law/close_loop', async (req, res) => {
   closuresRegistry.stats.closures_today = closuresToday;
 
   // === B) READ COGNITIVE STATE FOR RATIO COMPUTATION ===
-  const cognitiveStatePath = path.join(repoRoot, 'services/cognitive-sensor/cognitive_state.json');
+  const cognitiveStatePath = path.join(cognitiveSensorDir, 'cognitive_state.json');
   let openLoops = 0;
 
   try {
@@ -985,8 +1024,8 @@ app.post('/api/law/close_loop', async (req, res) => {
   // === D) PHYSICAL LOOP CLOSURE HOOKS (Step 5 completion) ===
   // Remove from loops_latest.json, append to loops_closed.json
   if (loop_id) {
-    const loopsLatestPath = path.join(repoRoot, 'services/cognitive-sensor/loops_latest.json');
-    const loopsClosedPath = path.join(repoRoot, 'services/cognitive-sensor/loops_closed.json');
+    const loopsLatestPath = path.join(cognitiveSensorDir, 'loops_latest.json');
+    const loopsClosedPath = path.join(cognitiveSensorDir, 'loops_closed.json');
 
     try {
       // Remove from loops_latest.json
@@ -1416,6 +1455,18 @@ app.post('/api/daemon/run', async (req, res) => {
 app.get('/api/stats', (req, res) => {
   const stats = storage.getStats();
   res.json(stats);
+});
+
+// === GOVERNANCE CONFIG ===
+
+app.get('/api/governance/config', (req, res) => {
+  const configPath = path.resolve(cognitiveSensorDir, 'governance_config.json');
+  try {
+    const raw = fs.readFileSync(configPath, 'utf-8');
+    res.json(JSON.parse(raw));
+  } catch (err) {
+    res.status(404).json({ error: 'governance_config.json not found. Run refresh pipeline first.' });
+  }
 });
 
 // Start server

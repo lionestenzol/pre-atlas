@@ -1,0 +1,5 @@
+node_modules
+.aegis-data
+*.log
+.env
+tools/redis

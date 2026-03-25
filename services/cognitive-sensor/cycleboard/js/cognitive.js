@@ -3,6 +3,8 @@
 
 const CognitiveController = {
   payload: null,
+  dailyPayload: null,
+  buildAllowed: true,
   bannerVisible: true,
   initialized: false,
   error: null,
@@ -38,6 +40,17 @@ const CognitiveController = {
       // Validate payload structure
       if (!this.payload || typeof this.payload !== 'object') {
         throw new Error('Invalid payload structure');
+      }
+
+      // Also load daily_payload.json for build_allowed signal
+      try {
+        const dpResp = await fetch('brain/daily_payload.json');
+        if (dpResp.ok) {
+          this.dailyPayload = await dpResp.json();
+          this.buildAllowed = this.dailyPayload.build_allowed !== false;
+        }
+      } catch (_) {
+        // daily_payload not available — default to allowed
       }
 
       this.initialized = true;
@@ -138,8 +151,44 @@ const CognitiveController = {
   },
 
   enforceClosure() {
-    // In CLOSURE mode, show warning on Home screen
-    // This is handled by the render function checking CognitiveController.mode
+    if (this.buildAllowed) return;
+
+    // Disable all create/add buttons
+    const createSelectors = [
+      'button[onclick*="openCreateModal"]',
+      'button[onclick*="addFocusTask"]',
+      'button[onclick*="createFocusTask"]',
+      'button[onclick*="createTask"]',
+    ];
+
+    createSelectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add('governance-locked');
+        btn.title = 'Creation locked — close loops first';
+      });
+    });
+
+    // Add lock overlay to main content area
+    const existing = document.getElementById('governance-lock-banner');
+    if (!existing) {
+      const lockBanner = document.createElement('div');
+      lockBanner.id = 'governance-lock-banner';
+      lockBanner.className = 'governance-lock-banner';
+      lockBanner.innerHTML = '<i class="fas fa-lock mr-2"></i> Creation locked — close or archive open loops to unlock BUILD mode';
+      const main = document.getElementById('main-content') || document.querySelector('main');
+      if (main) main.prepend(lockBanner);
+    }
+  },
+
+  /**
+   * Gate check — call before any creation action.
+   * Returns true if creation is allowed, false if blocked.
+   */
+  canCreate() {
+    if (this.buildAllowed) return true;
+    UI.showToast('Creation Locked', 'Close or archive open loops before creating new tasks.', 'error');
+    return false;
   },
 
   applyRiskIndicators(risk) {
@@ -189,7 +238,11 @@ function toggleCognitiveBanner() {
 }
 
 function openControlPanel() {
-  window.open('control_panel.html', '_blank');
+  if (window !== window.parent) {
+    window.parent.postMessage({ type: 'atlas-navigate', target: 'control' }, '*');
+  } else {
+    window.open('../control_panel.html', '_blank');
+  }
 }
 
 // Export for module use

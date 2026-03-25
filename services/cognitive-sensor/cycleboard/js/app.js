@@ -18,14 +18,16 @@ Object.defineProperty(window, 'state', {
 
 // Initialize the app when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-  // Apply dark mode if saved
-  if (state.Settings && state.Settings.darkMode) {
-    document.documentElement.classList.add('dark');
-  }
+  // Always apply dark mode (matches atlas boot theme)
+  document.documentElement.classList.add('dark');
+  if (state.Settings) state.Settings.darkMode = true;
 
   // Initialize main app
   init();
 
   // Initialize cognitive controller
   CognitiveController.init();
+
+  // Initialize strategic leverage router
+  StrategicRouter.init();
 });

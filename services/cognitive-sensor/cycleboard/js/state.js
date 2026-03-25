@@ -120,7 +120,7 @@ class CycleBoardState {
         }
       },
       Settings: {
-        darkMode: false,
+        darkMode: true,
         notifications: true,
         autoSave: true,
         defaultDayType: 'A'

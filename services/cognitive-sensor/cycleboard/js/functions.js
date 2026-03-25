@@ -1543,13 +1543,112 @@ function activateContingency(type) {
 
 function applyContingency(type) {
   const todayPlan = Helpers.getDayPlan();
+  const undoIndex = stateManager.historyIndex; // snapshot for undo
 
-  if (type === 'lowEnergy') {
-    setDayType('B');
+  switch (type) {
+    case 'runningLate': {
+      // Switch to B-Day with template applied (skip modal)
+      todayPlan.day_type = 'B';
+      applyDayTypeTemplate(todayPlan, 'B');
+      break;
+    }
+    case 'lowEnergy': {
+      // Switch to C-Day with template applied (skip modal)
+      todayPlan.day_type = 'C';
+      applyDayTypeTemplate(todayPlan, 'C');
+      break;
+    }
+    case 'freeTime': {
+      // Add a 90-min stretch block after the latest existing block
+      const blocks = todayPlan.time_blocks || [];
+      let latestTime = '09:00';
+      for (const b of blocks) {
+        if (b.time > latestTime) latestTime = b.time;
+      }
+      // Parse latest time and add its duration (default 60m) to get start of new block
+      const [h, m] = latestTime.split(':').map(Number);
+      const lastDuration = blocks.length > 0 ? (blocks[blocks.length - 1].duration || 60) : 0;
+      const startMins = h * 60 + m + lastDuration;
+      const newH = String(Math.floor(startMins / 60) % 24).padStart(2, '0');
+      const newM = String(startMins % 60).padStart(2, '0');
+
+      todayPlan.time_blocks = blocks;
+      todayPlan.time_blocks.push({
+        id: stateManager.generateId(),
+        time: `${newH}:${newM}`,
+        title: 'Stretch Block (Bonus Time)',
+        duration: 90,
+        completed: false
+      });
+      break;
+    }
+    case 'disruption': {
+      // Keep only completed blocks and blocks before current time
+      const now = new Date();
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      todayPlan.time_blocks = (todayPlan.time_blocks || []).filter(
+        b => b.completed || b.time < currentTime
+      );
+      break;
+    }
   }
 
+  stateManager.update({ DayPlans: state.DayPlans });
   Helpers.logActivity('contingency_activated', `Activated ${type} contingency plan`, { type });
-  UI.showToast('Contingency Applied', 'Your plan has been adjusted', 'success');
+
+  // Re-render Daily screen if we're on it
+  if (state.screen === 'Daily') {
+    render();
+  }
+
+  // Show undo toast (10s window) — pass saved index so undo reverts fully
+  showContingencyUndoToast(type, undoIndex);
+}
+
+function showContingencyUndoToast(type, undoIndex) {
+  const labels = {
+    runningLate: 'Switched to B-Day',
+    lowEnergy: 'Switched to C-Day',
+    freeTime: 'Stretch block added',
+    disruption: 'Future blocks cleared'
+  };
+
+  const toast = document.createElement('div');
+  toast.className = 'toast border rounded-lg shadow-lg p-4 min-w-[300px] bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300';
+  toast.setAttribute('role', 'alert');
+  toast.innerHTML = `
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-check-circle"></i>
+        <div>
+          <div class="font-semibold">${labels[type] || 'Contingency applied'}</div>
+        </div>
+      </div>
+      <button class="contingency-undo-btn text-sm font-bold underline hover:opacity-80 ml-4">Undo</button>
+    </div>
+  `;
+
+  const undoBtn = toast.querySelector('.contingency-undo-btn');
+  undoBtn.addEventListener('click', () => {
+    // Restore to exact pre-contingency state (skips logActivity entry too)
+    if (undoIndex !== undefined && undoIndex < stateManager.history.length) {
+      stateManager.historyIndex = undoIndex;
+      stateManager.state = JSON.parse(JSON.stringify(stateManager.history[undoIndex]));
+      stateManager.saveDebounced();
+      if (state.screen === 'Daily') render();
+      UI.showToast('Undone', 'Contingency action reverted', 'info');
+    }
+    toast.remove();
+  });
+
+  const container = document.getElementById('toast-container');
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 10000);
 }
 
 // Momentum Wins Functions

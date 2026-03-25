@@ -155,6 +155,23 @@ const ScreenRenderers = {
           `;
         })()}
 
+        ${typeof StrategicRouter !== 'undefined' ? StrategicRouter.renderStrategicCard() : ''}
+
+        ${typeof CognitiveController !== 'undefined' && CognitiveController.directiveText ? `
+          <details class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+            <summary class="p-6 cursor-pointer flex items-center justify-between list-none">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-bullhorn text-amber-500"></i>
+                <h2 class="text-lg font-bold dark:text-white">Daily Directive</h2>
+              </div>
+              <i class="fas fa-chevron-down text-slate-400 dark:text-gray-500 transition-transform"></i>
+            </summary>
+            <div class="px-6 pb-6">
+              <div class="text-sm dark:text-gray-300 whitespace-pre-wrap font-mono bg-slate-50 dark:bg-gray-700 rounded-lg p-4">${UI.sanitize(CognitiveController.directiveText.trim())}</div>
+            </div>
+          </details>
+        ` : ''}
+
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <button onclick="openCreateModal()" class="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
             <i class="fas fa-plus-circle text-blue-500 text-xl mb-2"></i>
@@ -484,6 +501,9 @@ const ScreenRenderers = {
             `).join('')}
           </div>
         </div>
+
+        ${typeof StrategicRouter !== 'undefined' ? StrategicRouter.renderAZSuggestion() : ''}
+        ${typeof StrategicRouter !== 'undefined' ? StrategicRouter.renderTimeBlockSuggestion() : ''}
 
         <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
           <div class="p-6 border-b dark:border-gray-700">
@@ -829,7 +849,7 @@ const ScreenRenderers = {
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          ${state.FocusArea.map(area => {
+          ${[...state.FocusArea].sort((a, b) => (b.leverageWeight || 0) - (a.leverageWeight || 0)).map(area => {
             const areaTasks = area.tasks || [];
             const completedTasks = areaTasks.filter(t => t.completed).length;
             const progress = areaTasks.length ? Math.round((completedTasks / areaTasks.length) * 100) : 0;
@@ -837,7 +857,7 @@ const ScreenRenderers = {
             return `
               <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between mb-4">
-                  <h3 class="text-lg font-bold dark:text-white">${UI.sanitize(area.name)}</h3>
+                  <h3 class="text-lg font-bold dark:text-white">${UI.sanitize(area.name)}${typeof StrategicRouter !== 'undefined' ? StrategicRouter.renderFocusAreaBadge(area.name) : ''}</h3>
                   <div class="w-3 h-3 rounded-full" style="background-color: ${area.color}"></div>
                 </div>
                 <p class="text-slate-600 dark:text-gray-300 mb-4">${UI.sanitize(area.definition)}</p>

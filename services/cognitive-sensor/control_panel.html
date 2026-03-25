@@ -4,8 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cognitive Control Panel</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.1"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Atlas palette overrides */
+    body { background: #0a0a0f !important; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .bg-gray-900 { background-color: #0a0a0f !important; }
+    .bg-gray-800 { background-color: #111118 !important; }
+    .bg-gray-700 { background-color: #1a1a2a !important; }
+    .text-gray-400 { color: #888 !important; }
+    .text-gray-500 { color: #555 !important; }
+    .rounded-lg { border: 1px solid #2a2a3a; border-radius: 12px !important; }
+    .rounded { border-radius: 8px !important; }
+    .bg-blue-600 { background-color: #4338ca !important; }
+    .bg-blue-600:hover, .hover\:bg-blue-700:hover { background-color: #4f46e5 !important; }
+    .bg-purple-600 { background-color: #312e81 !important; }
+    .bg-purple-600:hover, .hover\:bg-purple-700:hover { background-color: #3b3896 !important; }
+    .bg-green-600 { background-color: #065f46 !important; }
+    .bg-green-600:hover, .hover\:bg-green-700:hover { background-color: #047857 !important; }
+    .bg-indigo-600 { background-color: #4338ca !important; }
+    .bg-indigo-600:hover, .hover\:bg-indigo-700:hover { background-color: #4f46e5 !important; }
+    .bg-red-900 { background-color: rgba(248, 113, 113, 0.1) !important; }
+    .border-red-500 { border-color: rgba(248, 113, 113, 0.3) !important; }
+    .bg-red-600 { background-color: rgba(248, 113, 113, 0.2) !important; border: 1px solid rgba(248, 113, 113, 0.4); color: #fca5a5; }
+    .bg-red-600:hover, .hover\:bg-red-700:hover { background-color: rgba(248, 113, 113, 0.3) !important; }
+  </style>
 </head>
 <body class="bg-gray-900 text-white p-8">
   <div class="max-w-4xl mx-auto">
@@ -112,18 +135,37 @@
       }
     }
 
-    function updateUI() {
+    async function updateUI() {
       if (!currentState) return;
 
-      const payload = {
-        mode: currentState.closure.ratio < 15 ? 'CLOSURE' :
-              currentState.closure.open > 10 ? 'MAINTENANCE' : 'BUILD',
-        risk: currentState.closure.ratio < 15 ? 'HIGH' :
-              currentState.closure.open > 10 ? 'MEDIUM' : 'LOW',
-        open: currentState.closure.open,
-        ratio: currentState.closure.ratio,
-        action: currentState.loops[0]?.title || 'No loops'
-      };
+      // Read mode from daily_payload.json (single source of truth)
+      let payload;
+      try {
+        const dpResp = await fetch('daily_payload.json');
+        if (dpResp.ok) {
+          const dp = await dpResp.json();
+          payload = {
+            mode: dp.mode || 'UNKNOWN',
+            risk: dp.risk || 'UNKNOWN',
+            open: dp.open_loop_count ?? currentState.closure.open,
+            ratio: dp.closure_ratio ?? currentState.closure.ratio,
+            action: (dp.open_loops && dp.open_loops[0]) || currentState.loops[0]?.title || 'No loops'
+          };
+        } else {
+          throw new Error('payload not available');
+        }
+      } catch (_) {
+        // Fallback: use cognitive_state with inline calc (same thresholds as Python)
+        payload = {
+          mode: currentState.closure.ratio < 15 ? 'CLOSURE' :
+                currentState.closure.open > 10 ? 'MAINTENANCE' : 'BUILD',
+          risk: currentState.closure.ratio < 15 ? 'HIGH' :
+                currentState.closure.open > 10 ? 'MEDIUM' : 'LOW',
+          open: currentState.closure.open,
+          ratio: currentState.closure.ratio,
+          action: currentState.loops[0]?.title || 'No loops'
+        };
+      }
 
       document.getElementById('current-mode').textContent = payload.mode;
       document.getElementById('risk-level').textContent = payload.risk;
@@ -140,9 +182,11 @@
       // Update card color
       const card = document.getElementById('primary-action-card');
       if (payload.mode === 'BUILD') {
-        card.className = 'bg-green-900 border-2 border-green-500 rounded-lg p-6 mb-6';
+        card.style.background = 'rgba(52, 211, 153, 0.1)';
+        card.style.borderColor = 'rgba(52, 211, 153, 0.3)';
       } else if (payload.mode === 'MAINTENANCE') {
-        card.className = 'bg-yellow-900 border-2 border-yellow-500 rounded-lg p-6 mb-6';
+        card.style.background = 'rgba(251, 191, 36, 0.1)';
+        card.style.borderColor = 'rgba(251, 191, 36, 0.3)';
       }
 
       // Update loops list
@@ -176,7 +220,11 @@
     }
 
     function openDashboard() {
-      window.open('dashboard.html', '_blank');
+      if (window !== window.parent) {
+        window.parent.postMessage({ type: 'atlas-navigate', target: 'dashboard' }, '*');
+      } else {
+        window.open('dashboard.html', '_blank');
+      }
     }
 
     function runDecide() {
@@ -184,7 +232,11 @@
     }
 
     function openCycleBoard() {
-      window.open('cycleboard_app3.html', '_blank');
+      if (window !== window.parent) {
+        window.parent.postMessage({ type: 'atlas-navigate', target: 'cycleboard' }, '*');
+      } else {
+        window.open('cycleboard/index.html', '_blank');
+      }
     }
 
     function closeLoop(convoId) {

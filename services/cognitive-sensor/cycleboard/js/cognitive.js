@@ -1,6 +1,25 @@
 // CycleBoard Cognitive Controller Module
 // Brain Integration for cognitive state management
 
+// Shared staleness utility for all brain data consumers
+const DataFreshness = {
+  check(dateString, thresholdHours = 24) {
+    if (!dateString) {
+      return { stale: true, ageHours: -1, ageText: 'age unknown' };
+    }
+    const ageMs = Date.now() - new Date(dateString).getTime();
+    const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
+    const mins = Math.floor(ageMs / 60000);
+    let ageText;
+    if (mins < 1) ageText = 'just now';
+    else if (mins < 60) ageText = `${mins}m ago`;
+    else if (ageHours < 24) ageText = `${ageHours}h ago`;
+    else if (ageHours < 48) ageText = 'yesterday';
+    else ageText = `${Math.floor(ageHours / 24)} days ago`;
+    return { stale: ageHours >= thresholdHours || ageHours < 0, ageHours, ageText };
+  }
+};
+
 const CognitiveController = {
   payload: null,
   dailyPayload: null,
@@ -8,6 +27,8 @@ const CognitiveController = {
   bannerVisible: true,
   initialized: false,
   error: null,
+  freshness: null,
+  directiveText: null,
 
   async init() {
     // Prevent multiple initializations
@@ -53,9 +74,23 @@ const CognitiveController = {
         // daily_payload not available — default to allowed
       }
 
+      // Load daily directive text
+      try {
+        const dtResp = await fetch('brain/daily_directive.txt');
+        if (dtResp.ok) {
+          this.directiveText = await dtResp.text();
+        }
+      } catch (_) {
+        // directive not available — leave null
+      }
+
       this.initialized = true;
       this.error = null;
+      this.freshness = DataFreshness.check(this.dailyPayload?.generated_at || this.payload?.generated_at);
       this.applyGovernance();
+
+      // Re-render so directive card and other template-driven elements pick up loaded data
+      if (typeof render === 'function') render();
 
     } catch (error) {
       this.error = error.message;
@@ -63,12 +98,39 @@ const CognitiveController = {
 
       // Only log in development or if it's an unexpected error
       if (error.message.includes('HTTP 404') || error.message === 'HTTP 404: Not Found') {
-        console.log('Cognitive system offline. Banner hidden. Run: python refresh.py');
+        console.log('Cognitive system offline. Run: python refresh.py');
       } else {
         console.warn('Cognitive system error:', error.message);
       }
-      // Keep banner hidden if no cognitive data
+      // Show banner in offline state
+      this.showOfflineState();
     }
+  },
+
+  showOfflineState() {
+    const banner = document.getElementById('cognitive-directive');
+    const indicator = document.getElementById('cognitive-indicator');
+    const indicatorDot = document.getElementById('cognitive-indicator-dot');
+    const onlineMsg = document.getElementById('cognitive-online-msg');
+    const offlineMsg = document.getElementById('cognitive-offline-msg');
+
+    if (!banner) return;
+
+    // Show banner with offline content
+    banner.className = 'w-full shadow-lg';
+    banner.style.position = 'sticky';
+    banner.style.top = '0';
+    banner.style.zIndex = '50';
+    banner.style.display = 'block';
+
+    if (onlineMsg) onlineMsg.style.display = 'none';
+    if (offlineMsg) offlineMsg.style.display = 'block';
+
+    // Show indicator dot in gray
+    if (indicatorDot) {
+      indicatorDot.className = 'w-4 h-4 rounded-full animate-pulse shadow-lg bg-gray-500';
+    }
+    if (indicator) indicator.style.display = 'none';
   },
 
   // Allow manual retry
@@ -109,8 +171,14 @@ const CognitiveController = {
     const banner = document.getElementById('cognitive-directive');
     const indicator = document.getElementById('cognitive-indicator');
     const indicatorDot = document.getElementById('cognitive-indicator-dot');
+    const onlineMsg = document.getElementById('cognitive-online-msg');
+    const offlineMsg = document.getElementById('cognitive-offline-msg');
 
     if (!banner) return;
+
+    // Show online content, hide offline
+    if (onlineMsg) onlineMsg.style.display = 'block';
+    if (offlineMsg) offlineMsg.style.display = 'none';
 
     // Update content
     document.getElementById('directive-mode').textContent = mode;
@@ -122,6 +190,15 @@ const CognitiveController = {
                    mode === 'MAINTENANCE' ? `Review: ${topLoop}` :
                    'Focus on creation today';
     document.getElementById('directive-action').textContent = action;
+
+    // Staleness warning
+    if (this.freshness?.stale) {
+      const actionEl = document.getElementById('directive-action');
+      if (actionEl) {
+        actionEl.insertAdjacentHTML('afterend',
+          `<div class="text-xs mt-1 opacity-75"><i class="fas fa-clock mr-1"></i>Data ${this.freshness.ageText}</div>`);
+      }
+    }
 
     // Color-code by mode
     const colors = {

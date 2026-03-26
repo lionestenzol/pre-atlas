@@ -1,7 +1,7 @@
 # Pre Atlas - System Map & Specification
 
-**Version:** 1.1
-**Date:** 2026-01-09
+**Version:** 1.2
+**Date:** 2026-03-11
 **Total Size:** ~306 MB (excluding node_modules)
 **Phase History:** See `PHASE_ROADMAP.md` for complete implementation timeline (Phase 1 → 5B)
 
@@ -46,8 +46,10 @@ Pre Atlas/
 │   └── settings.local.json
 │
 ├── .delta-fabric/              # State synchronization layer (repo-local)
-│   ├── deltas.json             # Delta operation log
-│   └── entities.json           # Entity state store
+│   ├── state.db                # SQLite database (WAL mode) — entities + deltas
+│   ├── dictionary.json         # 3-tier compression dictionary
+│   ├── deltas.json.bak         # Pre-migration backup
+│   └── entities.json.bak       # Pre-migration backup
 │
 ├── services/
 │   │
@@ -56,7 +58,7 @@ Pre Atlas/
 │   │   ├── tsconfig.json       # TypeScript config
 │   │   ├── ARCHITECTURE_MAP.md # System design doc
 │   │   ├── start.bat           # Windows launcher
-│   │   ├── specs/              # 18 specification documents
+│   │   ├── specs/              # 19 specification documents
 │   │   │   ├── module-1-daily-cockpit.md
 │   │   │   ├── module-2-preparation-engine.md
 │   │   │   ├── module-3-matryoshka-dictionary.md
@@ -84,12 +86,14 @@ Pre Atlas/
 │   │   │   │   ├── app.ts      # Application logic
 │   │   │   │   ├── input.ts    # Input handling
 │   │   │   │   ├── renderer.ts # Terminal rendering
-│   │   │   │   └── storage.ts  # Data persistence
-│   │   │   └── core/           # 35 TypeScript modules
-│   │   │       ├── types.ts    # Entity type definitions (1130+ lines)
+│   │   │   │   ├── storage.ts  # Legacy JSON storage (replaced)
+│   │   │   │   └── sqlite-storage.ts  # SQLite storage (WAL mode, active)
+│   │   │   └── core/           # 18 active TypeScript modules + _deferred/
+│   │   │       ├── types.ts    # Barrel re-export → types-core + types-extended + types-sync
 │   │   │       ├── delta.ts    # Delta operations
-│   │   │       ├── routing.ts  # Mode computation
+│   │   │       ├── routing.ts  # Unified mode computation (single authority)
 │   │   │       └── ...
+│   │   ├── _deferred/          # 19 unused modules (camera, audio, actuation, sync, etc.)
 │   │   └── web/                # React web UI (Vite)
 │   │       ├── package.json
 │   │       ├── vite.config.ts
@@ -106,6 +110,19 @@ Pre Atlas/
 │       ├── completion_stats.py # Closure tracking
 │       ├── decision_engine.py  # Decision logic
 │       ├── route_today.py      # Daily routing
+│       │
+│       ├── # Cognitive Atlas Pipeline
+│       ├── build_cognitive_atlas.py  # Entry point (~75 lines orchestrator)
+│       ├── atlas_data.py             # Load messages + embeddings from results.db
+│       ├── atlas_projection.py       # UMAP reduction + HDBSCAN clustering
+│       ├── atlas_layers.py           # Toggle layer arrays + cluster summary
+│       ├── atlas_layout.py           # ForceAtlas2 layout (pure NumPy)
+│       ├── atlas_graph.py            # Graph nodes/edges construction
+│       ├── atlas_render.py           # JSON payload + HTML template fill
+│       ├── atlas_template.html       # Dashboard template (Plotly + Sigma.js)
+│       ├── cognitive_atlas.html      # Generated dashboard output (~5.9 MB)
+│       ├── cluster_leverage_map.py   # Leverage scoring (5 metrics per cluster)
+│       ├── leverage_map.json         # Generated leverage rankings
 │       │
 │       ├── # State Files
 │       ├── cognitive_state.json    # Current cognitive state
@@ -151,12 +168,18 @@ Pre Atlas/
 │       └── spec/               # Specifications
 │
 ├── contracts/
-│   └── schemas/                # Shared JSON Schema definitions
-│       ├── DailyPayload.v1.json
+│   └── schemas/                # Shared JSON Schema definitions (17 schemas)
+│       ├── DailyPayload.v1.json       # CycleBoard payload (+ schema_version, mode_source)
+│       ├── ModeContract.v1.json       # Python↔TypeScript routing contract
 │       ├── CognitiveMetricsComputed.json
 │       ├── DirectiveProposed.json
 │       ├── DailyProjection.v1.json
-│       └── Closures.v1.json    # Phase 5B closure registry schema
+│       ├── Closures.v1.json           # Phase 5B closure registry
+│       ├── Aegis*.v1.json             # 7 aegis-fabric schemas
+│       ├── ExcavatedIdeas.v1.json
+│       ├── IdeaRegistry.v1.json
+│       ├── TimelineEvents.v1.json
+│       └── WorkLedger.v1.json
 │
 ├── data/
 │   └── projections/            # Daily projection artifacts
@@ -186,8 +209,9 @@ Pre Atlas/
 **Files:**
 | File | Description |
 |------|-------------|
-| `entities.json` | Entity store with versioning and hash chains |
-| `deltas.json` | Append-only delta operation log |
+| `state.db` | SQLite database (WAL mode) — entities + deltas |
+| `entities.json.bak` | Pre-migration entity backup |
+| `deltas.json.bak` | Pre-migration delta backup |
 
 **Data Model:**
 - Entities have: `entity_id`, `entity_type`, `created_at`, `current_version`, `current_hash`, `is_archived`
@@ -271,7 +295,8 @@ Pre Atlas/
 | Mode | Description | Restrictions |
 |------|-------------|--------------|
 | RECOVER | Rest and recovery | BUILD/COMPOUND/SCALE blocked |
-| CLOSE_LOOPS | Clear pending items | BUILD blocked |
+| CLOSURE | Clear pending items | BUILD/COMPOUND/SCALE blocked |
+| MAINTENANCE | Light admin and health actions | None |
 | BUILD | Create new things | None |
 | COMPOUND | Extend existing work | None |
 | SCALE | Delegate and automate | None |
@@ -306,6 +331,7 @@ npm run build    # Compile TypeScript
 | `/api/law/violation` | POST | Log build violation |
 | `/api/daemon/status` | GET | Governance daemon status |
 | `/api/daemon/run` | POST | Manually trigger daemon job |
+| `/api/governance/config` | GET | Governance config (from Python atlas_config.py) |
 
 ---
 
@@ -347,6 +373,8 @@ npm run build    # Compile TypeScript
 | MAINTENANCE | open_loops > 10 AND closure_ratio >= 15% | YELLOW |
 | BUILD | open_loops <= 10 AND closure_ratio >= 15% | GREEN |
 
+*Python routing uses `atlas_config.py:compute_mode()` (single source of truth). TypeScript uses `routing.ts:route()` with full 6-mode Markov LUT. See `contracts/schemas/ModeContract.v1.json` for the cross-language routing contract.*
+
 **Key Commands:**
 ```bash
 # From repo root (recommended - CWD-safe):
@@ -371,6 +399,8 @@ python wire_cycleboard.py   # Wire cognitive state to UI
 | `completion_stats.json` | Completion metrics | `services/cognitive-sensor/` |
 | `daily_payload.json` | CycleBoard payload | `~/Downloads/cycleboard/brain/` |
 | `today.json` | Combined daily projection | `data/projections/` |
+| `cognitive_atlas.html` | Interactive dashboard (84K-point scatter, graph, leverage, ROI) ~5.9 MB | `services/cognitive-sensor/` |
+| `leverage_map.json` | Ranked clusters scored by business value (15 clusters, 6 metrics each) | `services/cognitive-sensor/` |
 
 **Contract Validation:**
 All exports are validated against JSON Schema before writing:
@@ -401,12 +431,7 @@ All exports are validated against JSON Schema before writing:
 
 **Mode Transition Rules:**
 
-| closure_ratio | Mode | build_allowed |
-|---------------|------|---------------|
-| ≥ 0.80 | SCALE | true |
-| ≥ 0.60 | BUILD | true |
-| ≥ 0.40 | MAINTENANCE | false |
-| < 0.40 | CLOSURE | false |
+*Note: The daemon's inline closure-ratio thresholds (0.40/0.60/0.80) were replaced in the 2026-03-11 stabilization. The daemon now calls `route()` from `routing.ts` using the full 5-signal Markov LUT, which produces all 6 modes. The Python side uses `atlas_config.py:compute_mode()` for its 3-mode subset.*
 
 **Governance Daemon Jobs:**
 
@@ -528,7 +553,7 @@ npm install
 | delta-kernel | `services/delta-kernel/` | ~70 | ~15,000 |
 | cognitive-sensor | `services/cognitive-sensor/` | ~80 | ~12,000 |
 | uasc-m2m | `research/uasc-m2m/` | ~60 | ~8,000 |
-| contracts | `contracts/` | 4 | ~100 |
+| contracts | `contracts/` | 17 | ~400 |
 | scripts | `scripts/` | 4 | ~150 |
 | **Total** | | **~223** | **~39,750** |
 
@@ -553,3 +578,24 @@ npm install
 *Generated: 2026-01-08*
 *Updated: 2026-01-08 (Phase 2 - contracts, projections, C→D bridge)*
 *Updated: 2026-01-09 (Phase 5B - closure mechanics, autonomous mode governance)*
+*Updated: 2026-03-11 (Stabilization: SQLite migration, unified routing, retries, types split, config API, schema versioning)*
+*Updated: 2026-03-26 (Mosaic Platform: orchestrator workflows, metering, Docker compose, installer — 19 schemas, 6 services)*
+
+---
+
+## Mosaic Platform Services
+
+| Port | Service | Stack | Role |
+|------|---------|-------|------|
+| 3000 | mosaic-dashboard | Next.js 16 | 5-panel web UI |
+| 3001 | delta-kernel | TypeScript/Express | State engine + governance daemon |
+| 3002 | aegis-fabric | TypeScript/Express | Policy engine + agent approval |
+| 3003 | mirofish | Python/FastAPI | 20-agent swarm simulation |
+| 3004 | openclaw | Python/FastAPI | Multi-channel messaging |
+| 3005 | mosaic-orchestrator | Python/FastAPI | Coordination, workflows, metering |
+
+Infrastructure: PostgreSQL 15, Redis 7, Neo4j 5, Ollama.
+
+**Schemas** (19 total in `contracts/schemas/`): MeteringUsage.v1, WorkflowEvent.v1, ModeContract.v1, DailyPayload.v1, OrchestratorEvent.v1, TaskExecution.v1, SimulationReport.v1, IdeaRegistry.v1, ExcavatedIdeas.v1, 7x Aegis schemas, CognitiveMetricsComputed, DirectiveProposed.
+
+**Docker**: `docker-compose.yml` (root) orchestrates 10 services. `installer.sh` for one-command setup.

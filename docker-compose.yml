@@ -1,0 +1,216 @@
+services:
+  # ── Databases & Infrastructure ──────────────────────────
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: mosaic-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aegis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aegis_dev_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-aegis_admin}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - mosaic_pg_data:/var/lib/postgresql/data
+      - ./services/aegis-fabric/db/migrations/001_admin.sql:/docker-entrypoint-initdb.d/001_admin.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aegis} -d ${POSTGRES_DB:-aegis_admin}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mosaic-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: mosaic-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - mosaic_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mosaic-net
+
+  neo4j:
+    image: neo4j:5
+    container_name: mosaic-neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-mirofish_dev_pass}
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - mosaic_neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mosaic-net
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: mosaic-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - mosaic_ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - mosaic-net
+
+  # ── Application Services ────────────────────────────────
+
+  delta-kernel:
+    build:
+      context: ./services/delta-kernel
+      dockerfile: Dockerfile
+    container_name: mosaic-delta-kernel
+    ports:
+      - "${DELTA_KERNEL_PORT:-3001}:3001"
+    volumes:
+      - mosaic_delta_data:/app/data
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/api/state/unified').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks:
+      - mosaic-net
+
+  aegis-fabric:
+    build:
+      context: ./services/aegis-fabric
+      dockerfile: Dockerfile
+    container_name: mosaic-aegis-fabric
+    ports:
+      - "${AEGIS_PORT:-3002}:3002"
+    environment:
+      AEGIS_PORT: "3002"
+      AEGIS_ADMIN_KEY: ${AEGIS_ADMIN_KEY:-change-me-to-a-real-key}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-aegis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aegis_dev_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-aegis_admin}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mosaic-net
+
+  mirofish:
+    build:
+      context: ./services/mirofish
+      dockerfile: Dockerfile
+    container_name: mosaic-mirofish
+    ports:
+      - "${MIROFISH_PORT:-3003}:3003"
+    environment:
+      PORT: "3003"
+      NEO4J_BOLT_URL: bolt://neo4j:7687
+      NEO4J_HTTP_URL: http://neo4j:7474
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-mirofish_dev_pass}
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:32b}
+      MAX_AGENTS: ${MAX_AGENTS:-500}
+      PARALLEL_FACTOR: ${PARALLEL_FACTOR:-4}
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    networks:
+      - mosaic-net
+
+  openclaw:
+    build:
+      context: ./services/openclaw
+      dockerfile: Dockerfile
+    container_name: mosaic-openclaw
+    ports:
+      - "${OPENCLAW_PORT:-3004}:3004"
+    environment:
+      PORT: "3004"
+      ORCHESTRATOR_URL: http://orchestrator:3005
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+    networks:
+      - mosaic-net
+
+  orchestrator:
+    build:
+      context: ./services/mosaic-orchestrator
+      dockerfile: Dockerfile
+    container_name: mosaic-orchestrator
+    ports:
+      - "${ORCHESTRATOR_PORT:-3005}:3005"
+    volumes:
+      - mosaic_metering_data:/data
+      - ./services/cognitive-sensor:/app/services/cognitive-sensor:ro
+    environment:
+      DELTA_KERNEL_URL: http://delta-kernel:3001
+      AEGIS_URL: http://aegis-fabric:3002
+      MIROFISH_URL: http://mirofish:3003
+      OPENCLAW_URL: http://openclaw:3004
+      ORCHESTRATOR_PORT: "3005"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:32b}
+      AEGIS_API_KEY: ${AEGIS_API_KEY:-change-me-to-a-real-key}
+      FREE_TIER_SECONDS: ${FREE_TIER_SECONDS:-3600}
+      METERING_DB_PATH: /data/metering.db
+      COGNITIVE_SENSOR_DIR: /app/services/cognitive-sensor
+    depends_on:
+      delta-kernel:
+        condition: service_healthy
+    networks:
+      - mosaic-net
+
+  dashboard:
+    build:
+      context: ./services/mosaic-dashboard
+      dockerfile: Dockerfile
+    container_name: mosaic-dashboard
+    ports:
+      - "${DASHBOARD_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_DELTA_URL: http://delta-kernel:3001
+      NEXT_PUBLIC_MOSAIC_URL: http://orchestrator:3005
+      NEXT_PUBLIC_MIROFISH_URL: http://mirofish:3003
+    depends_on:
+      orchestrator:
+        condition: service_healthy
+    networks:
+      - mosaic-net
+
+volumes:
+  mosaic_pg_data:
+  mosaic_redis_data:
+  mosaic_neo4j_data:
+  mosaic_ollama_data:
+  mosaic_delta_data:
+  mosaic_metering_data:
+
+networks:
+  mosaic-net:
+    driver: bridge

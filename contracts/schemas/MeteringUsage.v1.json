@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "MeteringUsage.v1.json",
+  "title": "MeteringUsage",
+  "description": "AI usage metering snapshot — tracks seconds consumed, token counts, and pause state.",
+  "type": "object",
+  "required": ["ai_seconds_used", "free_tier_seconds", "remaining_seconds", "paused"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "ai_seconds_used": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total AI processing seconds consumed"
+    },
+    "free_tier_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Free tier allocation in seconds (default 3600)"
+    },
+    "remaining_seconds": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Remaining free tier seconds"
+    },
+    "total_tokens": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total tokens consumed across all providers"
+    },
+    "total_events": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total number of AI invocations"
+    },
+    "paused": {
+      "type": "boolean",
+      "description": "Whether AI processing is currently paused"
+    },
+    "over_limit": {
+      "type": "boolean",
+      "description": "Whether usage has exceeded free tier"
+    }
+  },
+  "additionalProperties": false
+}

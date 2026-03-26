@@ -1469,6 +1469,18 @@ app.get('/api/governance/config', (req, res) => {
   }
 });
 
+// === IDEA REGISTRY ===
+
+app.get('/api/ideas', (req, res) => {
+  const ideasPath = path.resolve(cognitiveSensorDir, 'idea_registry.json');
+  try {
+    const raw = fs.readFileSync(ideasPath, 'utf-8');
+    res.json(JSON.parse(raw));
+  } catch (err) {
+    res.status(404).json({ error: 'idea_registry.json not found. Run agent pipeline first.' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Delta-State Fabric API running at http://localhost:${PORT}`);

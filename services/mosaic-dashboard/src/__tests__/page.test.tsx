@@ -1,9 +1,20 @@
 // @vitest-environment jsdom
-import { expect, test, afterEach } from "vitest";
+import { expect, test, afterEach, beforeEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import Page from "../app/page";
 
+// Mock all panel components to isolate page layout tests
+vi.mock("@/components/ModePanel", () => ({ default: () => <div data-testid="mode-panel" /> }));
+vi.mock("@/components/UsageCounter", () => ({ default: () => <div data-testid="usage-counter" /> }));
+vi.mock("@/components/FestivalPanel", () => ({ default: () => <div data-testid="festival-panel" /> }));
+vi.mock("@/components/SimulationPanel", () => ({ default: () => <div data-testid="simulation-panel" /> }));
+vi.mock("@/components/AtlasClusters", () => ({ default: () => <div data-testid="atlas-clusters" /> }));
+
 afterEach(cleanup);
+
+beforeEach(() => {
+  vi.stubGlobal("fetch", vi.fn());
+});
 
 test("renders Mosaic Dashboard heading", () => {
   render(<Page />);
@@ -12,17 +23,11 @@ test("renders Mosaic Dashboard heading", () => {
   ).toBeDefined();
 });
 
-test("shows proxy route for delta-kernel", () => {
+test("renders all 5 panels", () => {
   render(<Page />);
-  expect(screen.getByText(/\/api\/delta\/\*/)).toBeDefined();
-});
-
-test("shows proxy route for MiroFish", () => {
-  render(<Page />);
-  expect(screen.getByText(/\/api\/mirofish\/\*/)).toBeDefined();
-});
-
-test("shows proxy route for orchestrator", () => {
-  render(<Page />);
-  expect(screen.getByText(/\/api\/mosaic\/\*/)).toBeDefined();
+  expect(screen.getByTestId("mode-panel")).toBeDefined();
+  expect(screen.getByTestId("usage-counter")).toBeDefined();
+  expect(screen.getByTestId("festival-panel")).toBeDefined();
+  expect(screen.getByTestId("simulation-panel")).toBeDefined();
+  expect(screen.getByTestId("atlas-clusters")).toBeDefined();
 });

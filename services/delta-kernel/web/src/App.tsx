@@ -3,8 +3,8 @@ import './App.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
-type Mode = 'RECOVER' | 'CLOSE_LOOPS' | 'BUILD' | 'COMPOUND' | 'SCALE'
-type TaskStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE' | 'ARCHIVED'
+type Mode = 'RECOVER' | 'CLOSURE' | 'MAINTENANCE' | 'BUILD' | 'COMPOUND' | 'SCALE'
+type TaskStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE'
 
 interface Task {
   id: string
@@ -24,7 +24,8 @@ interface SystemState {
 
 const MODE_COLORS: Record<Mode, string> = {
   RECOVER: '#dc2626',
-  CLOSE_LOOPS: '#ca8a04',
+  CLOSURE: '#ca8a04',
+  MAINTENANCE: '#d97706',
   BUILD: '#16a34a',
   COMPOUND: '#2563eb',
   SCALE: '#9333ea',
@@ -32,7 +33,8 @@ const MODE_COLORS: Record<Mode, string> = {
 
 const MODE_DESCRIPTIONS: Record<Mode, string> = {
   RECOVER: 'Rest and restore. Only recovery actions available.',
-  CLOSE_LOOPS: 'Clear pending items. Reduce mental load.',
+  CLOSURE: 'Clear pending items. Reduce mental load.',
+  MAINTENANCE: 'System maintenance. Light admin and health actions.',
   BUILD: 'Create new work. Full capabilities enabled.',
   COMPOUND: 'Extend and improve existing work.',
   SCALE: 'Delegate, automate, multiply impact.',
@@ -53,6 +55,7 @@ function App() {
   const [statusMessage, setStatusMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [apiConnected, setApiConnected] = useState(false)
+  const [showSyncPrompt, setShowSyncPrompt] = useState(false)
 
   // Load from API
   const loadData = useCallback(async () => {
@@ -86,6 +89,27 @@ function App() {
     }
   }, [])
 
+  // Check for offline changes when API reconnects
+  const checkOfflineChanges = useCallback(async () => {
+    if (!apiConnected) return
+    const saved = localStorage.getItem('delta-fabric-state')
+    if (!saved) return
+    try {
+      const local = JSON.parse(saved)
+      const localTs = local._savedAt || 0
+      const localWasOffline = local._offline === true
+      if (localWasOffline && localTs > 0) {
+        setShowSyncPrompt(true)
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, [apiConnected])
+
+  useEffect(() => {
+    checkOfflineChanges()
+  }, [checkOfflineChanges])
+
   useEffect(() => {
     loadData()
   }, [loadData])
@@ -103,8 +127,13 @@ function App() {
         console.log('Failed to save to API')
       }
     }
-    // Always save to localStorage as backup
-    localStorage.setItem('delta-fabric-state', JSON.stringify({ state: newState, tasks }))
+    // Always save to localStorage as backup (track offline flag + timestamp)
+    localStorage.setItem('delta-fabric-state', JSON.stringify({
+      state: newState,
+      tasks,
+      _savedAt: Date.now(),
+      _offline: !apiConnected,
+    }))
   }, [apiConnected, tasks])
 
   // Update open loops count
@@ -121,16 +150,16 @@ function App() {
     const { mode, sleepHours, openLoops, leverageBalance, streakDays } = newState
 
     if (sleepHours < 5) return 'RECOVER'
-    if (sleepHours < 7 && ['BUILD', 'COMPOUND', 'SCALE'].includes(mode)) return 'CLOSE_LOOPS'
+    if (sleepHours < 7 && ['BUILD', 'COMPOUND', 'SCALE'].includes(mode)) return 'CLOSURE'
 
     if (sleepHours >= 7) {
-      if (mode === 'RECOVER') return 'CLOSE_LOOPS'
-      if (mode === 'CLOSE_LOOPS' && openLoops <= 3) return 'BUILD'
+      if (mode === 'RECOVER') return 'CLOSURE'
+      if (mode === 'CLOSURE' && openLoops <= 3) return 'BUILD'
       if (mode === 'BUILD' && leverageBalance >= 5) return 'COMPOUND'
       if (mode === 'COMPOUND' && leverageBalance >= 10 && streakDays >= 3) return 'SCALE'
     }
 
-    if (openLoops > 7 && ['BUILD', 'COMPOUND', 'SCALE'].includes(mode)) return 'CLOSE_LOOPS'
+    if (openLoops > 7 && ['BUILD', 'COMPOUND', 'SCALE'].includes(mode)) return 'CLOSURE'
 
     return mode
   }
@@ -256,6 +285,38 @@ function App() {
         {apiConnected ? '● Synced' : '○ Local only'}
       </div>
 
+      {/* Offline Changes Sync Prompt */}
+      {showSyncPrompt && (
+        <div className="sync-prompt" style={{
+          background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8,
+          padding: '12px 16px', margin: '8px 16px', display: 'flex',
+          alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        }}>
+          <span style={{ color: '#92400e', fontSize: 14 }}>
+            Offline changes detected. Overwrite server with local data?
+          </span>
+          <span style={{ display: 'flex', gap: 8 }}>
+            <button style={{ padding: '4px 12px', cursor: 'pointer' }} onClick={async () => {
+              const saved = localStorage.getItem('delta-fabric-state')
+              if (saved) {
+                const local = JSON.parse(saved)
+                await saveState(local.state)
+                localStorage.setItem('delta-fabric-state', JSON.stringify({ ...local, _offline: false }))
+              }
+              setShowSyncPrompt(false)
+            }}>Yes, push local</button>
+            <button style={{ padding: '4px 12px', cursor: 'pointer' }} onClick={() => {
+              const saved = localStorage.getItem('delta-fabric-state')
+              if (saved) {
+                const local = JSON.parse(saved)
+                localStorage.setItem('delta-fabric-state', JSON.stringify({ ...local, _offline: false }))
+              }
+              setShowSyncPrompt(false)
+            }}>Discard local</button>
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <header className="header" style={{ backgroundColor: MODE_COLORS[state.mode] }}>
         <h1>MODE: {state.mode}</h1>
@@ -353,7 +414,7 @@ function App() {
           Signal "Slept Well" to exit RECOVER mode
         </div>
       )}
-      {state.mode === 'CLOSE_LOOPS' && state.openLoops > 3 && (
+      {state.mode === 'CLOSURE' && state.openLoops > 3 && (
         <div className="hint">
           Complete tasks to reduce loops below 4 and unlock BUILD mode
         </div>

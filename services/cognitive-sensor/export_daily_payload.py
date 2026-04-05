@@ -2,6 +2,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 from validate import require_valid
+from atlas_config import compute_mode
+from atomic_write import atomic_write_json
 
 BASE = Path(__file__).parent.resolve()
 
@@ -14,29 +16,20 @@ closure = state["closure"]
 open_count = closure["open"]
 ratio = closure["ratio"]
 
-# Routing logic
-if ratio < 15:
-    mode = "CLOSURE"
-    build_allowed = False
-    risk = "HIGH"
+# Routing via single source of truth
+mode, risk, build_allowed = compute_mode(ratio, open_count)
+
+# Generate primary action based on mode
+if mode == "CLOSURE":
     primary_action = f"Close or archive: {loops[0]['title']}" if loops else "No loops detected."
-elif open_count > 20:
-    mode = "CLOSURE"
-    build_allowed = False
-    risk = "HIGH"
-    primary_action = f"Close 2 loops. Start with: {loops[0]['title']}" if loops else "Run loops.py"
-elif open_count > 10:
-    mode = "MAINTENANCE"
-    build_allowed = True
-    risk = "MEDIUM"
+elif mode == "MAINTENANCE":
     primary_action = f"Review: {loops[0]['title']}" if loops else "Backlog healthy."
 else:
-    mode = "BUILD"
-    build_allowed = True
-    risk = "LOW"
     primary_action = "Create freely."
 
 payload = {
+    "schema_version": "1.1.0",
+    "mode_source": "cognitive-sensor",
     "mode": mode,
     "build_allowed": build_allowed,
     "primary_action": primary_action,
@@ -47,18 +40,30 @@ payload = {
     "generated_at": datetime.now().strftime("%Y-%m-%d")
 }
 
+# Merge prediction results if available
+pred_path = BASE / "prediction_results.json"
+try:
+    if pred_path.exists():
+        pred_data = json.load(open(pred_path, encoding="utf-8"))
+        payload["predictions"] = {
+            "status": pred_data.get("status", "unavailable"),
+            "top_actions": pred_data.get("top_actions", [])[:3],
+            "pattern_count": len(pred_data.get("active_patterns", [])),
+            "mode_forecast": pred_data.get("mode_forecast"),
+            "exit_path": pred_data.get("exit_path"),
+        }
+except Exception:
+    payload["predictions"] = {"status": "unavailable"}
+
 # Validate against contract before writing
 require_valid(payload, "DailyPayload.v1.json", "export_daily_payload")
 
 # Destination: CycleBoard nervous system (repo-local)
 OUT = BASE / "cycleboard" / "brain" / "daily_payload.json"
-OUT.parent.mkdir(parents=True, exist_ok=True)
-with open(OUT, "w", encoding="utf-8") as f:
-    json.dump(payload, f, indent=2)
+atomic_write_json(OUT, payload)
 
 # Also write to local directory for easy access
 LOCAL_OUT = BASE / "daily_payload.json"
-with open(LOCAL_OUT, "w", encoding="utf-8") as f:
-    json.dump(payload, f, indent=2)
+atomic_write_json(LOCAL_OUT, payload)
 
 print(f"Daily payload exported to {OUT} (contract validated).")

@@ -49,8 +49,59 @@ const workController = new WorkController(repoRoot);
 // Initialize timeline logger
 const timeline = getTimelineLogger(repoRoot);
 
-app.use(cors());
+// === SECURITY ===
+
+// CORS: restrict to known local origins
+app.use(cors({
+  origin: [
+    'http://localhost:8765', 'http://127.0.0.1:8765',
+    'http://localhost:3001', 'http://127.0.0.1:3001',
+    'http://localhost:3000', 'http://127.0.0.1:3000', // Mosaic Dashboard
+    'http://localhost:5500', 'http://127.0.0.1:5500', // Live Server
+    'http://localhost:5501', 'http://127.0.0.1:5501', // Live Server alt
+    'http://localhost:8888', 'http://127.0.0.1:8888', // Atlas Shell
+    'http://localhost:8889', 'http://127.0.0.1:8889', // CycleBoard
+    'null', // file:// protocol
+  ],
+}));
 app.use(express.json());
+
+// Load API key from .aegis-tenant-key
+const keyPath = path.join(repoRoot, '.aegis-tenant-key');
+let API_KEY: string | null = null;
+try {
+  API_KEY = fs.readFileSync(keyPath, 'utf-8').trim();
+  console.log('API key loaded from .aegis-tenant-key');
+} catch {
+  console.warn('WARNING: No .aegis-tenant-key found — running without auth (dev mode)');
+}
+
+// Auth middleware: require Bearer token on /api/* (except /api/health and /api/auth/token)
+app.use('/api', (req, res, next) => {
+  if (!API_KEY) { next(); return; } // dev mode: no key file = no auth
+  if (req.path === '/health' || req.path === '/auth/token') { next(); return; }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Missing or invalid API key' });
+    return;
+  }
+  const token = authHeader.slice(7);
+  if (token !== API_KEY) {
+    res.status(401).json({ error: 'Missing or invalid API key' });
+    return;
+  }
+  next();
+});
+
+// Token endpoint: browser clients fetch the key once (localhost-only, CORS-restricted)
+app.get('/api/auth/token', (req, res) => {
+  if (!API_KEY) {
+    res.json({ ok: true, token: null });
+    return;
+  }
+  res.json({ ok: true, token: API_KEY });
+});
 
 // Serve control panel UI
 app.use('/control', express.static(path.join(__dirname, '../ui')));
@@ -110,7 +161,20 @@ const buildUnifiedState = () => {
   const today = readJsonFile(todayPath, 'today.json') as Record<string, unknown> | null;
   const closuresRegistry = readJsonFile(closuresPath, 'closures.json') as { closures: unknown[]; stats: Record<string, unknown> } | null;
 
-  // D) Derive unified values (prefer cognitive files → delta state → defaults)
+  // D) Derive unified values
+  //
+  // PRIORITY CASCADE (documented for Phase 0 audit):
+  //   Mode:          today.json > delta state > default ('RECOVER')
+  //   Risk:          today.json > delta state > default ('MEDIUM')
+  //   Open loops:    cognitive_state > today.json > delta state > default (0)
+  //   Closure ratio: cognitive_state > today.json > delta state > default (0)
+  //   Primary order: today.json > delta state > default
+  //   Build allowed: today.json > delta state > computed from mode
+  //
+  // Why this order: cognitive_state.json is refreshed daily by the pipeline
+  // and contains the most granular loop/closure data. today.json is the daily
+  // directive (mode routing output). delta state is the persistent store.
+  // If files are missing or stale, later sources provide a safe fallback.
   const todayDirective = today?.directive as Record<string, unknown> | undefined;
   const todayCognitive = today?.cognitive as Record<string, unknown> | undefined;
 
@@ -419,6 +483,15 @@ app.put('/api/tasks/:id', async (req, res) => {
 
       storage.saveEntity(data.entity, state);
       found = true;
+
+      // Feedback loop: task completion triggers closure pipeline
+      if (updates.status === 'DONE') {
+        processClosureEvent({
+          title: (state.title as string) || 'Task completed',
+          outcome: 'closed',
+        }).catch(e => console.error('[task_complete] Closure feedback failed:', e));
+      }
+
       break;
     }
   }
@@ -456,8 +529,24 @@ app.delete('/api/tasks/:id', (req, res) => {
  * Ingest cognitive metrics from cognitive-sensor.
  * Updates system_state with open_loops and computed mode.
  */
+const _processedRunIds = new Set<string>();
+
 app.post('/api/ingest/cognitive', async (req, res) => {
   const projection = req.body;
+
+  // Idempotency: skip duplicate run_ids
+  if (projection.run_id) {
+    if (_processedRunIds.has(projection.run_id)) {
+      res.json({ success: true, deduplicated: true, run_id: projection.run_id });
+      return;
+    }
+    _processedRunIds.add(projection.run_id);
+    // Keep set bounded (last 1000 run_ids)
+    if (_processedRunIds.size > 1000) {
+      const first = _processedRunIds.values().next().value;
+      if (first !== undefined) _processedRunIds.delete(first);
+    }
+  }
 
   // Validate required fields
   if (!projection.cognitive || !projection.directive) {
@@ -485,7 +574,8 @@ app.post('/api/ingest/cognitive', async (req, res) => {
     risk: directive.risk,
     build_allowed: directive.build_allowed,
     primary_action: directive.primary_action,
-    last_ingest: ingestTime,
+    last_ingest: now(),
+    last_run_id: projection.run_id || null,
   };
 
   const entities = storage.loadEntitiesByType<Record<string, unknown>>('system_state');
@@ -527,6 +617,73 @@ app.post('/api/ingest/cognitive', async (req, res) => {
     success: true,
     mode: stateData.mode,
     open_loops: stateData.open_loops,
+    run_id: projection.run_id || null,
+  });
+});
+
+// === DAILY BRIEF ===
+
+/**
+ * GET /api/daily-brief
+ * Returns structured daily brief data for the cockpit dashboard.
+ * Reads governance_state.json, daily_payload.json, and daily_brief.md.
+ */
+app.get('/api/daily-brief', (_req, res) => {
+  const CS = path.resolve(__dirname, '..', '..', '..', 'cognitive-sensor');
+
+  const readJson = (file: string) => {
+    try { return JSON.parse(fs.readFileSync(path.join(CS, file), 'utf8')); }
+    catch { return null; }
+  };
+  const readText = (file: string) => {
+    try { return fs.readFileSync(path.join(CS, file), 'utf8'); }
+    catch { return null; }
+  };
+
+  const governance = readJson('governance_state.json');
+  const payload = readJson('daily_payload.json');
+  const cogState = readJson('cognitive_state.json');
+  const briefMd = readText('daily_brief.md');
+
+  // Extract leverage moves from daily_brief.md
+  const moves: string[] = [];
+  if (briefMd) {
+    const movesMatch = briefMd.match(/## Top Moves Today[\s\S]*?(?=##|$)/);
+    if (movesMatch) {
+      const lines = movesMatch[0].split('\n').filter((l: string) => /^\d+\./.test(l.trim()));
+      for (const l of lines) moves.push(l.replace(/^\d+\.\s*/, '').trim());
+    }
+  }
+
+  // Extract decisions from daily_brief.md
+  const decisions: string[] = [];
+  if (briefMd) {
+    const decMatch = briefMd.match(/## Decisions Required[\s\S]*?(?=##|$)/);
+    if (decMatch) {
+      const lines = decMatch[0].split('\n').filter((l: string) => /^\*\*\d+\./.test(l.trim()));
+      for (const l of lines) decisions.push(l.replace(/^\*\*\d+\.\s*/, '').replace(/\*\*/g, '').trim());
+    }
+  }
+
+  res.json({
+    ok: true,
+    ts: new Date().toISOString(),
+    mode: payload?.mode || governance?.mode || 'RECOVER',
+    risk: payload?.risk || governance?.risk || 'MEDIUM',
+    build_allowed: payload?.build_allowed ?? governance?.build_allowed ?? false,
+    primary_action: payload?.primary_action || governance?.primary_action || '',
+    closure: {
+      ratio: cogState?.closure?.ratio ?? payload?.closure_ratio ?? 0,
+      open: cogState?.closure?.open ?? payload?.open_loop_count ?? 0,
+    },
+    leverage_moves: moves.length > 0 ? moves : [
+      governance?.leverage_moves?.[0] || 'No moves computed — run daily refresh',
+    ],
+    decisions,
+    lanes: governance?.active_lanes || governance?.lane_status || [],
+    directive: payload?.primary_action || 'Run atlas_cli.py daily to generate brief',
+    brief_generated: governance?.generated_at || payload?.generated_at || null,
+    brief_raw: briefMd,
   });
 });
 
@@ -872,6 +1029,191 @@ app.post('/api/law/override', async (req, res) => {
     });
   }
 });
+
+/**
+ * Internal closure processor — reusable by close_loop API and task completion.
+ * Fire-and-forget: errors are logged but don't propagate.
+ */
+async function processClosureEvent(closureInput: { loop_id?: string; title?: string; outcome: 'closed' | 'archived' }): Promise<{ success: boolean; mode?: string; mode_changed?: boolean; closureRatio?: number; closuresToday?: number; closedTotal?: number; openLoops?: number; buildAllowed?: boolean; streakDays?: number; streakUpdated?: boolean; bestStreak?: number }> {
+  const { loop_id, title, outcome } = closureInput;
+  const timestamp = now();
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayStartTs = todayStart.getTime();
+  const todayStr = todayStart.toISOString().split('T')[0];
+
+  // Load closures registry
+  const closuresPath = path.join(cognitiveSensorDir, 'closures.json');
+  let closuresRegistry: {
+    closures: Array<{ ts: number; loop_id: string | null; title: string | null; outcome: string }>;
+    stats: {
+      total_closures: number;
+      closures_today: number;
+      last_closure_at: number | null;
+      streak_days: number;
+      last_streak_date: string | null;
+      best_streak: number;
+    };
+  };
+
+  try {
+    if (fs.existsSync(closuresPath)) {
+      closuresRegistry = JSON.parse(fs.readFileSync(closuresPath, 'utf-8'));
+    } else {
+      closuresRegistry = {
+        closures: [],
+        stats: { total_closures: 0, closures_today: 0, last_closure_at: null, streak_days: 0, last_streak_date: null, best_streak: 0 },
+      };
+    }
+  } catch {
+    closuresRegistry = {
+      closures: [],
+      stats: { total_closures: 0, closures_today: 0, last_closure_at: null, streak_days: 0, last_streak_date: null, best_streak: 0 },
+    };
+  }
+
+  // Idempotency check
+  if (loop_id) {
+    const alreadyClosed = closuresRegistry.closures.some(c => c.loop_id === loop_id);
+    if (alreadyClosed) return { success: false };
+  }
+
+  // Build closure entry
+  const closureEntry = { ts: timestamp, loop_id: loop_id || null, title: title || null, outcome };
+  closuresRegistry.closures.push(closureEntry);
+  closuresRegistry.stats.total_closures += 1;
+  closuresRegistry.stats.last_closure_at = timestamp;
+  const closuresToday = closuresRegistry.closures.filter(c => c.ts >= todayStartTs).length;
+  closuresRegistry.stats.closures_today = closuresToday;
+
+  // Read cognitive state for ratio
+  const cognitiveStatePath = path.join(cognitiveSensorDir, 'cognitive_state.json');
+  let openLoops = 0;
+  try {
+    if (fs.existsSync(cognitiveStatePath)) {
+      const cogState = JSON.parse(fs.readFileSync(cognitiveStatePath, 'utf-8'));
+      openLoops = cogState.closure?.open ?? 0;
+    }
+  } catch { /* default */ }
+
+  const closedLoops = closuresRegistry.stats.total_closures;
+  const totalLoops = openLoops + closedLoops;
+  const closureRatio = totalLoops > 0 ? closedLoops / totalLoops : 1;
+
+  // Mode transition rules
+  let newMode: string;
+  let buildAllowed: boolean;
+  if (closureRatio >= 0.8) { newMode = 'SCALE'; buildAllowed = true; }
+  else if (closureRatio >= 0.6) { newMode = 'BUILD'; buildAllowed = true; }
+  else if (closureRatio >= 0.4) { newMode = 'MAINTENANCE'; buildAllowed = false; }
+  else { newMode = 'CLOSURE'; buildAllowed = false; }
+
+  // Streak increment (BUILD-only)
+  let streakUpdated = false;
+  const isFirstClosureToday = closuresRegistry.stats.last_streak_date !== todayStr;
+  if (isFirstClosureToday && (newMode === 'BUILD' || newMode === 'SCALE')) {
+    closuresRegistry.stats.last_streak_date = todayStr;
+    closuresRegistry.stats.streak_days += 1;
+    streakUpdated = true;
+    if (closuresRegistry.stats.streak_days > closuresRegistry.stats.best_streak) {
+      closuresRegistry.stats.best_streak = closuresRegistry.stats.streak_days;
+    }
+  }
+
+  // Write closures registry
+  const closuresDir = path.dirname(closuresPath);
+  if (!fs.existsSync(closuresDir)) fs.mkdirSync(closuresDir, { recursive: true });
+  fs.writeFileSync(closuresPath, JSON.stringify(closuresRegistry, null, 2));
+
+  // Physical loop closure hooks
+  if (loop_id) {
+    const loopsLatestPath = path.join(cognitiveSensorDir, 'loops_latest.json');
+    const loopsClosedPath = path.join(cognitiveSensorDir, 'loops_closed.json');
+    try {
+      if (fs.existsSync(loopsLatestPath)) {
+        const loopsLatest = JSON.parse(fs.readFileSync(loopsLatestPath, 'utf-8')) as Array<{ id?: string; loop_id?: string }>;
+        const filtered = loopsLatest.filter(l => l.id !== loop_id && l.loop_id !== loop_id);
+        if (filtered.length !== loopsLatest.length) {
+          fs.writeFileSync(loopsLatestPath, JSON.stringify(filtered, null, 2));
+        }
+      }
+      let loopsClosed: Array<{ loop_id: string; title: string | null; closed_at: number; outcome: string }> = [];
+      if (fs.existsSync(loopsClosedPath)) loopsClosed = JSON.parse(fs.readFileSync(loopsClosedPath, 'utf-8'));
+      loopsClosed.push({ loop_id, title: title || null, closed_at: timestamp, outcome });
+      fs.writeFileSync(loopsClosedPath, JSON.stringify(loopsClosed, null, 2));
+    } catch (e) {
+      console.error('[processClosureEvent] Physical loop removal failed:', (e as Error).message);
+    }
+  }
+
+  // Update delta state
+  const entities = storage.loadEntitiesByType<Record<string, unknown>>('system_state');
+  const currentStreakDays = entities.length > 0 ? (entities[0].state.streak_days as number) || 0 : 0;
+
+  if (entities.length > 0) {
+    const existing = entities[0];
+    const currentMode = (existing.state.mode as string) || 'CLOSURE';
+    const currentMetrics = (existing.state.metrics as Record<string, unknown>) || {};
+    const currentEnforcement = (existing.state.enforcement as Record<string, unknown>) || {};
+    const currentClosureLog = (currentEnforcement.closure_log as unknown[]) || [];
+    const currentClosedTotal = (currentMetrics.closed_loops_total as number) || 0;
+
+    const patches: Array<{ op: 'replace'; path: string; value: unknown }> = [
+      { op: 'replace', path: '/enforcement/violations_count', value: 0 },
+      { op: 'replace', path: '/enforcement/closure_log', value: [...currentClosureLog, closureEntry] },
+      { op: 'replace', path: '/metrics/closed_loops_total', value: currentClosedTotal + 1 },
+      { op: 'replace', path: '/metrics/last_closure_at', value: timestamp },
+      { op: 'replace', path: '/metrics/closure_ratio', value: closureRatio },
+      { op: 'replace', path: '/metrics/open_loops', value: openLoops },
+      { op: 'replace', path: '/metrics/closures_today', value: closuresToday },
+      { op: 'replace', path: '/build_allowed', value: buildAllowed },
+    ];
+
+    const modeChanged = currentMode !== newMode;
+    if (modeChanged) {
+      patches.push({ op: 'replace', path: '/mode', value: newMode });
+      patches.push({ op: 'replace', path: '/last_mode_transition_at', value: timestamp });
+      patches.push({ op: 'replace', path: '/last_mode_transition_reason', value: `Closure event: ratio=${closureRatio.toFixed(2)}` });
+    }
+
+    if (streakUpdated) {
+      patches.push({ op: 'replace', path: '/streak_days', value: currentStreakDays + 1 });
+      patches.push({ op: 'replace', path: '/streak/last_increment_date', value: todayStr });
+      if (closuresRegistry.stats.streak_days > (existing.state.best_streak as number || 0)) {
+        patches.push({ op: 'replace', path: '/best_streak', value: closuresRegistry.stats.streak_days });
+      }
+    }
+
+    const result = await createDelta(existing.entity, existing.state, patches, 'closure_engine');
+    storage.saveEntity(result.entity, result.state);
+    storage.appendDelta(result.delta);
+
+    timeline.emit('CLOSURE_PROCESSED', 'closure_engine', {
+      loop_id: loop_id || null,
+      title: title || null,
+      outcome,
+      mode: newMode,
+      mode_changed: modeChanged,
+      closure_ratio: closureRatio,
+    });
+
+    return {
+      success: true,
+      mode: newMode,
+      mode_changed: modeChanged,
+      closureRatio,
+      closuresToday,
+      closedTotal: currentClosedTotal + 1,
+      openLoops,
+      buildAllowed,
+      streakDays: streakUpdated ? currentStreakDays + 1 : currentStreakDays,
+      streakUpdated,
+      bestStreak: closuresRegistry.stats.best_streak,
+    };
+  }
+
+  return { success: true, mode: newMode, mode_changed: false };
+}
 
 /**
  * POST /api/law/close_loop
@@ -1350,8 +1692,8 @@ app.get('/api/timeline', (req, res) => {
   const events = timeline.query({
     from: from as string | undefined,
     to: to as string | undefined,
-    type: type as import('../core/timeline-logger').TimelineEventType | undefined,
-    source: source as import('../core/timeline-logger').TimelineSource | undefined,
+    type: type as any,
+    source: source as any,
     limit: limit ? parseInt(limit as string, 10) : 100,
   });
 
@@ -1481,8 +1823,80 @@ app.get('/api/ideas', (req, res) => {
   }
 });
 
+// === PREPARATION ENGINE OUTPUT ===
+
+app.get('/api/preparation', (req, res) => {
+  const entities = storage.loadEntitiesByType<Record<string, unknown>>('preparation_result');
+  if (entities.length === 0) {
+    res.json({
+      ok: true,
+      data: null,
+      message: 'No preparation results yet. Daemon runs every 5 minutes.',
+    });
+    return;
+  }
+  res.json({ ok: true, data: entities[0].state });
+});
+
+// === NOTIFICATIONS (auto-execution audit trail) ===
+
+app.get('/api/notifications', (req, res) => {
+  const since = req.query.since as string || undefined;
+  const typeFilter = req.query.types as string || undefined;
+
+  const events = timeline.query({
+    from: since ? new Date(parseInt(since)).toISOString() : undefined,
+    limit: 50,
+  });
+
+  const filtered = typeFilter
+    ? events.filter((e: any) => typeFilter.split(',').includes(e.type))
+    : events;
+
+  res.json({ ok: true, events: filtered });
+});
+
+// === CYCLEBOARD PERSISTENCE ===
+
+app.get('/api/cycleboard', (req, res) => {
+  const entities = storage.loadEntitiesByType<Record<string, unknown>>('cycle_board');
+  if (entities.length === 0) {
+    res.json({ ok: true, data: null });
+    return;
+  }
+  res.json({ ok: true, data: entities[0].state });
+});
+
+app.put('/api/cycleboard', async (req, res) => {
+  const newState = req.body;
+  if (!newState || typeof newState !== 'object') {
+    res.status(400).json({ ok: false, error: 'Request body must be a JSON object' });
+    return;
+  }
+
+  const entities = storage.loadEntitiesByType<Record<string, unknown>>('cycle_board');
+
+  if (entities.length > 0) {
+    const existing = entities[0];
+    const result = await createDelta(
+      existing.entity,
+      existing.state,
+      [{ op: 'replace' as const, path: '/data', value: newState }],
+      'cycleboard'
+    );
+    storage.saveEntity(result.entity, result.state);
+    storage.appendDelta(result.delta);
+  } else {
+    const result = await createEntity('cycle_board', { data: newState });
+    storage.saveEntity(result.entity, result.state);
+    storage.appendDelta(result.delta);
+  }
+
+  res.json({ ok: true });
+});
+
 // Start server
-app.listen(PORT, () => {
-  console.log(`Delta-State Fabric API running at http://localhost:${PORT}`);
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Delta-State Fabric API running at http://127.0.0.1:${PORT} (localhost only)`);
   console.log(`Data directory: ${dataDir}`);
 });

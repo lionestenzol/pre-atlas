@@ -23,9 +23,16 @@ const REFLECTION_PERIOD = Object.freeze({
   YEARLY: 'yearly'
 });
 
+// API persistence
+const CYCLEBOARD_API_BASE = 'http://localhost:3001';
+const API_SYNC_DEBOUNCE_MS = 2000;
+
 class CycleBoardState {
   constructor() {
     this.saveDebounceTimer = null;
+    this.apiSyncTimer = null;
+    this.apiAvailable = null; // null = unknown, true/false after probe
+    this.apiKey = null; // loaded async via loadApiKey()
     this.history = [];
     this.historyIndex = -1;
     this.maxHistorySize = 50;
@@ -145,7 +152,9 @@ class CycleBoardState {
         quarterly: [],
         yearly: []
       },
-      MomentumWins: [] // Daily small wins log
+      MomentumWins: [], // Daily small wins log
+      calendarView: 'month',
+      calendarDate: new Date().toISOString().slice(0, 10)
     };
   }
 
@@ -219,6 +228,12 @@ class CycleBoardState {
         if (!this.state.MomentumWins) {
           this.state.MomentumWins = [];
         }
+        if (!this.state.calendarView) {
+          this.state.calendarView = 'month';
+        }
+        if (!this.state.calendarDate) {
+          this.state.calendarDate = new Date().toISOString().slice(0, 10);
+        }
         // Ensure DayTypeTemplates exist with proper structure
         if (!this.state.DayTypeTemplates ||
             !this.state.DayTypeTemplates.A?.timeBlocks?.length ||
@@ -249,9 +264,105 @@ class CycleBoardState {
     }
   }
 
+  // === API Sync Methods ===
+
+  _authHeaders() {
+    const h = {};
+    if (this.apiKey) h['Authorization'] = `Bearer ${this.apiKey}`;
+    return h;
+  }
+
+  async loadApiKey() {
+    try {
+      const res = await fetch(`${CYCLEBOARD_API_BASE}/api/auth/token`);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.token) {
+        this.apiKey = json.token;
+        console.log('[CycleBoard] API key loaded');
+      }
+    } catch {
+      // API not available — key loading will be skipped
+    }
+  }
+
+  async loadFromApi() {
+    try {
+      await this.loadApiKey();
+      const res = await fetch(`${CYCLEBOARD_API_BASE}/api/cycleboard`, { headers: this._authHeaders() });
+      if (!res.ok) { this.apiAvailable = false; return false; }
+      const json = await res.json();
+      this.apiAvailable = true;
+
+      if (json.data) {
+        // API has data — extract from wrapper if present
+        const apiState = json.data.data || json.data;
+
+        // Check if localStorage has newer offline changes
+        const localTs = this.state._savedAt || 0;
+        const localWasOffline = this.state._offline === true;
+        if (localWasOffline && localTs > 0) {
+          const push = confirm(
+            '[CycleBoard] Offline changes detected.\n\n' +
+            'Click OK to push local changes to server.\n' +
+            'Click Cancel to discard local and use server data.'
+          );
+          if (push) {
+            this.state._offline = false;
+            this.syncToApi();
+            console.log('[CycleBoard] Pushed offline changes to API');
+            return true;
+          }
+        }
+
+        // Preserve transient UI props from current session
+        const transient = { screen: this.state.screen, calendarView: this.state.calendarView, calendarDate: this.state.calendarDate };
+        Object.assign(this.state, apiState, transient);
+        this.state._offline = false;
+        this.saveToStorage();
+        this.pushHistory();
+        console.log('[CycleBoard] State loaded from API');
+        return true;
+      } else {
+        // API is empty — seed it with localStorage state
+        this.syncToApi();
+        console.log('[CycleBoard] API empty, seeding with local state');
+        return false;
+      }
+    } catch (e) {
+      this.apiAvailable = false;
+      console.warn('[CycleBoard] API unavailable, using localStorage only');
+      return false;
+    }
+  }
+
+  syncToApi() {
+    if (this.apiAvailable === false) return;
+    fetch(`${CYCLEBOARD_API_BASE}/api/cycleboard`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...this._authHeaders() },
+      body: JSON.stringify(this.state)
+    }).then(res => {
+      this.apiAvailable = res.ok;
+      if (!res.ok) console.warn('[CycleBoard] API sync failed:', res.status);
+    }).catch(() => {
+      this.apiAvailable = false;
+    });
+  }
+
+  syncToApiDebounced() {
+    clearTimeout(this.apiSyncTimer);
+    this.apiSyncTimer = setTimeout(() => this.syncToApi(), API_SYNC_DEBOUNCE_MS);
+  }
+
+  // === Storage Methods ===
+
   saveToStorage() {
     try {
+      this.state._savedAt = Date.now();
+      this.state._offline = this.apiAvailable === false;
       localStorage.setItem('cycleboard-state', JSON.stringify(this.state));
+      this.syncToApiDebounced();
     } catch (e) {
       console.error('Failed to save state:', e);
 
@@ -262,6 +373,7 @@ class CycleBoardState {
         // Try again after cleanup
         try {
           localStorage.setItem('cycleboard-state', JSON.stringify(this.state));
+          this.syncToApiDebounced();
           if (typeof UI !== 'undefined') {
             UI.showToast('Storage Warning', 'Cleaned up old data to save space', 'warning');
           }

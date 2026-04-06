@@ -191,8 +191,12 @@ def main():
     print("\n>> Phase 3: Governor Daily Brief")
     run("governor_daily.py", "Governor daily pipeline")
 
+    # ── AI-DOES-THE-WORK: Autonomous Execution ──
+    print("\n>> Phase 4: Auto Actor (autonomous execution)")
+    run("auto_actor.py", "Auto actor — close loops, execute directives, park violations", critical=False)
+
     # ── AI-FOR-SYSTEM: Integration ──
-    print("\n>> Phase 4: System Integration (non-critical)")
+    print("\n>> Phase 5: System Integration (non-critical)")
     run_stall_check()
     push_to_orchestrator()
 
@@ -204,6 +208,7 @@ def main():
     print(f"  - daily_brief.md            (your brief)")
     print(f"  - governance_state.json      (system state)")
     print(f"  - genesis_output/ghost_*     (execution directives)")
+    print(f"  - auto_actor_log.json        (what the system DID)")
     print(f"  - delta-kernel               (state synced)")
     print(f"{'=' * 60}")
 

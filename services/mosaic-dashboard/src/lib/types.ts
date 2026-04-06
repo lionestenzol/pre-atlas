@@ -77,6 +77,12 @@ export interface OrchestratorStatus {
   festival: Record<string, unknown>;
 }
 
+// Execution Queue
+export interface QueueStats {
+  enabled: boolean;
+  stats: Record<string, number>;
+}
+
 // Panel 5: Mode & Governance
 export interface UnifiedDerived {
   mode: Mode;

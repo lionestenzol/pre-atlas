@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mosaic-orchestrator"
+version = "0.1.0"
+description = "Mosaic platform orchestrator — coordinates delta-kernel, cognitive-sensor, aegis-fabric, festival, mirofish, and openclaw"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.7.0",
+    "structlog>=24.1.0",
+    "schedule>=1.2.0",
+    "anthropic>=0.40.0",
+    "asyncpg>=0.29.0",
+    "nats-py>=2.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx",  # for TestClient
+]
+
+[project.scripts]
+mosaic = "mosaic.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mosaic"]

@@ -13,6 +13,7 @@ services:
     volumes:
       - mosaic_pg_data:/var/lib/postgresql/data
       - ./services/aegis-fabric/db/migrations/001_admin.sql:/docker-entrypoint-initdb.d/001_admin.sql
+      - ./migrations/003_execution_queue.sql:/docker-entrypoint-initdb.d/003_execution_queue.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aegis} -d ${POSTGRES_DB:-aegis_admin}"]
       interval: 5s
@@ -215,8 +216,15 @@ services:
       FREE_TIER_SECONDS: ${FREE_TIER_SECONDS:-3600}
       METERING_DB_PATH: /data/metering.db
       COGNITIVE_SENSOR_DIR: /app/services/cognitive-sensor
+      USE_QUEUE: ${USE_QUEUE:-false}
+      POSTGRES_DSN: postgresql://${POSTGRES_USER:-aegis}:${POSTGRES_PASSWORD:-aegis_dev_pass}@postgres:5432/${POSTGRES_DB:-aegis_admin}
+      NATS_URL: nats://nats:4222
     depends_on:
       delta-kernel:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      nats:
         condition: service_healthy
     networks:
       - mosaic-net

@@ -68,5 +68,8 @@ export const getOrchestratorStatus = () => apiFetch<OrchestratorStatus>('/api/mo
 export const executeTask = () =>
   apiFetch<{ status: string; message?: string }>('/api/mosaic/v1/tasks/execute', { method: 'POST' });
 
+// Execution Queue
+export const getQueueStats = () => apiFetch<import('./types').QueueStats>('/api/mosaic/v1/queue/stats');
+
 // Panel 5: Unified State
 export const getUnifiedState = () => apiFetch<UnifiedState>('/api/delta/state/unified');

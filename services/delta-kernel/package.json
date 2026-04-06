@@ -12,7 +12,8 @@
     "gate": "tsx src/tools/gate.ts",
     "test": "tsx src/core/run-tests.ts",
     "test:api": "tsx src/tests/api-tests.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "cycleboard": "tsx ../cognitive-sensor/cycleboard/cli.ts"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.8",
@@ -27,6 +28,7 @@
     "better-sqlite3": "^11.0.0",
     "cors": "^2.8.5",
     "express": "^5.2.1",
+    "nats": "^2.29.3",
     "node-cron": "^4.2.1"
   }
 }

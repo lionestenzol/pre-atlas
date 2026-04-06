@@ -17,6 +17,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { spawn as spawnChild } from 'child_process';
+import { emitEvent } from '../core/event-emitter.js';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -1477,6 +1478,17 @@ app.post('/api/law/close_loop', async (req, res) => {
       },
       physical_closure: loop_id ? 'attempted' : 'skipped',
     });
+
+    // Emit loop.closed to NATS event bus for real-time UI push
+    emitEvent('loop.closed', {
+      loopId: loop_id || null,
+      loopTitle: title || null,
+      outcome,
+      closedAt: new Date(timestamp).toISOString(),
+      newMode,
+      modeChanged,
+      closureRatio,
+    }).catch(() => {}); // Best-effort
   } else {
     // No existing system_state — create genesis state
     const genesisState = {

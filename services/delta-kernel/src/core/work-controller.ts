@@ -13,6 +13,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { getTimelineLogger, TimelineLogger } from './timeline-logger.js';
+import { emitEvent } from './event-emitter.js';
 
 // === TYPES ===
 
@@ -203,7 +204,8 @@ export class WorkController {
 
   constructor(repoRoot: string) {
     this.repoRoot = repoRoot;
-    this.ledgerPath = path.join(repoRoot, 'services/cognitive-sensor/work_ledger.json');
+    const cognitiveSensorDir = process.env.COGNITIVE_SENSOR_DIR || path.join(repoRoot, 'services', 'cognitive-sensor');
+    this.ledgerPath = path.join(cognitiveSensorDir, 'work_ledger.json');
     this.ledger = this.loadLedger();
     this.timeline = getTimelineLogger(repoRoot);
   }
@@ -620,6 +622,15 @@ export class WorkController {
     }
 
     this.saveLedger();
+
+    // Emit task.completed to NATS event bus for real-time UI push
+    emitEvent('task.completed', {
+      jobId: req.job_id,
+      outcome: req.outcome,
+      durationMs: duration_ms,
+      queueAdvanced,
+      nextJobStarted: nextJobStarted,
+    }).catch(() => {}); // Best-effort
 
     return {
       success: true,

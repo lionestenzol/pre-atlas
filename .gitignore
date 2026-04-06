@@ -55,6 +55,16 @@ services/cognitive-sensor/conversations.json
 
 # === Generated state (recreated on run) ===
 .delta-fabric/
+.aegis-data/
+
+# === Generated HTML (rebuilt by Python pipeline) ===
+# Regenerate with: python build_cognitive_atlas.py / python build_cognitive_map.py
+services/cognitive-sensor/cognitive_atlas.html
+services/cognitive-sensor/cognitive_map.html
+
+# === Generated docs manifest (rebuilt by build_docs_manifest.py) ===
+docs_manifest.json
+docs_manifest.js
 
 # === Personal data (privacy) ===
 # PDF files may contain personal information
@@ -68,11 +78,13 @@ logs/
 .env
 .env.local
 .env.*.local
+.aegis-tenant-key
 
 # === Temporary files ===
 *.tmp
 *.temp
 *.bak
+.pipeline.lock
 
 # === OS generated ===
 .DS_Store

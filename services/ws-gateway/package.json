@@ -1,0 +1,19 @@
+{
+  "name": "ws-gateway",
+  "version": "0.1.0",
+  "description": "WebSocket gateway bridging NATS events to browser clients via Socket.IO",
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts"
+  },
+  "dependencies": {
+    "nats": "^2.28.2",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "@types/node": "^20"
+  }
+}

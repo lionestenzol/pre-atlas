@@ -4,14 +4,17 @@ import { useState, useEffect, useCallback } from 'react';
 import Panel from './Panel';
 import ModeTag from './ModeTag';
 import { getUnifiedState } from '@/lib/api';
+import { onModeChanged, onLoopClosed, isConnected } from '../lib/websocket';
 import type { UnifiedDerived } from '@/lib/types';
 
-const REFRESH_MS = 30_000;
+const POLL_FALLBACK_MS = 30_000;
+const POLL_CONNECTED_MS = 120_000; // Slow poll when WebSocket is active
 
 export default function ModePanel() {
   const [derived, setDerived] = useState<UnifiedDerived | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [wsLive, setWsLive] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -27,8 +30,25 @@ export default function ModePanel() {
 
   useEffect(() => {
     load();
-    const id = setInterval(load, REFRESH_MS);
-    return () => clearInterval(id);
+
+    // Polling: fast when WS is down, slow when WS is live
+    const pollMs = isConnected() ? POLL_CONNECTED_MS : POLL_FALLBACK_MS;
+    const id = setInterval(load, pollMs);
+
+    // Real-time subscriptions
+    const unsubMode = onModeChanged(() => {
+      setWsLive(true);
+      load();
+    });
+    const unsubLoop = onLoopClosed(() => {
+      load();
+    });
+
+    return () => {
+      clearInterval(id);
+      unsubMode();
+      unsubLoop();
+    };
   }, [load]);
 
   return (
@@ -51,7 +71,9 @@ export default function ModePanel() {
             <Stat label="Violations" value={derived.violations_count} />
           </div>
 
-          <p className="text-xs text-zinc-500">Auto-refreshes every 30s</p>
+          <p className="text-xs text-zinc-500">
+            {wsLive ? '● Live (WebSocket)' : '○ Polling (30s)'}
+          </p>
         </div>
       )}
     </Panel>

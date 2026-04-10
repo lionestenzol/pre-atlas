@@ -62,6 +62,7 @@ app.use(cors({
     'http://localhost:5501', 'http://127.0.0.1:5501', // Live Server alt
     'http://localhost:8888', 'http://127.0.0.1:8888', // Atlas Shell
     'http://localhost:8889', 'http://127.0.0.1:8889', // CycleBoard
+    'http://localhost:3008', 'http://127.0.0.1:3008', // UASC Executor
     'null', // file:// protocol
   ],
 }));
@@ -358,8 +359,16 @@ app.put('/api/state', async (req, res) => {
   const newState: SimpleState = req.body;
   const currentTime = now();
 
-  const stateData = {
-    mode: newState.mode as import('../core/types').Mode,
+  const stateData: SystemStateData = {
+    mode: newState.mode as SystemStateData['mode'],
+    signals: {
+      sleep_hours: newState.sleepHours ?? 6,
+      open_loops: newState.openLoops ?? 0,
+      assets_shipped: 0,
+      deep_work_blocks: 0,
+      money_delta: 0,
+    },
+    // Preserve flat fields for backward compat with existing readers
     sleep_hours: newState.sleepHours,
     open_loops: newState.openLoops,
     leverage_balance: newState.leverageBalance,
@@ -438,17 +447,13 @@ app.post('/api/tasks', async (req, res) => {
     return;
   }
 
-  const taskData = {
-    title,
-    status: 'OPEN' as import('../core/types').TaskStatus,
-    priority: priority as import('../core/types').Priority,
-    created_at: now(),
+  const taskData: TaskData = {
+    title_template: title,
+    title_params: {},
+    status: 'OPEN',
+    priority: priority as Exclude<Priority, 'CRITICAL'>,
     due_at: null,
-    closed_at: null,
-    project_id: null,
-    parent_task_id: null,
-    template_id: null,
-    params: {},
+    linked_thread: null,
   };
 
   const result = await createEntity('task', taskData);
@@ -1650,6 +1655,52 @@ app.get('/api/work/status', (req, res) => {
 });
 
 /**
+ * POST /api/work/claim
+ * Atomically claim the next approved executable task for autonomous execution.
+ *
+ * Body: { executor_id: string }
+ */
+app.post('/api/work/claim', (req, res) => {
+  const { executor_id } = req.body;
+
+  if (!executor_id || typeof executor_id !== 'string') {
+    res.status(400).json({ error: 'executor_id is required' });
+    return;
+  }
+
+  const claim = workController.claimNextExecutable(executor_id);
+  res.json(claim);
+});
+
+/**
+ * POST /api/work/heartbeat
+ * Extend the claim on an active executable task.
+ *
+ * Body: { job_id: string, executor_id: string, extension_ms?: number }
+ */
+app.post('/api/work/heartbeat', (req, res) => {
+  const { job_id, executor_id, extension_ms } = req.body;
+
+  if (!job_id || typeof job_id !== 'string' || !executor_id || typeof executor_id !== 'string') {
+    res.status(400).json({ error: 'job_id and executor_id are required' });
+    return;
+  }
+
+  if (extension_ms !== undefined && (typeof extension_ms !== 'number' || extension_ms <= 0)) {
+    res.status(400).json({ error: 'extension_ms must be a positive number when provided' });
+    return;
+  }
+
+  const result = workController.extendClaim(job_id, executor_id, extension_ms);
+  if (!result.extended) {
+    res.status(404).json({ error: 'Job not found or executor mismatch' });
+    return;
+  }
+
+  res.json(result);
+});
+
+/**
  * POST /api/work/cancel
  * Cancel a queued or active job.
  *
@@ -1682,6 +1733,16 @@ app.get('/api/work/history', (req, res) => {
   res.json({
     completed: ledger.completed.slice(0, 20),
     stats: ledger.stats,
+  });
+});
+
+/**
+ * GET /api/work/metrics
+ * Lightweight claim/execution observability snapshot.
+ */
+app.get('/api/work/metrics', (_req, res) => {
+  res.json({
+    claims: workController.getClaimMetrics(),
   });
 });
 
@@ -1740,6 +1801,86 @@ app.get('/api/timeline/day/:date', (req, res) => {
     events,
     count: events.length,
   });
+});
+
+/**
+ * POST /api/timeline
+ * Emit a timeline event from an external service (e.g., Cortex).
+ * Body: { type: string, source?: string, data?: object }
+ */
+app.post('/api/timeline', (req, res) => {
+  const { type, source = 'cortex', data } = req.body;
+
+  if (!type) {
+    res.status(400).json({ error: 'type required' });
+    return;
+  }
+
+  const event = timeline.emit(type as any, source as any, data);
+  res.json({ success: true, event_id: event.id, ts: event.ts });
+});
+
+/**
+ * POST /api/tasks/status
+ * Update a task's status by task_id. Used by Cortex execution layer.
+ * Body: { task_id: string, status: string, metadata?: object }
+ */
+app.post('/api/tasks/status', (req, res) => {
+  const { task_id, status, metadata } = req.body;
+
+  if (!task_id || !status) {
+    res.status(400).json({ error: 'task_id and status required' });
+    return;
+  }
+
+  const entities = storage.loadEntitiesByType<Record<string, unknown>>('task');
+  let found = false;
+
+  for (const e of entities) {
+    if (e.entity.entity_id === task_id) {
+      const state = e.state as Record<string, unknown>;
+      state.status = status;
+      if (metadata) {
+        state.cortex_metadata = metadata;
+      }
+      if (status === 'DONE' || status === 'completed') {
+        state.closed_at = now();
+      }
+      storage.saveEntity(e.entity, state);
+      found = true;
+
+      // Emit timeline event for tracking
+      timeline.emit(
+        status === 'completed' ? 'CORTEX_TASK_COMPLETED' as any :
+        status === 'failed' || status === 'dead' ? 'CORTEX_TASK_FAILED' as any :
+        'AUTO_EXECUTED',
+        'cortex' as any,
+        { task_id, status, ...metadata }
+      );
+      break;
+    }
+  }
+
+  if (!found) {
+    // Task doesn't exist in delta yet — create it so Cortex can track state
+    const taskData: TaskData = {
+      title_template: `cortex:${task_id}`,
+      title_params: {},
+      status: status === 'completed' ? 'DONE' : 'OPEN',
+      priority: 'NORMAL',
+      due_at: null,
+      linked_thread: null,
+    };
+
+    createEntity('task', taskData).then(result => {
+      storage.saveEntity(result.entity, result.state);
+      storage.appendDelta(result.delta);
+    }).catch(err => {
+      console.error('[tasks/status] Auto-create failed:', err);
+    });
+  }
+
+  res.json({ success: true, task_id, status, created: !found });
 });
 
 // === HEALTH ===
@@ -1905,6 +2046,180 @@ app.put('/api/cycleboard', async (req, res) => {
   }
 
   res.json({ ok: true });
+});
+
+// === PENDING ACTIONS + EXECUTOR BRIDGE ===
+
+import { bridgeAction, checkExecutorHealth, getTokenForAction } from '../core/executor-bridge.js';
+import type { PendingActionData, ActionType, PendingActionStatus, SystemStateData, TaskData, Priority } from '../core/types-core';
+
+const PENDING_ACTION_TIMEOUT_MS = 30_000; // 30 seconds
+
+// List pending actions
+app.get('/api/actions/pending', (req, res) => {
+  const entities = storage.loadEntitiesByType<PendingActionData>('pending_action');
+  const pending = entities
+    .filter(e => (e.state as PendingActionData).status === 'PENDING')
+    .map(e => ({
+      id: e.entity.entity_id,
+      action_type: (e.state as PendingActionData).action_type,
+      target_entity_id: (e.state as PendingActionData).target_entity_id,
+      status: (e.state as PendingActionData).status,
+      created_at: (e.state as PendingActionData).created_at,
+      expires_at: (e.state as PendingActionData).expires_at,
+      token: getTokenForAction((e.state as PendingActionData).action_type),
+    }));
+
+  res.json({ pending_actions: pending });
+});
+
+// Create a pending action
+app.post('/api/actions/pending', async (req, res) => {
+  const { action_type, target_entity_id, payload = {} } = req.body;
+
+  if (!action_type || !target_entity_id) {
+    res.status(400).json({ error: 'action_type and target_entity_id required' });
+    return;
+  }
+
+  const validTypes: ActionType[] = [
+    'reply_message', 'complete_task', 'send_draft',
+    'apply_automation', 'create_asset', 'delegate', 'rest_action',
+  ];
+  if (!validTypes.includes(action_type)) {
+    res.status(400).json({ error: `Invalid action_type: ${action_type}` });
+    return;
+  }
+
+  const timestamp = now();
+  const actionData: PendingActionData = {
+    action_type,
+    target_entity_id,
+    payload,
+    status: 'PENDING',
+    created_at: timestamp,
+    expires_at: timestamp + PENDING_ACTION_TIMEOUT_MS,
+    confirmed_at: null,
+  };
+
+  const result = await createEntity('pending_action', actionData);
+  storage.saveEntity(result.entity, result.state);
+  storage.appendDelta(result.delta);
+
+  res.json({
+    id: result.entity.entity_id,
+    action_type,
+    target_entity_id,
+    status: 'PENDING',
+    token: getTokenForAction(action_type),
+    expires_at: actionData.expires_at,
+  });
+});
+
+// Confirm a pending action → triggers executor bridge
+app.post('/api/actions/confirm/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const entities = storage.loadEntitiesByType<PendingActionData>('pending_action');
+  const found = entities.find(e => e.entity.entity_id === id);
+
+  if (!found) {
+    res.status(404).json({ error: 'Pending action not found' });
+    return;
+  }
+
+  const state = found.state as PendingActionData;
+
+  if (state.status !== 'PENDING') {
+    res.status(409).json({ error: `Action already ${state.status}` });
+    return;
+  }
+
+  // Check expiry
+  if (now() > state.expires_at) {
+    state.status = 'EXPIRED' as PendingActionStatus;
+    storage.saveEntity(found.entity, state);
+    res.status(410).json({ error: 'Action expired' });
+    return;
+  }
+
+  // Mark confirmed
+  state.status = 'CONFIRMED';
+  state.confirmed_at = now();
+  storage.saveEntity(found.entity, state);
+
+  // Resolve context for the bridge
+  let context: { task_title?: string; draft_data?: any } = {};
+
+  if (state.action_type === 'complete_task') {
+    // Look up the task title
+    const allEntities = storage.loadAllEntities();
+    for (const [_, data] of allEntities) {
+      if (data.entity.entity_id === state.target_entity_id) {
+        context.task_title = (data.state as Record<string, unknown>).title as string
+          || (data.state as Record<string, unknown>).title_template as string
+          || 'unknown';
+        break;
+      }
+    }
+  } else if (state.action_type === 'send_draft' || state.action_type === 'reply_message') {
+    // Look up the draft data
+    const drafts = storage.loadEntitiesByType('draft');
+    const draft = drafts.find(d => d.entity.entity_id === state.target_entity_id);
+    if (draft) {
+      context.draft_data = draft.state;
+    }
+  }
+
+  // Fire the executor bridge
+  const bridgeResult = await bridgeAction(state, context);
+
+  // Log to timeline
+  timeline.emit('ACTION_EXECUTED', 'executor_bridge', {
+    action_type: state.action_type,
+    target_entity_id: state.target_entity_id,
+    run_id: bridgeResult.run_id,
+    status: bridgeResult.status,
+    duration_ms: bridgeResult.duration_ms,
+    error: bridgeResult.error,
+  });
+
+  res.json({
+    id,
+    status: 'CONFIRMED',
+    execution: bridgeResult,
+  });
+});
+
+// Cancel a pending action
+app.post('/api/actions/cancel/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const entities = storage.loadEntitiesByType<PendingActionData>('pending_action');
+  const found = entities.find(e => e.entity.entity_id === id);
+
+  if (!found) {
+    res.status(404).json({ error: 'Pending action not found' });
+    return;
+  }
+
+  const state = found.state as PendingActionData;
+
+  if (state.status !== 'PENDING') {
+    res.status(409).json({ error: `Action already ${state.status}` });
+    return;
+  }
+
+  state.status = 'CANCELLED';
+  storage.saveEntity(found.entity, state);
+
+  res.json({ id, status: 'CANCELLED' });
+});
+
+// Check executor health
+app.get('/api/executor/health', async (_req, res) => {
+  const healthy = await checkExecutorHealth();
+  res.json({ executor_reachable: healthy, url: process.env.UASC_EXECUTOR_URL || 'http://localhost:3008' });
 });
 
 // Start server

@@ -12,6 +12,7 @@
     "gate": "tsx src/tools/gate.ts",
     "test": "tsx src/core/run-tests.ts",
     "test:api": "tsx src/tests/api-tests.ts",
+    "test:work": "tsx src/tests/work-controller-tests.ts",
     "build": "tsc",
     "cycleboard": "tsx ../cognitive-sensor/cycleboard/cli.ts"
   },

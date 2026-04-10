@@ -28,6 +28,7 @@ export interface ActiveJob {
   agent?: string;
   weight: number;
   started_at: number;
+  timeout_ms: number | null;
   timeout_at: number | null;
   depends_on: string[];
   metadata: Record<string, unknown>;
@@ -40,6 +41,7 @@ export interface QueuedJob {
   agent?: string;
   weight: number;
   queued_at: number;
+  timeout_ms: number | null;
   depends_on: string[];
   position: number;
   reason: string;
@@ -53,6 +55,7 @@ export interface CompletedJob {
   title: string;
   agent?: string;
   outcome: JobOutcome;
+  result: unknown;
   started_at: number;
   completed_at: number;
   duration_ms: number;
@@ -83,6 +86,11 @@ export interface WorkLedger {
     avg_duration_ms: number;
     total_cost_usd: number;
     total_tokens_used: number;
+    work_claims_total: number;
+    work_claims_failed_total: number;
+    work_claims_extended_total: number;
+    work_claims_expired_total: number;
+    work_claim_ttl_ms_total: number;
   };
   config: WorkLedgerConfig;
 }
@@ -181,6 +189,18 @@ export interface WorkStatusResponse {
   closure_ratio: number;
 }
 
+export interface WorkClaimMetrics {
+  totals: {
+    claims: number;
+    failed_claims: number;
+    extended_claims: number;
+    expired_claims: number;
+  };
+  active_claims: number;
+  observed_expired_claims: number;
+  average_claim_ttl_ms: number;
+}
+
 export interface CancelRequest {
   job_id: string;
   reason?: string;
@@ -194,6 +214,27 @@ export interface CancelResponse {
   queue_advanced: boolean;
 }
 
+export interface ExecutableTaskClaim {
+  claimed: boolean;
+  executor_id: string;
+  job: null | {
+    job_id: string;
+    type: JobType;
+    title: string;
+    agent?: string;
+    started_at: number;
+    timeout_at: number | null;
+    metadata: Record<string, unknown>;
+  };
+}
+
+export interface ExtendClaimResult {
+  extended: boolean;
+  job_id: string;
+  executor_id: string;
+  new_expires_at: number | null;
+}
+
 // === WORK CONTROLLER ===
 
 export class WorkController {
@@ -201,6 +242,8 @@ export class WorkController {
   private ledger: WorkLedger;
   private timeline: TimelineLogger;
   private repoRoot: string;
+  private readonly executionClaimTtlMs = 15 * 60 * 1000;
+  private readonly minimumExecutionClaimTtlMs = 5 * 1000;
 
   constructor(repoRoot: string) {
     this.repoRoot = repoRoot;
@@ -232,6 +275,11 @@ export class WorkController {
         avg_duration_ms: 0,
         total_cost_usd: 0,
         total_tokens_used: 0,
+        work_claims_total: 0,
+        work_claims_failed_total: 0,
+        work_claims_extended_total: 0,
+        work_claims_expired_total: 0,
+        work_claim_ttl_ms_total: 0,
       },
       config: {
         max_concurrent_jobs: 1,
@@ -275,6 +323,35 @@ export class WorkController {
     return depends_on.filter(dep => !completedIds.has(dep));
   }
 
+  private getExecutionClaim(metadata: Record<string, unknown> | undefined): Record<string, unknown> | null {
+    if (!metadata || typeof metadata !== 'object') return null;
+    const execution = metadata.execution;
+    if (!execution || typeof execution !== 'object') return null;
+    return execution as Record<string, unknown>;
+  }
+
+  private hasExecutableCommand(metadata: Record<string, unknown>): boolean {
+    return typeof metadata.cmd === 'string' && metadata.cmd.trim().length > 0;
+  }
+
+  private getJobTimeoutMs(
+    job: { timeout_ms?: number | null; started_at: number; timeout_at: number | null; metadata?: Record<string, unknown> }
+  ): number | null {
+    if (typeof job.timeout_ms === 'number' && job.timeout_ms > 0) {
+      return job.timeout_ms;
+    }
+
+    if (typeof job.metadata?.timeout_ms === 'number' && job.metadata.timeout_ms > 0) {
+      return job.metadata.timeout_ms as number;
+    }
+
+    if (typeof job.timeout_at === 'number' && job.timeout_at > job.started_at) {
+      return job.timeout_at - job.started_at;
+    }
+
+    return null;
+  }
+
   /**
    * Request permission to start a job.
    * Returns APPROVED, QUEUED, or DENIED.
@@ -288,6 +365,7 @@ export class WorkController {
     const weight = req.weight || 1;
     const depends_on = req.depends_on || [];
     const timeout_ms = req.timeout_ms || this.ledger.config.default_timeout_ms;
+    const metadata = { ...(req.metadata || {}), timeout_ms };
 
     // Emit WORK_REQUESTED event
     this.timeline.emit('WORK_REQUESTED', 'work_controller', {
@@ -351,11 +429,12 @@ export class WorkController {
         agent: req.agent,
         weight,
         queued_at: timestamp,
+        timeout_ms,
         depends_on,
         position,
         reason: 'Waiting on dependencies',
         blocked_by: blockedBy,
-        metadata: req.metadata || {},
+        metadata,
       };
 
       this.ledger.queued.push(queuedJob);
@@ -410,11 +489,12 @@ export class WorkController {
         agent: req.agent,
         weight,
         queued_at: timestamp,
+        timeout_ms,
         depends_on,
         position,
         reason: 'At capacity',
         blocked_by: [],
-        metadata: req.metadata || {},
+        metadata,
       };
 
       this.ledger.queued.push(queuedJob);
@@ -445,9 +525,10 @@ export class WorkController {
       agent: req.agent,
       weight,
       started_at: timestamp,
+      timeout_ms,
       timeout_at: timeout_ms ? timestamp + timeout_ms : null,
       depends_on,
-      metadata: req.metadata || {},
+      metadata,
     };
 
     this.ledger.active.push(activeJob);
@@ -514,6 +595,7 @@ export class WorkController {
       title: job.title,
       agent: job.agent,
       outcome: req.outcome,
+      result: req.result ?? null,
       started_at,
       completed_at: timestamp,
       duration_ms,
@@ -595,7 +677,8 @@ export class WorkController {
               agent: candidate.agent,
               weight: candidate.weight,
               started_at: timestamp,
-              timeout_at: timestamp + this.ledger.config.default_timeout_ms,
+              timeout_ms: candidate.timeout_ms,
+              timeout_at: candidate.timeout_ms ? timestamp + candidate.timeout_ms : null,
               depends_on: candidate.depends_on,
               metadata: candidate.metadata,
             };
@@ -682,6 +765,131 @@ export class WorkController {
   }
 
   /**
+   * Atomically claim the next approved executable task for autonomous execution.
+   * Active jobs are considered approved. Only tasks with metadata.cmd are executable.
+   */
+  claimNextExecutable(executorId: string): ExecutableTaskClaim {
+    const now = Date.now();
+
+    for (const job of this.ledger.active) {
+      if (!['ai', 'system'].includes(job.type)) continue;
+      if (!this.hasExecutableCommand(job.metadata)) continue;
+
+      const claim = this.getExecutionClaim(job.metadata);
+      const claimExpiresAt = typeof claim?.claim_expires_at === 'number'
+        ? claim.claim_expires_at as number
+        : 0;
+
+      if (claim && claimExpiresAt <= now && claim.claimed_by !== executorId && !claim.claim_expired_observed_at) {
+        this.ledger.stats.work_claims_expired_total++;
+        job.metadata.execution = {
+          ...claim,
+          claim_expired_observed_at: now,
+        };
+        this.timeline.emit('AUTO_EXECUTED', 'work_controller', {
+          job_id: job.job_id,
+          executor_id: executorId,
+          claim_expired: true,
+          previous_executor_id: claim.claimed_by,
+          claim_expires_at: claimExpiresAt,
+        });
+      }
+
+      if (claim && claimExpiresAt > now && claim.claimed_by !== executorId) {
+        continue;
+      }
+
+      const previousAttempts = typeof claim?.attempts === 'number'
+        ? claim.attempts as number
+        : 0;
+      const claimTtlMs = this.getJobTimeoutMs(job) ?? this.executionClaimTtlMs;
+      const effectiveTtlMs = Math.max(claimTtlMs, this.minimumExecutionClaimTtlMs);
+
+      job.metadata.execution = {
+        claimed_by: executorId,
+        claimed_at: now,
+        claim_expires_at: now + effectiveTtlMs,
+        attempts: previousAttempts + 1,
+      };
+
+      this.ledger.stats.work_claims_total++;
+      this.ledger.stats.work_claim_ttl_ms_total += effectiveTtlMs;
+      this.saveLedger();
+      this.timeline.emit('AUTO_EXECUTED', 'work_controller', {
+        job_id: job.job_id,
+        executor_id: executorId,
+        attempts: previousAttempts + 1,
+        claim_ttl_ms: effectiveTtlMs,
+        claim_expires_at: now + effectiveTtlMs,
+      });
+
+      return {
+        claimed: true,
+        executor_id: executorId,
+        job: {
+          job_id: job.job_id,
+          type: job.type,
+          title: job.title,
+          agent: job.agent,
+          started_at: job.started_at,
+          timeout_at: job.timeout_at,
+          metadata: { ...job.metadata },
+        },
+      };
+    }
+
+    this.ledger.stats.work_claims_failed_total++;
+    this.saveLedger();
+
+    return {
+      claimed: false,
+      executor_id: executorId,
+      job: null,
+    };
+  }
+
+  extendClaim(jobId: string, executorId: string, extensionMs?: number): ExtendClaimResult {
+    const job = this.ledger.active.find(j => j.job_id === jobId);
+    if (!job) {
+      return { extended: false, job_id: jobId, executor_id: executorId, new_expires_at: null };
+    }
+
+    const claim = this.getExecutionClaim(job.metadata);
+    if (!claim || claim.claimed_by !== executorId) {
+      return { extended: false, job_id: jobId, executor_id: executorId, new_expires_at: null };
+    }
+
+    const baseTtlMs = extensionMs ?? this.getJobTimeoutMs(job) ?? this.executionClaimTtlMs;
+    const effectiveTtlMs = Math.max(baseTtlMs, this.minimumExecutionClaimTtlMs);
+    const newExpiresAt = Date.now() + effectiveTtlMs;
+
+    job.metadata.execution = {
+      ...claim,
+      claimed_by: executorId,
+      claim_expires_at: newExpiresAt,
+      last_heartbeat_at: Date.now(),
+    };
+
+    this.ledger.stats.work_claims_extended_total++;
+    this.ledger.stats.work_claim_ttl_ms_total += effectiveTtlMs;
+    this.saveLedger();
+    this.timeline.emit('AUTO_EXECUTED', 'work_controller', {
+      job_id: job.job_id,
+      executor_id: executorId,
+      claim_extended: true,
+      claim_ttl_ms: effectiveTtlMs,
+      claim_expires_at: newExpiresAt,
+    });
+
+    return {
+      extended: true,
+      job_id: job.job_id,
+      executor_id: executorId,
+      new_expires_at: newExpiresAt,
+    };
+  }
+
+  /**
    * Cancel a job (active or queued).
    */
   cancel(req: CancelRequest): CancelResponse | { error: string; status: number } {
@@ -735,7 +943,8 @@ export class WorkController {
               agent: candidate.agent,
               weight: candidate.weight,
               started_at: timestamp,
-              timeout_at: timestamp + this.ledger.config.default_timeout_ms,
+              timeout_ms: candidate.timeout_ms,
+              timeout_at: candidate.timeout_ms ? timestamp + candidate.timeout_ms : null,
               depends_on: candidate.depends_on,
               metadata: candidate.metadata,
             };
@@ -808,5 +1017,41 @@ export class WorkController {
    */
   getLedger(): WorkLedger {
     return { ...this.ledger };
+  }
+
+  getClaimMetrics(): WorkClaimMetrics {
+    const now = Date.now();
+    const activeClaims = this.ledger.active.filter(job => {
+      const claim = this.getExecutionClaim(job.metadata);
+      return typeof claim?.claim_expires_at === 'number' && claim.claim_expires_at > now;
+    }).length;
+
+    const observedExpiredClaims = this.ledger.active.filter(job => {
+      const claim = this.getExecutionClaim(job.metadata);
+      return typeof claim?.claim_expires_at === 'number' && claim.claim_expires_at <= now;
+    }).length;
+
+    const successfulClaims = this.ledger.stats.work_claims_total + this.ledger.stats.work_claims_extended_total;
+
+    return {
+      totals: {
+        claims: this.ledger.stats.work_claims_total,
+        failed_claims: this.ledger.stats.work_claims_failed_total,
+        extended_claims: this.ledger.stats.work_claims_extended_total,
+        expired_claims: this.ledger.stats.work_claims_expired_total,
+      },
+      active_claims: activeClaims,
+      observed_expired_claims: observedExpiredClaims,
+      average_claim_ttl_ms: successfulClaims > 0
+        ? Math.round(this.ledger.stats.work_claim_ttl_ms_total / successfulClaims)
+        : 0,
+    };
+  }
+
+  getJob(jobId: string): ActiveJob | QueuedJob | CompletedJob | null {
+    return this.ledger.active.find(j => j.job_id === jobId)
+      || this.ledger.queued.find(j => j.job_id === jobId)
+      || this.ledger.completed.find(j => j.job_id === jobId)
+      || null;
   }
 }

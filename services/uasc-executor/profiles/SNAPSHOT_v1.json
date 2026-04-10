@@ -1,0 +1,50 @@
+{
+  "id": "SNAPSHOT",
+  "version": 1,
+  "description": "System state snapshot — read delta state, work queue, recent activity, write structured JSON",
+  "steps": [
+    {
+      "name": "fetch_state",
+      "type": "shell",
+      "cmd": "curl -s http://localhost:3001/api/state -o %TEMP%\\atlas_state.json",
+      "timeout_seconds": 10,
+      "platform": "windows"
+    },
+    {
+      "name": "fetch_work",
+      "type": "shell",
+      "cmd": "curl -s http://localhost:3001/api/work/status -o %TEMP%\\atlas_work.json",
+      "timeout_seconds": 10,
+      "platform": "windows"
+    },
+    {
+      "name": "fetch_timeline",
+      "type": "shell",
+      "cmd": "curl -s http://localhost:3001/api/timeline -o %TEMP%\\atlas_timeline.json",
+      "timeout_seconds": 10,
+      "platform": "windows"
+    },
+    {
+      "name": "build_snapshot",
+      "type": "shell",
+      "cmd": "python -u -c \"import json,os,datetime;s=json.load(open(os.path.join(os.environ['TEMP'],'atlas_state.json')));w=json.load(open(os.path.join(os.environ['TEMP'],'atlas_work.json')));t=json.load(open(os.path.join(os.environ['TEMP'],'atlas_timeline.json')));evts=t if isinstance(t,list) else t.get('events',t.get('timeline',[]));work_evts=sorted([e for e in evts if 'WORK' in str(e.get('type',''))],key=lambda x:x['ts'],reverse=True)[:5];out_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'output') if '__file__' in dir() else os.path.join(os.getcwd(),'output');os.makedirs(out_dir,exist_ok=True);snap={'timestamp':datetime.datetime.utcnow().isoformat()+'Z','mode':s.get('mode'),'constraints':{'build_allowed':w.get('build_allowed'),'max_concurrent':w.get('capacity',{}).get('max_concurrent'),'max_queue':w.get('capacity',{}).get('max_queue'),'closure_ratio':w.get('closure_ratio')},'capacity':{'active':w.get('capacity',{}).get('active',0),'available':w.get('capacity',{}).get('available',0),'queue_depth':w.get('capacity',{}).get('queue_depth',0)},'recent_activity':[{'ts':e['ts'],'type':e['type'],'title':e.get('data',{}).get('title',''),'duration_ms':e.get('data',{}).get('duration_ms',None)} for e in work_evts[:5]],'health':'operational' if s.get('mode') else 'degraded','next_actions':['Monitor queue throughput under load','Add failure alerting for WORK_FAILED events','Define task contracts for each command profile']};f=open(os.path.join(out_dir,'atlas_snapshot.json'),'w');json.dump(snap,f,indent=2);f.close();print(json.dumps(snap,indent=2))\"",
+      "timeout_seconds": 15,
+      "platform": "windows"
+    },
+    {
+      "name": "confirm",
+      "type": "log",
+      "message": "Snapshot written to output/atlas_snapshot.json at {timestamp}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "System snapshot complete"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Snapshot failed — check delta-kernel connectivity",
+    "level": "error"
+  }
+}

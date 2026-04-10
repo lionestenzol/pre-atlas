@@ -1,0 +1,49 @@
+{
+  "id": "EXECUTE",
+  "version": 1,
+  "description": "Execute a validated brief through Codex CLI — validate actions, run sequentially, report results",
+  "inputs": [
+    {
+      "name": "brief_file",
+      "type": "string",
+      "description": "Filename of the brief in output/ directory (e.g. brief_20260410_launch-something.json)"
+    },
+    {
+      "name": "use_codex",
+      "type": "string",
+      "default": "false",
+      "description": "Set to 'true' to use Codex CLI, 'false' for direct shell execution"
+    }
+  ],
+  "steps": [
+    {
+      "name": "validate",
+      "type": "shell",
+      "cmd": "cmd /c \"set BRIEF_PATH=output\\{brief_file}&& python -u scripts\\validate_actions.py\"",
+      "timeout_seconds": 15,
+      "platform": "windows"
+    },
+    {
+      "name": "execute",
+      "type": "shell",
+      "cmd": "cmd /c \"set BRIEF_PATH=output\\validated_{brief_file}&& set USE_CODEX={use_codex}&& python -u scripts\\run_actions.py\"",
+      "timeout_seconds": 300,
+      "platform": "windows"
+    },
+    {
+      "name": "confirm",
+      "type": "log",
+      "message": "Execution complete for {brief_file}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Brief executed successfully"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Brief execution failed — check output/results_*.json for details",
+    "level": "error"
+  }
+}

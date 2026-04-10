@@ -1,0 +1,42 @@
+{
+  "id": "WRAP",
+  "version": 1,
+  "description": "End-of-day wrap — commit, push, sync",
+  "steps": [
+    {
+      "name": "git_status",
+      "type": "shell",
+      "cmd": "git status --porcelain",
+      "store_as": "git_changes"
+    },
+    {
+      "name": "git_add",
+      "type": "shell",
+      "cmd": "git add -A",
+      "condition": "git_changes != ''"
+    },
+    {
+      "name": "git_commit",
+      "type": "shell",
+      "cmd": "git commit -m \"wrap: auto-commit {date}\"",
+      "condition": "git_changes != ''",
+      "continue_on_error": true
+    },
+    {
+      "name": "git_push",
+      "type": "shell",
+      "cmd": "git push",
+      "continue_on_error": true
+    },
+    {
+      "name": "log_done",
+      "type": "log",
+      "message": "Wrap complete at {timestamp}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Day wrapped — all changes saved"
+  }
+}

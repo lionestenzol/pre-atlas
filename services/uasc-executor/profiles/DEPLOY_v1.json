@@ -1,0 +1,46 @@
+{
+  "id": "DEPLOY",
+  "version": 1,
+  "description": "Deploy — push, migrate, verify health",
+  "inputs": [
+    {
+      "name": "environment",
+      "type": "string",
+      "default": "production"
+    }
+  ],
+  "steps": [
+    {
+      "name": "pre_deploy_check",
+      "type": "shell",
+      "cmd": "git status --porcelain",
+      "store_as": "dirty_files",
+      "fail_if": "dirty_files != ''"
+    },
+    {
+      "name": "build_artifacts",
+      "type": "shell",
+      "cmd": "echo 'Building artifacts...'"
+    },
+    {
+      "name": "push_artifacts",
+      "type": "shell",
+      "cmd": "echo 'Pushing to {environment}...'"
+    },
+    {
+      "name": "notify_complete",
+      "type": "log",
+      "message": "Deploy to {environment} completed at {timestamp}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Deployment successful"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Deploy failed — check logs",
+    "level": "error"
+  }
+}

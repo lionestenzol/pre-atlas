@@ -1,0 +1,43 @@
+{
+  "id": "CLOSE_LOOP",
+  "version": 1,
+  "description": "Close a loop — mark task done via delta-kernel API, log closure",
+  "inputs": [
+    {
+      "name": "task_id",
+      "type": "string",
+      "description": "Task entity ID to close"
+    },
+    {
+      "name": "task_title",
+      "type": "string",
+      "default": "unknown task"
+    }
+  ],
+  "steps": [
+    {
+      "name": "mark_task_done",
+      "type": "http",
+      "method": "PUT",
+      "url": "http://localhost:3001/api/tasks/{task_id}",
+      "body": { "status": "DONE" },
+      "expected_status": 200,
+      "retries": 2
+    },
+    {
+      "name": "log_closure",
+      "type": "log",
+      "message": "Loop closed: {task_title} ({task_id}) at {timestamp}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Loop closed successfully"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Failed to close loop — check delta-kernel API",
+    "level": "error"
+  }
+}

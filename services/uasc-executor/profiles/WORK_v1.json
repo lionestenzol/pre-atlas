@@ -1,0 +1,36 @@
+{
+  "id": "WORK",
+  "version": 1,
+  "description": "Enter work state — open tools, set focus mode",
+  "steps": [
+    {
+      "name": "launch_editor",
+      "type": "shell",
+      "cmd": "code .",
+      "continue_on_error": true
+    },
+    {
+      "name": "launch_browser",
+      "type": "shell",
+      "cmd": "start chrome --new-window",
+      "continue_on_error": true,
+      "platform": "windows"
+    },
+    {
+      "name": "set_dnd",
+      "type": "shell",
+      "cmd": "echo 'Focus mode: ON'",
+      "continue_on_error": true
+    },
+    {
+      "name": "log_start",
+      "type": "log",
+      "message": "Work session started at {timestamp}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Work environment ready"
+  }
+}

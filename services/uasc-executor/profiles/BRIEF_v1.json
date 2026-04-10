@@ -1,0 +1,56 @@
+{
+  "id": "BRIEF",
+  "version": 1,
+  "description": "Generate a structured execution brief from a goal and current system state",
+  "inputs": [
+    {
+      "name": "goal",
+      "type": "string",
+      "description": "Target outcome — what needs to be accomplished"
+    },
+    {
+      "name": "context",
+      "type": "string",
+      "default": "",
+      "description": "Additional context, constraints, or background"
+    }
+  ],
+  "steps": [
+    {
+      "name": "fetch_state",
+      "type": "shell",
+      "cmd": "curl -s http://localhost:3001/api/state -o %TEMP%\\atlas_state.json",
+      "timeout_seconds": 10,
+      "platform": "windows"
+    },
+    {
+      "name": "fetch_work",
+      "type": "shell",
+      "cmd": "curl -s http://localhost:3001/api/work/status -o %TEMP%\\atlas_work.json",
+      "timeout_seconds": 10,
+      "platform": "windows"
+    },
+    {
+      "name": "build_brief",
+      "type": "shell",
+      "cmd": "cmd /c \"set BRIEF_GOAL={goal}&& set BRIEF_CONTEXT={context}&& python -u scripts\\build_brief.py\"",
+      "timeout_seconds": 15,
+      "platform": "windows"
+    },
+    {
+      "name": "confirm",
+      "type": "log",
+      "message": "Brief generated for: {goal}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Execution brief complete"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Brief generation failed — check delta-kernel connectivity and inputs",
+    "level": "error"
+  }
+}

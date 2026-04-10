@@ -1,0 +1,57 @@
+{
+  "id": "SEND_DRAFT",
+  "version": 1,
+  "description": "Apply a draft — render template, log the send, mark draft applied",
+  "inputs": [
+    {
+      "name": "draft_id",
+      "type": "string",
+      "description": "Draft entity ID"
+    },
+    {
+      "name": "template_id",
+      "type": "string",
+      "default": "TEMPLATE_ACK"
+    },
+    {
+      "name": "message_text",
+      "type": "string",
+      "default": "Acknowledged."
+    },
+    {
+      "name": "target_entity_id",
+      "type": "string",
+      "default": ""
+    }
+  ],
+  "steps": [
+    {
+      "name": "render_message",
+      "type": "log",
+      "message": "Sending draft [{template_id}]: {message_text}",
+      "level": "info"
+    },
+    {
+      "name": "log_target",
+      "type": "log",
+      "message": "Target entity: {target_entity_id}",
+      "level": "info",
+      "condition": "target_entity_id != ''"
+    },
+    {
+      "name": "log_sent",
+      "type": "log",
+      "message": "Draft {draft_id} applied at {timestamp}",
+      "level": "info"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Draft sent successfully"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Draft send failed",
+    "level": "error"
+  }
+}

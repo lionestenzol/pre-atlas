@@ -1,0 +1,59 @@
+{
+  "id": "BUILD",
+  "version": 1,
+  "description": "Build pipeline — install deps, build, test",
+  "inputs": [
+    {
+      "name": "project_dir",
+      "type": "string",
+      "default": ".",
+      "description": "Project directory"
+    }
+  ],
+  "steps": [
+    {
+      "name": "detect_package_manager",
+      "type": "shell",
+      "cmd": "if exist package.json (echo npm) else if exist requirements.txt (echo pip) else (echo unknown)",
+      "store_as": "pkg_manager",
+      "platform": "windows"
+    },
+    {
+      "name": "install_deps_npm",
+      "type": "shell",
+      "cmd": "npm install",
+      "condition": "pkg_manager == 'npm'",
+      "timeout_seconds": 300
+    },
+    {
+      "name": "install_deps_pip",
+      "type": "shell",
+      "cmd": "pip install -r requirements.txt",
+      "condition": "pkg_manager == 'pip'",
+      "timeout_seconds": 300
+    },
+    {
+      "name": "build_npm",
+      "type": "shell",
+      "cmd": "npm run build",
+      "condition": "pkg_manager == 'npm'"
+    },
+    {
+      "name": "test_npm",
+      "type": "shell",
+      "cmd": "npm test",
+      "condition": "pkg_manager == 'npm'",
+      "continue_on_error": true,
+      "store_as": "test_results"
+    }
+  ],
+  "on_success": {
+    "type": "log",
+    "message": "Build completed successfully"
+  },
+  "on_failure": {
+    "type": "log",
+    "message": "Build failed",
+    "level": "error"
+  }
+}

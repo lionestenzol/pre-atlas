@@ -1,15 +1,141 @@
 {
-  "active": [],
+  "active": [
+    {
+      "job_id": "j_bxooytk9mnubtvr7",
+      "type": "system",
+      "title": "Summarize Pre Atlas architecture",
+      "agent": "test",
+      "weight": 1,
+      "started_at": 1775911459075,
+      "timeout_ms": 600000,
+      "timeout_at": 1775912059075,
+      "depends_on": [],
+      "metadata": {
+        "instructions": "Read the project structure and write a one-paragraph summary of what Pre Atlas does.",
+        "directive_type": "EXECUTE",
+        "cmd": "@WORK",
+        "timeout_ms": 600000,
+        "execution": {
+          "claimed_by": "atlas-ai-worker",
+          "claimed_at": 1775911510217,
+          "claim_expires_at": 1775912110232,
+          "attempts": 2,
+          "last_heartbeat_at": 1775911510232
+        }
+      }
+    }
+  ],
   "queued": [],
-  "completed": [],
+  "completed": [
+    {
+      "job_id": "j_pqpvbxwmmns1hz91",
+      "type": "system",
+      "title": "smoke-test-2",
+      "outcome": "failed",
+      "result": null,
+      "started_at": 1775773175221,
+      "completed_at": 1775824980032,
+      "duration_ms": 51804811,
+      "error": "Job timed out",
+      "metrics": {},
+      "metadata": {
+        "cmd": "@WORK",
+        "inputs": {
+          "instructions": "echo hello from atlas"
+        },
+        "source": "smoke-test",
+        "intent": "validation"
+      }
+    },
+    {
+      "job_id": "j_qi6v3strmnt6h3bl",
+      "type": "system",
+      "title": "health-check-via-daemon",
+      "outcome": "completed",
+      "result": {
+        "executor": "atlas-execution-daemon",
+        "attempts": 1,
+        "cmd": "@EXECUTE",
+        "uasc_run_id": "8570a6bd-eded-4d91-b8b3-f445757761eb",
+        "uasc_status": "success",
+        "steps": [
+          {
+            "name": "validate",
+            "status": "success",
+            "duration_ms": 120
+          },
+          {
+            "name": "execute",
+            "status": "success",
+            "duration_ms": 949
+          },
+          {
+            "name": "confirm",
+            "status": "success",
+            "duration_ms": 0
+          }
+        ],
+        "outputs": {},
+        "completed_at": "2026-04-10T17:26:41Z"
+      },
+      "started_at": 1775841998097,
+      "completed_at": 1775842003772,
+      "duration_ms": 3216,
+      "error": null,
+      "metrics": {},
+      "metadata": {
+        "cmd": "@EXECUTE",
+        "inputs": {
+          "brief_file": "brief_health_check.json",
+          "use_codex": "false"
+        },
+        "source": "test",
+        "intent": "pipeline-validation",
+        "execution": {
+          "claimed_by": "atlas-execution-daemon",
+          "claimed_at": 1775842003290,
+          "claim_expires_at": 1775842303290,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "job_id": "j_tmjiq8nnmnubrh2v",
+      "type": "system",
+      "title": "Write a one-paragraph summary of the Pre Atlas architecture",
+      "agent": "test",
+      "outcome": "abandoned",
+      "result": null,
+      "started_at": 1775911346743,
+      "completed_at": 1775911446584,
+      "duration_ms": 99841,
+      "error": null,
+      "metrics": {},
+      "metadata": {
+        "instructions": "Analyze the Pre Atlas project structure and write a concise one-paragraph summary of what the system does, its key components, and how they interact.",
+        "directive_type": "EXECUTE",
+        "cmd": "@WORK",
+        "timeout_ms": 600000,
+        "execution": {
+          "claimed_by": "atlas-ai-worker",
+          "claimed_at": 1775911395964,
+          "claim_expires_at": 1775911995964,
+          "attempts": 2
+        }
+      }
+    }
+  ],
   "stats": {
-    "total_completed": 0,
-    "total_failed": 0,
-    "total_abandoned": 0,
-    "total_denied": 0,
-    "avg_duration_ms": 0,
+    "total_completed": 1,
+    "total_failed": 1,
+    "total_abandoned": 1,
+    "total_denied": 5,
+    "avg_duration_ms": 17302623,
     "total_cost_usd": 0,
-    "total_tokens_used": 0
+    "total_tokens_used": 0,
+    "work_claims_total": null,
+    "work_claim_ttl_ms_total": null,
+    "work_claims_extended_total": null
   },
   "config": {
     "max_concurrent_jobs": 1,

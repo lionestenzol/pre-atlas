@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AegisPolicy.v1",
+  "title": "Aegis Policy",
+  "description": "Declarative policy rules for the Aegis Enterprise Fabric",
+  "type": "object",
+  "required": ["tenant_id", "rules", "version", "created_at", "updated_at"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "name", "priority", "conditions", "effect", "reason", "enabled"],
+        "properties": {
+          "rule_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "priority": { "type": "integer", "minimum": 0 },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["field", "operator", "value"],
+              "properties": {
+                "field": { "type": "string" },
+                "operator": { "type": "string", "enum": ["eq", "neq", "in", "not_in", "gt", "lt", "gte", "lte", "exists"] },
+                "value": {}
+              }
+            }
+          },
+          "effect": { "type": "string", "enum": ["ALLOW", "DENY", "REQUIRE_HUMAN"] },
+          "reason": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "created_at": { "type": "integer" },
+          "updated_at": { "type": "integer" }
+        }
+      }
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "created_at": { "type": "integer" },
+    "updated_at": { "type": "integer" }
+  }
+}

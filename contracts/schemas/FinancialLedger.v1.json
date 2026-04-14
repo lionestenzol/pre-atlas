@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "FinancialLedger.v1",
+  "title": "Financial Ledger",
+  "description": "Transaction logging, budget tracking, cash flow projection, and financial alerts.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "transactions", "budgets"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "balance": { "type": "number", "description": "Current balance in USD" },
+    "transactions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/transaction" }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/budget_category" }
+    },
+    "projections": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/projection" }
+    },
+    "alerts": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/alert" }
+    },
+    "alert_thresholds": {
+      "type": "object",
+      "properties": {
+        "runway_critical_months": { "type": "number", "default": 1 },
+        "runway_warning_months": { "type": "number", "default": 2 },
+        "budget_breach_pct": { "type": "number", "default": 1.2 },
+        "expense_spike_pct": { "type": "number", "default": 1.5 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "transaction": {
+      "type": "object",
+      "required": ["id", "date", "amount", "category"],
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "amount": { "type": "number", "description": "Positive=income, negative=expense" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "recurring": { "type": "boolean", "default": false },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "budget_category": {
+      "type": "object",
+      "required": ["monthly_limit"],
+      "properties": {
+        "monthly_limit": { "type": "number" },
+        "spent_this_month": { "type": "number", "default": 0 }
+      },
+      "additionalProperties": false
+    },
+    "projection": {
+      "type": "object",
+      "required": ["month", "projected_income", "projected_expenses"],
+      "properties": {
+        "month": { "type": "string", "pattern": "^\\d{4}-\\d{2}$" },
+        "projected_income": { "type": "number" },
+        "projected_expenses": { "type": "number" },
+        "projected_balance": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "alert": {
+      "type": "object",
+      "required": ["type", "severity", "message", "created_at"],
+      "properties": {
+        "type": { "type": "string", "enum": ["runway_critical", "runway_warning", "budget_breach", "expense_spike"] },
+        "severity": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+        "message": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

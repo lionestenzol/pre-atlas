@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "CortexTask.v1",
+  "title": "Cortex Task",
+  "description": "Structured task input for the Cortex execution layer",
+  "type": "object",
+  "required": ["task_id", "tenant_id", "intent", "domain", "priority", "created_at"],
+  "properties": {
+    "task_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "source": {
+      "type": "string",
+      "enum": ["governance", "compound_loop", "ghost_executor", "auto_actor", "manual"]
+    },
+    "intent": {
+      "type": "string",
+      "enum": ["close_loop", "execute_directive", "update_state", "generate_artifact", "run_pipeline", "sync_service", "archive_entity", "compute_metric"]
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["cognitive", "delta", "mosaic", "aegis", "uasc", "mirofish"]
+    },
+    "priority": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "params": { "type": "object" },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "timeout_seconds": { "type": "integer", "default": 300 },
+        "max_cost_usd": { "type": "number", "default": 0.50 },
+        "requires_approval": { "type": "boolean", "default": false },
+        "idempotent": { "type": "boolean", "default": true }
+      }
+    },
+    "created_at": { "type": "integer" },
+    "mode_at_creation": {
+      "type": "string",
+      "enum": ["RECOVER", "CLOSURE", "MAINTENANCE", "BUILD", "COMPOUND", "SCALE"]
+    }
+  }
+}

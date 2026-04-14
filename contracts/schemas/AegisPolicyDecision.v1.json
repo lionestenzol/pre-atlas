@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AegisPolicyDecision.v1",
+  "title": "Aegis Policy Decision",
+  "description": "Result of a policy evaluation",
+  "type": "object",
+  "required": ["decision_id", "tenant_id", "agent_id", "action", "effect", "reason", "evaluated_at"],
+  "properties": {
+    "decision_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "agent_id": { "type": "string", "format": "uuid" },
+    "action": { "type": "string" },
+    "effect": { "type": "string", "enum": ["ALLOW", "DENY", "REQUIRE_HUMAN"] },
+    "matched_rule_id": { "type": ["string", "null"] },
+    "reason": { "type": "string" },
+    "context": {
+      "type": "object",
+      "properties": {
+        "mode": { "type": "string" },
+        "tenant_tier": { "type": "string" },
+        "agent_provider": { "type": "string" }
+      }
+    },
+    "cached": { "type": "boolean" },
+    "evaluated_at": { "type": "integer" },
+    "cache_ttl_ms": { "type": "integer" }
+  }
+}

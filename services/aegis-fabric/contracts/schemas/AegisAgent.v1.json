@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AegisAgent.v1",
+  "title": "Aegis Agent",
+  "description": "Agent registered in the Aegis Enterprise Fabric",
+  "type": "object",
+  "required": ["tenant_id", "name", "provider", "version", "capabilities", "enabled", "created_at"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "name": { "type": "string", "minLength": 1 },
+    "provider": { "type": "string", "enum": ["claude", "openai", "local", "custom"] },
+    "version": { "type": "string" },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "create_task", "update_task", "complete_task", "delete_task",
+          "query_state", "propose_delta", "route_decision",
+          "request_approval", "get_policy_simulation", "register_webhook"
+        ]
+      }
+    },
+    "cost_center": { "type": "string" },
+    "enabled": { "type": "boolean" },
+    "metadata": { "type": "object" },
+    "created_at": { "type": "integer" },
+    "last_active_at": { "type": "integer" }
+  }
+}

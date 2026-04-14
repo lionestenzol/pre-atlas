@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blueprint Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f0f;
+      color: #e5e5e5;
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    .header { text-align: center; margin-bottom: 32px; }
+    .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+    .header p { font-size: 13px; color: #666; }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .field-group label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #888; }
+    .field-group input {
+      width: 100%; padding: 12px 14px; background: #111; border: 1px solid #2a2a2a;
+      border-radius: 6px; color: #e5e5e5; font-size: 14px; font-family: inherit;
+    }
+    .field-group input:focus { outline: none; border-color: #3b82f6; }
+    .field-group input::placeholder { color: #555; }
+
+    .error-message { margin-top: 12px; padding: 12px 16px; background: #1a1a1a; border-left: 3px solid #ef4444; font-size: 13px; color: #ef4444; }
+
+    button {
+      padding: 10px 20px; background: #2a2a2a; border: none; border-radius: 6px;
+      color: #e5e5e5; font-size: 13px; cursor: pointer; transition: background 0.2s;
+    }
+    button:hover { background: #3a3a3a; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.primary { background: #3b82f6; color: white; }
+    button.primary:hover:not(:disabled) { background: #2563eb; }
+    .generate-btn { margin-top: 16px; width: 100%; }
+
+    .output-actions { display: flex; gap: 8px; margin-bottom: 24px; }
+    .copied-indicator { font-size: 12px; color: #22c55e; align-self: center; }
+
+    .blueprint-section { background: #1a1a1a; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .blueprint-section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 10px; }
+    .blueprint-section p { font-size: 14px; line-height: 1.5; }
+    .blueprint-section ul, .blueprint-section ol { padding-left: 20px; font-size: 14px; line-height: 1.8; }
+    .blueprint-section li { color: #ccc; }
+
+    .add-feature { margin-top: 24px; padding-top: 24px; border-top: 1px solid #2a2a2a; }
+    .add-feature h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 12px; }
+    .add-feature-form { display: flex; gap: 8px; }
+    .add-feature-form input {
+      flex: 1; padding: 10px 12px; background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 6px; color: #e5e5e5; font-size: 14px; font-family: inherit;
+    }
+    .add-feature-form input:focus { outline: none; border-color: #3b82f6; }
+
+    .feature-message { margin-top: 8px; font-size: 12px; padding: 8px 12px; border-radius: 4px; }
+    .feature-message.deferred { color: #eab308; background: #1a1a0a; }
+    .feature-message.essential { color: #22c55e; background: #0a1a0a; }
+    .feature-message.blocked { color: #ef4444; background: #1a0a0a; }
+
+    .replace-prompt { margin-top: 12px; }
+    .replace-prompt p { font-size: 12px; color: #888; margin-bottom: 8px; }
+    .replace-options { display: flex; flex-direction: column; gap: 4px; }
+    .replace-option {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px; font-size: 13px;
+    }
+    .replace-option span { color: #ccc; }
+    .replace-option button { padding: 4px 12px; font-size: 11px; }
+
+    .parking-lot { margin-top: 24px; padding: 16px; background: #1a1a0a; border: 1px solid #2a2a1a; border-radius: 8px; }
+    .parking-lot h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #eab308; margin-bottom: 10px; }
+    .parking-lot ul { padding-left: 20px; font-size: 13px; line-height: 1.8; }
+    .parking-lot li { color: #999; }
+
+    .hidden { display: none; }
+
+    @media (max-width: 480px) {
+      .app { padding: 16px 12px; }
+      .output-actions { flex-direction: column; }
+      .add-feature-form { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>Blueprint</h1>
+      <p>Constraint-based execution blueprint generator</p>
+    </div>
+
+    <!-- INPUT VIEW -->
+    <div id="input-view">
+      <div class="field-group">
+        <label>What are you building?</label>
+        <input type="text" id="field-product" placeholder="daily goal tracker">
+      </div>
+      <div class="field-group">
+        <label>Who is it for?</label>
+        <input type="text" id="field-user" placeholder="high school students">
+      </div>
+      <div class="field-group">
+        <label>What will they do with it?</label>
+        <input type="text" id="field-action" placeholder="set and track daily goals">
+      </div>
+      <div id="error-box" class="error-message hidden"></div>
+      <button class="primary generate-btn" id="btn-generate" disabled>Generate Blueprint</button>
+    </div>
+
+    <!-- OUTPUT VIEW -->
+    <div id="output-view" class="hidden">
+      <div class="output-actions">
+        <button class="primary" id="btn-copy">Copy Blueprint</button>
+        <button id="btn-start-over">Start Over</button>
+        <span id="copied-indicator" class="copied-indicator hidden">Copied</span>
+      </div>
+
+      <div class="blueprint-section"><h3>1. Objective</h3><p id="bp-objective"></p></div>
+      <div class="blueprint-section"><h3>2. Target User</h3><p id="bp-target-user"></p></div>
+      <div class="blueprint-section"><h3>3. Core Function</h3><p id="bp-core-function"></p></div>
+      <div class="blueprint-section"><h3>4. Constraints (V1 Only)</h3><ul id="bp-constraints"></ul></div>
+      <div class="blueprint-section"><h3 id="bp-mvp-heading">5. MVP Features (0/5)</h3><ol id="bp-mvp-features"></ol></div>
+      <div class="blueprint-section"><h3>6. Build Steps</h3><ol id="bp-build-steps"></ol></div>
+      <div class="blueprint-section"><h3>7. Dependencies</h3><ul id="bp-dependencies"></ul></div>
+      <div class="blueprint-section"><h3>8. Definition of Done</h3><ul id="bp-done"></ul></div>
+
+      <div id="parking-lot-section" class="parking-lot hidden">
+        <h3>V2 Parking Lot</h3>
+        <ul id="bp-parking-lot"></ul>
+      </div>
+
+      <div class="add-feature">
+        <h3>Add Feature</h3>
+        <div class="add-feature-form">
+          <input type="text" id="field-new-feature" placeholder="Describe a feature...">
+          <button id="btn-add-feature" disabled>Add</button>
+        </div>
+        <div id="feature-message" class="feature-message hidden"></div>
+        <div id="replace-prompt" class="replace-prompt hidden">
+          <p>Select a feature to replace:</p>
+          <div id="replace-options" class="replace-options"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // === CONSTANTS ===
+    const VAGUE_WORDS = ['platform', 'solution', 'system', 'optimize', 'improve', 'ai-powered', 'ai powered'];
+    const EXPANSION_KEYWORDS = ['slack', 'community', 'analytics', 'integrations', 'mobile app', 'team', 'certification'];
+    const STORAGE_KEY = 'blueprint-generator-state';
+
+    // === STATE ===
+    let blueprint = null;
+    let pendingFeature = null;
+
+    // === DOM REFS ===
+    const $product = document.getElementById('field-product');
+    const $user = document.getElementById('field-user');
+    const $action = document.getElementById('field-action');
+    const $errorBox = document.getElementById('error-box');
+    const $btnGenerate = document.getElementById('btn-generate');
+    const $inputView = document.getElementById('input-view');
+    const $outputView = document.getElementById('output-view');
+    const $btnCopy = document.getElementById('btn-copy');
+    const $btnStartOver = document.getElementById('btn-start-over');
+    const $copiedIndicator = document.getElementById('copied-indicator');
+    const $newFeature = document.getElementById('field-new-feature');
+    const $btnAddFeature = document.getElementById('btn-add-feature');
+    const $featureMessage = document.getElementById('feature-message');
+    const $replacePrompt = document.getElementById('replace-prompt');
+    const $replaceOptions = document.getElementById('replace-options');
+
+    // === VALIDATION ===
+    function validateField(label, value) {
+      if (!value.trim()) return `"${label}" is required.`;
+      if (value.trim().split(/\s+/).length < 2) return `"${label}" must be at least 2 words.`;
+      const lower = value.toLowerCase();
+      for (const w of VAGUE_WORDS) {
+        if (lower.includes(w)) return `"${label}" is too vague — avoid words like "${w}".`;
+      }
+      return null;
+    }
+
+    // === GENERATE ===
+    function generateBlueprint(product, user, action) {
+      const parsedIdea = { product, user, action };
+      const mvpFeatures = [
+        `Core interface for ${user} to ${action}`,
+        'Input validation and error handling',
+        'Local data persistence (localStorage)',
+        'Single-page responsive layout',
+        'Clear empty/error/success states',
+      ];
+      return {
+        id: crypto.randomUUID(),
+        createdAt: Date.now(),
+        input: `I am building a ${product} that helps ${user} do ${action}`,
+        parsedIdea,
+        sections: {
+          objective: `Build a ${product} that enables ${user} to ${action}. Nothing more.`,
+          targetUser: `${user} who currently cannot easily ${action}.`,
+          coreFunction: `The single core function is: let ${user} ${action} using ${product}.`,
+          constraintsV1Only: [
+            'No user accounts or authentication',
+            'No backend server or database',
+            'No third-party integrations',
+            'No mobile app — web only',
+            'No analytics or tracking',
+            'Ship in under 2 weeks',
+          ],
+          mvpFeatures: [...mvpFeatures],
+          buildSteps: [
+            `1. Define data model for ${product}`,
+            `2. Build core ${action} interface`,
+            '3. Implement input validation',
+            '4. Add localStorage persistence',
+            '5. Style with minimal CSS (dark theme, responsive)',
+            '6. Test all error states manually',
+            '7. Deploy to Vercel',
+          ],
+          dependencies: [
+            'Next.js (App Router) or Vite + React',
+            'TypeScript (strict mode)',
+            'No component library — vanilla CSS only',
+            'No state management library — useState/useReducer only',
+          ],
+          definitionOfDone: [
+            `${user} can ${action} end-to-end in one session`,
+            'All inputs validated; no silent failures',
+            'Works offline after first load (localStorage)',
+            'Loads in under 2 seconds on 3G',
+            'Zero runtime errors in console',
+            'Deployed and accessible via public URL',
+          ],
+        },
+        mvpFeatures,
+        v2ParkingLot: [],
+      };
+    }
+
+    // === SCOPE LOCK ===
+    function classifyFeature(text) {
+      const lower = text.toLowerCase();
+      for (const keyword of EXPANSION_KEYWORDS) {
+        if (lower.includes(keyword)) {
+          return { classification: 'v2ParkingLot', reason: `Contains expansion keyword "${keyword}". Deferred to V2.`, matchedKeyword: keyword };
+        }
+      }
+      return { classification: 'essential', reason: 'No expansion keywords detected. Can replace one MVP feature.' };
+    }
+
+    // === FORMAT ===
+    function formatBlueprint(bp) {
+      const s = bp.sections;
+      const lines = [
+        '# Execution Blueprint', '',
+        '## Objective', s.objective, '',
+        '## Target User', s.targetUser, '',
+        '## Core Function', s.coreFunction, '',
+        '## Constraints (V1 Only)',
+      ];
+      s.constraintsV1Only.forEach(c => lines.push(`- ${c}`));
+      lines.push('', '## MVP Features (max 5)');
+      bp.mvpFeatures.forEach((f, i) => lines.push(`${i + 1}. ${f}`));
+      lines.push('', '## Build Steps');
+      s.buildSteps.forEach(st => lines.push(st));
+      lines.push('', '## Dependencies');
+      s.dependencies.forEach(d => lines.push(`- ${d}`));
+      lines.push('', '## Definition of Done');
+      s.definitionOfDone.forEach(d => lines.push(`- [ ] ${d}`));
+      if (bp.v2ParkingLot.length > 0) {
+        lines.push('', '## V2 Parking Lot');
+        bp.v2ParkingLot.forEach(f => lines.push(`- ${f}`));
+      }
+      return lines.join('\n');
+    }
+
+    // === STORAGE ===
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch {}
+      return { blueprint: null, history: [] };
+    }
+
+    function saveState(state) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          ...state,
+          history: state.history.slice(-10),
+        }));
+      } catch {}
+    }
+
+    function persist(bp) {
+      blueprint = bp;
+      const state = loadState();
+      saveState({
+        blueprint: bp,
+        history: [...state.history.filter(h => h.id !== bp.id), bp],
+      });
+    }
+
+    // === RENDER ===
+    function renderList(el, items, ordered) {
+      el.innerHTML = '';
+      items.forEach((item, i) => {
+        const li = document.createElement('li');
+        li.textContent = ordered ? item.replace(/^\d+\.\s*/, '') : item;
+        el.appendChild(li);
+      });
+    }
+
+    function renderBlueprint() {
+      if (!blueprint) return;
+      const s = blueprint.sections;
+      document.getElementById('bp-objective').textContent = s.objective;
+      document.getElementById('bp-target-user').textContent = s.targetUser;
+      document.getElementById('bp-core-function').textContent = s.coreFunction;
+      renderList(document.getElementById('bp-constraints'), s.constraintsV1Only);
+      renderList(document.getElementById('bp-mvp-features'), blueprint.mvpFeatures, true);
+      document.getElementById('bp-mvp-heading').textContent = `5. MVP Features (${blueprint.mvpFeatures.length}/5)`;
+      renderList(document.getElementById('bp-build-steps'), s.buildSteps, true);
+      renderList(document.getElementById('bp-dependencies'), s.dependencies);
+      renderList(document.getElementById('bp-done'), s.definitionOfDone);
+
+      const parkingSection = document.getElementById('parking-lot-section');
+      if (blueprint.v2ParkingLot.length > 0) {
+        parkingSection.classList.remove('hidden');
+        renderList(document.getElementById('bp-parking-lot'), blueprint.v2ParkingLot);
+      } else {
+        parkingSection.classList.add('hidden');
+      }
+    }
+
+    function showView(view) {
+      $inputView.classList.toggle('hidden', view !== 'input');
+      $outputView.classList.toggle('hidden', view !== 'output');
+    }
+
+    function clearFeatureUI() {
+      $featureMessage.classList.add('hidden');
+      $replacePrompt.classList.add('hidden');
+      $newFeature.value = '';
+      pendingFeature = null;
+    }
+
+    function showFeatureMessage(text, type) {
+      $featureMessage.textContent = text;
+      $featureMessage.className = `feature-message ${type}`;
+      $featureMessage.classList.remove('hidden');
+    }
+
+    // === EVENTS ===
+    function updateGenerateBtn() {
+      $btnGenerate.disabled = !($product.value.trim() && $user.value.trim() && $action.value.trim());
+    }
+
+    [$product, $user, $action].forEach(el => {
+      el.addEventListener('input', () => {
+        $errorBox.classList.add('hidden');
+        updateGenerateBtn();
+      });
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleGenerate();
+      });
+    });
+
+    $newFeature.addEventListener('input', () => {
+      $btnAddFeature.disabled = !$newFeature.value.trim();
+      $featureMessage.classList.add('hidden');
+      $replacePrompt.classList.add('hidden');
+      pendingFeature = null;
+    });
+    $newFeature.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAddFeature();
+    });
+
+    function handleGenerate() {
+      $errorBox.classList.add('hidden');
+      const productErr = validateField('What are you building', $product.value);
+      const userErr = validateField('Who is it for', $user.value);
+      const actionErr = validateField('What will they do', $action.value);
+      const err = productErr || userErr || actionErr;
+      if (err) {
+        $errorBox.textContent = err;
+        $errorBox.classList.remove('hidden');
+        return;
+      }
+      const bp = generateBlueprint($product.value.trim(), $user.value.trim(), $action.value.trim());
+      persist(bp);
+      renderBlueprint();
+      showView('output');
+    }
+
+    function handleAddFeature() {
+      if (!blueprint || !$newFeature.value.trim()) return;
+      const text = $newFeature.value.trim();
+      const classification = classifyFeature(text);
+
+      if (classification.classification === 'v2ParkingLot') {
+        const updated = { ...blueprint, v2ParkingLot: [...blueprint.v2ParkingLot, text] };
+        persist(updated);
+        renderBlueprint();
+        showFeatureMessage(classification.reason, 'deferred');
+        $newFeature.value = '';
+        $btnAddFeature.disabled = true;
+        pendingFeature = null;
+        $replacePrompt.classList.add('hidden');
+        return;
+      }
+
+      if (blueprint.mvpFeatures.length >= 5) {
+        pendingFeature = text;
+        showFeatureMessage('MVP is full (5/5). Choose a feature to replace.', 'blocked');
+        renderReplaceOptions();
+        return;
+      }
+
+      const newFeatures = [...blueprint.mvpFeatures, text];
+      const updated = {
+        ...blueprint,
+        mvpFeatures: newFeatures,
+        sections: { ...blueprint.sections, mvpFeatures: newFeatures },
+      };
+      persist(updated);
+      renderBlueprint();
+      showFeatureMessage('Feature added to MVP.', 'essential');
+      $newFeature.value = '';
+      $btnAddFeature.disabled = true;
+      pendingFeature = null;
+      $replacePrompt.classList.add('hidden');
+    }
+
+    function renderReplaceOptions() {
+      $replaceOptions.innerHTML = '';
+      blueprint.mvpFeatures.forEach((f, i) => {
+        const div = document.createElement('div');
+        div.className = 'replace-option';
+        const span = document.createElement('span');
+        span.textContent = `${i + 1}. ${f}`;
+        const btn = document.createElement('button');
+        btn.textContent = 'Replace';
+        btn.addEventListener('click', () => handleReplace(i));
+        div.appendChild(span);
+        div.appendChild(btn);
+        $replaceOptions.appendChild(div);
+      });
+      $replacePrompt.classList.remove('hidden');
+    }
+
+    function handleReplace(index) {
+      if (!blueprint || !pendingFeature) return;
+      const newFeatures = [...blueprint.mvpFeatures];
+      newFeatures[index] = pendingFeature;
+      const updated = {
+        ...blueprint,
+        mvpFeatures: newFeatures,
+        sections: { ...blueprint.sections, mvpFeatures: newFeatures },
+      };
+      persist(updated);
+      renderBlueprint();
+      showFeatureMessage(`Replaced feature #${index + 1}.`, 'essential');
+      $newFeature.value = '';
+      $btnAddFeature.disabled = true;
+      pendingFeature = null;
+      $replacePrompt.classList.add('hidden');
+    }
+
+    $btnGenerate.addEventListener('click', handleGenerate);
+
+    $btnCopy.addEventListener('click', () => {
+      if (!blueprint) return;
+      navigator.clipboard.writeText(formatBlueprint(blueprint)).then(() => {
+        $copiedIndicator.classList.remove('hidden');
+        setTimeout(() => $copiedIndicator.classList.add('hidden'), 2000);
+      });
+    });
+
+    $btnStartOver.addEventListener('click', () => {
+      showView('input');
+      $product.value = '';
+      $user.value = '';
+      $action.value = '';
+      blueprint = null;
+      $errorBox.classList.add('hidden');
+      clearFeatureUI();
+      $copiedIndicator.classList.add('hidden');
+      $btnGenerate.disabled = true;
+      saveState({ blueprint: null, history: loadState().history });
+    });
+
+    $btnAddFeature.addEventListener('click', handleAddFeature);
+
+    // === INIT: RESTORE FROM STORAGE ===
+    (function init() {
+      const state = loadState();
+      if (state.blueprint) {
+        blueprint = state.blueprint;
+        $product.value = blueprint.parsedIdea.product;
+        $user.value = blueprint.parsedIdea.user;
+        $action.value = blueprint.parsedIdea.action;
+        renderBlueprint();
+        showView('output');
+      }
+    })();
+  </script>
+</body>
+</html>

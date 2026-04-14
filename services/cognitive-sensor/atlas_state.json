@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-03-27T12:12:43",
+  "energy": "high",
+  "pressure": "high",
+  "mode": "CLOSURE",
+  "open_loops": 7,
+  "closure_ratio": 72.0,
+  "streak_days": 1,
+  "fest_active": 5,
+  "fest_incomplete": 3,
+  "critical_tasks": [],
+  "blockers": [],
+  "top_loop": "AI Workflow Orchestration",
+  "next_action": "Close loops. Top loop: \"AI Workflow Orchestration\"",
+  "closed": true,
+  "closed_at": "2026-03-27T22:07:57"
+}

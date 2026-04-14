@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idea Intelligence Dashboard</title>
+<script src="https://cdn.tailwindcss.com/3.4.1"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.3s ease-out; }
+  .tier-execute { border-left: 4px solid #10b981; }
+  .tier-next_up { border-left: 4px solid #3b82f6; }
+  .tier-backlog { border-left: 4px solid #f59e0b; }
+  .tier-archive { border-left: 4px solid #6b7280; }
+  .status-idea { color: #8b5cf6; }
+  .status-started { color: #3b82f6; }
+  .status-stalled { color: #f59e0b; }
+  .status-completed { color: #10b981; }
+  .status-abandoned { color: #6b7280; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
+  pre { white-space: pre-wrap; word-break: break-word; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+  ::-webkit-scrollbar-corner { background: transparent; }
+  * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
+</style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+<!-- Header -->
+<header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div>
+      <div class="flex items-center gap-3">
+        <button onclick="(window!==window.parent)?window.parent.postMessage({type:'atlas-navigate',target:'cycleboard'},'*'):window.open('cycleboard/index.html','_blank')" class="text-sm text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 transition"><i class="fas fa-arrow-left"></i></button>
+        <h1 class="text-xl font-bold text-white"><i class="fas fa-brain mr-2 text-purple-400"></i>Idea Intelligence</h1>
+      </div>
+      <p class="text-sm text-gray-400" id="subtitle">Loading...</p>
+    </div>
+    <div class="flex gap-2">
+      <input type="text" id="search" placeholder="Search ideas..."
+        class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 w-64 focus:outline-none focus:border-purple-500">
+      <button onclick="loadData()" class="bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded-lg text-sm">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Stats Bar -->
+<div class="max-w-7xl mx-auto px-4 py-4">
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3" id="stats">
+  </div>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="max-w-7xl mx-auto px-4">
+  <div class="flex gap-1 border-b border-gray-800" id="tabs">
+    <button onclick="showTab('overview')" class="tab-btn px-4 py-2 text-sm rounded-t-lg bg-purple-600 text-white" data-tab="overview">Overview</button>
+    <button onclick="showTab('execute')" class="tab-btn px-4 py-2 text-sm rounded-t-lg text-gray-400 hover:text-white" data-tab="execute">Execute Now</button>
+    <button onclick="showTab('nextup')" class="tab-btn px-4 py-2 text-sm rounded-t-lg text-gray-400 hover:text-white" data-tab="nextup">Next Up</button>
+    <button onclick="showTab('clusters')" class="tab-btn px-4 py-2 text-sm rounded-t-lg text-gray-400 hover:text-white" data-tab="clusters">Vision Clusters</button>
+    <button onclick="showTab('timeline')" class="tab-btn px-4 py-2 text-sm rounded-t-lg text-gray-400 hover:text-white" data-tab="timeline">Timelines</button>
+    <button onclick="showTab('all')" class="tab-btn px-4 py-2 text-sm rounded-t-lg text-gray-400 hover:text-white" data-tab="all">All Ideas</button>
+    <button onclick="showTab('backlog')" class="tab-btn px-4 py-2 text-sm rounded-t-lg text-gray-400 hover:text-white" data-tab="backlog">Backlog</button>
+  </div>
+</div>
+
+<!-- Content -->
+<main class="max-w-7xl mx-auto px-4 py-6">
+  <div id="content" class="fade-in"></div>
+</main>
+
+<!-- Detail Modal -->
+<div id="modal" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4" onclick="if(event.target===this)closeModal()">
+  <div class="bg-gray-900 border border-gray-700 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
+    <div class="flex justify-between items-start mb-4">
+      <h2 class="text-lg font-bold" id="modal-title"></h2>
+      <button onclick="closeModal()" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+let DATA = null;
+let CURRENT_TAB = 'overview';
+
+function addToAZ(title) {
+  // Write to CycleBoard's localStorage directly (shared origin when served from same server)
+  try {
+    const raw = localStorage.getItem('cycleboard-state');
+    if (raw) {
+      const cbState = JSON.parse(raw);
+      const tasks = cbState.AZTask || [];
+      // Check for duplicate
+      if (tasks.some(t => t.task.toLowerCase() === title.toLowerCase())) {
+        alert('Already in A-Z: ' + title);
+        return;
+      }
+      const nextLetter = String.fromCharCode(65 + (tasks.length % 26));
+      tasks.push({
+        id: Math.random().toString(36).slice(2, 10) + Date.now().toString(36),
+        letter: nextLetter,
+        task: title,
+        status: 'Not Started',
+        notes: 'Added from Idea Dashboard',
+        createdAt: new Date().toISOString()
+      });
+      cbState.AZTask = tasks;
+      localStorage.setItem('cycleboard-state', JSON.stringify(cbState));
+      alert('Added to A-Z: ' + nextLetter + ' – ' + title);
+    } else {
+      alert('CycleBoard state not found. Open CycleBoard first to initialize.');
+    }
+  } catch (e) {
+    alert('Failed to add: ' + e.message);
+  }
+}
+
+function applyData(data) {
+  DATA = data;
+  document.getElementById('subtitle').textContent =
+    `${DATA.metadata.total_ideas} ideas | Generated ${DATA.metadata.generated_at.split('T')[0]}`;
+  renderStats();
+  showTab(CURRENT_TAB);
+}
+
+function loadViaXHR() {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'idea_registry.json', true);
+    xhr.onload = function() {
+      if (xhr.responseText) {
+        try { resolve(JSON.parse(xhr.responseText)); } catch(e) { reject(e); }
+      } else { reject(new Error('Empty response')); }
+    };
+    xhr.onerror = function() { reject(new Error('XHR failed')); };
+    xhr.send();
+  });
+}
+
+function loadViaScript() {
+  return new Promise((resolve, reject) => {
+    // Try loading idea_registry_data.js (JSONP-style wrapper)
+    if (window.__IDEA_REGISTRY__) { resolve(window.__IDEA_REGISTRY__); return; }
+    const s = document.createElement('script');
+    s.src = 'idea_registry_data.js';
+    s.onload = function() {
+      if (window.__IDEA_REGISTRY__) resolve(window.__IDEA_REGISTRY__);
+      else reject(new Error('Data wrapper loaded but no data found'));
+    };
+    s.onerror = function() { reject(new Error('No idea_registry_data.js')); };
+    document.head.appendChild(s);
+  });
+}
+
+async function loadData() {
+  try {
+    let data;
+    try {
+      const resp = await fetch('idea_registry.json');
+      data = await resp.json();
+    } catch(fetchErr) {
+      // file:// fallback 1: XHR (works in some browsers for local files)
+      try {
+        data = await loadViaXHR();
+      } catch(xhrErr) {
+        // file:// fallback 2: script tag with JSONP wrapper
+        data = await loadViaScript();
+      }
+    }
+    applyData(data);
+  } catch(e) {
+    document.getElementById('content').innerHTML = `
+      <div class="bg-red-900/30 border border-red-800 rounded-xl p-6 text-center">
+        <i class="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
+        <p class="text-red-300">Could not load idea_registry.json</p>
+        <p class="text-red-400 text-sm mt-1">Run <code class="bg-gray-800 px-2 py-1 rounded">python run_agents.py</code> first</p>
+        <p class="text-red-500 text-xs mt-2">${e.message}</p>
+      </div>`;
+  }
+}
+
+function renderStats() {
+  const t = DATA.metadata.tier_breakdown;
+  const stats = [
+    { label: 'Total', value: DATA.metadata.total_ideas, icon: 'fa-lightbulb', color: 'purple' },
+    { label: 'Execute Now', value: t.execute_now || 0, icon: 'fa-bolt', color: 'green' },
+    { label: 'Next Up', value: t.next_up || 0, icon: 'fa-arrow-right', color: 'blue' },
+    { label: 'Backlog', value: t.backlog || 0, icon: 'fa-clock', color: 'yellow' },
+    { label: 'Archive', value: t.archive || 0, icon: 'fa-archive', color: 'gray' },
+  ];
+  const colors = { purple: 'bg-purple-900/40 border-purple-800', green: 'bg-green-900/40 border-green-800',
+    blue: 'bg-blue-900/40 border-blue-800', yellow: 'bg-yellow-900/40 border-yellow-800', gray: 'bg-gray-800/40 border-gray-700' };
+  const textColors = { purple: 'text-purple-300', green: 'text-green-300', blue: 'text-blue-300', yellow: 'text-yellow-300', gray: 'text-gray-400' };
+
+  document.getElementById('stats').innerHTML = stats.map(s => `
+    <div class="rounded-xl border p-4 ${colors[s.color]}">
+      <div class="flex items-center gap-2 mb-1">
+        <i class="fas ${s.icon} ${textColors[s.color]}"></i>
+        <span class="text-xs text-gray-400">${s.label}</span>
+      </div>
+      <div class="text-2xl font-bold ${textColors[s.color]}">${s.value}</div>
+    </div>
+  `).join('');
+}
+
+function showTab(tab) {
+  CURRENT_TAB = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('bg-purple-600', b.dataset.tab === tab);
+    b.classList.toggle('text-white', b.dataset.tab === tab);
+    b.classList.toggle('text-gray-400', b.dataset.tab !== tab);
+  });
+  if (!DATA) return;
+
+  const c = document.getElementById('content');
+  c.className = 'fade-in';
+
+  switch(tab) {
+    case 'overview': c.innerHTML = renderOverview(); break;
+    case 'execute': c.innerHTML = renderTier('execute_now', 'Execute Now', 'green'); break;
+    case 'nextup': c.innerHTML = renderTier('next_up', 'Next Up', 'blue'); break;
+    case 'clusters': c.innerHTML = renderClusters(); break;
+    case 'timeline': c.innerHTML = renderTimelines(); break;
+    case 'all': c.innerHTML = renderAll(); break;
+    case 'backlog': c.innerHTML = renderTier('backlog', 'Backlog', 'yellow'); break;
+  }
+}
+
+function renderOverview() {
+  const reg = DATA.full_registry;
+  const gw = DATA.gateway_ideas || [];
+
+  // Category breakdown
+  const cats = {};
+  reg.forEach(i => { cats[i.category] = (cats[i.category]||0) + 1; });
+  const catEntries = Object.entries(cats).sort((a,b) => b[1]-a[1]);
+
+  // Status breakdown
+  const statuses = {};
+  reg.forEach(i => { statuses[i.status] = (statuses[i.status]||0) + 1; });
+
+  // Top 5
+  const top5 = reg.slice(0, 5);
+
+  return `
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Top Priority -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h3 class="font-bold mb-3 text-purple-300"><i class="fas fa-trophy mr-2"></i>Top 5 Priority</h3>
+        ${top5.map((idea, i) => `
+          <div class="flex items-center gap-3 py-2 border-b border-gray-800 last:border-0 cursor-pointer hover:bg-gray-800/50 rounded px-2" onclick="showDetail('${idea.canonical_id}')">
+            <span class="text-lg font-bold text-gray-600 w-6">${i+1}</span>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">${idea.canonical_title}</div>
+              <div class="text-xs text-gray-500">${idea.category.replace(/_/g,' ')} | ${idea.status}</div>
+            </div>
+            <div class="text-sm font-mono font-bold text-purple-400">${idea.priority_score.toFixed(2)}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Gateways -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h3 class="font-bold mb-3 text-blue-300"><i class="fas fa-key mr-2"></i>Gateway Ideas</h3>
+        <p class="text-xs text-gray-500 mb-3">Ideas that unlock the most downstream projects</p>
+        ${gw.slice(0,5).map(g => `
+          <div class="flex items-center gap-3 py-2 border-b border-gray-800 last:border-0">
+            <div class="bg-blue-900/30 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold text-blue-300">${g.unlocks_count}</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">${g.canonical_title}</div>
+              <div class="text-xs text-gray-500">Unlocks ${g.unlocks_count} ideas</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Categories -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h3 class="font-bold mb-3 text-yellow-300"><i class="fas fa-tags mr-2"></i>Categories</h3>
+        ${catEntries.map(([cat, count]) => {
+          const pct = (count / reg.length * 100).toFixed(0);
+          return `
+          <div class="flex items-center gap-2 py-1.5">
+            <div class="flex-1 text-sm">${cat.replace(/_/g,' ')}</div>
+            <div class="w-32 bg-gray-800 rounded-full h-2">
+              <div class="bg-purple-500 h-2 rounded-full" style="width:${pct}%"></div>
+            </div>
+            <div class="text-xs text-gray-500 w-8 text-right">${count}</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- Status -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h3 class="font-bold mb-3 text-green-300"><i class="fas fa-chart-pie mr-2"></i>Status Breakdown</h3>
+        ${Object.entries(statuses).sort((a,b)=>b[1]-a[1]).map(([status, count]) => {
+          const pct = (count / reg.length * 100).toFixed(0);
+          const icon = {idea:'fa-lightbulb',started:'fa-play',stalled:'fa-pause',completed:'fa-check',abandoned:'fa-times'}[status]||'fa-circle';
+          return `
+          <div class="flex items-center gap-3 py-2">
+            <i class="fas ${icon} status-${status} w-4"></i>
+            <div class="flex-1 text-sm">${status}</div>
+            <div class="w-32 bg-gray-800 rounded-full h-2">
+              <div class="bg-green-500 h-2 rounded-full" style="width:${pct}%"></div>
+            </div>
+            <div class="text-xs text-gray-500 w-12 text-right">${count} (${pct}%)</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+function renderTier(tierName, displayName, color) {
+  const items = DATA.tiers[tierName] || [];
+  if (items.length === 0) {
+    return `<div class="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+      <i class="fas fa-inbox text-gray-600 text-3xl mb-3"></i>
+      <p class="text-gray-500">No ideas in ${displayName}</p>
+    </div>`;
+  }
+
+  const colorMap = { green: 'border-green-800', blue: 'border-blue-800', yellow: 'border-yellow-800' };
+
+  return `
+    <div class="space-y-3">
+      ${items.map((item, i) => `
+        <div class="bg-gray-900 border ${colorMap[color]} rounded-xl p-4 tier-${tierName} cursor-pointer hover:bg-gray-800/70 transition-colors"
+             onclick="showDetail('${item.canonical_id}')">
+          <div class="flex items-start gap-4">
+            <div class="text-lg font-bold text-gray-600 mt-1 w-6">${i+1}</div>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium">${item.canonical_title}</div>
+              <div class="flex gap-3 mt-1 flex-wrap">
+                <span class="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-400">${item.category.replace(/_/g,' ')}</span>
+                <span class="text-xs status-${item.status}">${item.status}</span>
+                <span class="text-xs text-gray-500">${item.complexity}</span>
+                ${item.mention_count > 1 ? `<span class="text-xs text-purple-400">${item.mention_count}x mentioned</span>` : ''}
+              </div>
+            </div>
+            <div class="text-right flex flex-col items-end gap-2">
+              <div>
+                <div class="text-lg font-mono font-bold text-${color}-400">${item.priority_score.toFixed(2)}</div>
+                <div class="text-xs text-gray-500">priority</div>
+              </div>
+              <button onclick="event.stopPropagation();addToAZ('${item.canonical_title.replace(/'/g, "\\'")}')" class="text-xs px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition" title="Add to CycleBoard A-Z tasks">+ A-Z</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderClusters() {
+  const clusters = DATA.vision_clusters || [];
+  const reg = DATA.full_registry || [];
+  const byId = {};
+  reg.forEach(i => byId[i.canonical_id] = i);
+
+  const sorted = [...clusters].sort((a,b) => b.size - a.size);
+
+  return `
+    <div class="grid md:grid-cols-2 gap-4">
+      ${sorted.filter(c => c.size >= 3).map(cluster => `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-purple-300">${cluster.name}</h3>
+            <span class="bg-purple-900/40 text-purple-300 text-xs px-2 py-1 rounded-full">${cluster.size} ideas</span>
+          </div>
+          <div class="space-y-1">
+            ${cluster.idea_ids.slice(0, 8).map(id => {
+              const idea = byId[id];
+              if (!idea) return '';
+              const statusIcon = {idea:'[ ]',started:'[~]',stalled:'[!]',completed:'[x]',abandoned:'[-]'}[idea.status]||'[ ]';
+              return `
+              <div class="flex items-center gap-2 text-sm py-1 cursor-pointer hover:bg-gray-800/50 rounded px-1" onclick="showDetail('${id}')">
+                <span class="font-mono text-xs text-gray-500">${statusIcon}</span>
+                <span class="truncate flex-1">${idea.canonical_title}</span>
+                <span class="text-xs text-gray-600">${idea.priority_score.toFixed(2)}</span>
+              </div>`;
+            }).join('')}
+            ${cluster.idea_ids.length > 8 ? `<div class="text-xs text-gray-600 pl-6">+${cluster.idea_ids.length - 8} more</div>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderTimelines() {
+  const reg = DATA.full_registry || [];
+  const multi = reg.filter(i => (i.version_timeline||[]).length > 1)
+    .sort((a,b) => (b.version_timeline||[]).length - (a.version_timeline||[]).length);
+
+  if (multi.length === 0) {
+    return `<div class="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+      <p class="text-gray-500">No ideas with multiple mentions to show timelines</p>
+    </div>`;
+  }
+
+  return `
+    <div class="space-y-4">
+      ${multi.slice(0, 15).map(idea => `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold cursor-pointer hover:text-purple-300" onclick="showDetail('${idea.canonical_id}')">${idea.canonical_title}</h3>
+            <span class="text-sm text-purple-400">${idea.version_timeline.length} mentions</span>
+          </div>
+          <div class="relative pl-6 border-l-2 border-gray-700 space-y-3">
+            ${idea.version_timeline.map(v => `
+              <div class="relative">
+                <div class="absolute -left-[25px] w-3 h-3 rounded-full bg-purple-500 border-2 border-gray-900"></div>
+                <div class="text-xs text-gray-500">${v.date || 'unknown'}</div>
+                <div class="text-sm">${v.convo_title}</div>
+                ${v.key_quote ? `<div class="text-xs text-gray-400 mt-1 italic">"${v.key_quote.substring(0,120)}..."</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderAll() {
+  const reg = DATA.full_registry || [];
+  const query = document.getElementById('search').value.toLowerCase();
+  const filtered = query ? reg.filter(i =>
+    i.canonical_title.toLowerCase().includes(query) ||
+    (i.category||'').toLowerCase().includes(query) ||
+    (i.status||'').toLowerCase().includes(query)
+  ) : reg;
+
+  return `
+    <div class="text-sm text-gray-500 mb-3">${filtered.length} ideas${query ? ` matching "${query}"` : ''}</div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-800">
+          <tr>
+            <th class="text-left px-3 py-2 text-gray-400 font-medium">Idea</th>
+            <th class="text-left px-3 py-2 text-gray-400 font-medium hidden md:table-cell">Category</th>
+            <th class="text-left px-3 py-2 text-gray-400 font-medium">Status</th>
+            <th class="text-left px-3 py-2 text-gray-400 font-medium">Tier</th>
+            <th class="text-right px-3 py-2 text-gray-400 font-medium">Priority</th>
+            <th class="text-right px-3 py-2 text-gray-400 font-medium hidden md:table-cell">Mentions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.slice(0, 100).map(idea => `
+            <tr class="border-t border-gray-800 hover:bg-gray-800/50 cursor-pointer" onclick="showDetail('${idea.canonical_id}')">
+              <td class="px-3 py-2 max-w-xs truncate">${idea.canonical_title}</td>
+              <td class="px-3 py-2 text-gray-500 hidden md:table-cell">${(idea.category||'').replace(/_/g,' ')}</td>
+              <td class="px-3 py-2"><span class="status-${idea.status}">${idea.status}</span></td>
+              <td class="px-3 py-2 text-xs">${(idea.tier||'').replace(/_/g,' ')}</td>
+              <td class="px-3 py-2 text-right font-mono">${idea.priority_score.toFixed(2)}</td>
+              <td class="px-3 py-2 text-right text-gray-500 hidden md:table-cell">${idea.mention_count||1}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ${filtered.length > 100 ? `<div class="text-center py-3 text-gray-500 text-sm">Showing 100 of ${filtered.length}</div>` : ''}
+    </div>`;
+}
+
+function showDetail(canonId) {
+  const idea = DATA.full_registry.find(i => i.canonical_id === canonId);
+  if (!idea) return;
+
+  document.getElementById('modal-title').textContent = idea.canonical_title;
+
+  const pb = idea.priority_breakdown || {};
+  const timeline = idea.version_timeline || [];
+  const quotes = idea.all_key_quotes || [];
+  const skills = idea.skills_required || [];
+  const children = idea.child_ideas || [];
+  const deps = idea.dependencies || [];
+  const related = idea.related_ideas || [];
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="space-y-4">
+      <!-- Meta -->
+      <div class="flex flex-wrap gap-2">
+        <span class="px-2 py-1 rounded text-xs bg-purple-900/40 text-purple-300">${idea.tier.replace(/_/g,' ')}</span>
+        <span class="px-2 py-1 rounded text-xs bg-gray-800 text-gray-400">${idea.category.replace(/_/g,' ')}</span>
+        <span class="px-2 py-1 rounded text-xs status-${idea.status} bg-gray-800">${idea.status}</span>
+        <span class="px-2 py-1 rounded text-xs bg-gray-800 text-gray-400">${idea.complexity}</span>
+        ${idea.mention_count > 1 ? `<span class="px-2 py-1 rounded text-xs bg-purple-900/40 text-purple-300">${idea.mention_count}x mentioned</span>` : ''}
+      </div>
+
+      <!-- Priority -->
+      <div class="bg-gray-800 rounded-lg p-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-gray-400">Priority Score</span>
+          <span class="text-xl font-bold font-mono text-purple-400">${idea.priority_score.toFixed(3)}</span>
+        </div>
+        <div class="grid grid-cols-5 gap-1 text-xs">
+          ${Object.entries(pb).map(([k,v]) => `
+            <div class="text-center">
+              <div class="text-gray-500">${k}</div>
+              <div class="font-mono">${v.toFixed(3)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Alignment -->
+      <div class="bg-gray-800 rounded-lg p-3">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-400">Alignment</span>
+          <span class="font-mono text-green-400">${(idea.alignment_score||0).toFixed(2)}</span>
+        </div>
+      </div>
+
+      <!-- Skills -->
+      ${skills.length ? `
+      <div>
+        <h4 class="text-sm text-gray-400 mb-1">Skills Required</h4>
+        <div class="flex flex-wrap gap-1">
+          ${skills.map(s => `<span class="px-2 py-0.5 rounded text-xs bg-blue-900/30 text-blue-300">${s.replace(/_/g,' ')}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Key Quotes -->
+      ${quotes.length ? `
+      <div>
+        <h4 class="text-sm text-gray-400 mb-1">Key Quotes</h4>
+        ${quotes.map(q => `<div class="text-sm text-gray-300 border-l-2 border-purple-600 pl-3 py-1 mb-2 italic">"${q.substring(0,200)}"</div>`).join('')}
+      </div>` : ''}
+
+      <!-- Timeline -->
+      ${timeline.length ? `
+      <div>
+        <h4 class="text-sm text-gray-400 mb-2">Version Timeline</h4>
+        <div class="space-y-2 pl-4 border-l-2 border-gray-700">
+          ${timeline.map(v => `
+            <div class="relative">
+              <div class="absolute -left-[13px] w-2 h-2 rounded-full bg-purple-500"></div>
+              <div class="text-xs text-gray-500">${v.date || 'unknown'} - ${v.evolution_note}</div>
+              <div class="text-sm">${v.convo_title}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Relationships -->
+      ${(children.length || deps.length || related.length) ? `
+      <div>
+        <h4 class="text-sm text-gray-400 mb-1">Relationships</h4>
+        ${idea.parent_idea ? `<div class="text-sm"><span class="text-gray-500">Parent:</span> ${idea.parent_idea}</div>` : ''}
+        ${children.length ? `<div class="text-sm"><span class="text-gray-500">Children:</span> ${children.join(', ')}</div>` : ''}
+        ${deps.length ? `<div class="text-sm"><span class="text-gray-500">Depends on:</span> ${deps.join(', ')}</div>` : ''}
+        ${related.length ? `<div class="text-sm"><span class="text-gray-500">Related:</span> ${related.join(', ')}</div>` : ''}
+      </div>` : ''}
+    </div>`;
+
+  document.getElementById('modal').classList.remove('hidden');
+  document.getElementById('modal').classList.add('flex');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+  document.getElementById('modal').classList.remove('flex');
+}
+
+// Search handler
+document.getElementById('search').addEventListener('input', () => {
+  if (CURRENT_TAB === 'all') showTab('all');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// Load on start
+loadData();
+</script>
+</body>
+</html>

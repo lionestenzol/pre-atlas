@@ -1,0 +1,819 @@
+{
+  "generated_at": "2026-02-09",
+  "total_components": 42,
+  "summary": {
+    "agents": 7,
+    "scripts": 18,
+    "reports": 5,
+    "cron_jobs": 6,
+    "orchestrators": 5,
+    "dashboards": 3,
+    "contracts": 8,
+    "integrations": 2
+  },
+
+  "components": [
+
+    {
+      "name": "agent_excavator",
+      "type": "agent",
+      "file_paths": ["services/cognitive-sensor/agent_excavator.py"],
+      "purpose": "Extracts ideas/projects/plans from all 1,397 conversations using regex + semantic similarity against 6 idea signature vectors.",
+      "inputs": ["memory_db.json", "results.db"],
+      "outputs": ["excavated_ideas_raw.json"],
+      "trigger": "manual (python agent_excavator.py) or via run_agents.py",
+      "autonomy_level": 2,
+      "dependencies": ["model_cache.py", "sentence-transformers", "numpy"]
+    },
+
+    {
+      "name": "agent_deduplicator",
+      "type": "agent",
+      "file_paths": ["services/cognitive-sensor/agent_deduplicator.py"],
+      "purpose": "Merges duplicate ideas via pairwise cosine similarity with union-find clustering (threshold 0.75).",
+      "inputs": ["excavated_ideas_raw.json"],
+      "outputs": ["ideas_deduplicated.json"],
+      "trigger": "manual or via run_agents.py (after excavator)",
+      "autonomy_level": 2,
+      "dependencies": ["model_cache.py", "numpy"]
+    },
+
+    {
+      "name": "agent_classifier",
+      "type": "agent",
+      "file_paths": ["services/cognitive-sensor/agent_classifier.py"],
+      "purpose": "Builds hierarchical idea structure with parent-child relationships, dependencies, status detection, and alignment scoring against behavioral profile.",
+      "inputs": ["ideas_deduplicated.json", "DEEP_PSYCHOLOGICAL_PROFILE.md"],
+      "outputs": ["ideas_classified.json"],
+      "trigger": "manual or via run_agents.py (after deduplicator)",
+      "autonomy_level": 2,
+      "dependencies": ["model_cache.py", "numpy"]
+    },
+
+    {
+      "name": "agent_orchestrator",
+      "type": "agent",
+      "file_paths": ["services/cognitive-sensor/agent_orchestrator.py"],
+      "purpose": "Priority scoring engine: frequency(20%) + recency(20%) + alignment(25%) + feasibility(15%) + compounding(20%). Assigns tiers (Execute Now / Next Up / Backlog / Archive).",
+      "inputs": ["ideas_classified.json"],
+      "outputs": ["idea_registry.json"],
+      "trigger": "manual or via run_agents.py (after classifier)",
+      "autonomy_level": 2,
+      "dependencies": ["numpy"]
+    },
+
+    {
+      "name": "agent_reporter",
+      "type": "agent",
+      "file_paths": ["services/cognitive-sensor/agent_reporter.py"],
+      "purpose": "Generates human-readable IDEA_REGISTRY.md with executive summary, tier tables, dependency graphs, and skills gap analysis.",
+      "inputs": ["idea_registry.json"],
+      "outputs": ["IDEA_REGISTRY.md"],
+      "trigger": "manual or via run_agents.py (after orchestrator)",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "agent_classifier_convo",
+      "type": "agent",
+      "file_paths": ["services/cognitive-sensor/agent_classifier_convo.py"],
+      "purpose": "Tags every conversation with domain (personal/business/technical/processing/execution/learning), outcome (produced/resolved/looped/abandoned), emotional trajectory, and intensity using 60% semantic + 40% keyword hybrid scoring.",
+      "inputs": ["memory_db.json", "results.db"],
+      "outputs": ["conversation_classifications.json"],
+      "trigger": "manual or via run_audit.py / run_weekly.py",
+      "autonomy_level": 2,
+      "dependencies": ["model_cache.py", "sentence-transformers", "numpy"]
+    },
+
+    {
+      "name": "agent_synthesizer",
+      "type": "agent",
+      "file_paths": ["services/cognitive-sensor/agent_synthesizer.py"],
+      "purpose": "Reads all analysis files and cross-references data to answer 30 behavioral audit questions across 6 layers (Identity, Power, Execution, Decision, Emotional, Opportunity).",
+      "inputs": [
+        "DEEP_PSYCHOLOGICAL_PROFILE.md", "EMOTIONAL_PROFILE.md", "GROWTH_REPORT.md",
+        "THE_CYCLE.md", "DERAILMENT_FACTORS.md", "CONVERSATION_PATTERNS.md",
+        "LANGUAGE_LOOPS.md", "BELIEF_RULES.md",
+        "conversation_classifications.json", "idea_registry.json",
+        "completion_stats.json", "cognitive_state.json"
+      ],
+      "outputs": ["BEHAVIORAL_AUDIT.md"],
+      "trigger": "manual or via run_audit.py / run_weekly.py",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "governor_daily",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/governor_daily.py"],
+      "purpose": "Daily governance pipeline: computes operating mode (CLOSURE/MAINTENANCE/BUILD), detects lane violations, generates daily brief with binary decisions.",
+      "inputs": ["cognitive_state.json", "idea_registry.json", "conversation_classifications.json", "completion_stats.json", "atlas_config.py"],
+      "outputs": ["daily_brief.md", "governance_state.json"],
+      "trigger": "manual or via run_daily.py",
+      "autonomy_level": 1,
+      "dependencies": ["atlas_config.py"]
+    },
+
+    {
+      "name": "governor_weekly",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/governor_weekly.py"],
+      "purpose": "Weekly governance pipeline: reality check (where time went), lane progress, autonomy proposals, lane integrity audit, stop list, and 3-5 binary decisions.",
+      "inputs": ["governance_state.json", "idea_registry.json", "conversation_classifications.json", "completion_stats.json", "atlas_config.py"],
+      "outputs": ["weekly_governor_packet.md"],
+      "trigger": "manual or via run_weekly.py",
+      "autonomy_level": 1,
+      "dependencies": ["atlas_config.py"]
+    },
+
+    {
+      "name": "loops",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/loops.py"],
+      "purpose": "Detects open cognitive loops from conversations by scoring intent vs completion signals. Produces ranked list of unresolved loops.",
+      "inputs": ["results.db (messages, topics tables)"],
+      "outputs": ["loops_latest.json"],
+      "trigger": "manual or via refresh.py / run_daily.py",
+      "autonomy_level": 2,
+      "dependencies": ["results.db"]
+    },
+
+    {
+      "name": "completion_stats",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/completion_stats.py"],
+      "purpose": "Computes closure/archive/decision statistics from loop_decisions table. Weekly and lifetime breakdowns.",
+      "inputs": ["results.db (loop_decisions table)"],
+      "outputs": ["completion_stats.json"],
+      "trigger": "manual or via refresh.py / run_daily.py",
+      "autonomy_level": 2,
+      "dependencies": ["results.db"]
+    },
+
+    {
+      "name": "export_cognitive_state",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/export_cognitive_state.py"],
+      "purpose": "Calls cognitive_api.py to assemble full cognitive state, validates against CognitiveMetricsComputed schema, writes output.",
+      "inputs": ["cognitive_api.py output", "CognitiveMetricsComputed.json schema"],
+      "outputs": ["cognitive_state.json"],
+      "trigger": "manual or via refresh.py / run_daily.py",
+      "autonomy_level": 2,
+      "dependencies": ["cognitive_api.py", "validate.py"]
+    },
+
+    {
+      "name": "cognitive_api",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/cognitive_api.py"],
+      "purpose": "Core data assembly layer. Queries results.db for state, open loops, closure backlog, topics, and outputs structured JSON to stdout.",
+      "inputs": ["results.db", "loops_latest.json"],
+      "outputs": ["stdout JSON (consumed by export_cognitive_state.py)"],
+      "trigger": "called by export_cognitive_state.py",
+      "autonomy_level": 2,
+      "dependencies": ["results.db"]
+    },
+
+    {
+      "name": "route_today",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/route_today.py"],
+      "purpose": "Determines daily operating mode (CLOSURE/MAINTENANCE/BUILD) from closure ratio and open loop count. Outputs routing directive.",
+      "inputs": ["cognitive_state.json"],
+      "outputs": ["stdout (mode, reason, action)"],
+      "trigger": "manual or via refresh.py / run_daily.py",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "export_daily_payload",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/export_daily_payload.py"],
+      "purpose": "Builds CycleBoard input payload from cognitive state. Validates against DailyPayload.v1 schema.",
+      "inputs": ["cognitive_state.json", "DailyPayload.v1.json schema"],
+      "outputs": ["daily_payload.json"],
+      "trigger": "manual or via refresh.py / run_daily.py",
+      "autonomy_level": 2,
+      "dependencies": ["validate.py"]
+    },
+
+    {
+      "name": "wire_cycleboard",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/wire_cycleboard.py"],
+      "purpose": "Copies cognitive_state.json into cycleboard directory so CycleBoard HTML can fetch it.",
+      "inputs": ["cognitive_state.json", "cycleboard_app3.html"],
+      "outputs": ["cycleboard/brain/cognitive_state.json", "cycleboard/index.html"],
+      "trigger": "manual or via refresh.py / run_daily.py",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "reporter",
+      "type": "report",
+      "file_paths": ["services/cognitive-sensor/reporter.py"],
+      "purpose": "Appends timestamped radar output (rising/falling topics) to STATE_HISTORY.md.",
+      "inputs": ["radar.py output"],
+      "outputs": ["STATE_HISTORY.md (appended)"],
+      "trigger": "manual or via refresh.py / run_daily.py",
+      "autonomy_level": 2,
+      "dependencies": ["radar.py"]
+    },
+
+    {
+      "name": "radar",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/radar.py"],
+      "purpose": "Computes rising and falling topic trends by comparing last 90 days vs previous 90 days of topic weights.",
+      "inputs": ["results.db (topics, convo_time tables)"],
+      "outputs": ["stdout (rising/falling topics)"],
+      "trigger": "called by reporter.py",
+      "autonomy_level": 2,
+      "dependencies": ["results.db"]
+    },
+
+    {
+      "name": "resurfacer",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/resurfacer.py"],
+      "purpose": "Resurfaces the oldest high-score open loop with its original conversation context for review.",
+      "inputs": ["loops_latest.json", "results.db (loop_decisions, messages)"],
+      "outputs": ["RESURFACER_LOG.md (appended)"],
+      "trigger": "manual",
+      "autonomy_level": 0,
+      "dependencies": ["results.db"]
+    },
+
+    {
+      "name": "build_dashboard",
+      "type": "report",
+      "file_paths": ["services/cognitive-sensor/build_dashboard.py"],
+      "purpose": "Generates dashboard.html from STATE_HISTORY.md, loops, completion stats, and loop decisions.",
+      "inputs": ["STATE_HISTORY.md", "loops_latest.json", "completion_stats.json", "results.db"],
+      "outputs": ["dashboard.html"],
+      "trigger": "manual or via refresh.py / run_daily.py",
+      "autonomy_level": 2,
+      "dependencies": ["results.db"]
+    },
+
+    {
+      "name": "build_projection",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/build_projection.py"],
+      "purpose": "Combines cognitive_state.json with daily routing into a single stamped projection artifact for delta-kernel ingestion.",
+      "inputs": ["cognitive_state.json"],
+      "outputs": ["data/projections/today.json"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": ["validate.py"]
+    },
+
+    {
+      "name": "push_to_delta",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/push_to_delta.py"],
+      "purpose": "POSTs today.json projection to delta-kernel API at localhost:3001/api/ingest/cognitive. Bridge between Python and TypeScript layers.",
+      "inputs": ["data/projections/today.json"],
+      "outputs": ["HTTP POST to delta-kernel API"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": ["delta-kernel API running on :3001"]
+    },
+
+    {
+      "name": "inject_directive",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/inject_directive.py"],
+      "purpose": "Injects cognitive routing directive banner (mode, build_allowed, primary action) into CycleBoard HTML.",
+      "inputs": ["cycleboard_app3.html"],
+      "outputs": ["cycleboard/cycleboard_cognitive.html"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "profile_report",
+      "type": "report",
+      "file_paths": ["services/cognitive-sensor/profile_report.py"],
+      "purpose": "Generates deep psychological profile from all conversations. Extracts identity patterns, recurring narratives, values, wounds.",
+      "inputs": ["memory_db.json"],
+      "outputs": ["DEEP_PSYCHOLOGICAL_PROFILE.md"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "decision_engine",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/decision_engine.py"],
+      "purpose": "Analyzes intent/resolution/stall/acceleration patterns across all conversations. Computes decision latency and phase distributions.",
+      "inputs": ["memory_db.json"],
+      "outputs": ["DECISION_ENGINE.md"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "belief_core",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/belief_core.py"],
+      "purpose": "Extracts 'I am', 'I can', 'I always', 'I never' belief patterns from conversations with frequency counts.",
+      "inputs": ["memory_db.json"],
+      "outputs": ["BELIEF_CORE.md"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "language_loops",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/language_loops.py"],
+      "purpose": "N-gram analysis of conversation patterns to detect recurring language loops and verbal habits.",
+      "inputs": ["memory_db.json"],
+      "outputs": ["LANGUAGE_LOOPS.md"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "semantic_loops",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/semantic_loops.py"],
+      "purpose": "Semantic clustering and loop detection using embeddings. Identifies conversations that revisit the same themes.",
+      "inputs": ["results.db (embeddings)", "memory_db.json"],
+      "outputs": ["semantic_loops.json"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": ["model_cache.py", "numpy", "scikit-learn"]
+    },
+
+    {
+      "name": "init_embeddings",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/init_embeddings.py"],
+      "purpose": "Vectorizes all conversations using sentence-transformers (all-MiniLM-L6-v2, 384-dim). Bulk initialization of embeddings table in results.db.",
+      "inputs": ["memory_db.json"],
+      "outputs": ["results.db (embeddings table)"],
+      "trigger": "manual (one-time setup)",
+      "autonomy_level": 2,
+      "dependencies": ["model_cache.py", "sentence-transformers"]
+    },
+
+    {
+      "name": "init_topics",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/init_topics.py"],
+      "purpose": "Discovers topics via K-means clustering (10 clusters default) on embeddings. Populates topics table.",
+      "inputs": ["results.db (embeddings table)"],
+      "outputs": ["results.db (topics table)", "topic_clusters.json"],
+      "trigger": "manual (one-time setup)",
+      "autonomy_level": 2,
+      "dependencies": ["scikit-learn", "numpy"]
+    },
+
+    {
+      "name": "init_convo_time",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/init_convo_time.py"],
+      "purpose": "Extracts and normalizes conversation timestamps. Populates convo_time table in results.db.",
+      "inputs": ["memory_db.json"],
+      "outputs": ["results.db (convo_time table)"],
+      "trigger": "manual (one-time setup)",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "init_results_db",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/init_results_db.py"],
+      "purpose": "Creates SQLite schema for results.db (messages, topics, convo_time, loop_decisions tables).",
+      "inputs": ["memory_db.json"],
+      "outputs": ["results.db"],
+      "trigger": "manual (one-time setup)",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "init_titles",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/init_titles.py"],
+      "purpose": "Extracts conversation titles and maps convo_id to title for lookups.",
+      "inputs": ["memory_db.json"],
+      "outputs": ["results.db (titles)"],
+      "trigger": "manual (one-time setup)",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "cluster_business_topics",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/cluster_business_topics.py"],
+      "purpose": "Clusters business/wealth-related conversations using embeddings and K-means.",
+      "inputs": ["results.db (embeddings)", "memory_db.json"],
+      "outputs": ["business_wealth_clusters.json", "BUSINESS_IDEAS_CLUSTERED.md"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": ["model_cache.py", "scikit-learn", "numpy"]
+    },
+
+    {
+      "name": "validate",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/validate.py"],
+      "purpose": "JSON Schema contract validation engine. require_valid() enforces data contracts before writes.",
+      "inputs": ["contracts/schemas/*.json", "any JSON data"],
+      "outputs": ["validation pass/fail"],
+      "trigger": "called by other scripts",
+      "autonomy_level": 2,
+      "dependencies": ["contracts/schemas/"]
+    },
+
+    {
+      "name": "model_cache",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/model_cache.py"],
+      "purpose": "Singleton cache for sentence-transformers model (all-MiniLM-L6-v2). Prevents reloading across pipeline steps.",
+      "inputs": [],
+      "outputs": ["in-memory model instance"],
+      "trigger": "imported by agents",
+      "autonomy_level": 2,
+      "dependencies": ["sentence-transformers"]
+    },
+
+    {
+      "name": "atlas_config",
+      "type": "script",
+      "file_paths": ["services/cognitive-sensor/atlas_config.py"],
+      "purpose": "Single source of truth for all governance rules: North Star, targets, behavioral kernel, autonomy levels, agent registry, active lanes, routing thresholds.",
+      "inputs": [],
+      "outputs": ["Python constants consumed by governor pipelines"],
+      "trigger": "imported by governor_daily.py, governor_weekly.py",
+      "autonomy_level": 2,
+      "dependencies": []
+    },
+
+    {
+      "name": "refresh",
+      "type": "orchestrator",
+      "file_paths": ["services/cognitive-sensor/refresh.py"],
+      "purpose": "Master refresh pipeline. Runs 8 scripts in sequence: loops -> completion_stats -> export_cognitive_state -> route_today -> export_daily_payload -> wire_cycleboard -> reporter -> build_dashboard.",
+      "inputs": ["all upstream data"],
+      "outputs": ["all downstream artifacts refreshed"],
+      "trigger": "manual or via governance_daemon (hourly cron)",
+      "autonomy_level": 2,
+      "dependencies": ["all pipeline scripts"]
+    },
+
+    {
+      "name": "run_agents",
+      "type": "orchestrator",
+      "file_paths": ["services/cognitive-sensor/run_agents.py"],
+      "purpose": "Orchestrates full 5-agent idea pipeline: excavator -> deduplicator -> classifier -> orchestrator -> reporter.",
+      "inputs": ["memory_db.json", "results.db"],
+      "outputs": ["idea_registry.json", "IDEA_REGISTRY.md"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": ["all 5 agent scripts"]
+    },
+
+    {
+      "name": "run_audit",
+      "type": "orchestrator",
+      "file_paths": ["services/cognitive-sensor/run_audit.py"],
+      "purpose": "Orchestrates behavioral audit pipeline: conversation classifier -> synthesizer.",
+      "inputs": ["memory_db.json", "results.db", "all analysis .md files"],
+      "outputs": ["conversation_classifications.json", "BEHAVIORAL_AUDIT.md"],
+      "trigger": "manual or via run_weekly.py",
+      "autonomy_level": 2,
+      "dependencies": ["agent_classifier_convo.py", "agent_synthesizer.py"]
+    },
+
+    {
+      "name": "run_daily",
+      "type": "orchestrator",
+      "file_paths": ["services/cognitive-sensor/run_daily.py"],
+      "purpose": "Daily loop orchestrator: runs full refresh pipeline, then governor_daily for brief and state generation.",
+      "inputs": ["all upstream data"],
+      "outputs": ["daily_brief.md", "governance_state.json", "all refresh artifacts"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": ["refresh.py pipeline", "governor_daily.py"]
+    },
+
+    {
+      "name": "run_weekly",
+      "type": "orchestrator",
+      "file_paths": ["services/cognitive-sensor/run_weekly.py"],
+      "purpose": "Weekly loop orchestrator: runs daily loop + behavioral audit + governor_weekly for weekly packet.",
+      "inputs": ["all upstream data"],
+      "outputs": ["weekly_governor_packet.md", "BEHAVIORAL_AUDIT.md", "daily_brief.md"],
+      "trigger": "manual",
+      "autonomy_level": 2,
+      "dependencies": ["run_daily.py", "run_audit.py", "governor_weekly.py"]
+    },
+
+    {
+      "name": "governance_daemon",
+      "type": "cron",
+      "file_paths": ["services/delta-kernel/src/governance/governance_daemon.ts"],
+      "purpose": "Autonomous node-cron scheduler running inside delta-kernel API server. Manages 6 scheduled jobs for continuous system operation.",
+      "inputs": ["cognitive_state.json", "closures.json", "system_state entity"],
+      "outputs": ["system_state entity (delta-fabric)", "timeline events"],
+      "trigger": "auto-starts with delta-kernel API server (npm run api)",
+      "autonomy_level": 2,
+      "dependencies": ["node-cron", "delta-fabric storage", "refresh.py"],
+      "cron_schedules": {
+        "heartbeat": "*/5 * * * * (every 5 min)",
+        "refresh": "0 * * * * (every hour)",
+        "day_start": "0 6 * * * (06:00 daily)",
+        "day_end": "0 22 * * * (22:00 daily)",
+        "mode_recalc": "*/15 * * * * (every 15 min)",
+        "work_queue": "*/1 * * * * (every minute)"
+      }
+    },
+
+    {
+      "name": "work_controller",
+      "type": "script",
+      "file_paths": ["services/delta-kernel/src/core/work-controller.ts"],
+      "purpose": "Universal work admission controller. Three primitives: request() (ask permission), complete() (report done), status() (query state). All work — human and machine — passes through this gate.",
+      "inputs": ["work requests from CLI, API, or daemon"],
+      "outputs": ["work_ledger.json", "admission decisions (APPROVED/QUEUED/DENIED)"],
+      "trigger": "called by governance_daemon (every minute) and API endpoints",
+      "autonomy_level": 2,
+      "dependencies": ["timeline-logger.ts"]
+    },
+
+    {
+      "name": "delta_kernel_api",
+      "type": "script",
+      "file_paths": ["services/delta-kernel/src/api/server.ts"],
+      "purpose": "Express API server (port 3001) serving delta-fabric storage, governance daemon, work controller, and timeline endpoints. Auto-starts governance daemon on boot.",
+      "inputs": ["HTTP requests", "cognitive projections via /api/ingest/cognitive"],
+      "outputs": ["JSON API responses", "delta-fabric state mutations"],
+      "trigger": "npm run api",
+      "autonomy_level": 2,
+      "dependencies": ["express", "node-cron", "governance_daemon.ts", "work-controller.ts"]
+    },
+
+    {
+      "name": "idea_dashboard",
+      "type": "report",
+      "file_paths": ["services/cognitive-sensor/idea_dashboard.html"],
+      "purpose": "Interactive HTML dashboard for browsing idea registry tiers, vision clusters, and priority scores.",
+      "inputs": ["idea_registry.json (fetched client-side)"],
+      "outputs": ["browser visualization"],
+      "trigger": "open in browser (served via HTTP)",
+      "autonomy_level": 0,
+      "dependencies": ["idea_registry.json"]
+    },
+
+    {
+      "name": "dashboard",
+      "type": "report",
+      "file_paths": ["services/cognitive-sensor/dashboard.html"],
+      "purpose": "Main cognitive dashboard showing state history, open loops, completion stats, and loop decisions.",
+      "inputs": ["generated by build_dashboard.py"],
+      "outputs": ["browser visualization"],
+      "trigger": "open in browser",
+      "autonomy_level": 0,
+      "dependencies": ["build_dashboard.py"]
+    },
+
+    {
+      "name": "cycleboard",
+      "type": "report",
+      "file_paths": [
+        "services/cognitive-sensor/cycleboard_app3.html",
+        "services/cognitive-sensor/cycleboard/index.html",
+        "services/cognitive-sensor/cycleboard/cycleboard_cognitive.html"
+      ],
+      "purpose": "Daily task management UI with cognitive routing integration. Displays mode, build_allowed, primary action, and open loops.",
+      "inputs": ["daily_payload.json", "cognitive_state.json"],
+      "outputs": ["browser visualization"],
+      "trigger": "open in browser",
+      "autonomy_level": 0,
+      "dependencies": ["wire_cycleboard.py", "inject_directive.py"]
+    },
+
+    {
+      "name": "contract_schemas",
+      "type": "other",
+      "file_paths": [
+        "contracts/schemas/DailyPayload.v1.json",
+        "contracts/schemas/IdeaRegistry.v1.json",
+        "contracts/schemas/ExcavatedIdeas.v1.json",
+        "contracts/schemas/Closures.v1.json",
+        "contracts/schemas/WorkLedger.v1.json",
+        "contracts/schemas/TimelineEvents.v1.json",
+        "contracts/schemas/CognitiveMetricsComputed.json",
+        "contracts/schemas/DirectiveProposed.json"
+      ],
+      "purpose": "JSON Schema v7 contracts enforcing data shape validation between pipeline stages.",
+      "inputs": [],
+      "outputs": ["validation rules consumed by validate.py"],
+      "trigger": "referenced at write-time by scripts using require_valid()",
+      "autonomy_level": 2,
+      "dependencies": []
+    }
+  ],
+
+  "capability_groups": {
+
+    "cognitive": {
+      "description": "Analysis, summarization, profiling — understanding what happened and why",
+      "components": [
+        {
+          "name": "agent_classifier_convo",
+          "role": "Tags every conversation by domain, outcome, trajectory, intensity"
+        },
+        {
+          "name": "agent_synthesizer",
+          "role": "Cross-references all data into 30-question behavioral audit"
+        },
+        {
+          "name": "profile_report",
+          "role": "Deep psychological profiling from raw conversations"
+        },
+        {
+          "name": "decision_engine",
+          "role": "Intent/resolution/stall/acceleration pattern analysis"
+        },
+        {
+          "name": "belief_core",
+          "role": "Identity belief extraction (I am, I can, I always, I never)"
+        },
+        {
+          "name": "language_loops",
+          "role": "N-gram verbal habit detection"
+        },
+        {
+          "name": "semantic_loops",
+          "role": "Semantic loop detection via embedding similarity"
+        },
+        {
+          "name": "loops",
+          "role": "Open loop detection and lifecycle scoring"
+        },
+        {
+          "name": "radar",
+          "role": "Rising/falling topic trend detection (90-day window)"
+        },
+        {
+          "name": "init_embeddings",
+          "role": "Vectorization infrastructure (384-dim embeddings)"
+        },
+        {
+          "name": "init_topics",
+          "role": "Topic discovery via K-means clustering"
+        }
+      ]
+    },
+
+    "operational": {
+      "description": "Tasks, plans, routing, backlog management — what to do and when",
+      "components": [
+        {
+          "name": "governor_daily",
+          "role": "Daily operating mode + binary decisions + lane violation detection"
+        },
+        {
+          "name": "governor_weekly",
+          "role": "Weekly reality check + lane progress + stop list + autonomy proposals"
+        },
+        {
+          "name": "route_today",
+          "role": "Daily mode routing (CLOSURE/MAINTENANCE/BUILD)"
+        },
+        {
+          "name": "export_daily_payload",
+          "role": "CycleBoard input payload generation"
+        },
+        {
+          "name": "resurfacer",
+          "role": "Resurfaces oldest unresolved loop for review"
+        },
+        {
+          "name": "completion_stats",
+          "role": "Closure/archive/decision statistics tracking"
+        },
+        {
+          "name": "governance_daemon",
+          "role": "Autonomous cron scheduler (heartbeat, refresh, day boundaries, mode recalc, work queue)"
+        },
+        {
+          "name": "work_controller",
+          "role": "Universal work admission gate (request/complete/status)"
+        },
+        {
+          "name": "refresh",
+          "role": "Master pipeline orchestrator (8-step daily refresh)"
+        },
+        {
+          "name": "run_daily",
+          "role": "Daily loop orchestrator (refresh + governor)"
+        },
+        {
+          "name": "run_weekly",
+          "role": "Weekly loop orchestrator (daily + audit + packet)"
+        },
+        {
+          "name": "atlas_config",
+          "role": "Governance rules: North Star, targets, autonomy levels, lanes, routing"
+        },
+        {
+          "name": "wire_cycleboard",
+          "role": "Wires cognitive state into CycleBoard UI"
+        },
+        {
+          "name": "inject_directive",
+          "role": "Injects mode banner into CycleBoard HTML"
+        }
+      ]
+    },
+
+    "financial": {
+      "description": "Offers, revenue, tracking — currently the thinnest layer",
+      "components": [
+        {
+          "name": "cluster_business_topics",
+          "role": "Clusters business/wealth conversation themes"
+        }
+      ],
+      "gaps": [
+        "No revenue tracking system",
+        "No client pipeline tracker",
+        "No offer/pricing engine",
+        "No financial goal monitoring"
+      ]
+    },
+
+    "strategic": {
+      "description": "Patterns, opportunity scanning, idea management — what to bet on",
+      "components": [
+        {
+          "name": "agent_excavator",
+          "role": "Mines all conversations for ideas/projects/plans"
+        },
+        {
+          "name": "agent_deduplicator",
+          "role": "Merges 527 raw ideas into canonical entries"
+        },
+        {
+          "name": "agent_classifier",
+          "role": "Builds idea hierarchy with alignment scoring"
+        },
+        {
+          "name": "agent_orchestrator",
+          "role": "Priority scoring and tier assignment"
+        },
+        {
+          "name": "agent_reporter",
+          "role": "Human-readable idea registry with dependency graph"
+        },
+        {
+          "name": "run_agents",
+          "role": "Full idea intelligence pipeline orchestrator"
+        }
+      ]
+    }
+  },
+
+  "registered_but_not_built": [
+    {
+      "name": "backlog_maintainer",
+      "registered_in": "atlas_config.py",
+      "purpose": "Merge duplicates, kill low-score items, enforce 2-lane integrity",
+      "autonomy_level": 2,
+      "status": "registered, no implementation file"
+    },
+    {
+      "name": "idea_parker",
+      "registered_in": "atlas_config.py",
+      "purpose": "Auto-park new ideas not aligned with active lanes",
+      "autonomy_level": 2,
+      "status": "registered, no implementation file"
+    }
+  ],
+
+  "data_flow": {
+    "source": "memory_db.json (1,397 conversations, ~135MB)",
+    "database": "results.db (SQLite: messages, topics, convo_time, embeddings, loop_decisions)",
+    "embedding_model": "all-MiniLM-L6-v2 (384 dimensions)",
+    "scoring_pattern": "60% semantic + 40% keyword (consistent across all agents)",
+    "validation": "JSON Schema v7 via validate.py require_valid()",
+    "bridge": "push_to_delta.py POSTs projections to delta-kernel API on :3001"
+  }
+}

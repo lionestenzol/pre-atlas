@@ -9,11 +9,10 @@
  * No AI. No heuristics. No drift.
  */
 
-import { Mode, SystemStateData } from './types';
+import { Mode, SystemStateData, Bucket, LifeSignals } from './types';
 
-// === BUCKET TYPES ===
-
-export type Bucket = 'LOW' | 'OK' | 'HIGH';
+// Re-export Bucket from types-core (canonical definition)
+export type { Bucket };
 
 export interface BucketedSignals {
   sleep_hours: Bucket;
@@ -96,7 +95,7 @@ const GLOBAL_OVERRIDES: RoutingRule[] = [
   {
     // open_loops LOW means ≥4 loops (bad) → need to close them
     condition: (b) => b.open_loops === 'LOW',
-    next: 'CLOSE_LOOPS',
+    next: 'CLOSURE',
   },
 ];
 
@@ -105,11 +104,11 @@ const MODE_TRANSITIONS: Record<Mode, RoutingRule[]> = {
   RECOVER: [
     {
       condition: (b) => b.sleep_hours === 'OK' || b.sleep_hours === 'HIGH',
-      next: 'CLOSE_LOOPS',
+      next: 'CLOSURE',
     },
   ],
 
-  CLOSE_LOOPS: [
+  CLOSURE: [
     {
       condition: (b) => b.open_loops === 'OK' || b.open_loops === 'HIGH',
       next: 'BUILD',
@@ -132,6 +131,8 @@ const MODE_TRANSITIONS: Record<Mode, RoutingRule[]> = {
     },
   ],
 
+  MAINTENANCE: [],
+
   SCALE: [
     {
       condition: (b) => b.assets_shipped === 'LOW',
@@ -139,7 +140,7 @@ const MODE_TRANSITIONS: Record<Mode, RoutingRule[]> = {
     },
     {
       condition: (b) => b.money_delta === 'LOW',
-      next: 'CLOSE_LOOPS',
+      next: 'CLOSURE',
     },
   ],
 };
@@ -189,7 +190,8 @@ export function route(
 
 export const MODE_ALLOWED_ACTIONS: Record<Mode, string[]> = {
   RECOVER: ['rest_tasks', 'health_actions', 'sleep', 'light_admin'],
-  CLOSE_LOOPS: ['finish_tasks', 'reply_messages', 'clean_queues'],
+  CLOSURE: ['finish_tasks', 'reply_messages', 'clean_queues'],
+  MAINTENANCE: ['light_admin', 'health_actions', 'finish_tasks'],
   BUILD: ['draft_assets', 'plans', 'systems'],
   COMPOUND: ['extend_assets', 'marketing', 'leverage'],
   SCALE: ['hiring', 'delegation', 'infrastructure', 'funding'],
@@ -200,4 +202,147 @@ export const MODE_ALLOWED_ACTIONS: Record<Mode, string[]> = {
  */
 export function isActionAllowed(mode: Mode, action: string): boolean {
   return MODE_ALLOWED_ACTIONS[mode].includes(action);
+}
+
+// === MODE UTILITIES ===
+
+export const MODE_DESCRIPTIONS: Record<Mode, string> = {
+  RECOVER: 'Rest and restore energy. Only recovery actions available.',
+  CLOSURE: 'Clear pending items and reduce mental load.',
+  MAINTENANCE: 'System maintenance mode. Light admin and health actions.',
+  BUILD: 'Create new work. Full capabilities enabled.',
+  COMPOUND: 'Extend and improve existing work.',
+  SCALE: 'Delegate, automate, and multiply impact.',
+};
+
+export const MODE_ORDER: Mode[] = ['RECOVER', 'CLOSURE', 'MAINTENANCE', 'BUILD', 'COMPOUND', 'SCALE'];
+
+export function getModeIndex(mode: Mode): number {
+  return MODE_ORDER.indexOf(mode);
+}
+
+export function isHigherMode(a: Mode, b: Mode): boolean {
+  return getModeIndex(a) > getModeIndex(b);
+}
+
+// === LIFE SIGNAL BUCKET FUNCTIONS ===
+
+export function bucketEnergyLevel(level: number): Bucket {
+  if (level < 30) return 'LOW';   // Depleted — block high-effort modes
+  if (level >= 70) return 'HIGH'; // Peak — all modes available
+  return 'OK';
+}
+
+export function bucketFinancialPosition(runway_months: number): Bucket {
+  if (runway_months < 2) return 'LOW';   // Critical — force closure
+  if (runway_months >= 6) return 'HIGH'; // Secure — growth unlocked
+  return 'OK';
+}
+
+export function bucketSkillsUtilization(pct: number): Bucket {
+  if (pct < 40) return 'LOW';   // Working in weakness areas
+  if (pct >= 70) return 'HIGH'; // Leveraging strengths
+  return 'OK';
+}
+
+export function bucketNetworkActive(score: number): Bucket {
+  if (score < 20) return 'LOW';   // Isolated
+  if (score >= 60) return 'HIGH'; // Well-connected
+  return 'OK';
+}
+
+// === CONSTRAINT ENGINE ===
+// Runs AFTER core Markov routing. Keeps the routing kernel pure.
+// Constraints can only downgrade mode, never upgrade.
+
+interface RoutingConstraint {
+  id: string;
+  applies: (mode: Mode, life: LifeSignals) => boolean;
+  enforces: Mode;
+  reason: string;
+}
+
+const LIFE_CONSTRAINTS: RoutingConstraint[] = [
+  {
+    id: 'energy_gate',
+    applies: (mode, life) =>
+      bucketEnergyLevel(life.energy.energy_level) === 'LOW' &&
+      getModeIndex(mode) > getModeIndex('MAINTENANCE'),
+    enforces: 'MAINTENANCE',
+    reason: 'Energy depleted — high-effort modes blocked until recovery',
+  },
+  {
+    id: 'burnout_gate',
+    applies: (mode, life) =>
+      life.energy.burnout_risk && mode !== 'RECOVER',
+    enforces: 'RECOVER',
+    reason: 'Burnout risk detected — forced recovery',
+  },
+  {
+    id: 'financial_crisis',
+    applies: (mode, life) =>
+      bucketFinancialPosition(life.finance.runway_months) === 'LOW' &&
+      mode !== 'CLOSURE' && mode !== 'RECOVER',
+    enforces: 'CLOSURE',
+    reason: 'Financial runway <2 months — focus on shipping revenue-generating work',
+  },
+  {
+    id: 'scale_requires_network',
+    applies: (mode, life) =>
+      mode === 'SCALE' &&
+      bucketNetworkActive(life.network.collaboration_score) === 'LOW',
+    enforces: 'BUILD',
+    reason: 'Cannot scale without collaboration infrastructure — build first',
+  },
+  {
+    id: 'red_alert_zone',
+    applies: (mode, life) =>
+      life.energy.red_alert_active &&
+      getModeIndex(mode) > getModeIndex('MAINTENANCE'),
+    enforces: 'MAINTENANCE',
+    reason: 'In predicted interference window — limit to maintenance only',
+  },
+];
+
+/**
+ * Apply life-signal constraints after core routing.
+ * Constraints can only downgrade mode, never upgrade.
+ * Returns the constrained mode and list of active constraints.
+ */
+export function applyLifeConstraints(
+  mode: Mode,
+  lifeSignals: LifeSignals | undefined
+): { mode: Mode; activeConstraints: Array<{ id: string; reason: string }> } {
+  if (!lifeSignals) {
+    return { mode, activeConstraints: [] };
+  }
+
+  const activeConstraints: Array<{ id: string; reason: string }> = [];
+  let constrainedMode = mode;
+
+  for (const constraint of LIFE_CONSTRAINTS) {
+    if (constraint.applies(constrainedMode, lifeSignals)) {
+      // Only downgrade, never upgrade
+      if (getModeIndex(constraint.enforces) < getModeIndex(constrainedMode)) {
+        constrainedMode = constraint.enforces;
+        activeConstraints.push({ id: constraint.id, reason: constraint.reason });
+      }
+    }
+  }
+
+  return { mode: constrainedMode, activeConstraints };
+}
+
+/**
+ * Full routing step with life-signal constraints.
+ * Core routing → constraint engine → final mode.
+ */
+export function routeWithConstraints(
+  currentMode: Mode,
+  signals: SystemStateData['signals'],
+  lifeSignals?: LifeSignals,
+  config: RoutingConfig = DEFAULT_CONFIG
+): { mode: Mode; activeConstraints: Array<{ id: string; reason: string }> } {
+  const coreMode = route(currentMode, signals, config);
+  return applyLifeConstraints(coreMode, lifeSignals);
 }

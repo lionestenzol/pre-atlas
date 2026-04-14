@@ -1,0 +1,624 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-09T14:14:11.602909+00:00",
+  "decisions": [
+    {
+      "decision_id": "d_fb6c29069653",
+      "type": "close_loop",
+      "confidence": 0.95,
+      "action": "ARCHIVE loop: Fear of Success Cycle",
+      "rationale": "ARCHIVE recommendation for 'Fear of Success Cycle'. drift=4, energy=50",
+      "outcome": "escalated",
+      "created_at": "2026-04-08T23:28:37.214371+00:00",
+      "approved_at": null,
+      "context": {
+        "convo_id": "986",
+        "decision_type": "ARCHIVE",
+        "lane_critical": false
+      }
+    },
+    {
+      "decision_id": "d_161b8c0a076d",
+      "type": "adjust_priority",
+      "confidence": 0.7,
+      "action": "Deprioritize: Feel Like / Don Know / Like Just (skill domain already strong at 96)",
+      "rationale": "skill domain at 96/100 — diminishing returns. Redirect effort to weaker domains",
+      "outcome": "escalated",
+      "created_at": "2026-04-08T23:28:37.214371+00:00",
+      "approved_at": null,
+      "context": {
+        "domain": "skill",
+        "domain_score": 95.68,
+        "cluster_label": "Feel Like / Don Know / Like Just",
+        "direction": "demote"
+      }
+    },
+    {
+      "decision_id": "d_08da04cabdbf",
+      "type": "execute_directive",
+      "confidence": 0.8,
+      "action": "Execute 3 work blocks (90min build minimum)",
+      "rationale": "Energy=50, drift=4. Needs review",
+      "outcome": "escalated",
+      "created_at": "2026-04-08T23:28:37.214371+00:00",
+      "approved_at": null,
+      "context": {
+        "energy": 50,
+        "drift_score": 4,
+        "daily_blocks": 3
+      }
+    },
+    {
+      "decision_id": "d_c5b791956057",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Code to Numeric Logic' (priority=0.59, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.59 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-08T23:28:37.214371+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Code to Numeric Logic",
+        "priority": 0.588,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_d99a6c060e96",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'SaaS Market Growth Trends' (priority=0.53, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.53 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-08T23:28:37.214371+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "SaaS Market Growth Trends",
+        "priority": 0.533,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_153fc5fb4cc2",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Prompt Engineering Mastery' (priority=0.40, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.40 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-08T23:28:37.214371+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Prompt Engineering Mastery",
+        "priority": 0.4,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_14c6d8e373d7",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Business Model Breakdown' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-08T23:28:37.214371+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Business Model Breakdown",
+        "priority": 0.388,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_3d3896690f1c",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'ChatGPT o1 Overview' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-08T23:28:37.214371+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "ChatGPT o1 Overview",
+        "priority": 0.387,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_ec41103c87a8",
+      "type": "close_loop",
+      "confidence": 0.95,
+      "action": "ARCHIVE loop: Fear of Success Cycle",
+      "rationale": "ARCHIVE recommendation for 'Fear of Success Cycle'. drift=4, energy=50",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:12:53.007517+00:00",
+      "approved_at": null,
+      "context": {
+        "convo_id": "986",
+        "decision_type": "ARCHIVE",
+        "lane_critical": false
+      }
+    },
+    {
+      "decision_id": "d_e89832f89149",
+      "type": "adjust_priority",
+      "confidence": 0.7,
+      "action": "Deprioritize: Feel Like / Don Know / Like Just (skill domain already strong at 95)",
+      "rationale": "skill domain at 95/100 — diminishing returns. Redirect effort to weaker domains",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:12:53.007517+00:00",
+      "approved_at": null,
+      "context": {
+        "domain": "skill",
+        "domain_score": 95.03999999999999,
+        "cluster_label": "Feel Like / Don Know / Like Just",
+        "direction": "demote"
+      }
+    },
+    {
+      "decision_id": "d_ea33a7e37fb8",
+      "type": "execute_directive",
+      "confidence": 0.8,
+      "action": "Execute 3 work blocks (90min build minimum)",
+      "rationale": "Energy=50, drift=4. Needs review",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:12:53.007517+00:00",
+      "approved_at": null,
+      "context": {
+        "energy": 50,
+        "drift_score": 4,
+        "daily_blocks": 3
+      }
+    },
+    {
+      "decision_id": "d_5b65e161ef3c",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Code to Numeric Logic' (priority=0.59, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.59 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:12:53.007517+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Code to Numeric Logic",
+        "priority": 0.588,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_bdaea4f61346",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'SaaS Market Growth Trends' (priority=0.53, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.53 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:12:53.007517+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "SaaS Market Growth Trends",
+        "priority": 0.533,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_f574e19f89e9",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Prompt Engineering Mastery' (priority=0.40, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.40 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:12:53.007517+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Prompt Engineering Mastery",
+        "priority": 0.4,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_e2f360492521",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Business Model Breakdown' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:12:53.007517+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Business Model Breakdown",
+        "priority": 0.388,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_d0212921e673",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'ChatGPT o1 Overview' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:12:53.007517+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "ChatGPT o1 Overview",
+        "priority": 0.387,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_e097aca8c102",
+      "type": "close_loop",
+      "confidence": 0.95,
+      "action": "ARCHIVE loop: Fear of Success Cycle",
+      "rationale": "ARCHIVE recommendation for 'Fear of Success Cycle'. drift=4, energy=50",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:24:15.456641+00:00",
+      "approved_at": null,
+      "context": {
+        "convo_id": "986",
+        "decision_type": "ARCHIVE",
+        "lane_critical": false
+      }
+    },
+    {
+      "decision_id": "d_ec0f32d7ee7e",
+      "type": "adjust_priority",
+      "confidence": 0.7,
+      "action": "Deprioritize: Feel Like / Don Know / Like Just (skill domain already strong at 94)",
+      "rationale": "skill domain at 94/100 — diminishing returns. Redirect effort to weaker domains",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:24:15.456641+00:00",
+      "approved_at": null,
+      "context": {
+        "domain": "skill",
+        "domain_score": 94.44,
+        "cluster_label": "Feel Like / Don Know / Like Just",
+        "direction": "demote"
+      }
+    },
+    {
+      "decision_id": "d_fa1b894f3586",
+      "type": "execute_directive",
+      "confidence": 0.8,
+      "action": "Execute 3 work blocks (90min build minimum)",
+      "rationale": "Energy=50, drift=4. Needs review",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:24:15.456641+00:00",
+      "approved_at": null,
+      "context": {
+        "energy": 50,
+        "drift_score": 4,
+        "daily_blocks": 3
+      }
+    },
+    {
+      "decision_id": "d_28d96a450dd9",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Code to Numeric Logic' (priority=0.59, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.59 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:24:15.456641+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Code to Numeric Logic",
+        "priority": 0.588,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_942ba4fff70f",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'SaaS Market Growth Trends' (priority=0.53, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.53 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:24:15.456641+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "SaaS Market Growth Trends",
+        "priority": 0.533,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_684939e83fbb",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Prompt Engineering Mastery' (priority=0.40, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.40 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:24:15.456641+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Prompt Engineering Mastery",
+        "priority": 0.4,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_f01a5d48aecc",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Business Model Breakdown' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:24:15.456641+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Business Model Breakdown",
+        "priority": 0.388,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_4ef4fd53b9c7",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'ChatGPT o1 Overview' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:24:15.456641+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "ChatGPT o1 Overview",
+        "priority": 0.387,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_7f98c47e5221",
+      "type": "close_loop",
+      "confidence": 0.95,
+      "action": "ARCHIVE loop: Fear of Success Cycle",
+      "rationale": "ARCHIVE recommendation for 'Fear of Success Cycle'. drift=4, energy=50",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:41:08.908647+00:00",
+      "approved_at": null,
+      "context": {
+        "convo_id": "986",
+        "decision_type": "ARCHIVE",
+        "lane_critical": false
+      }
+    },
+    {
+      "decision_id": "d_d5a11deb0577",
+      "type": "adjust_priority",
+      "confidence": 0.7,
+      "action": "Deprioritize: Feel Like / Don Know / Like Just (skill domain already strong at 94)",
+      "rationale": "skill domain at 94/100 — diminishing returns. Redirect effort to weaker domains",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:41:08.908647+00:00",
+      "approved_at": null,
+      "context": {
+        "domain": "skill",
+        "domain_score": 93.88,
+        "cluster_label": "Feel Like / Don Know / Like Just",
+        "direction": "demote"
+      }
+    },
+    {
+      "decision_id": "d_c43994c18b54",
+      "type": "execute_directive",
+      "confidence": 0.8,
+      "action": "Execute 3 work blocks (90min build minimum)",
+      "rationale": "Energy=50, drift=4. Needs review",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:41:08.908647+00:00",
+      "approved_at": null,
+      "context": {
+        "energy": 50,
+        "drift_score": 4,
+        "daily_blocks": 3
+      }
+    },
+    {
+      "decision_id": "d_0b956789aed5",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Code to Numeric Logic' (priority=0.59, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.59 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:41:08.908647+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Code to Numeric Logic",
+        "priority": 0.588,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_c3ed0916acac",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'SaaS Market Growth Trends' (priority=0.53, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.53 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:41:08.908647+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "SaaS Market Growth Trends",
+        "priority": 0.533,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_3d0a6f1d5530",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Prompt Engineering Mastery' (priority=0.40, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.40 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:41:08.908647+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Prompt Engineering Mastery",
+        "priority": 0.4,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_aeea1f22ec5d",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Business Model Breakdown' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:41:08.908647+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Business Model Breakdown",
+        "priority": 0.388,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_5cd4c66f1e1f",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'ChatGPT o1 Overview' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T13:41:08.908647+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "ChatGPT o1 Overview",
+        "priority": 0.387,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_95d3fd359685",
+      "type": "close_loop",
+      "confidence": 0.95,
+      "action": "ARCHIVE loop: Fear of Success Cycle",
+      "rationale": "ARCHIVE recommendation for 'Fear of Success Cycle'. drift=4, energy=50",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T14:14:11.586463+00:00",
+      "approved_at": null,
+      "context": {
+        "convo_id": "986",
+        "decision_type": "ARCHIVE",
+        "lane_critical": false
+      }
+    },
+    {
+      "decision_id": "d_fea5abe2c249",
+      "type": "adjust_priority",
+      "confidence": 0.7,
+      "action": "Deprioritize: Feel Like / Don Know / Like Just (skill domain already strong at 93)",
+      "rationale": "skill domain at 93/100 — diminishing returns. Redirect effort to weaker domains",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T14:14:11.586463+00:00",
+      "approved_at": null,
+      "context": {
+        "domain": "skill",
+        "domain_score": 93.32,
+        "cluster_label": "Feel Like / Don Know / Like Just",
+        "direction": "demote"
+      }
+    },
+    {
+      "decision_id": "d_4a61cd289018",
+      "type": "execute_directive",
+      "confidence": 0.8,
+      "action": "Execute 3 work blocks (90min build minimum)",
+      "rationale": "Energy=50, drift=4. Needs review",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T14:14:11.586463+00:00",
+      "approved_at": null,
+      "context": {
+        "energy": 50,
+        "drift_score": 4,
+        "daily_blocks": 3
+      }
+    },
+    {
+      "decision_id": "d_4ea5c7effe31",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Code to Numeric Logic' (priority=0.59, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.59 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T14:14:11.586463+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Code to Numeric Logic",
+        "priority": 0.588,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_2b2ae90b28d2",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'SaaS Market Growth Trends' (priority=0.53, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.53 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T14:14:11.586463+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "SaaS Market Growth Trends",
+        "priority": 0.533,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_3592e48f5fb2",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Prompt Engineering Mastery' (priority=0.40, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.40 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T14:14:11.586463+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Prompt Engineering Mastery",
+        "priority": 0.4,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_c0dbf9876a47",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'Business Model Breakdown' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T14:14:11.586463+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "Business Model Breakdown",
+        "priority": 0.388,
+        "recommendation": "park"
+      }
+    },
+    {
+      "decision_id": "d_343c8692234b",
+      "type": "park_idea",
+      "confidence": 0.8,
+      "action": "Park 'ChatGPT o1 Overview' (priority=0.39, rec=park)",
+      "rationale": "Violates lane focus. Priority 0.39 below threshold",
+      "outcome": "escalated",
+      "created_at": "2026-04-09T14:14:11.586463+00:00",
+      "approved_at": null,
+      "context": {
+        "title": "ChatGPT o1 Overview",
+        "priority": 0.387,
+        "recommendation": "park"
+      }
+    }
+  ],
+  "stats": {
+    "decisions_made": 8,
+    "auto_executed": 0,
+    "escalated": 8,
+    "deferred": 0,
+    "avg_confidence": 0.81,
+    "decision_types": [
+      "close_loop",
+      "execute_directive",
+      "park_idea",
+      "adjust_priority"
+    ]
+  }
+}

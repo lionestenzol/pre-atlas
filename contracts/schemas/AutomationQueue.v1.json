@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AutomationQueue.v1",
+  "title": "Automation Queue",
+  "description": "Scheduled task queue with recurring, one-shot, and reminder support. Conditional execution based on energy and drift gates.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "tasks"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "tasks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/scheduled_task" }
+    },
+    "execution_history": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/execution_result" }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "scheduled_task": {
+      "type": "object",
+      "required": ["id", "type", "action", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["recurring", "one_shot", "reminder"] },
+        "action": { "type": "string", "description": "What to execute or remind about" },
+        "schedule": { "type": "string", "description": "Cron-like: daily, weekly, every_48h, or ISO datetime for one_shot" },
+        "last_run_at": { "type": ["string", "null"], "format": "date-time" },
+        "next_run_at": { "type": ["string", "null"], "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "paused", "completed"] },
+        "conditions": {
+          "type": "object",
+          "properties": {
+            "energy_min": { "type": "integer" },
+            "drift_max": { "type": "integer" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "execution_result": {
+      "type": "object",
+      "required": ["task_id", "run_at", "success"],
+      "properties": {
+        "task_id": { "type": "string" },
+        "run_at": { "type": "string", "format": "date-time" },
+        "success": { "type": "boolean" },
+        "output": { "type": "string" },
+        "duration_seconds": { "type": "number" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

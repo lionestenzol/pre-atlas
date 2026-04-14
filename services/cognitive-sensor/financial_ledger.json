@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-09T10:00:00+00:00",
+  "balance": 5350.0,
+  "transactions": [
+    {
+      "id": "txn_868711e10ccc",
+      "date": "2026-04-09",
+      "amount": 2500,
+      "category": "business",
+      "description": "Consulting invoice - client 1",
+      "recurring": true,
+      "tags": []
+    },
+    {
+      "id": "txn_9eb2268df631",
+      "date": "2026-04-09",
+      "amount": -1500,
+      "category": "housing",
+      "description": "Rent April",
+      "recurring": true,
+      "tags": []
+    },
+    {
+      "id": "txn_7ab66162ddb1",
+      "date": "2026-04-09",
+      "amount": -150,
+      "category": "software",
+      "description": "Claude API + hosting",
+      "recurring": true,
+      "tags": []
+    },
+    {
+      "id": "txn_797136ffd36a",
+      "date": "2026-04-09",
+      "amount": -350,
+      "category": "groceries",
+      "description": "Weekly groceries",
+      "recurring": false,
+      "tags": []
+    },
+    {
+      "id": "txn_b56779c73cf1",
+      "date": "2026-04-09",
+      "amount": -100,
+      "category": "transport",
+      "description": "Gas + metro",
+      "recurring": false,
+      "tags": []
+    },
+    {
+      "id": "txn_dd6dac53c2b8",
+      "date": "2026-04-09",
+      "amount": -50,
+      "category": "entertainment",
+      "description": "Netflix + Spotify",
+      "recurring": true,
+      "tags": []
+    },
+    {
+      "id": "txn_b8b3d5aa96e6",
+      "date": "2026-04-09",
+      "amount": 500,
+      "category": "business",
+      "description": "One-time project payment",
+      "recurring": false,
+      "tags": []
+    }
+  ],
+  "budgets": {
+    "housing": {
+      "monthly_limit": 1500,
+      "spent_this_month": 0
+    },
+    "utilities": {
+      "monthly_limit": 200,
+      "spent_this_month": 0
+    },
+    "software": {
+      "monthly_limit": 150,
+      "spent_this_month": 0
+    },
+    "groceries": {
+      "monthly_limit": 400,
+      "spent_this_month": 0
+    },
+    "transport": {
+      "monthly_limit": 200,
+      "spent_this_month": 0
+    },
+    "health": {
+      "monthly_limit": 100,
+      "spent_this_month": 0
+    },
+    "entertainment": {
+      "monthly_limit": 100,
+      "spent_this_month": 0
+    },
+    "savings": {
+      "monthly_limit": 200,
+      "spent_this_month": 0
+    },
+    "business": {
+      "monthly_limit": 300,
+      "spent_this_month": 0
+    },
+    "other": {
+      "monthly_limit": 100,
+      "spent_this_month": 0
+    }
+  },
+  "projections": [],
+  "alerts": [],
+  "alert_thresholds": {
+    "runway_critical_months": 1,
+    "runway_warning_months": 2,
+    "budget_breach_pct": 1.2,
+    "expense_spike_pct": 1.5
+  }
+}

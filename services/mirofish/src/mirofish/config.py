@@ -1,4 +1,4 @@
-"""MiroFish configuration — all settings from env vars."""
+"""MiroFish configuration — prediction engine settings from env vars."""
 import os
 from pathlib import Path
 from pydantic import BaseModel
@@ -15,20 +15,51 @@ class MirofishConfig(BaseModel):
     neo4j_user: str = os.getenv("NEO4J_USER", "neo4j")
     neo4j_password: str = os.getenv("NEO4J_PASSWORD", "mirofish123")
 
-    # Ollama
+    # Ollama (used ONLY for ingestion extraction + embeddings, NOT for prediction)
     ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
-    ollama_model: str = os.getenv("OLLAMA_MODEL", "qwen2.5:32b")
+    ollama_model: str = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
     ollama_fallback_model: str = os.getenv("OLLAMA_FALLBACK_MODEL", "qwen2.5:7b")
     ollama_embed_model: str = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 
-    # Simulation limits
-    max_agents: int = int(os.getenv("MAX_AGENTS", "500"))
-    max_ticks: int = int(os.getenv("MAX_TICKS", "50"))
-    parallel_factor: int = int(os.getenv("PARALLEL_FACTOR", "4"))
+    # Cognitive-sensor paths (read-only data source)
+    cognitive_sensor_path: Path = Path(
+        os.getenv("COGNITIVE_SENSOR_PATH", str(Path(__file__).resolve().parents[3] / "cognitive-sensor"))
+    )
 
-    # Storage
-    db_path: Path = Path(
-        os.getenv("MIROFISH_DB_PATH", str(Path.home() / ".mirofish" / "simulations.db"))
+    @property
+    def memory_db_path(self) -> Path:
+        return self.cognitive_sensor_path / "memory_db.json"
+
+    @property
+    def results_db_path(self) -> Path:
+        return self.cognitive_sensor_path / "results.db"
+
+    @property
+    def classifications_path(self) -> Path:
+        return self.cognitive_sensor_path / "conversation_classifications.json"
+
+    @property
+    def loops_path(self) -> Path:
+        return self.cognitive_sensor_path / "loops_latest.json"
+
+    @property
+    def cognitive_state_path(self) -> Path:
+        return self.cognitive_sensor_path / "cognitive_state.json"
+
+    @property
+    def ideas_path(self) -> Path:
+        return self.cognitive_sensor_path / "excavated_ideas_raw.json"
+
+    # Prediction settings
+    similarity_threshold: float = float(os.getenv("SIMILARITY_THRESHOLD", "0.7"))
+    prediction_k: int = int(os.getenv("PREDICTION_K", "20"))
+    temporal_decay_days: int = int(os.getenv("TEMPORAL_DECAY_DAYS", "90"))
+    min_pattern_frequency: int = int(os.getenv("MIN_PATTERN_FREQUENCY", "5"))
+
+    # Ingestion
+    ingest_batch_size: int = int(os.getenv("INGEST_BATCH_SIZE", "50"))
+    ingest_state_path: Path = Path(
+        os.getenv("INGEST_STATE_PATH", str(Path.home() / ".mirofish" / "ingest_state.json"))
     )
 
     # Retry

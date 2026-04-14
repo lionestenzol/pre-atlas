@@ -28,11 +28,18 @@
     .border-red-500 { border-color: rgba(248, 113, 113, 0.3) !important; }
     .bg-red-600 { background-color: rgba(248, 113, 113, 0.2) !important; border: 1px solid rgba(248, 113, 113, 0.4); color: #fca5a5; }
     .bg-red-600:hover, .hover\:bg-red-700:hover { background-color: rgba(248, 113, 113, 0.3) !important; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+    ::-webkit-scrollbar-corner { background: transparent; }
+    * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
   </style>
 </head>
 <body class="bg-gray-900 text-white p-8">
   <div class="max-w-4xl mx-auto">
     <header class="mb-8">
+      <button onclick="(window!==window.parent)?window.parent.postMessage({type:'atlas-navigate',target:'cycleboard'},'*'):window.open('cycleboard/index.html','_blank')" class="text-sm text-indigo-400 hover:text-indigo-300 mb-3 inline-flex items-center gap-1 transition"><i class="fas fa-arrow-left"></i> CycleBoard</button>
       <h1 class="text-3xl font-bold mb-2">Cognitive Control Panel</h1>
       <p class="text-gray-400">Master controls for your personal operating system</p>
     </header>

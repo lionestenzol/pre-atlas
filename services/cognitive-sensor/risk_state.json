@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-09T14:14:11.603640+00:00",
+  "active_plans": [
+    {
+      "alert_type": "closure_drought",
+      "severity": "HIGH",
+      "actions": [
+        "Decompose the oldest open loop into 2-3 subtasks",
+        "Pick the smallest subtask and close it by end of day",
+        "If blocked, archive with honest reason — not as fake closure"
+      ],
+      "estimated_days": 2,
+      "success_criteria": [
+        "1+ genuine closure in 48h",
+        "closure_quality >= 70%"
+      ],
+      "created_at": "2026-04-09T14:14:11.586433+00:00"
+    }
+  ],
+  "interference_signals": [
+    {
+      "type": "internal",
+      "pattern": "avoidance_procrastination",
+      "impact": "blocks_execution",
+      "confidence": 0.9,
+      "response": "Pick the smallest possible task and do only that. 15-minute timer. No switching."
+    }
+  ],
+  "guardrails": {
+    "risk_level": "HIGH",
+    "max_work_blocks": 1,
+    "automation_scope": "all_escalated",
+    "idea_moratorium": true,
+    "deep_work_allowed": false
+  },
+  "recovery_target": {
+    "target_score": 76,
+    "target_days": 3,
+    "current_score": 61,
+    "weakest_domain": "project",
+    "weakest_score": 30.1,
+    "focus": "Improve project domain from 30 to 45",
+    "checkpoint_next": "2026-04-12T14:14:11.586433+00:00"
+  }
+}

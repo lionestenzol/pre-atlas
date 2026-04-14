@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aegis-postgres
+    environment:
+      POSTGRES_USER: aegis
+      POSTGRES_PASSWORD: aegis_dev_pass
+      POSTGRES_DB: aegis_admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - aegis_pg_data:/var/lib/postgresql/data
+      - ./db/migrations/001_admin.sql:/docker-entrypoint-initdb.d/001_admin.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegis -d aegis_admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: aegis-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - aegis_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  aegis_pg_data:
+  aegis_redis_data:

@@ -23,7 +23,7 @@
 │  ██ DELTA FABRIC ██                          [RECOVER] 06:42    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  MODE: CLOSE_LOOPS                                              │
+│  MODE: CLOSURE                                              │
 │  ════════════════                                               │
 │  sleep: OK (6.5h) │ loops: LOW (5) │ assets: LOW │ money: OK    │
 │                                                                 │
@@ -318,7 +318,7 @@ function sortTasksForMode(tasks: TaskDisplay[], mode: Mode): TaskDisplay[] {
 ```typescript
 const TASK_MODE_RELEVANCE: Record<Mode, (task: TaskData) => number> = {
   RECOVER: (t) => t.priority === 'LOW' ? 100 : 20,
-  CLOSE_LOOPS: (t) => t.linked_thread ? 100 : 80,
+  CLOSURE: (t) => t.linked_thread ? 100 : 80,
   BUILD: (t) => t.title_template.includes('CREATE') ? 100 : 50,
   COMPOUND: (t) => t.title_template.includes('EXTEND') ? 100 : 50,
   SCALE: (t) => t.title_template.includes('DELEGATE') ? 100 : 30,
@@ -331,7 +331,7 @@ const TASK_MODE_RELEVANCE: Record<Mode, (task: TaskData) => number> = {
 const LEVERAGE_MOVE_RULES: LeverageMoveRule[] = [
   {
     rule_id: 'loops_to_build',
-    condition: (s, m) => m === 'CLOSE_LOOPS' && s.open_loops === 'LOW',
+    condition: (s, m) => m === 'CLOSURE' && s.open_loops === 'LOW',
     description: 'Close loops to unlock BUILD mode',
     impact: 'Enables asset creation',
     trigger_hint: 'Complete or block pending tasks',
@@ -454,7 +454,7 @@ Cockpit
 | Mode | Emphasized | Muted |
 |------|-----------|-------|
 | RECOVER | rest actions, low-priority tasks | asset creation, delegation |
-| CLOSE_LOOPS | reply actions, linked tasks | create actions |
+| CLOSURE | reply actions, linked tasks | create actions |
 | BUILD | create actions, unlinked tasks | reply actions |
 | COMPOUND | extend actions | create new |
 | SCALE | delegate actions | direct execution |

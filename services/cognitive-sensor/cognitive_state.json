@@ -6,29 +6,9 @@
   },
   "loops": [
     {
-      "convo_id": "1356",
-      "title": "Extrinsic vs Intrinsic Rewards",
-      "score": 60406
-    },
-    {
-      "convo_id": "1209",
-      "title": "Irritation and Hunger Struggles",
-      "score": 37229
-    },
-    {
       "convo_id": "81",
       "title": "Universal Programming Table Setup",
       "score": 34490
-    },
-    {
-      "convo_id": "1247",
-      "title": "Understanding Gaslighting Effects",
-      "score": 32195
-    },
-    {
-      "convo_id": "1136",
-      "title": "Understanding Doublespeak",
-      "score": 31960
     }
   ],
   "drift": {
@@ -44,8 +24,11 @@
     "people": 15670
   },
   "closure": {
-    "open": 14,
-    "closed": 1,
-    "ratio": 6.67
+    "open": 1,
+    "closed": 21,
+    "truly_closed": 21,
+    "archived": 0,
+    "ratio": 95.45,
+    "closure_quality": 100.0
   }
 }

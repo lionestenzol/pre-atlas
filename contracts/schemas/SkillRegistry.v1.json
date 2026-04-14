@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "SkillRegistry.v1",
+  "title": "Skill Registry",
+  "description": "Individual skill tracking with usage counts and proficiency levels. Feeds mastery_count into compound scoring.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "skills"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "skills": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/skill_entry" }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "skill_entry": {
+      "type": "object",
+      "required": ["skill_id", "category", "usage_count", "proficiency"],
+      "properties": {
+        "skill_id": { "type": "string" },
+        "category": {
+          "type": "string",
+          "enum": ["core", "gap", "emerging"],
+          "description": "core = user_skills, gap = skills_gaps, emerging = discovered via activity"
+        },
+        "usage_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total times exercised across closures and subtasks"
+        },
+        "proficiency": {
+          "type": "string",
+          "enum": ["novice", "developing", "proficient", "mastered"],
+          "description": "novice(0-2), developing(3-6), proficient(7-14), mastered(15+)"
+        },
+        "last_used_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "sources": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "IDs of subtasks/closures that exercised this skill"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

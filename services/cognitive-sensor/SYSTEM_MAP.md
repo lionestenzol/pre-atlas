@@ -1,480 +1,286 @@
-# System Map
+# Pre Atlas -- System Map
 
-## Complete File Inventory
+> A layered overview for someone joining the project. Start with the "what" and "why," then drill into the "how."
 
-```
-services/cognitive-sensor/
-│
-├── DATA SOURCES
-│   ├── memory_db.json (140 MB) - Source: ChatGPT export
-│   └── conversations.json - Raw export from ChatGPT
-│
-├── DATABASE
-│   └── results.db (SQLite)
-│       ├── messages (93,898 rows)
-│       ├── topics (13,934 rows)
-│       ├── convo_time (1,397 rows)
-│       ├── convo_titles (1,397 rows)
-│       └── loop_decisions (1 row)
-│
-├── INITIALIZATION SCRIPTS (Run once or on data update)
-│   ├── init_results_db.py - Creates messages table
-│   ├── init_topics.py - Extracts topic keywords
-│   ├── init_convo_time.py - Adds timestamps
-│   └── init_titles.py - Loads conversation titles
-│
-├── INTELLIGENCE SCRIPTS (Run daily)
-│   ├── loops.py - Detects unfinished conversations
-│   ├── completion_stats.py - Calculates closure metrics
-│   └── radar.py - Shows attention drift
-│
-├── EXPORT SCRIPTS (Run daily)
-│   ├── cognitive_api.py - Query interface
-│   ├── export_cognitive_state.py - Generates cognitive_state.json
-│   ├── route_today.py - Generates daily_directive.txt
-│   └── export_daily_payload.py - Generates daily_payload.json
-│
-├── INTEGRATION SCRIPTS (Run daily)
-│   ├── wire_cycleboard.py - Copies files to CycleBoard
-│   ├── reporter.py - Logs to STATE_HISTORY.md
-│   └── build_dashboard.py - Generates dashboard.html
-│
-├── DECISION TOOLS (Run as needed)
-│   ├── decide.py - Interactive loop closure
-│   └── resurfacer.py - Weekly loop reminder
-│
-├── ORCHESTRATION
-│   └── refresh.py - **MASTER SCRIPT - runs entire pipeline**
-│
-├── GENERATED STATE FILES
-│   ├── cognitive_state.json - Current brain state
-│   ├── daily_payload.json - Execution law
-│   ├── daily_directive.txt - Human-readable routing
-│   ├── loops_latest.json - Top 15 open loops
-│   ├── completion_stats.json - Closure statistics
-│   ├── STATE_HISTORY.md - Historical log
-│   ├── RESURFACER_LOG.md - Weekly loop prompts
-│   └── dashboard.html - Analytics interface
-│
-├── SELF-ANALYSIS PROFILES (Deep pattern analysis)
-│   ├── THE_CYCLE.md - The 5-step stuck loop pattern
-│   ├── DERAILMENT_FACTORS.md - What knocks you off course
-│   ├── CONVERSATION_PATTERNS.md - How you talk, repetition
-│   ├── EMOTIONAL_PROFILE.md - Emotional landscape
-│   ├── DEEP_PSYCHOLOGICAL_PROFILE.md - Core wounds, attachment, values
-│   └── GROWTH_REPORT.md - Fallacies, blindspots, growth opportunities
-│
-├── INTERFACES
-│   └── control_panel.html - Master control interface
-│
-└── DOCUMENTATION
-    ├── README.md - Complete system documentation
-    ├── QUICKSTART.md - 5-minute setup guide
-    ├── TECHNICAL.md - Architecture and algorithms
-    └── SYSTEM_MAP.md - This file
-```
+---
 
-## CycleBoard Integration
+## 1. What This System Does
+
+Pre Atlas is a personal behavioral governance system. It reads every message from ~1,400 AI conversations (~94K messages), analyzes thinking patterns, and tells you what to focus on.
+
+The core problem it solves: you have hundreds of ideas, dozens of open projects, and no reliable way to decide what matters. Pre Atlas replaces gut-feel prioritization with data-driven directives.
+
+It answers three questions every day:
+
+1. **What topics do I actually spend time on?** (Cognitive Atlas -- clustering)
+2. **Which ideas have real business value?** (Leverage scoring)
+3. **What should I do right now?** (Mode system + daily directive)
+
+The system runs entirely locally. No cloud, no server, no accounts. Python scripts + SQLite + JSON files.
+
+---
+
+## 2. What It Produces
+
+| Output | What It Is | Who Reads It |
+|--------|-----------|--------------|
+| `cognitive_atlas.html` | Full-viewport interactive dashboard: 84K-point scatter plot (Plotly WebGL), force-directed cluster graph (Sigma.js), leverage ranking, cluster inspector, ROI analysis, and role distribution — all in a single self-contained HTML file (~5.9 MB) | Human (browser) |
+| `leverage_map.json` | Ranked list of conversation clusters scored by business value (5 metrics: revenue potential, asset proximity, completion rate, recency, size) | Scripts + CycleBoard |
+| `daily_payload.json` | Today's mode (RECOVER/CLOSURE/BUILD/etc.), risk level, primary action, and reasoning | CycleBoard |
+| `IDEA_REGISTRY.md` | Prioritized list of extracted ideas with tiers (execute now, next up, backlog) | Human + Agents |
+| `dashboard.html` | Analytics on conversation patterns, closure ratios, open loops, topic distribution | Human (browser) |
+| `cognitive_state.json` | Snapshot of current cognitive metrics for the CycleBoard planning interface | CycleBoard app |
+
+---
+
+## 3. How Data Flows
 
 ```
-services/cognitive-sensor/cycleboard/
-│
-├── COGNITIVE BRIDGE
-│   └── brain/
-│       ├── daily_directive.txt (copied from workspace)
-│       ├── cognitive_state.json (copied from workspace)
-│       └── daily_payload.json (generated by export_daily_payload.py)
-│
-└── INTERFACES
-    ├── cycleboard_app3.html - Main CycleBoard planning tool
-    └── cycleboard_cognitive.html - Full integration with directive banner
+Raw Conversations (memory_db.json, ~140MB)
+    |
+    v
+[init_results_db.py] --> results.db (messages, topics, timestamps)
+    |
+    v
+[init_titles.py + init_convo_time.py] --> conversation metadata
+    |
+    v
+[init_embeddings.py] --> 384-dim vectors per message (all-MiniLM-L6-v2)
+    |
+    v
+[build_cognitive_atlas.py] --> UMAP + HDBSCAN --> cognitive_atlas.html
+    |
+    v
+[cluster_leverage_map.py] --> 5 metrics per cluster --> leverage_map.json
+    |
+    v
+[Agent Pipeline] --> excavate ideas --> dedup --> classify --> prioritize
+    |                                                            |
+    v                                                            v
+[Governors] --> daily brief, weekly packet          IDEA_REGISTRY.md
+    |
+    v
+[CycleBoard + Dashboard] --> human-facing planning interfaces
 ```
 
-## Data Flow Diagram
+Each arrow is a Python script that reads files/DB and writes files/DB. No shared state between steps -- just JSON and SQLite.
+
+---
+
+## 4. The Cognitive Atlas (Deep Dive)
+
+This is the visual centerpiece. It takes 84,848 message embeddings and produces an interactive HTML dashboard.
+
+**Pipeline:**
+1. Load 384-dimensional sentence embeddings from SQLite
+2. UMAP reduces 384D to 2D (cosine metric, 30 neighbors)
+3. HDBSCAN finds density-based clusters (~207 clusters, ~31% noise)
+4. Build 5 toggle layers: Cluster, Role (user/assistant), Time, Conversation, Leverage
+5. Build force-directed graph: nodes = clusters, edges = conversation overlap + cosine similarity
+6. Embed everything into a single self-contained HTML file
+
+**Visualization stack:**
+- Plotly (WebGL/scattergl) renders 84K points as an interactive scatter plot
+- Sigma.js + Graphology renders the cluster relationship graph
+- 6 view modes toggled by buttons: Cluster, Role, Time, Conversation, Leverage, Graph
+
+**Key files (after refactor):**
+
+| File | Purpose |
+|------|---------|
+| `build_cognitive_atlas.py` | Entry point -- thin orchestrator (~75 lines) |
+| `atlas_data.py` | Loads messages + embeddings from `results.db` |
+| `atlas_projection.py` | UMAP dimensionality reduction + HDBSCAN clustering |
+| `atlas_layers.py` | Builds toggle layer arrays + cluster summary stats |
+| `atlas_layout.py` | ForceAtlas2 force-directed layout (pure NumPy) |
+| `atlas_graph.py` | Constructs graph nodes/edges with dual edge strategy |
+| `atlas_render.py` | Assembles JSON payload, fills HTML template |
+| `atlas_template.html` | HTML/CSS/JS dashboard template (viewport-governed flex layout, Plotly + Sigma.js) |
+
+**Dashboard UI Architecture (`atlas_template.html`):**
+
+The template implements a viewport-governed flex layout with scroll isolation:
 
 ```
-┌─────────────────────┐
-│ conversations.json  │ (ChatGPT export)
-└──────────┬──────────┘
-           │
-           ↓ init_results_db.py
-           ↓ init_topics.py
-           ↓ init_convo_time.py
-           ↓ init_titles.py
-           ↓
-┌──────────────────────┐
-│    results.db        │ (Single source of truth)
-│ ┌──────────────────┐ │
-│ │ messages         │ │ ← Message metadata
-│ │ topics           │ │ ← Keyword frequency
-│ │ convo_time       │ │ ← Timestamps
-│ │ convo_titles     │ │ ← Conversation names
-│ │ loop_decisions   │ │ ← User decisions
-│ └──────────────────┘ │
-└──────────┬───────────┘
-           │
-           ├─→ loops.py ──────────→ loops_latest.json
-           │
-           ├─→ completion_stats.py → completion_stats.json
-           │
-           ├─→ radar.py (prints to console)
-           │
-           └─→ cognitive_api.py
-                    ↓
-           ┌────────────────────┐
-           │ cognitive_state.json│ (Nervous system)
-           └────────┬───────────┘
-                    │
-                    ├─→ route_today.py ──→ daily_directive.txt
-                    │
-                    └─→ export_daily_payload.py
-                             ↓
-                    ┌────────────────────┐
-                    │ daily_payload.json │ (Execution law)
-                    └────────┬───────────┘
-                             │
-                             ├─→ wire_cycleboard.py
-                             │        ↓
-                             │   cycleboard/brain/*
-                             │        ↓
-                             │   CycleBoard HTML
-                             │        ↓
-                             │   Red/yellow/green banner
-                             │   UI lockouts
-                             │
-                             ├─→ build_dashboard.py
-                             │        ↓
-                             │   dashboard.html
-                             │
-                             └─→ reporter.py
-                                      ↓
-                                 STATE_HISTORY.md
+<body>                          display:flex; flex-direction:column; overflow:hidden
+  <header>                      flex-shrink:0
+  <div.stats>                   flex-shrink:0  (6 stat cards)
+  <div.controls>                flex-shrink:0  (mode toggle + 5 layer buttons)
+  <div.main-area>               flex:1; overflow:hidden; display:flex (row)
+    <div.atlas-box>             flex:1; overflow:hidden
+      #atlas-chart              Plotly scattergl (container-bound, no hardcoded height)
+      #graph-container          Sigma.js (100% width/height)
+    <div.sidebar>               width:420px; display:block; overflow-y:auto (SOLE SCROLLER)
+      #lev-panel                Leverage Ranking table (max-height:260px, internal scroll)
+      #insp-panel               Cluster Inspector (metrics, n-grams, central messages)
+      #summary-panel            Cluster Summary table (max-height:300px, internal scroll)
+      #roi-panel                Cognitive ROI by revenue tag
+      #av-panel                 Asset Vectors by type
+      Role Distribution         Plotly bar chart (User/Assistant/Tool)
 ```
 
-## Execution Order
+Key design decisions:
+- `html,body` set to `height:100%; overflow:hidden` — no global scrollbar
+- Only the sidebar scrolls (`overflow-y:auto`); everything else is `overflow:hidden`
+- Plotly chart dimensions computed from `.atlas-box.clientWidth/clientHeight` via `getChartLayout()` — no hardcoded pixel heights
+- `window.resize` event triggers `Plotly.relayout()` and `sigmaInst.refresh()`
+- Collapsible panels via `togglePanel()` — click title to expand/collapse, auto-expand on cluster inspect
+- Panels with `max-height` constraints (`#lev-panel`, `#summary-panel`) use `overflow-y:auto` for internal scrolling
+- Responsive breakpoint at ≤1200px switches to column layout (sidebar below at 50vh)
 
-### Initial Setup (One Time)
-```
-1. Export ChatGPT conversations → conversations.json
-2. Run brain.py → creates memory_db.json
-3. Run init_results_db.py → creates results.db + messages table
-4. Run init_topics.py → adds topics table
-5. Run init_convo_time.py → adds convo_time table
-6. Run init_titles.py → adds convo_titles table
-7. Create indexes (run once)
-```
+---
 
-### Daily Refresh (Automated by refresh.py)
-```
-1. loops.py
-   ↓ generates loops_latest.json
-2. completion_stats.py
-   ↓ generates completion_stats.json
-3. export_cognitive_state.py
-   ↓ generates cognitive_state.json
-4. route_today.py
-   ↓ generates daily_directive.txt
-5. export_daily_payload.py
-   ↓ generates daily_payload.json
-6. wire_cycleboard.py
-   ↓ copies files to cycleboard/brain/
-7. reporter.py
-   ↓ appends to STATE_HISTORY.md
-8. build_dashboard.py
-   ↓ generates dashboard.html
-```
+## 5. The Mode System
 
-### User Actions (As Needed)
-```
-• decide.py → records decision in loop_decisions table
-• resurfacer.py → adds entry to RESURFACER_LOG.md
-• Open control_panel.html → view status and take action
-• Open CycleBoard → see governed interface
-```
-
-## File Dependencies
+Pre Atlas has 6 behavioral modes arranged as a progression:
 
 ```
-refresh.py requires:
-├── loops.py
-│   └── requires: results.db (topics, convo_time, convo_titles)
-├── completion_stats.py
-│   └── requires: results.db (loop_decisions)
-├── export_cognitive_state.py
-│   └── requires: loops_latest.json
-├── route_today.py
-│   └── requires: cognitive_state.json
-├── export_daily_payload.py
-│   └── requires: cognitive_state.json
-├── wire_cycleboard.py
-│   └── requires: daily_directive.txt, cognitive_state.json, daily_payload.json
-├── reporter.py
-│   └── requires: radar.py output
-└── build_dashboard.py
-    └── requires: STATE_HISTORY.md, loops_latest.json, completion_stats.json, results.db
+RECOVER --> CLOSURE --> MAINTENANCE --> BUILD --> COMPOUND --> SCALE
 ```
 
-## Interface Communication
+The system determines which mode you're in based on 5 signals:
+- Sleep / energy (are you functional?)
+- Open loops (how many unfinished things?)
+- Assets shipped (have you completed anything recently?)
+- Deep work hours (are you doing focused work?)
+- Revenue signals (is anything generating money?)
 
-```
-control_panel.html
-    ↓ fetch('cognitive_state.json')
-    ↓ displays mode, risk, loops, ratio
-    ↓ provides action buttons
-    ↓ links to other interfaces
+Each mode constrains what actions are "legal." In RECOVER mode, the only legal action is rest. In BUILD mode, you can start new projects. The system tells you your mode each morning via the daily directive.
 
-dashboard.html
-    ↓ reads STATE_HISTORY.md (embedded)
-    ↓ reads loops_latest.json (embedded)
-    ↓ reads completion_stats.json (embedded)
-    ↓ queries results.db for anchors
+This logic lives in `delta-kernel` (TypeScript/Express service, port 3001) which is separate from `cognitive-sensor` but consumes its data.
 
-cycleboard_working.html
-    ↓ fetch('brain/daily_payload.json')
-    ↓ displays floating directive
-    ↓ color-codes by mode
-    ↓ reads CycleBoard state from localStorage
+---
 
-cognitive_controller.js
-    ↓ fetch('brain/daily_payload.json')
-    ↓ updateDirectiveBanner()
-    ↓ enforceBuildPolicy() (disables buttons)
-    ↓ injectClosureTasks() (adds required tasks)
-    ↓ applyRiskIndicators() (adds badges)
-```
+## 6. The Agent Pipeline
 
-## State Transitions
+8 specialized agents process ideas extracted from conversations:
 
-```
-CLOSURE (Red)
-    ↓ User runs decide.py → CLOSE/ARCHIVE
-    ↓ closure_ratio increases
-    ↓ open_count decreases
-    ↓
-MAINTENANCE (Yellow)
-    ↓ User continues closing loops
-    ↓ open_count drops below 10
-    ↓
-BUILD (Green)
-    ↓ User starts new project
-    ↓ New loop detected
-    ↓ open_count increases
-    ↓
-    ↓ If ignored, loops accumulate
-    ↓
-CLOSURE (Red) - cycle repeats
-```
+| Agent | Role |
+|-------|------|
+| `agent_excavator.py` | Extracts raw ideas from conversation text |
+| `agent_deduplicator.py` | Merges duplicate/similar ideas |
+| `agent_classifier.py` | Categorizes ideas (product, content, system, etc.) |
+| `agent_classifier_convo.py` | Classifies entire conversations by type |
+| `agent_orchestrator.py` | Routes ideas through the pipeline |
+| `agent_reporter.py` | Generates human-readable summaries |
+| `agent_synthesizer.py` | Combines insights across clusters |
+| `agent_book_miner.py` | Extracts actionable frameworks from book discussions |
 
-## Metrics Tracking
+Run them all: `python run_agents.py`
 
-```
-loop_decisions table
-    ↓ INSERT on each decide.py run
-    ↓ Used by completion_stats.py
-    ↓
-completion_stats.json
-    {
-      "closed_week": N,
-      "archived_week": N,
-      "closed_life": N,
-      "archived_life": N,
-      "closure_ratio": X.XX
-    }
-    ↓ Read by build_dashboard.py
-    ↓ Read by control_panel.html
-    ↓
-STATE_HISTORY.md
-    ↓ Append-only log
-    ↓ Captures radar output over time
-    ↓ Enables trend analysis
-```
+---
 
-## Backup Strategy
+## 7. Technical Architecture
 
-### Critical Files (Irreplaceable)
-```
-memory_db.json - Your conversation history
-results.db - Your analyzed data
-loop_decisions - Your decision history
-STATE_HISTORY.md - Your temporal log
+**Stack:**
+- Python 3.13 + SQLite (no server, no cloud)
+- `all-MiniLM-L6-v2` for 384-dim sentence embeddings
+- UMAP for dimensionality reduction
+- HDBSCAN for density-based clustering
+- ForceAtlas2 (custom NumPy implementation) for graph layout
+- Plotly WebGL for 84K-point scatter rendering
+- Sigma.js + Graphology for graph visualization
 
-SELF-ANALYSIS PROFILES (Personal insights):
-THE_CYCLE.md - Your stuck loop pattern
-DERAILMENT_FACTORS.md - What knocks you off course
-CONVERSATION_PATTERNS.md - How you communicate
-EMOTIONAL_PROFILE.md - Your emotional landscape
-DEEP_PSYCHOLOGICAL_PROFILE.md - Core wounds, values, attachment
-GROWTH_REPORT.md - Fallacies, blindspots, growth edges
-```
+**Architecture style:** Flat scripts. No Python packages, no `__init__.py`, no framework. Each script imports siblings directly and runs independently. Communication between stages is via JSON files and SQLite -- never shared memory or running processes.
 
-**Backup command:**
+**Why this works:** The system processes data in batches (daily/weekly), not in real-time. A simple pipeline of scripts is easier to debug, modify, and reason about than a microservice architecture. Each script can be run and tested independently.
+
+**Database:** Single SQLite file (`results.db`) with tables:
+- `message_embeddings` -- one row per message with embedding blob
+- `convo_titles` -- conversation ID to title mapping
+- `convo_time` -- conversation timestamps
+- Various topic/cluster tables
+
+---
+
+## 8. How to Run Things
+
+**First-time setup:**
 ```bash
-tar -czf cognitive_backup_$(date +%Y%m%d).tar.gz \
-  memory_db.json \
-  results.db \
-  STATE_HISTORY.md \
-  RESURFACER_LOG.md
+cd services/cognitive-sensor
+pip install -r requirements.txt
 ```
 
-### Generated Files (Replaceable)
-```
-cognitive_state.json - Can regenerate from results.db
-daily_payload.json - Can regenerate from cognitive_state.json
-loops_latest.json - Can regenerate from results.db
-completion_stats.json - Can regenerate from results.db
-dashboard.html - Can regenerate from above
-```
-
-**Recovery:** Run `python refresh.py`
-
-### Scripts (Version Controlled)
-```
-All *.py files
-All *.html interface files
-All *.md documentation
+**Initialize database (run once, or when source data changes):**
+```bash
+python init_results_db.py       # Parse memory_db.json into SQLite
+python init_titles.py           # Extract conversation titles
+python init_convo_time.py       # Extract timestamps
+python init_embeddings.py       # Generate 384D embeddings (slow, ~20 min)
 ```
 
-**Recovery:** Keep in git, or re-download from source
-
-## Port Usage
-
-```
-:8080 - Control panel web server
-  ↳ python -m http.server 8080
-  ↳ Serves services/cognitive-sensor/
-
-:3001 - Delta Kernel REST API
-  ↳ npm run api (from services/delta-kernel/)
-  ↳ Governance, enforcement, work admission
+**Generate the atlas:**
+```bash
+python build_cognitive_atlas.py  # UMAP + HDBSCAN + HTML (~60s)
 ```
 
-**Why two servers:**
-- 8080: Static file serving for HTML interfaces
-- 3001: REST API for state management and governance
-
-## Security Boundaries
-
-```
-┌─────────────────────────────────────┐
-│ Local Machine Only                  │
-│ ┌─────────────────────────────────┐ │
-│ │ Web Browser                     │ │
-│ │ :8080/control_panel.html        │ │
-│ │ :8000/cycleboard_working.html   │ │
-│ └─────────────┬───────────────────┘ │
-│               │ HTTP fetch()        │
-│ ┌─────────────▼───────────────────┐ │
-│ │ Python Web Servers              │ │
-│ │ http.server (no auth)           │ │
-│ └─────────────┬───────────────────┘ │
-│               │ File read           │
-│ ┌─────────────▼───────────────────┐ │
-│ │ File System                     │ │
-│ │ • Cognitive state files         │ │
-│ │ • SQLite database              │ │
-│ │ • Conversation history         │ │
-│ └─────────────────────────────────┘ │
-│                                     │
-│ NO EXTERNAL NETWORK                 │
-│ NO CLOUD SERVICES                   │
-│ NO AUTHENTICATION                   │
-└─────────────────────────────────────┘
+**Run leverage scoring:**
+```bash
+python cluster_leverage_map.py   # Score clusters by business value
 ```
 
-## Extension Points
-
-### Add New Data Source
-```
-1. Create init_newsource.py
-   ↳ Parses external data
-   ↳ Inserts into results.db (new table)
-
-2. Update cognitive_api.py
-   ↳ Add query function for new data
-
-3. Update export_daily_payload.py
-   ↳ Include new data in routing logic
-
-4. Update control_panel.html
-   ↳ Display new metrics
+**Run agent pipeline:**
+```bash
+python run_agents.py             # Extract + classify + prioritize ideas
 ```
 
-### Add New Interface
-```
-1. Create new_interface.html
-   ↳ Fetch cognitive_state.json
-   ↳ OR fetch daily_payload.json
-
-2. Add to wire_cycleboard.py (if needed)
-   ↳ Copy required files to interface location
-
-3. Update refresh.py (if needed)
-   ↳ Generate interface-specific data files
+**Run governance:**
+```bash
+python run_daily.py              # Daily directive
+python run_weekly.py             # Weekly review packet
 ```
 
-### Add New Routing Mode
-```
-1. Edit export_daily_payload.py
-   ↳ Add new condition → new mode
-
-2. Edit cognitive_controller.js
-   ↳ Handle new mode (color, actions)
-
-3. Edit control_panel.html
-   ↳ Display new mode appropriately
-```
-
-## Troubleshooting Flow
-
-```
-Problem: Control panel shows OFFLINE
-    ↓
-Check: Does cognitive_state.json exist?
-    YES → Is web server running?
-        YES → Check browser console for errors
-        NO → Run: python -m http.server 8080
-    NO → Run: python refresh.py
-
-Problem: Loops not updating after decision
-    ↓
-Check: Did decide.py complete successfully?
-    YES → Did you run refresh.py after?
-        YES → Check loop_decisions table
-        NO → Run: python refresh.py
-    NO → Check for Python errors
-
-Problem: CycleBoard shows old directive
-    ↓
-Check: Is CycleBoard web server running?
-    YES → Did wire_cycleboard.py run?
-        YES → Check cycleboard/brain/daily_payload.json
-        NO → Run: python wire_cycleboard.py
-    NO → Run: START_CYCLEBOARD.bat
-
-Problem: Dashboard not updating
-    ↓
-Check: Did build_dashboard.py run?
-    YES → Is dashboard.html in workspace?
-        YES → Hard refresh browser (Ctrl+Shift+R)
-        NO → Run: python build_dashboard.py
-    NO → Run: python refresh.py
+**Run tests:**
+```bash
+python -m pytest tests/ -m "not slow" -v    # Fast tests (~2s)
+python -m pytest tests/ -v                  # All tests including UMAP/HDBSCAN
 ```
 
 ---
 
-**This map shows every file, every script, every connection.**
+## 9. Key Concepts Glossary
 
-Use it to:
-- Understand the complete system
-- Debug issues
-- Plan extensions
-- Navigate the codebase
+| Term | Meaning |
+|------|---------|
+| **Embedding** | A 384-number vector representing the meaning of a message. Similar messages have similar vectors. |
+| **UMAP** | Algorithm that compresses 384 dimensions down to 2 so you can plot messages on a flat surface. Preserves neighborhood structure. |
+| **HDBSCAN** | Clustering algorithm that finds groups of nearby points. Doesn't need you to specify how many clusters -- it discovers them. Also identifies "noise" (messages that don't belong to any cluster). |
+| **Leverage score** | A composite metric (0-100) measuring how much business value a conversation cluster has. Combines revenue potential, asset proximity, completion rate, recency, and size. |
+| **ForceAtlas2** | Physics simulation for graph layout. Nodes repel each other (springs), edges attract connected nodes. Produces visually intuitive cluster relationship graphs. |
+| **Mode** | Your current behavioral state (RECOVER through SCALE). Determines what the system recommends you do today. |
+| **Delta-kernel** | The TypeScript state engine that tracks modes, tasks, and behavioral signals. Separate service from cognitive-sensor. |
+| **Noise** | Messages that HDBSCAN couldn't assign to any cluster. Typically ~31% of messages. These are one-off or highly unique conversations. |
+| **Flat script architecture** | Design choice: no packages, no frameworks, no class hierarchies. Each `.py` file is a standalone script that imports siblings and reads/writes files. |
 
-**Color key for mental model:**
-- Data sources = INPUT
-- Scripts = TRANSFORMATION
-- Generated files = STATE
-- Interfaces = OUTPUT
-- User actions = FEEDBACK
+---
 
-The system is a closed loop. This map shows how it closes.
+## 10. Repository Structure
+
+```
+Pre Atlas/
+  services/
+    cognitive-sensor/          <-- Python/SQLite analysis pipeline (you are here)
+      build_cognitive_atlas.py     Entry point for atlas generation
+      atlas_data.py                DB loading
+      atlas_projection.py          UMAP + HDBSCAN
+      atlas_layers.py              Layer building
+      atlas_layout.py              ForceAtlas2 layout
+      atlas_graph.py               Graph construction
+      atlas_render.py              HTML generation
+      atlas_template.html          HTML template
+      cluster_leverage_map.py      Leverage scoring
+      agent_*.py                   8 idea processing agents
+      governor_daily.py            Daily directive generator
+      governor_weekly.py           Weekly review generator
+      run_agents.py                Agent pipeline runner
+      run_daily.py / run_weekly.py Governance runners
+      init_*.py                    Database initialization scripts
+      results.db                   SQLite database (generated)
+      memory_db.json               Raw conversation export (~140MB)
+      tests/                       pytest test suite (54 tests)
+      cycleboard/                  Planning interface (HTML/JS)
+    delta-kernel/              <-- TypeScript/Express state engine
+      src/core/                    Mode system, task lifecycle, messaging
+  contracts/
+    schemas/                   <-- JSON Schema data contracts (draft-07)
+```

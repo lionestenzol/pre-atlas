@@ -29,7 +29,30 @@
       "Bash(del \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\services\\\\delta-kernel\\\\nul\")",
       "Bash(cmd /c type \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\services\\\\delta-kernel\\\\nul\")",
       "Bash(cmd /c dir \"C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\nul\")",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(gh repo create:*)",
+      "Bash(ls:*)",
+      "Bash(du:*)",
+      "Bash(git -C \"C:/Users/bruke/Pre Atlas\" log --oneline -10)",
+      "Bash(grep:*)",
+      "Bash(git -C \"C:/Users/bruke/Pre Atlas\" diff --name-only)",
+      "Bash(git -C \"C:/Users/bruke/Pre Atlas\" diff --name-only --cached)",
+      "Bash(where:*)",
+      "Bash(cd:*)",
+      "mcp__plugin_pinecone_pinecone__list-indexes",
+      "Bash(wsl -d Ubuntu -- bash -c \"cd /root/festival-project/festivals/active/cycleboard-wiring-CW0001 && echo y | fest task completed 2>&1\")",
+      "Bash(wsl -d Ubuntu -- bash -c 'cd /root/festival-project/festivals/planning/mosaic-platform-MP0001/002_MIROFISH/01_infrastructure && fest renumber task --skip-dry-run 2>&1')",
+      "Bash(wsl -d Ubuntu -- bash -c 'cd /root/festival-project/festivals/planning/mosaic-platform-MP0001/002_MIROFISH/02_knowledge_graph && fest renumber task --skip-dry-run 2>&1')",
+      "Bash(wsl -d Ubuntu -- bash -c 'cd /root/festival-project/festivals/planning/mosaic-platform-MP0001/002_MIROFISH/03_swarm && fest renumber task --skip-dry-run 2>&1')",
+      "Bash(wsl -d Ubuntu -- bash -c 'cd /root/festival-project/festivals/planning/mosaic-platform-MP0001/002_MIROFISH/04_api && fest renumber task --skip-dry-run 2>&1')",
+      "Bash(wsl -d Ubuntu -- bash -c 'echo y | cd /root/festival-project/festivals/planning/mosaic-platform-MP0001/002_MIROFISH/01_infrastructure && echo y | fest renumber task --skip-dry-run 2>&1')",
+      "Bash(wsl -d Ubuntu -- bash -c 'cd /root/festival-project/festivals/active/mosaic-platform-MP0001 && fest task complete 004_DASHBOARD/01_scaffold/03_testing.md && fest task complete 004_DASHBOARD/01_scaffold/04_review.md && fest task complete 004_DASHBOARD/01_scaffold/05_iterate.md && fest task complete 004_DASHBOARD/01_scaffold/06_fest_commit.md')",
+      "Bash(wsl -d Ubuntu -- bash -c 'cd /root/festival-project/festivals/active/mosaic-platform-MP0001 && echo y | fest task completed 004_DASHBOARD/01_scaffold/03_testing.md')",
+      "Bash(wsl -d Ubuntu -- bash -c 'for f in /root/festival-project/festivals/active/*/FESTIVAL_GOAL.md; do d=$\\(dirname \"\"$f\"\"\\); n=$\\(basename \"\"$d\"\"\\); echo \"\"=== $n ===\"\"; head -3 \"\"$f\"\"; echo; done')",
+      "Bash(KEY=\"b4aa24a027afc3ff3e07c670d89b129caab7ec933a6cbd95dbb49c281df1a7a7\")",
+      "Bash(codex exec:*)",
+      "Bash(powershell.exe -Command 'Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Start-Process powershell -ArgumentList '\\\\''-NoExit'\\\\'', '\\\\''-Command'\\\\'', \"Set-Location -LiteralPath '\\\\''C:\\\\Users\\\\bruke\\\\Pre Atlas\\\\services\\\\delta-kernel'\\\\''; npm run api\"; Start-Sleep -Seconds 6; curl.exe -sS --max-time 5 http://localhost:3001/api/health')",
+      "Bash(powershell.exe -Command \"Start-Process powershell -ArgumentList '-NoExit', '-Command', \\\\\"Set-Location -LiteralPath 'C:\\\\\\\\Users\\\\\\\\bruke\\\\\\\\Pre Atlas\\\\\\\\services\\\\\\\\delta-kernel'; npm run api\\\\\"\")"
     ]
   }
 }

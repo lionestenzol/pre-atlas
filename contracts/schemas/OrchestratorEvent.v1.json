@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "OrchestratorEvent.v1",
+  "title": "Mosaic Orchestrator Event",
+  "description": "Event envelope for all orchestrator actions — logs workflow triggers, task dispatches, and system state changes.",
+  "type": "object",
+  "required": ["event_id", "event_type", "timestamp", "source", "schema_version"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "description": "Unique event identifier (UUID)"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "workflow_started",
+        "workflow_completed",
+        "workflow_failed",
+        "task_dispatched",
+        "task_completed",
+        "task_failed",
+        "simulation_requested",
+        "simulation_completed",
+        "brief_posted",
+        "stall_detected",
+        "festival_created",
+        "festival_trimmed",
+        "metering_paused",
+        "metering_resumed"
+      ],
+      "description": "Type of orchestrator event"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["orchestrator", "claude_adapter", "mirofish", "openclaw", "daily_loop", "stall_detector"],
+      "description": "Component that generated this event"
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific data"
+    },
+    "mode_at_event": {
+      "type": "string",
+      "enum": ["RECOVER", "CLOSURE", "MAINTENANCE", "BUILD", "COMPOUND", "SCALE"],
+      "description": "System mode when event occurred"
+    }
+  },
+  "additionalProperties": false
+}

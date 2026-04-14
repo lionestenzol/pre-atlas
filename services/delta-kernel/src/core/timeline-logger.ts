@@ -23,16 +23,34 @@ export type TimelineEventType =
   | 'LOOP_OPENED'
   | 'LOOP_CLOSED'
   | 'MODE_CHANGED'
+  | 'MODE_TRANSITION_ACTIONS'
   | 'STREAK_UPDATED'
   | 'DAEMON_HEARTBEAT'
-  | 'SYSTEM_START';
+  | 'SYSTEM_START'
+  | 'AUTO_EXECUTED'
+  | 'AGENT_PIPELINE_COMPLETE'
+  | 'TASK_STALLED'
+  | 'TASK_AUTO_ARCHIVED'
+  | 'IDEA_AUTO_PROMOTED'
+  | 'CLOSURE_PROCESSED'
+  | 'ACTION_CONFIRMED'
+  | 'ACTION_EXECUTED'
+  | 'CORTEX_TASK_COMPLETED'
+  | 'CORTEX_TASK_FAILED'
+  | 'CORTEX_TASK_ESCALATED'
+  | 'REFRESH_COMPLETED'
+  | 'REFRESH_FAILED';
 
 export type TimelineSource =
   | 'work_controller'
   | 'governance_daemon'
+  | 'closure_engine'
+  | 'preparation_engine'
   | 'api'
   | 'cli'
-  | 'system';
+  | 'system'
+  | 'executor_bridge'
+  | 'cortex';
 
 export interface TimelineEvent {
   id: string;
@@ -60,7 +78,8 @@ export class TimelineLogger {
   private maxEvents: number;
 
   constructor(repoRoot: string, maxEvents: number = 10000) {
-    this.filePath = path.join(repoRoot, 'services', 'cognitive-sensor', 'timeline_events.json');
+    const cognitiveSensorDir = process.env.COGNITIVE_SENSOR_DIR || path.join(repoRoot, 'services', 'cognitive-sensor');
+    this.filePath = path.join(cognitiveSensorDir, 'timeline_events.json');
     this.maxEvents = maxEvents;
     this.log = this.loadOrCreate();
   }

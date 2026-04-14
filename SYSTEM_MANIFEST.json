@@ -1,0 +1,878 @@
+{
+  "system_name": "Pre Atlas",
+  "version": "0.1.0",
+  "description": "Personal behavioral governance system. Analyzes conversation history, computes operational mode via deterministic routing, enforces mode-appropriate behavior through policy gates.",
+  "generated_at": "2026-03-10",
+  "mode_enum": ["RECOVER", "CLOSURE", "MAINTENANCE", "BUILD", "COMPOUND", "SCALE"],
+  "services": [
+    {
+      "name": "delta-kernel",
+      "language": "TypeScript",
+      "runtime": "Node.js (tsx)",
+      "entry_points": [
+        "src/api/server.ts",
+        "src/cli/index.ts",
+        "src/tools/gate.ts"
+      ],
+      "ports": [3001, 5173],
+      "responsibilities": [
+        "Deterministic state engine with append-only hash-chained deltas",
+        "Mode routing via Markov lookup table (no AI)",
+        "REST API serving unified delta + cognitive state",
+        "Governance daemon with 6 cron jobs",
+        "CLI terminal UI and React web dashboard",
+        "Work admission control (Phase 6A)",
+        "Timeline event logging (Phase 6C)",
+        "Closure tracking and streak sovereignty"
+      ],
+      "inputs": [
+        "POST /api/ingest/cognitive (from cognitive-sensor via push_to_delta.py)",
+        "PUT /api/state (from CLI or web UI)",
+        "POST /api/tasks (from CLI or web UI)",
+        "POST /api/law/close_loop (from atlas_boot.html)"
+      ],
+      "outputs": [
+        "GET /api/state/unified (consumed by atlas_boot.html every 30s)",
+        "GET /api/state (consumed by CLI and web app)",
+        "GET /api/tasks (consumed by CLI and web app)",
+        "GET /api/daemon/status (consumed by atlas_boot.html)",
+        "GET /api/timeline/* (consumed by timeline.html)"
+      ],
+      "depends_on": [],
+      "writes_state": [
+        ".delta-fabric/entities.json",
+        ".delta-fabric/deltas.json",
+        ".delta-fabric/dictionary.json"
+      ],
+      "reads_state": [
+        ".delta-fabric/entities.json",
+        ".delta-fabric/deltas.json",
+        ".delta-fabric/dictionary.json",
+        "services/cognitive-sensor/cognitive_state.json",
+        "services/cognitive-sensor/loops_latest.json",
+        "services/cognitive-sensor/closures.json",
+        "data/projections/today.json"
+      ],
+      "endpoints": [
+        {"method": "GET", "path": "/api/state/unified", "purpose": "Merged delta + cognitive snapshot"},
+        {"method": "GET", "path": "/api/state", "purpose": "System state (mode, signals)"},
+        {"method": "PUT", "path": "/api/state", "purpose": "Update system state"},
+        {"method": "GET", "path": "/api/tasks", "purpose": "List all tasks"},
+        {"method": "POST", "path": "/api/tasks", "purpose": "Create task"},
+        {"method": "PUT", "path": "/api/tasks/:id", "purpose": "Update task"},
+        {"method": "DELETE", "path": "/api/tasks/:id", "purpose": "Archive task"},
+        {"method": "POST", "path": "/api/ingest/cognitive", "purpose": "Ingest cognitive projection"},
+        {"method": "POST", "path": "/api/law/acknowledge", "purpose": "User acknowledges daily order"},
+        {"method": "POST", "path": "/api/law/archive", "purpose": "Archive a loop"},
+        {"method": "POST", "path": "/api/law/refresh", "purpose": "Request cognitive refresh"},
+        {"method": "POST", "path": "/api/law/violation", "purpose": "Log build violation"},
+        {"method": "POST", "path": "/api/law/override", "purpose": "Log enforcement override"},
+        {"method": "POST", "path": "/api/law/close_loop", "purpose": "Canonical closure event"},
+        {"method": "POST", "path": "/api/work/request", "purpose": "Request job permission"},
+        {"method": "POST", "path": "/api/work/complete", "purpose": "Report job completion"},
+        {"method": "GET", "path": "/api/work/status", "purpose": "Query work state"},
+        {"method": "POST", "path": "/api/work/cancel", "purpose": "Cancel job"},
+        {"method": "GET", "path": "/api/work/history", "purpose": "Completed jobs (last 20)"},
+        {"method": "GET", "path": "/api/timeline", "purpose": "Query timeline events"},
+        {"method": "GET", "path": "/api/timeline/stats", "purpose": "Timeline statistics"},
+        {"method": "GET", "path": "/api/timeline/day/:date", "purpose": "Events for date"},
+        {"method": "GET", "path": "/api/health", "purpose": "Health check"},
+        {"method": "GET", "path": "/api/daemon/status", "purpose": "Daemon state + job history"},
+        {"method": "POST", "path": "/api/daemon/run", "purpose": "Manually trigger daemon job"},
+        {"method": "GET", "path": "/api/stats", "purpose": "Storage statistics"}
+      ],
+      "cron_jobs": [
+        {"name": "heartbeat", "schedule": "*/5 * * * *", "purpose": "Update daemon status timestamp"},
+        {"name": "refresh", "schedule": "0 * * * *", "purpose": "Spawn Python refresh.py (120s timeout)"},
+        {"name": "day_start", "schedule": "0 6 * * *", "purpose": "Reset daily counters, recalculate mode"},
+        {"name": "day_end", "schedule": "0 22 * * *", "purpose": "Streak sovereignty check — reset streak if no closures today"},
+        {"name": "mode_recalc", "schedule": "*/15 * * * *", "purpose": "Read cognitive state, apply closure_ratio thresholds, update mode"},
+        {"name": "work_queue", "schedule": "*/1 * * * *", "purpose": "Check job timeouts, advance queue"}
+      ],
+      "mode_thresholds": {
+        "closure_ratio_to_scale": 0.8,
+        "closure_ratio_to_build": 0.6,
+        "closure_ratio_to_maintenance": 0.4,
+        "closure_ratio_to_closure": 0.0,
+        "sleep_low_threshold": 6.0,
+        "sleep_high_threshold": 7.5,
+        "open_loops_bad_threshold": 4,
+        "open_loops_good_threshold": 1,
+        "assets_shipped_high": 2,
+        "deep_work_blocks_high": 2
+      },
+      "global_overrides": [
+        {"condition": "sleep_hours < 6", "forced_mode": "RECOVER"},
+        {"condition": "open_loops >= 4", "forced_mode": "CLOSURE"}
+      ]
+    },
+    {
+      "name": "cognitive-sensor",
+      "language": "Python",
+      "runtime": "Python 3.x (CPython)",
+      "entry_points": [
+        "refresh.py",
+        "atlas_cli.py",
+        "run_agents.py",
+        "run_daily.py",
+        "run_weekly.py",
+        "run_audit.py"
+      ],
+      "ports": [],
+      "responsibilities": [
+        "Conversation analysis pipeline (1,397 conversations, 93,898 messages)",
+        "Open loop detection via topic-based scoring",
+        "Idea extraction, deduplication, classification, and prioritization (8 agents)",
+        "Daily/weekly governance (mode computation, lane enforcement, brief generation)",
+        "Cognitive atlas visualization (UMAP + HDBSCAN, 84K points)",
+        "CycleBoard dashboard (operational UI)",
+        "Behavioral audit (30-question, 6 psychological layers)",
+        "Strategic priorities computation",
+        "JSON Schema contract validation"
+      ],
+      "inputs": [
+        "results.db (SQLite, ~140MB, 384-dim sentence embeddings)",
+        "memory_db.json (1,397 conversations, static input)"
+      ],
+      "outputs": [
+        "cognitive_state.json",
+        "daily_payload.json",
+        "daily_directive.txt",
+        "loops_latest.json",
+        "completion_stats.json",
+        "governance_state.json",
+        "idea_registry.json",
+        "strategic_priorities.json",
+        "conversation_classifications.json",
+        "daily_brief.md",
+        "weekly_governor_packet.md",
+        "BEHAVIORAL_AUDIT.md",
+        "IDEA_REGISTRY.md",
+        "cognitive_atlas.html",
+        "dashboard.html",
+        "data/projections/today.json"
+      ],
+      "depends_on": ["delta-kernel"],
+      "writes_state": [
+        "cognitive_state.json",
+        "daily_payload.json",
+        "daily_directive.txt",
+        "loops_latest.json",
+        "completion_stats.json",
+        "governance_state.json",
+        "idea_registry.json",
+        "excavated_ideas_raw.json",
+        "ideas_deduplicated.json",
+        "ideas_classified.json",
+        "strategic_priorities.json",
+        "conversation_classifications.json",
+        "cycleboard/brain/cognitive_state.json",
+        "cycleboard/brain/daily_payload.json",
+        "cycleboard/brain/daily_directive.txt",
+        "cycleboard/brain/strategic_priorities.json",
+        "data/projections/today.json"
+      ],
+      "reads_state": [
+        "results.db",
+        "memory_db.json",
+        "cognitive_state.json",
+        "loops_latest.json",
+        "completion_stats.json",
+        "governance_state.json",
+        "idea_registry.json",
+        "excavated_ideas_raw.json",
+        "ideas_deduplicated.json",
+        "ideas_classified.json",
+        "conversation_classifications.json",
+        "leverage_map.json"
+      ],
+      "key_constants": {
+        "MIN_LOOP_SCORE": 18000,
+        "INTENT_TOPIC_WEIGHT": 30,
+        "DONE_TOPIC_WEIGHT": -50,
+        "SAME_THRESHOLD": 0.70,
+        "RELATED_THRESHOLD": 0.55,
+        "VISION_CLUSTER_THRESHOLD": 0.55,
+        "PARENT_CHILD_THRESHOLD": 0.50,
+        "TIER_EXECUTE_NOW": 0.45,
+        "TIER_NEXT_UP": 0.30,
+        "TIER_BACKLOG": 0.12,
+        "CLOSURE_RATIO_CRITICAL": 15.0,
+        "OPEN_LOOPS_CRITICAL": 20,
+        "OPEN_LOOPS_CAUTION": 10,
+        "EMBEDDING_MODEL": "all-MiniLM-L6-v2",
+        "EMBEDDING_DIM": 384,
+        "UMAP_N_NEIGHBORS": 30,
+        "UMAP_MIN_DIST": 0.05,
+        "HDBSCAN_MIN_CLUSTER_SIZE": 50,
+        "HDBSCAN_MIN_SAMPLES": 10,
+        "MAX_ACTIVE_LANES": 2,
+        "IDEA_MORATORIUM": true,
+        "MAX_RESEARCH_MINUTES": 30,
+        "MIN_BUILD_MINUTES": 90,
+        "DAILY_WORK_BLOCKS": 3
+      }
+    },
+    {
+      "name": "aegis-fabric",
+      "language": "TypeScript",
+      "runtime": "Node.js (tsx)",
+      "entry_points": ["src/api/server.ts"],
+      "ports": [3002],
+      "responsibilities": [
+        "AI agent policy gate (ALLOW/DENY/REQUIRE_HUMAN)",
+        "Multi-tenant agent management",
+        "Declarative policy engine (9 operators, first-match-wins)",
+        "Agent action normalization (Claude/OpenAI/Direct → CanonicalAgentAction)",
+        "Human-in-the-loop approval queue",
+        "Usage/quota tracking per tenant per agent",
+        "Audit logging (immutable)",
+        "Webhook event dispatch"
+      ],
+      "inputs": [
+        "POST /api/v1/agent/action (from AI agents: Claude, OpenAI, custom)",
+        "POST /api/v1/policies (from tenant admin)",
+        "POST /api/v1/approvals/:id (from human reviewer)"
+      ],
+      "outputs": [
+        "Policy decisions: {effect, matched_rule_id, reason}",
+        "Approval queue entries",
+        "Audit log events",
+        "Webhook dispatches"
+      ],
+      "depends_on": [],
+      "writes_state": [
+        ".aegis-data/tenants.json",
+        ".aegis-data/usage.json",
+        ".aegis-data/tenants/{tenant_id}/entities.json",
+        ".aegis-data/tenants/{tenant_id}/deltas.json"
+      ],
+      "reads_state": [
+        ".aegis-data/tenants.json",
+        ".aegis-data/usage.json",
+        ".aegis-data/tenants/{tenant_id}/entities.json",
+        ".aegis-data/tenants/{tenant_id}/deltas.json"
+      ],
+      "endpoints": [
+        {"method": "POST", "path": "/api/v1/agents", "purpose": "Register agent"},
+        {"method": "GET", "path": "/api/v1/agents", "purpose": "List agents"},
+        {"method": "POST", "path": "/api/v1/agent/action", "purpose": "Submit agent action (main entry)"},
+        {"method": "GET", "path": "/api/v1/audit", "purpose": "Get audit log"},
+        {"method": "GET", "path": "/api/v1/policies", "purpose": "List policies"},
+        {"method": "POST", "path": "/api/v1/policies", "purpose": "Create policy rules"},
+        {"method": "POST", "path": "/api/v1/policies/simulate", "purpose": "Dry-run policy evaluation"},
+        {"method": "GET", "path": "/api/v1/approvals", "purpose": "List pending approvals"},
+        {"method": "POST", "path": "/api/v1/approvals/:id", "purpose": "Approve or reject"},
+        {"method": "GET", "path": "/api/v1/state", "purpose": "Query entities by type"},
+        {"method": "GET", "path": "/api/v1/metrics", "purpose": "System metrics"},
+        {"method": "GET", "path": "/api/v1/webhooks", "purpose": "List webhooks"},
+        {"method": "POST", "path": "/api/v1/webhooks", "purpose": "Register webhook"}
+      ],
+      "policy_engine": {
+        "operators": ["eq", "neq", "in", "not_in", "gt", "lt", "gte", "lte", "exists"],
+        "effects": ["ALLOW", "DENY", "REQUIRE_HUMAN"],
+        "evaluation": "first-match-wins, rules sorted by priority",
+        "default_if_no_match": "ALLOW",
+        "cache_ttl_seconds": 60
+      },
+      "valid_agent_actions": [
+        "create_task", "update_task", "complete_task", "delete_task",
+        "query_state", "propose_delta", "route_decision",
+        "request_approval", "get_policy_simulation", "register_webhook"
+      ],
+      "tenant_tiers": {
+        "FREE": {"max_agents": 2, "max_actions_per_hour": 100, "max_entities": 500},
+        "STARTER": {"max_agents": 10, "max_actions_per_hour": 1000, "max_entities": 5000},
+        "ENTERPRISE": {"max_agents": 100, "max_actions_per_hour": 10000, "max_entities": 100000}
+      },
+      "approval_statuses": ["PENDING", "APPROVED", "REJECTED", "EXPIRED"],
+      "approval_default_ttl_ms": 3600000
+    }
+  ],
+  "components": [
+    {
+      "name": "mode_router",
+      "location": "services/delta-kernel/src/core/routing.ts",
+      "type": "pure_function",
+      "responsibility": "Compute operational mode from 5 signals via deterministic Markov lookup",
+      "inputs": ["sleep_hours", "open_loops", "assets_shipped", "deep_work_blocks", "money_delta"],
+      "outputs": ["Mode (one of 6 values)"],
+      "called_by": ["server.ts", "governance_daemon.ts", "daily-screen.ts"]
+    },
+    {
+      "name": "lut_router_legacy",
+      "location": "services/delta-kernel/src/core/lut.ts",
+      "type": "pure_function",
+      "responsibility": "Legacy LUT-based mode routing (superseded by routing.ts)",
+      "inputs": ["sleep_hours", "open_loops", "leverage_balance", "streak_days", "pending_actions"],
+      "outputs": ["Mode"],
+      "called_by": ["renderer.ts"],
+      "notes": "REDUNDANT — uses different signal set and thresholds than routing.ts"
+    },
+    {
+      "name": "python_mode_router",
+      "location": "services/cognitive-sensor/route_today.py",
+      "type": "script",
+      "responsibility": "Python-side mode routing from cognitive state",
+      "inputs": ["cognitive_state.json (closure.ratio, closure.open)"],
+      "outputs": ["daily_directive.txt"],
+      "called_by": ["refresh.py"],
+      "notes": "REDUNDANT — third routing implementation with different thresholds"
+    },
+    {
+      "name": "delta_engine",
+      "location": "services/delta-kernel/src/core/delta.ts",
+      "type": "module",
+      "responsibility": "Append-only hash-chained delta operations (RFC 6902 JSON Patch)",
+      "inputs": ["entity_type + initial_state (create)", "entity + patch (mutate)"],
+      "outputs": ["{entity, delta, state}"],
+      "called_by": ["server.ts", "storage.ts", "cockpit.ts", "preparation.ts"]
+    },
+    {
+      "name": "delta_engine_aegis_copy",
+      "location": "services/aegis-fabric/src/core/delta.ts",
+      "type": "module",
+      "responsibility": "Copy of delta engine for aegis-fabric (same API, separate code)",
+      "inputs": ["entity_type + initial_state"],
+      "outputs": ["{entity, delta, state}"],
+      "called_by": ["action-processor.ts", "entity-registry.ts"],
+      "notes": "DUPLICATED — mirrors delta-kernel/src/core/delta.ts"
+    },
+    {
+      "name": "daily_cockpit",
+      "location": "services/delta-kernel/src/core/cockpit.ts",
+      "type": "module",
+      "responsibility": "Build command center state: signals, prepared actions (max 7), tasks, drafts, leverage moves",
+      "inputs": ["mode", "signals", "tasks", "drafts", "threads"],
+      "outputs": ["CockpitState"],
+      "called_by": ["server.ts", "daily-screen.ts"]
+    },
+    {
+      "name": "preparation_engine",
+      "location": "services/delta-kernel/src/core/preparation.ts",
+      "type": "module",
+      "responsibility": "Background draft generation (NEVER executes). Max 5 drafts/run. Fingerprint dedup.",
+      "inputs": ["delta_events", "current_mode", "entities"],
+      "outputs": ["Draft entities (require human confirmation)"],
+      "called_by": ["server.ts", "governance_daemon.ts"]
+    },
+    {
+      "name": "matryoshka_dictionary",
+      "location": "services/delta-kernel/src/core/dictionary.ts",
+      "type": "module",
+      "responsibility": "3-tier hierarchical compression: Token → Pattern → Motif. Append-only.",
+      "inputs": ["raw text values"],
+      "outputs": ["token/pattern/motif IDs"],
+      "called_by": ["storage.ts"]
+    },
+    {
+      "name": "vector_discovery",
+      "location": "services/delta-kernel/src/core/vector-discovery.ts",
+      "type": "module",
+      "responsibility": "Semantic clustering and pattern detection. Generates DiscoveryProposal entities.",
+      "inputs": ["entity text content"],
+      "outputs": ["DiscoveryProposal entities (5 types)"],
+      "called_by": ["not wired into runtime"],
+      "notes": "SPEC COMPLETE but not integrated into execution flow"
+    },
+    {
+      "name": "ai_design",
+      "location": "services/delta-kernel/src/core/ai-design.ts",
+      "type": "module",
+      "responsibility": "LLM-based design proposals (AI NEVER executes — outputs compile to LUTs only)",
+      "inputs": ["entity content", "current mode"],
+      "outputs": ["DesignProposal entities (5 types)"],
+      "called_by": ["not wired into runtime"],
+      "notes": "SPEC COMPLETE but not integrated into execution flow"
+    },
+    {
+      "name": "delta_sync",
+      "location": "services/delta-kernel/src/core/delta-sync.ts",
+      "type": "module",
+      "responsibility": "P2P sync protocol. 7 packet types. LoRa-safe (220-byte max).",
+      "inputs": ["entity heads from peers"],
+      "outputs": ["synchronized deltas"],
+      "called_by": ["not wired into runtime"],
+      "notes": "SPEC COMPLETE but not integrated. Designed for off-grid LoRa."
+    },
+    {
+      "name": "off_grid_node",
+      "location": "services/delta-kernel/src/core/off-grid-node.ts",
+      "type": "module",
+      "responsibility": "Node tier definitions: CORE/EDGE/MICRO with hardware profiles and storage limits",
+      "inputs": [],
+      "outputs": ["NodeClass configurations"],
+      "called_by": ["not wired into runtime"],
+      "notes": "SPEC COMPLETE but not integrated"
+    },
+    {
+      "name": "ui_stream",
+      "location": "services/delta-kernel/src/core/ui-stream.ts",
+      "type": "module",
+      "responsibility": "UI delta streaming. 6 component kinds, 7 stream operations.",
+      "called_by": ["not wired into runtime"],
+      "notes": "SPEC COMPLETE but not integrated"
+    },
+    {
+      "name": "camera_stream",
+      "location": "services/delta-kernel/src/core/camera-stream.ts",
+      "type": "module",
+      "responsibility": "Camera tile delta streaming with residual compression.",
+      "called_by": ["not wired into runtime"],
+      "notes": "SPEC COMPLETE but not integrated"
+    },
+    {
+      "name": "actuation",
+      "location": "services/delta-kernel/src/core/actuation.ts",
+      "type": "module",
+      "responsibility": "Remote control with human confirmation gate. 7 actuator kinds.",
+      "called_by": ["not wired into runtime"],
+      "notes": "SPEC COMPLETE but not integrated"
+    },
+    {
+      "name": "work_controller",
+      "location": "services/delta-kernel/src/core/work-controller.ts",
+      "type": "module",
+      "responsibility": "Universal work admission gate. 3 primitives: request/complete/status.",
+      "inputs": ["job requests (type, title, weight, dependencies)"],
+      "outputs": ["admission status (APPROVED/QUEUED/DENIED)", "WorkLedger"],
+      "called_by": ["governance_daemon.ts", "server.ts"]
+    },
+    {
+      "name": "governance_daemon",
+      "location": "services/delta-kernel/src/governance/governance_daemon.ts",
+      "type": "scheduler",
+      "responsibility": "Autonomous cron scheduler. 6 jobs. Auto-starts with API server.",
+      "inputs": ["system clock", "cognitive_state.json", "closures.json"],
+      "outputs": ["mode recalculations", "heartbeats", "work queue management"],
+      "called_by": ["server.ts (auto-start)"]
+    },
+    {
+      "name": "policy_engine",
+      "location": "services/aegis-fabric/src/policies/policy-engine.ts",
+      "type": "module",
+      "responsibility": "Evaluate declarative rules against agent actions. 9 operators. First-match-wins.",
+      "inputs": ["CanonicalAgentAction", "tenant policies"],
+      "outputs": ["PolicyDecision (effect + reason + matched_rule_id)"],
+      "called_by": ["action-processor.ts"]
+    },
+    {
+      "name": "agent_adapter",
+      "location": "services/aegis-fabric/src/agents/agent-adapter.ts",
+      "type": "module",
+      "responsibility": "Normalize Claude/OpenAI/Direct agent formats to CanonicalAgentAction",
+      "inputs": ["raw agent action (Claude tool_use / OpenAI function_call / direct)"],
+      "outputs": ["CanonicalAgentAction"],
+      "called_by": ["action-processor.ts"]
+    },
+    {
+      "name": "refresh_pipeline",
+      "location": "services/cognitive-sensor/refresh.py",
+      "type": "orchestrator",
+      "responsibility": "10-step sequential Python pipeline. Master entry point for cognitive refresh.",
+      "inputs": ["results.db", "memory_db.json"],
+      "outputs": ["cognitive_state.json", "daily_payload.json", "dashboard.html", "strategic_priorities.json"],
+      "called_by": ["governance_daemon.ts (hourly cron)", "scripts/run_all.ps1"]
+    },
+    {
+      "name": "atlas_governor",
+      "location": "services/cognitive-sensor/governor_daily.py + governor_weekly.py",
+      "type": "module",
+      "responsibility": "Governance: mode compute, lane enforcement, leverage moves, brief/packet generation",
+      "inputs": ["cognitive_state.json", "idea_registry.json", "conversation_classifications.json", "completion_stats.json"],
+      "outputs": ["daily_brief.md", "governance_state.json", "weekly_governor_packet.md"],
+      "called_by": ["atlas_agent.py", "run_daily.py", "run_weekly.py"]
+    },
+    {
+      "name": "idea_pipeline",
+      "location": "services/cognitive-sensor/agent_*.py (5 agents)",
+      "type": "pipeline",
+      "responsibility": "Extract → deduplicate → classify → prioritize → report ideas from conversation history",
+      "inputs": ["memory_db.json", "results.db"],
+      "outputs": ["idea_registry.json", "IDEA_REGISTRY.md"],
+      "called_by": ["run_agents.py", "atlas_agent.maintain_backlog()"]
+    },
+    {
+      "name": "atlas_visualization",
+      "location": "services/cognitive-sensor/atlas_*.py (6 modules)",
+      "type": "pipeline",
+      "responsibility": "UMAP + HDBSCAN clustering → force-directed layout → interactive HTML visualization",
+      "inputs": ["results.db (384-dim embeddings)"],
+      "outputs": ["cognitive_atlas.html (5.9MB self-contained)"],
+      "called_by": ["build_cognitive_atlas.py"]
+    },
+    {
+      "name": "master_dashboard",
+      "location": "atlas_boot.html",
+      "type": "ui",
+      "responsibility": "Master control shell. 4-tab viewport, telemetry, command strip. 30s polling.",
+      "inputs": ["GET /api/state/unified (port 3001)", "GET /api/daemon/status (port 3001)"],
+      "outputs": ["Browser UI rendering"],
+      "called_by": ["user (opens in browser)"]
+    },
+    {
+      "name": "cycleboard",
+      "location": "services/cognitive-sensor/cycleboard/",
+      "type": "ui",
+      "responsibility": "Operational dashboard. Mode display, signals, strategic priorities.",
+      "inputs": ["brain/cognitive_state.json", "brain/daily_payload.json", "brain/daily_directive.txt", "brain/strategic_priorities.json"],
+      "outputs": ["Browser UI rendering"],
+      "called_by": ["atlas_boot.html (loaded as iframe)"]
+    }
+  ],
+  "pipelines": [
+    {
+      "name": "cognitive_refresh",
+      "entry": "services/cognitive-sensor/refresh.py",
+      "trigger": "governance_daemon.ts hourly cron OR scripts/run_all.ps1",
+      "steps": [
+        {"order": 1, "script": "loops.py", "reads": ["results.db"], "writes": ["loops_latest.json"]},
+        {"order": 2, "script": "completion_stats.py", "reads": ["results.db"], "writes": ["completion_stats.json"]},
+        {"order": 3, "script": "export_cognitive_state.py", "reads": ["cognitive_api.py output"], "writes": ["cognitive_state.json"]},
+        {"order": 4, "script": "route_today.py", "reads": ["cognitive_state.json"], "writes": ["daily_directive.txt"]},
+        {"order": 5, "script": "export_daily_payload.py", "reads": ["cognitive_state.json"], "writes": ["daily_payload.json", "cycleboard/brain/daily_payload.json"]},
+        {"order": 6, "script": "wire_cycleboard.py", "reads": ["cognitive_state.json", "daily_directive.txt"], "writes": ["cycleboard/brain/cognitive_state.json", "cycleboard/brain/daily_directive.txt"]},
+        {"order": 7, "script": "reporter.py", "reads": ["cognitive_state.json"], "writes": ["STATE_HISTORY.md"]},
+        {"order": 8, "script": "build_dashboard.py", "reads": ["cognitive_state.json"], "writes": ["dashboard.html"]},
+        {"order": 9, "script": "build_strategic_priorities.py", "reads": ["leverage_map.json", "cognitive_state.json"], "writes": ["strategic_priorities.json"]},
+        {"order": 10, "script": "build_docs_manifest.py", "reads": ["*.md files"], "writes": ["docs_manifest.json"]}
+      ]
+    },
+    {
+      "name": "idea_intelligence",
+      "entry": "services/cognitive-sensor/run_agents.py",
+      "trigger": "atlas_agent.maintain_backlog() or manual",
+      "steps": [
+        {"order": 1, "script": "agent_excavator.py", "reads": ["memory_db.json", "results.db"], "writes": ["excavated_ideas_raw.json"]},
+        {"order": 2, "script": "agent_deduplicator.py", "reads": ["excavated_ideas_raw.json"], "writes": ["ideas_deduplicated.json"]},
+        {"order": 3, "script": "agent_classifier.py", "reads": ["ideas_deduplicated.json"], "writes": ["ideas_classified.json"]},
+        {"order": 4, "script": "agent_orchestrator.py", "reads": ["ideas_classified.json"], "writes": ["idea_registry.json"]},
+        {"order": 5, "script": "agent_reporter.py", "reads": ["idea_registry.json"], "writes": ["IDEA_REGISTRY.md"]}
+      ]
+    },
+    {
+      "name": "system_startup",
+      "entry": "scripts/run_all.ps1",
+      "trigger": "manual",
+      "steps": [
+        {"order": 1, "script": "npm run api (delta-kernel)", "purpose": "Start Express server on port 3001 + auto-start governance daemon"},
+        {"order": 2, "script": "wait 3 seconds", "purpose": "Allow API to initialize"},
+        {"order": 3, "script": "python refresh.py", "purpose": "Run 10-step cognitive refresh pipeline"},
+        {"order": 4, "script": "python build_projection.py", "purpose": "Merge cognitive + directive into today.json"},
+        {"order": 5, "script": "python push_to_delta.py", "purpose": "POST today.json to localhost:3001/api/ingest/cognitive"}
+      ]
+    },
+    {
+      "name": "daily_governance",
+      "entry": "services/cognitive-sensor/run_daily.py",
+      "trigger": "atlas_cli.py daily",
+      "steps": [
+        {"order": 1, "script": "loops.py", "phase": "ingest"},
+        {"order": 2, "script": "completion_stats.py", "phase": "ingest"},
+        {"order": 3, "script": "export_cognitive_state.py", "phase": "ingest"},
+        {"order": 4, "script": "route_today.py", "phase": "ingest"},
+        {"order": 5, "script": "export_daily_payload.py", "phase": "ingest"},
+        {"order": 6, "script": "wire_cycleboard.py", "phase": "backlog"},
+        {"order": 7, "script": "reporter.py", "phase": "backlog"},
+        {"order": 8, "script": "governor_daily.py", "phase": "govern"}
+      ]
+    },
+    {
+      "name": "weekly_governance",
+      "entry": "services/cognitive-sensor/run_weekly.py",
+      "trigger": "atlas_cli.py weekly",
+      "steps": [
+        {"order": 1, "script": "run_daily.py (full daily pipeline)", "phase": "daily"},
+        {"order": 2, "script": "agent_classifier_convo.py", "phase": "audit"},
+        {"order": 3, "script": "agent_synthesizer.py", "phase": "audit"},
+        {"order": 4, "script": "governor_weekly.py", "phase": "govern"}
+      ]
+    },
+    {
+      "name": "agent_action_processing",
+      "entry": "services/aegis-fabric/src/api/routes/agent-routes.ts",
+      "trigger": "POST /api/v1/agent/action",
+      "steps": [
+        {"order": 1, "module": "agent-adapter.ts", "purpose": "Normalize Claude/OpenAI/Direct → CanonicalAgentAction"},
+        {"order": 2, "module": "agent-registry.ts", "purpose": "Validate agent exists, is enabled, has capability"},
+        {"order": 3, "module": "tenant-registry.ts", "purpose": "Fetch tenant config for policy context"},
+        {"order": 4, "module": "usage-tracker.ts", "purpose": "Check quota (actions/hour)"},
+        {"order": 5, "module": "policy-engine.ts", "purpose": "Evaluate rules: ALLOW/DENY/REQUIRE_HUMAN"},
+        {"order": 6, "module": "action-processor.ts", "purpose": "Execute action or queue for approval"},
+        {"order": 7, "module": "audit-log.ts", "purpose": "Log immutable audit entry"},
+        {"order": 8, "module": "webhook-dispatcher.ts", "purpose": "Notify subscribers"}
+      ]
+    }
+  ],
+  "data_models": [
+    {
+      "name": "SystemStateData",
+      "location": "services/delta-kernel/src/core/types.ts",
+      "fields": {
+        "mode": "Mode (RECOVER|CLOSURE|MAINTENANCE|BUILD|COMPOUND|SCALE)",
+        "signals.sleep_hours": "number",
+        "signals.open_loops": "number",
+        "signals.assets_shipped": "number",
+        "signals.deep_work_blocks": "number",
+        "signals.money_delta": "number"
+      },
+      "produced_by": ["server.ts", "routing.ts"],
+      "consumed_by": ["cockpit.ts", "daily-screen.ts", "App.tsx", "atlas_boot.html"]
+    },
+    {
+      "name": "Entity",
+      "location": "services/delta-kernel/src/core/types.ts",
+      "fields": {
+        "entity_id": "UUID v4",
+        "entity_type": "one of 45 entity types",
+        "created_at": "unix epoch ms",
+        "current_version": "integer (incremented per delta)",
+        "current_hash": "SHA256 of current state",
+        "is_archived": "boolean"
+      },
+      "produced_by": ["delta.ts createEntity()"],
+      "consumed_by": ["all entity-consuming modules"]
+    },
+    {
+      "name": "Delta",
+      "location": "services/delta-kernel/src/core/types.ts",
+      "fields": {
+        "delta_id": "UUID v4",
+        "entity_id": "UUID v4",
+        "timestamp": "unix epoch ms",
+        "author": "{type: SYSTEM|USER|AI, id: string}",
+        "patch": "JsonPatch[] (RFC 6902)",
+        "prev_hash": "SHA256",
+        "new_hash": "SHA256"
+      },
+      "produced_by": ["delta.ts createDelta()"],
+      "consumed_by": ["storage.ts (append)", "delta-sync.ts (P2P)", "hash chain verification"]
+    },
+    {
+      "name": "DailyPayload",
+      "location": "contracts/schemas/DailyPayload.v1.json",
+      "fields": {
+        "mode": "string (CLOSURE|MAINTENANCE|BUILD)",
+        "build_allowed": "boolean",
+        "primary_action": "string",
+        "open_loops": "string[] (top 5 titles)",
+        "open_loop_count": "integer",
+        "closure_ratio": "number",
+        "risk": "string (HIGH|MEDIUM|LOW)",
+        "generated_at": "string (YYYY-MM-DD)"
+      },
+      "produced_by": ["export_daily_payload.py"],
+      "consumed_by": ["CycleBoard UI", "atlas_boot.html via unified state"]
+    },
+    {
+      "name": "CognitiveState",
+      "location": "contracts/schemas/CognitiveMetricsComputed.json",
+      "fields": {
+        "state": "{first_activity, last_activity, total_convos}",
+        "loops": "[{convo_id, title, score}]",
+        "drift": "{business, technical, personal, learning, processing, execution}",
+        "closure": "{open, closed, ratio}"
+      },
+      "produced_by": ["export_cognitive_state.py"],
+      "consumed_by": ["server.ts (unified state)", "CycleBoard", "governor_daily.py"]
+    },
+    {
+      "name": "IdeaRegistry",
+      "location": "contracts/schemas/IdeaRegistry.v1.json",
+      "fields": {
+        "metadata": "{generated_at, total_ideas, tier_breakdown, max_priority, avg_priority}",
+        "tiers": "{execute_now, next_up, backlog, archive}",
+        "execution_sequence": "string[] (canonical_ids in order)",
+        "gateway_ideas": "string[] (ideas that unlock most downstream)",
+        "full_registry": "[{canonical_id, priority_score, complexity, alignment_score, skills_required, dependencies}]"
+      },
+      "produced_by": ["agent_orchestrator.py"],
+      "consumed_by": ["governor_daily.py", "idea_dashboard.html"]
+    },
+    {
+      "name": "GovernanceState",
+      "location": "services/cognitive-sensor/governance_state.json",
+      "fields": {
+        "mode": "string",
+        "risk": "string",
+        "build_allowed": "boolean",
+        "active_lanes": "[{name, status, health}]",
+        "lane_violations": "string[]",
+        "leverage_moves": "string[]",
+        "targets": "object",
+        "guardrails": "string[]"
+      },
+      "produced_by": ["governor_daily.py"],
+      "consumed_by": ["atlas_boot.html", "governor_weekly.py"]
+    },
+    {
+      "name": "PolicyRule",
+      "location": "services/aegis-fabric/src/core/types.ts",
+      "fields": {
+        "rule_id": "string",
+        "name": "string",
+        "priority": "integer",
+        "conditions": "[{field, operator, value}]",
+        "effect": "ALLOW|DENY|REQUIRE_HUMAN",
+        "reason": "string",
+        "enabled": "boolean"
+      },
+      "produced_by": ["tenant admin (manual)"],
+      "consumed_by": ["policy-engine.ts"]
+    },
+    {
+      "name": "WorkLedger",
+      "location": "contracts/schemas/WorkLedger.v1.json",
+      "fields": {
+        "active": "[{job_id, type, title, weight, started_at, timeout_at}]",
+        "queued": "[{job_id, type, title, weight}]",
+        "completed": "[{job_id, outcome, duration_ms, cost_usd}]",
+        "stats": "{total_completed, total_failed, avg_duration_ms, total_cost_usd}",
+        "config": "{max_concurrent_jobs, max_queue_depth, default_timeout_ms, allow_ai_in_closure_mode}"
+      },
+      "produced_by": ["work-controller.ts"],
+      "consumed_by": ["governance_daemon.ts", "server.ts"]
+    },
+    {
+      "name": "CockpitState",
+      "location": "services/delta-kernel/src/core/cockpit.ts",
+      "fields": {
+        "timestamp": "unix epoch ms",
+        "mode": "Mode",
+        "mode_since": "unix epoch ms",
+        "signals": "{sleep_hours, open_loops, assets_shipped, deep_work_blocks, money_delta} as SignalDisplay",
+        "prepared_actions": "PreparedAction[] (max 7)",
+        "top_tasks": "TaskDisplay[]",
+        "drafts": "DraftDisplay[]",
+        "leverage_moves": "LeverageMove[]"
+      },
+      "produced_by": ["cockpit.ts buildCockpit()"],
+      "consumed_by": ["server.ts", "renderer.ts", "App.tsx"]
+    }
+  ],
+  "state_stores": [
+    {
+      "name": "delta_fabric_entities",
+      "path": ".delta-fabric/entities.json",
+      "format": "JSON (Map<entity_id, {entity, state}>)",
+      "written_by": "delta-kernel/src/cli/storage.ts",
+      "read_by": "delta-kernel/src/api/server.ts, storage.ts",
+      "lifecycle": "persistent, created on first run, updated on every mutation"
+    },
+    {
+      "name": "delta_fabric_deltas",
+      "path": ".delta-fabric/deltas.json",
+      "format": "JSON (Delta[], append-only)",
+      "written_by": "delta-kernel/src/cli/storage.ts",
+      "read_by": "delta-kernel/src/api/server.ts, storage.ts",
+      "lifecycle": "persistent, append-only, never deleted, grows indefinitely"
+    },
+    {
+      "name": "delta_fabric_dictionary",
+      "path": ".delta-fabric/dictionary.json",
+      "format": "JSON ({tokens, patterns, motifs})",
+      "written_by": "delta-kernel/src/cli/storage.ts",
+      "read_by": "storage.ts",
+      "lifecycle": "persistent, append-only"
+    },
+    {
+      "name": "results_db",
+      "path": "services/cognitive-sensor/results.db",
+      "format": "SQLite (~140MB)",
+      "tables": ["messages", "topics", "convo_titles", "convo_time", "embeddings", "loop_decisions"],
+      "written_by": "init_*.py scripts, decide.py",
+      "read_by": "loops.py, completion_stats.py, agent_excavator.py, atlas_data.py, all analysis scripts",
+      "lifecycle": "persistent, created by init scripts, git-ignored"
+    },
+    {
+      "name": "memory_db",
+      "path": "services/cognitive-sensor/memory_db.json",
+      "format": "JSON (array of 1,397 conversation objects)",
+      "written_by": "external (user chat history export)",
+      "read_by": "agent_excavator.py, agent_classifier_convo.py, agent_book_miner.py",
+      "lifecycle": "static input, never modified by system"
+    },
+    {
+      "name": "aegis_data",
+      "path": ".aegis-data/",
+      "format": "JSON files (tenants.json, usage.json, tenants/{id}/entities.json, tenants/{id}/deltas.json)",
+      "written_by": "aegis-fabric storage module",
+      "read_by": "aegis-fabric storage module",
+      "lifecycle": "persistent, created on first run, git-ignored"
+    },
+    {
+      "name": "cognitive_state",
+      "path": "services/cognitive-sensor/cognitive_state.json",
+      "format": "JSON",
+      "written_by": "export_cognitive_state.py",
+      "read_by": "server.ts, CycleBoard, governor_daily.py, build_projection.py, export_daily_payload.py",
+      "lifecycle": "regenerated on every refresh cycle"
+    },
+    {
+      "name": "daily_projection",
+      "path": "data/projections/today.json",
+      "format": "JSON (merged cognitive + directive)",
+      "written_by": "build_projection.py",
+      "read_by": "push_to_delta.py → server.ts",
+      "lifecycle": "regenerated on startup"
+    }
+  ],
+  "execution_flows": [
+    {
+      "name": "system_startup",
+      "trigger": "manual (scripts/run_all.ps1)",
+      "sequence": ["start delta-kernel API (port 3001)", "wait 3s", "run refresh.py", "run build_projection.py", "run push_to_delta.py"]
+    },
+    {
+      "name": "continuous_operation",
+      "trigger": "automatic (governance daemon cron jobs)",
+      "sequence": ["every 1min: work_queue check", "every 5min: heartbeat", "every 15min: mode_recalc", "every 1hr: cognitive refresh", "6am: day_start reset", "10pm: day_end streak check"]
+    },
+    {
+      "name": "browser_polling",
+      "trigger": "automatic (atlas_boot.html setInterval)",
+      "interval_ms": 30000,
+      "sequence": ["GET /api/state/unified", "GET /api/daemon/status", "update UI metrics"]
+    },
+    {
+      "name": "loop_closure",
+      "trigger": "user clicks in atlas_boot.html",
+      "sequence": ["POST /api/law/close_loop {loop_id, title, outcome}", "update closures.json", "recalculate closure_ratio", "check mode transition", "update streak", "return new state"]
+    }
+  ],
+  "external_dependencies": [
+    {"name": "express", "version": "^5.2.1", "language": "TypeScript", "used_by": ["delta-kernel", "aegis-fabric"]},
+    {"name": "cors", "version": "^2.8.5", "language": "TypeScript", "used_by": ["delta-kernel", "aegis-fabric"]},
+    {"name": "node-cron", "version": "^4.2.1", "language": "TypeScript", "used_by": ["delta-kernel"]},
+    {"name": "tsx", "version": "^4.7.0", "language": "TypeScript", "used_by": ["delta-kernel", "aegis-fabric"]},
+    {"name": "typescript", "version": "^5.3.0", "language": "TypeScript", "used_by": ["delta-kernel", "aegis-fabric"]},
+    {"name": "react", "version": "19.2.0", "language": "TypeScript", "used_by": ["delta-kernel web app"]},
+    {"name": "react-dom", "version": "19.2.0", "language": "TypeScript", "used_by": ["delta-kernel web app"]},
+    {"name": "vite", "version": "7.2.4", "language": "TypeScript", "used_by": ["delta-kernel web app"]},
+    {"name": "sentence-transformers", "version": ">=2.2.0", "language": "Python", "used_by": ["cognitive-sensor (model_cache.py)"]},
+    {"name": "numpy", "version": ">=1.24.0", "language": "Python", "used_by": ["cognitive-sensor (all agents, atlas modules)"]},
+    {"name": "scikit-learn", "version": ">=1.3.0", "language": "Python", "used_by": ["cognitive-sensor"]},
+    {"name": "umap-learn", "version": ">=0.5.5", "language": "Python", "used_by": ["cognitive-sensor (atlas_projection.py)"]},
+    {"name": "hdbscan", "version": ">=0.8.33", "language": "Python", "used_by": ["cognitive-sensor (atlas_projection.py)"]},
+    {"name": "pytest", "version": ">=7.0.0", "language": "Python", "used_by": ["cognitive-sensor tests"]},
+    {"name": "Plotly.js", "version": "CDN", "language": "JavaScript", "used_by": ["cognitive_atlas.html"]},
+    {"name": "Sigma.js", "version": "CDN", "language": "JavaScript", "used_by": ["cognitive_atlas.html"]}
+  ],
+  "json_schema_contracts": [
+    "AegisAgent.v1.json",
+    "AegisAgentAction.v1.json",
+    "AegisApproval.v1.json",
+    "AegisPolicy.v1.json",
+    "AegisPolicyDecision.v1.json",
+    "AegisTenant.v1.json",
+    "AegisWebhook.v1.json",
+    "Closures.v1.json",
+    "CognitiveMetricsComputed.json",
+    "DailyPayload.v1.json",
+    "DailyProjection.v1.json",
+    "ExcavatedIdeas.v1.json",
+    "IdeaRegistry.v1.json",
+    "TimelineEvents.v1.json",
+    "WorkLedger.v1.json"
+  ]
+}

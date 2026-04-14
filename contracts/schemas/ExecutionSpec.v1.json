@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ExecutionSpec.v1",
+  "title": "Execution Spec",
+  "description": "Deterministic execution plan produced by the planner agent",
+  "type": "object",
+  "required": ["spec_id", "task_id", "steps", "created_at"],
+  "properties": {
+    "spec_id": { "type": "string", "format": "uuid" },
+    "task_id": { "type": "string", "format": "uuid" },
+    "plan_method": { "type": "string", "enum": ["template", "decomposition", "single_step"] },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["step_index", "action_type", "params", "expected_output"],
+        "properties": {
+          "step_index": { "type": "integer", "minimum": 0 },
+          "action_type": {
+            "type": "string",
+            "enum": ["uasc_command", "api_call", "file_write", "file_read", "claude_generate", "state_update", "shell_exec", "noop"]
+          },
+          "params": { "type": "object" },
+          "expected_output": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["json", "text", "boolean", "void"] },
+              "schema": { "type": "object" }
+            }
+          },
+          "rollback": {
+            "type": "object",
+            "properties": {
+              "action_type": { "type": "string" },
+              "params": { "type": "object" }
+            }
+          },
+          "depends_on": { "type": "array", "items": { "type": "integer" } }
+        }
+      }
+    },
+    "estimated_cost_usd": { "type": "number" },
+    "estimated_duration_seconds": { "type": "integer" },
+    "created_at": { "type": "integer" }
+  }
+}

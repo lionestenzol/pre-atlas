@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AegisAgentAction.v1",
+  "title": "Canonical Agent Action",
+  "description": "Normalized agent action submitted to the Aegis Enterprise Fabric",
+  "type": "object",
+  "required": ["action_id", "tenant_id", "agent_id", "action", "params", "timestamp"],
+  "properties": {
+    "action_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "agent_id": { "type": "string", "format": "uuid" },
+    "agent_version": { "type": "string" },
+    "action": {
+      "type": "string",
+      "enum": [
+        "create_task", "update_task", "complete_task", "delete_task",
+        "query_state", "propose_delta", "route_decision",
+        "request_approval", "get_policy_simulation", "register_webhook"
+      ]
+    },
+    "params": { "type": "object" },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "provider": { "type": "string", "enum": ["claude", "openai", "local", "custom"] },
+        "model_id": { "type": "string" },
+        "tokens_used": { "type": "integer", "minimum": 0 },
+        "cost_usd": { "type": "number", "minimum": 0 },
+        "latency_ms": { "type": "number", "minimum": 0 }
+      }
+    },
+    "timestamp": { "type": "integer" },
+    "idempotency_key": { "type": "string" }
+  }
+}

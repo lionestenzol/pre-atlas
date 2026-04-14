@@ -4,6 +4,24 @@
 // Search debounce timer
 let searchDebounceTimer = null;
 
+// Add an idea from the registry to the A-Z task list
+function addIdeaToAZ(title) {
+  if (!CognitiveController.canCreate || CognitiveController.canCreate()) {
+    const nextLetter = String.fromCharCode(65 + (state.AZTask.length % 26));
+    state.AZTask.push({
+      id: stateManager.generateId(),
+      letter: nextLetter,
+      task: title,
+      status: 'Not Started',
+      notes: 'Added from Idea Registry',
+      createdAt: new Date().toISOString()
+    });
+    stateManager.update({ AZTask: state.AZTask });
+    render();
+    UI.showToast('Idea Added', `${nextLetter} – ${title}`, 'success');
+  }
+}
+
 // Filter state accessors - stored in app state for persistence
 function getAzFilter() {
   return state.UI?.azFilter || 'all';
@@ -695,15 +713,15 @@ function exportState() {
 
   const link = document.createElement('a');
   link.href = url;
-  link.download = `cycleboard-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  link.download = `atlas-backup-${new Date().toISOString().slice(0, 10)}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 
   // Track export statistics
-  localStorage.setItem('cycleboard-last-export', new Date().toISOString());
-  const exportCount = parseInt(localStorage.getItem('cycleboard-export-count') || '0');
-  localStorage.setItem('cycleboard-export-count', (exportCount + 1).toString());
+  localStorage.setItem('atlas-last-export', new Date().toISOString());
+  const exportCount = parseInt(localStorage.getItem('atlas-export-count') || '0');
+  localStorage.setItem('atlas-export-count', (exportCount + 1).toString());
 
   const dataSize = (JSON.stringify(state).length / 1024).toFixed(1);
   UI.showToast('Export Successful', `Data backed up (${dataSize} KB)`, 'success');
@@ -784,7 +802,7 @@ function handleFileImport(event) {
         stateManager.update(state);
 
         // Track import statistics
-        localStorage.setItem('cycleboard-last-import', new Date().toISOString());
+        localStorage.setItem('atlas-last-import', new Date().toISOString());
 
         UI.closeModal();
         UI.hideLoading();
@@ -800,7 +818,7 @@ function handleFileImport(event) {
     } catch (err) {
       UI.hideLoading();
       console.error('Import error:', err);
-      UI.showToast('Import Failed', 'The file is not a valid CycleBoard backup', 'error');
+      UI.showToast('Import Failed', 'The file is not a valid Atlas Dashboard backup', 'error');
     }
   };
 
@@ -814,7 +832,7 @@ function handleFileImport(event) {
 
 function clearData() {
   if (confirm('Are you sure you want to delete ALL data? This cannot be undone.')) {
-    localStorage.removeItem('cycleboard-state');
+    localStorage.removeItem('atlas-dashboard-state');
     // Clear current state and replace with defaults
     const defaultState = stateManager.getDefaultState();
     Object.keys(stateManager.state).forEach(key => delete stateManager.state[key]);
@@ -2260,8 +2278,13 @@ function render() {
   
   const content = document.getElementById('main-content');
   if (content) {
-    const screenContainer = content.querySelector('.max-w-6xl') || content;
-    screenContainer.innerHTML = ScreenRenderers[state.screen]();
+    // Command screen renders async — delegate to CommandScreen
+    if (state.screen === 'Command') {
+      CommandScreen.render();
+    } else {
+      const screenContainer = content.querySelector('.max-w-6xl') || content;
+      screenContainer.innerHTML = ScreenRenderers[state.screen]();
+    }
 
     if (state.screen === 'AtoZ') {
       const input = document.getElementById('az-search-input');
@@ -2274,6 +2297,250 @@ function render() {
     }
   }
 }
+// === Calendar Navigation Functions ===
+
+function calendarSetView(view) {
+  state.calendarView = view;
+  stateManager.update({ calendarView: view });
+  render();
+}
+
+function calendarSelectDate(dateStr) {
+  state.calendarDate = dateStr;
+  state.calendarView = 'day';
+  stateManager.update({ calendarDate: dateStr, calendarView: 'day' });
+  render();
+}
+
+function calendarGoToday() {
+  const today = stateManager.getTodayDate();
+  state.calendarDate = today;
+  stateManager.update({ calendarDate: today });
+  render();
+}
+
+function calendarPrev() {
+  const [y, m, d] = state.calendarDate.split('-').map(Number);
+  const view = state.calendarView || 'month';
+
+  if (view === 'month') {
+    const prev = m - 1 < 1 ? new Date(y - 1, 11, 1) : new Date(y, m - 2, 1);
+    state.calendarDate = prev.toISOString().slice(0, 10);
+  } else if (view === 'week') {
+    const cur = new Date(y, m - 1, d);
+    cur.setDate(cur.getDate() - 7);
+    state.calendarDate = cur.toISOString().slice(0, 10);
+  } else {
+    const cur = new Date(y, m - 1, d);
+    cur.setDate(cur.getDate() - 1);
+    state.calendarDate = cur.toISOString().slice(0, 10);
+  }
+  stateManager.update({ calendarDate: state.calendarDate });
+  render();
+}
+
+function calendarNext() {
+  const [y, m, d] = state.calendarDate.split('-').map(Number);
+  const view = state.calendarView || 'month';
+
+  if (view === 'month') {
+    const next = m + 1 > 12 ? new Date(y + 1, 0, 1) : new Date(y, m, 1);
+    state.calendarDate = next.toISOString().slice(0, 10);
+  } else if (view === 'week') {
+    const cur = new Date(y, m - 1, d);
+    cur.setDate(cur.getDate() + 7);
+    state.calendarDate = cur.toISOString().slice(0, 10);
+  } else {
+    const cur = new Date(y, m - 1, d);
+    cur.setDate(cur.getDate() + 1);
+    state.calendarDate = cur.toISOString().slice(0, 10);
+  }
+  stateManager.update({ calendarDate: state.calendarDate });
+  render();
+}
+
+// === Calendar Write Functions (date-aware) ===
+
+function createDayPlanForDate(dateStr, dayType) {
+  if (state.DayPlans[dateStr]) return; // already exists
+  const plan = stateManager.createDefaultDayPlan();
+  plan.date = dateStr;
+  plan.day_type = dayType;
+  applyDayTypeTemplate(plan, dayType);
+  state.DayPlans[dateStr] = plan;
+  Helpers.logActivity('day_plan_created', `Created ${dayType}-Day plan for ${dateStr}`, { date: dateStr, dayType });
+  stateManager.update({ DayPlans: state.DayPlans });
+  render();
+  UI.showToast('Plan Created', `${dayType}-Day plan for ${Helpers.formatDate(dateStr)}`, 'success');
+}
+
+function setDayTypeForDate(dateStr, type, applyTemplate = null) {
+  let plan = state.DayPlans[dateStr];
+  if (!plan) {
+    createDayPlanForDate(dateStr, type);
+    return;
+  }
+  const oldType = plan.day_type;
+  if (oldType === type && applyTemplate === null) return;
+
+  if (oldType !== type && applyTemplate === null) {
+    showApplyTemplateModalForDate(dateStr, type, oldType);
+    return;
+  }
+
+  plan.day_type = type;
+  if (applyTemplate === true) {
+    applyDayTypeTemplate(plan, type);
+  }
+  Helpers.logActivity('day_type_changed', `Changed ${dateStr} to ${type}-Day`, { date: dateStr, from: oldType, to: type });
+  state.DayPlans[dateStr] = plan;
+  stateManager.update({ DayPlans: state.DayPlans });
+  render();
+}
+
+function showApplyTemplateModalForDate(dateStr, newType, oldType) {
+  const template = state.DayTypeTemplates?.[newType];
+  if (!template) { setDayTypeForDate(dateStr, newType, false); return; }
+
+  const content = `
+    <div class="p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold ${
+          newType === 'A' ? 'bg-green-100 text-green-700' : newType === 'B' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+        }">${newType}</div>
+        <div>
+          <h2 class="text-xl font-bold dark:text-white">${template.name}</h2>
+          <p class="text-sm text-slate-500 dark:text-gray-400">${Helpers.formatDate(dateStr)} — ${template.description}</p>
+        </div>
+      </div>
+      <div class="bg-slate-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+        <h3 class="font-semibold text-sm mb-2 dark:text-gray-300">Template includes:</h3>
+        <ul class="text-sm space-y-1 text-slate-600 dark:text-gray-400">
+          <li><i class="fas fa-clock mr-2 text-blue-500"></i>${template.timeBlocks.length} time blocks</li>
+          <li><i class="fas fa-bullseye mr-2 text-purple-500"></i>Baseline: ${template.goals.baseline}</li>
+        </ul>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="setDayTypeForDate('${dateStr}','${newType}',true);UI.closeModal();" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <i class="fas fa-check mr-2"></i>Apply Template
+        </button>
+        <button onclick="setDayTypeForDate('${dateStr}','${newType}',false);UI.closeModal();" class="flex-1 px-4 py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700">
+          Just Change Type
+        </button>
+        <button onclick="UI.closeModal()" class="px-4 py-2 text-slate-500 dark:text-gray-400">Cancel</button>
+      </div>
+    </div>
+  `;
+  UI.showModal(content);
+}
+
+function toggleTimeBlockCompletionForDate(dateStr, blockId) {
+  const plan = state.DayPlans[dateStr];
+  if (!plan) return;
+  const block = plan.time_blocks.find(b => b.id === blockId);
+  if (block) {
+    block.completed = !block.completed;
+    if (block.completed) {
+      Helpers.logActivity('time_block_completed', `Completed: ${block.title} (${dateStr})`, { blockId: block.id, date: dateStr });
+    }
+    state.DayPlans[dateStr] = plan;
+    stateManager.update({ DayPlans: state.DayPlans });
+    render();
+  }
+}
+
+function toggleGoalCompletionForDate(dateStr, goalType) {
+  const plan = state.DayPlans[dateStr];
+  if (!plan) return;
+  const goal = plan[`${goalType}_goal`];
+  if (!goal) return;
+  goal.completed = !goal.completed;
+  if (goal.completed) {
+    Helpers.logActivity('goal_achieved', `Achieved ${goalType} goal (${dateStr}): ${goal.text}`, { goalType, date: dateStr });
+  }
+  state.DayPlans[dateStr] = plan;
+  stateManager.update({ DayPlans: state.DayPlans });
+  render();
+}
+
+function addTimeBlockForDate(dateStr, time, title) {
+  let plan = state.DayPlans[dateStr];
+  if (!plan) return;
+  const newBlock = { id: stateManager.generateId(), time, title, completed: false };
+  plan.time_blocks.push(newBlock);
+  plan.time_blocks.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  state.DayPlans[dateStr] = plan;
+  stateManager.update({ DayPlans: state.DayPlans });
+  Helpers.logActivity('time_block_added', `Added "${title}" at ${time} on ${dateStr}`, { date: dateStr });
+  render();
+  UI.showToast('Event Added', `${title} at ${time}`, 'success');
+}
+
+function showCreatePlanModal(dateStr) {
+  const types = [
+    { key: 'A', name: 'Optimal Day', desc: 'Full energy, maximum output', color: 'blue', icon: 'fa-bolt' },
+    { key: 'B', name: 'Low Energy Day', desc: 'Conserve energy, essentials only', color: 'amber', icon: 'fa-battery-half' },
+    { key: 'C', name: 'Chaos Day', desc: 'Survival mode, one priority', color: 'red', icon: 'fa-fire' }
+  ];
+
+  const content = `
+    <div class="p-6">
+      <h2 class="text-xl font-bold dark:text-white mb-1">Create Day Plan</h2>
+      <p class="text-sm text-gray-400 mb-4">${Helpers.formatDate(dateStr)}</p>
+      <div class="space-y-3">
+        ${types.map(t => `
+          <button onclick="createDayPlanForDate('${dateStr}','${t.key}');UI.closeModal();"
+            class="w-full flex items-center gap-4 p-4 rounded-xl border dark:border-gray-600 hover:border-${t.color}-500 dark:hover:bg-gray-700 transition-all text-left">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center bg-${t.color}-500/20 text-${t.color}-400">
+              <i class="fas ${t.icon} text-xl"></i>
+            </div>
+            <div>
+              <div class="font-bold dark:text-white">${t.key}-Day: ${t.name}</div>
+              <div class="text-sm text-gray-400">${t.desc}</div>
+            </div>
+          </button>
+        `).join('')}
+      </div>
+      <button onclick="UI.closeModal()" class="w-full mt-4 px-4 py-2 text-sm text-gray-400 hover:text-gray-300">Cancel</button>
+    </div>
+  `;
+  UI.showModal(content);
+}
+
+function showNewEventModal(dateStr) {
+  if (!state.DayPlans[dateStr]) {
+    showCreatePlanModal(dateStr);
+    return;
+  }
+
+  const content = `
+    <div class="p-6">
+      <h2 class="text-xl font-bold dark:text-white mb-1">Add Event</h2>
+      <p class="text-sm text-gray-400 mb-4">${Helpers.formatDate(dateStr)}</p>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1 dark:text-gray-300">Time</label>
+          <input type="time" id="new-event-time" value="09:00"
+            class="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1 dark:text-gray-300">Title</label>
+          <input type="text" id="new-event-title" placeholder="Event name..."
+            class="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2">
+        </div>
+        <div class="flex gap-3">
+          <button onclick="const t=document.getElementById('new-event-time').value;const n=document.getElementById('new-event-title').value;if(n){addTimeBlockForDate('${dateStr}',t,n);UI.closeModal();}else{UI.showToast('Error','Please enter a title','error');}"
+            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <i class="fas fa-plus mr-2"></i>Add Event
+          </button>
+          <button onclick="UI.closeModal()" class="px-4 py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-700">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+  UI.showModal(content);
+}
+
 // Export for module use
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -2288,6 +2555,98 @@ if (typeof module !== 'undefined' && module.exports) {
     addFocusTask, toggleFocusTask, removeFocusTask, toggleEightStep,
     activateContingency, addMomentumWin, deleteMomentumWin, setReflectionTab,
     openReflectionModal, saveReflection, deleteReflection, deleteActivity,
-    exportTimeline, completeAllTodayTasks, init, render, convertTo24Hour
+    exportTimeline, completeAllTodayTasks, init, render, convertTo24Hour,
+    calendarSetView, calendarSelectDate, calendarGoToday, calendarPrev, calendarNext,
+    createDayPlanForDate, setDayTypeForDate, toggleTimeBlockCompletionForDate,
+    toggleGoalCompletionForDate, addTimeBlockForDate, showCreatePlanModal, showNewEventModal,
+    submitEnergySignals, submitFinanceSignals, submitSkillsSignals, submitNetworkSignals
   };
+}
+
+// === Life Signal Submission Functions ===
+
+const _signalApiBase = 'http://localhost:3001';
+
+async function _postSignal(domain, payload) {
+  try {
+    const authHeaders = {};
+    if (typeof stateManager !== 'undefined' && stateManager.apiKey) {
+      authHeaders['Authorization'] = `Bearer ${stateManager.apiKey}`;
+    }
+    const res = await fetch(`${_signalApiBase}/api/signals/${domain}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      await BrainData.load();
+      render();
+      if (typeof UI !== 'undefined') UI.showToast('Saved', `${domain} signals updated`, 'success');
+    } else {
+      _writeSignalFallback(domain, payload);
+    }
+  } catch (_) {
+    _writeSignalFallback(domain, payload);
+  }
+}
+
+function _writeSignalFallback(domain, payload) {
+  const key = `${domain}Metrics`;
+  if (BrainData[key]) {
+    Object.assign(BrainData[key], payload);
+  } else {
+    BrainData[key] = { ...payload, generated_at: new Date().toISOString() };
+  }
+  render();
+  if (typeof UI !== 'undefined') UI.showToast('Saved Locally', `${domain} signals saved (API offline)`, 'info');
+}
+
+function submitEnergySignals() {
+  const el = document.getElementById('energy-input');
+  const ml = document.getElementById('load-input');
+  const sq = document.getElementById('sleep-input');
+  if (!el) return;
+  _postSignal('energy', {
+    energy_level: parseInt(el.value),
+    mental_load: parseInt(ml?.value || '5'),
+    sleep_quality: parseInt(sq?.value || '3'),
+  });
+}
+
+function submitFinanceSignals() {
+  const rw = document.getElementById('runway-input');
+  const inc = document.getElementById('income-input');
+  const exp = document.getElementById('expenses-input');
+  if (!rw) return;
+  _postSignal('finance', {
+    runway_months: parseFloat(rw.value),
+    monthly_income: parseFloat(inc?.value || '0'),
+    monthly_expenses: parseFloat(exp?.value || '0'),
+  });
+}
+
+function submitSkillsSignals() {
+  const ut = document.getElementById('util-input');
+  const lr = document.getElementById('learning-input');
+  const ms = document.getElementById('mastery-input');
+  const gr = document.getElementById('growth-input');
+  if (!ut) return;
+  _postSignal('skills', {
+    utilization_pct: parseFloat(ut.value),
+    active_learning: lr?.value === 'true',
+    mastery_count: parseInt(ms?.value || '0'),
+    growth_count: parseInt(gr?.value || '0'),
+  });
+}
+
+function submitNetworkSignals() {
+  const cs = document.getElementById('collab-input');
+  const ar = document.getElementById('active-input');
+  const ow = document.getElementById('outreach-input');
+  if (!cs) return;
+  _postSignal('network', {
+    collaboration_score: parseInt(cs.value),
+    active_relationships: parseInt(ar?.value || '0'),
+    outreach_this_week: parseInt(ow?.value || '0'),
+  });
 }

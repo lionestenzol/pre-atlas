@@ -1,0 +1,382 @@
+{
+  "generated": "2026-04-14T16:00:13.907850",
+  "mode": "BUILD",
+  "risk": "LOW",
+  "open_loops": 1,
+  "closure_ratio": 0.9545,
+  "top_clusters": [
+    {
+      "rank": 1,
+      "cluster_id": 121,
+      "label": "The Concept of a Zero-Space AI-to-AI Language",
+      "normalized_leverage": 10.0,
+      "execution_ratio": 0.5186,
+      "reusability_index": 0.2132,
+      "market_score": 10,
+      "asset_vector": "Content Engine",
+      "revenue_tag": "productizable_system",
+      "focus_area": "Production",
+      "gap": "balanced",
+      "directive": "Maintain focus on Production. C121 is balanced.",
+      "top_ngrams": [
+        "real time",
+        "step step",
+        "apple tree",
+        "just like",
+        "feel like"
+      ]
+    },
+    {
+      "rank": 2,
+      "cluster_id": 110,
+      "label": "🔹 UNLIMITED POTENTIAL OF YOUR AI-PNG SYSTEM",
+      "normalized_leverage": 8.36,
+      "execution_ratio": 0.6482,
+      "reusability_index": 0.2,
+      "market_score": 7,
+      "asset_vector": "Tool",
+      "revenue_tag": "infrastructure_build",
+      "focus_area": "Production",
+      "gap": "high_leverage_high_execution",
+      "directive": "Scale output from 🔹 UNLIMITED POTENTIAL OF YOUR AI-PNG SYSTEM (C110). Ship reusable artifact.",
+      "top_ngrams": [
+        "png based",
+        "ai png",
+        "qr code",
+        "png file",
+        "execution keys"
+      ]
+    },
+    {
+      "rank": 3,
+      "cluster_id": 70,
+      "label": "CODE ANALYSIS & REQUIRED IMPROVEMENTS",
+      "normalized_leverage": 7.61,
+      "execution_ratio": 0.5252,
+      "reusability_index": 0.2586,
+      "market_score": 7,
+      "asset_vector": "Tool",
+      "revenue_tag": "infrastructure_build",
+      "focus_area": "Production",
+      "gap": "balanced",
+      "directive": "Maintain focus on Production. C70 is balanced.",
+      "top_ngrams": [
+        "users bruke",
+        "updates pattern",
+        "os path",
+        "pip install",
+        "python 11"
+      ]
+    },
+    {
+      "rank": 4,
+      "cluster_id": 205,
+      "label": "Sounds Like / Feel Like / Control Situation",
+      "normalized_leverage": 7.27,
+      "execution_ratio": 0.1654,
+      "reusability_index": 0.2832,
+      "market_score": 8,
+      "asset_vector": "Content Engine",
+      "revenue_tag": "social_dynamics",
+      "focus_area": "Image",
+      "gap": "high_leverage_low_execution",
+      "directive": "Build leverage in Sounds Like / Feel Like / Control Situation (C205). 120m deep block required.",
+      "top_ngrams": [
+        "sounds like",
+        "feel like",
+        "control situation",
+        "wasn just",
+        "didn need"
+      ]
+    },
+    {
+      "rank": 5,
+      "cluster_id": 186,
+      "label": "Feel Like / Sounds Like / Don Know",
+      "normalized_leverage": 6.94,
+      "execution_ratio": 0.1359,
+      "reusability_index": 0.3313,
+      "market_score": 8,
+      "asset_vector": "Content Engine",
+      "revenue_tag": "social_dynamics",
+      "focus_area": "Image",
+      "gap": "balanced",
+      "directive": "Maintain focus on Image. C186 is balanced.",
+      "top_ngrams": [
+        "feel like",
+        "sounds like",
+        "don know",
+        "just like",
+        "like just"
+      ]
+    },
+    {
+      "rank": 6,
+      "cluster_id": 26,
+      "label": "Audio_Transcription Text / Content_Type Audio_Transcription / Content_Type Audio_Transcription Text",
+      "normalized_leverage": 6.47,
+      "execution_ratio": 0.0008,
+      "reusability_index": 0.45,
+      "market_score": 6,
+      "asset_vector": "Content Engine",
+      "revenue_tag": "infrastructure_build",
+      "focus_area": "Growth",
+      "gap": "balanced",
+      "directive": "Maintain focus on Growth. C26 is balanced.",
+      "top_ngrams": [
+        "audio_transcription text",
+        "content_type audio_transcription",
+        "content_type audio_transcription text",
+        "direction decoding_id",
+        "decoding_id content_type audio_transcription"
+      ]
+    },
+    {
+      "rank": 7,
+      "cluster_id": 116,
+      "label": "Major Upgrade: AI-Ready Dual-Format Output",
+      "normalized_leverage": 6.31,
+      "execution_ratio": 0.3506,
+      "reusability_index": 0.253,
+      "market_score": 6,
+      "asset_vector": "Tool",
+      "revenue_tag": "infrastructure_build",
+      "focus_area": "Production",
+      "gap": "balanced",
+      "directive": "Maintain focus on Production. C116 is balanced.",
+      "top_ngrams": [
+        "let know",
+        "answer choices",
+        "correct answer",
+        "quiz results",
+        "quiz data"
+      ]
+    },
+    {
+      "rank": 8,
+      "cluster_id": 195,
+      "label": "Creating Highly Advanced Custom GPTs with OpenAI",
+      "normalized_leverage": 5.95,
+      "execution_ratio": 0.3336,
+      "reusability_index": 0.2586,
+      "market_score": 6,
+      "asset_vector": "Tool",
+      "revenue_tag": "infrastructure_build",
+      "focus_area": "Production",
+      "gap": "balanced",
+      "directive": "Maintain focus on Production. C195 is balanced.",
+      "top_ngrams": [
+        "custom gpt",
+        "chat gpt",
+        "feel like",
+        "using chatgpt",
+        "step step"
+      ]
+    },
+    {
+      "rank": 9,
+      "cluster_id": 133,
+      "label": "Feel Like / Called Gay / Calling Gay",
+      "normalized_leverage": 5.69,
+      "execution_ratio": 0.1769,
+      "reusability_index": 0.1812,
+      "market_score": 7,
+      "asset_vector": "Content Engine",
+      "revenue_tag": "social_dynamics",
+      "focus_area": "Image",
+      "gap": "balanced",
+      "directive": "Maintain focus on Image. C133 is balanced.",
+      "top_ngrams": [
+        "feel like",
+        "called gay",
+        "calling gay",
+        "don know",
+        "make feel"
+      ]
+    },
+    {
+      "rank": 10,
+      "cluster_id": 206,
+      "label": "Feel Like / Just Like / Don Know",
+      "normalized_leverage": 4.52,
+      "execution_ratio": 0.0304,
+      "reusability_index": 0.1679,
+      "market_score": 7,
+      "asset_vector": "Content Engine",
+      "revenue_tag": "social_dynamics",
+      "focus_area": "Image",
+      "gap": "balanced",
+      "directive": "Maintain focus on Image. C206 is balanced.",
+      "top_ngrams": [
+        "feel like",
+        "just like",
+        "don know",
+        "like just",
+        "like like"
+      ]
+    },
+    {
+      "rank": 11,
+      "cluster_id": 97,
+      "label": "Sounds Like / Feel Like / Wasn Just",
+      "normalized_leverage": 3.06,
+      "execution_ratio": 0.1466,
+      "reusability_index": 0.3453,
+      "market_score": 3,
+      "asset_vector": "Internal Utility",
+      "revenue_tag": "personal_regulation",
+      "focus_area": "Growth",
+      "gap": "balanced",
+      "directive": "Maintain focus on Growth. C97 is balanced.",
+      "top_ngrams": [
+        "sounds like",
+        "feel like",
+        "wasn just",
+        "moving forward",
+        "didn just"
+      ]
+    },
+    {
+      "rank": 12,
+      "cluster_id": 182,
+      "label": "Feel Like / Substitute Teacher / Like Teacher",
+      "normalized_leverage": 2.73,
+      "execution_ratio": 0.0865,
+      "reusability_index": 0.1026,
+      "market_score": 5,
+      "asset_vector": "Content Engine",
+      "revenue_tag": "infrastructure_build",
+      "focus_area": "Growth",
+      "gap": "low_leverage_low_execution",
+      "directive": "Maintain focus on Growth. C182 is balanced.",
+      "top_ngrams": [
+        "feel like",
+        "substitute teacher",
+        "like teacher",
+        "sounds like",
+        "user mentioned"
+      ]
+    },
+    {
+      "rank": 13,
+      "cluster_id": 89,
+      "label": "Feel Like / Sounds Like / Like Mom",
+      "normalized_leverage": 1.14,
+      "execution_ratio": 0.1081,
+      "reusability_index": 0.232,
+      "market_score": 2,
+      "asset_vector": "Internal Utility",
+      "revenue_tag": "personal_regulation",
+      "focus_area": "Growth",
+      "gap": "low_leverage_low_execution",
+      "directive": "Maintain focus on Growth. C89 is balanced.",
+      "top_ngrams": [
+        "feel like",
+        "sounds like",
+        "like mom",
+        "don know",
+        "don want"
+      ]
+    },
+    {
+      "rank": 14,
+      "cluster_id": 68,
+      "label": "Feel Like / Sounds Like / Air Fryer",
+      "normalized_leverage": 0.55,
+      "execution_ratio": 0.1528,
+      "reusability_index": 0.2005,
+      "market_score": 2,
+      "asset_vector": "Internal Utility",
+      "revenue_tag": "personal_regulation",
+      "focus_area": "Growth",
+      "gap": "low_leverage_low_execution",
+      "directive": "Maintain focus on Growth. C68 is balanced.",
+      "top_ngrams": [
+        "feel like",
+        "sounds like",
+        "air fryer",
+        "bone broth",
+        "make sure"
+      ]
+    },
+    {
+      "rank": 15,
+      "cluster_id": 100,
+      "label": "Feel Like / Don Know / Like Just",
+      "normalized_leverage": 0.0,
+      "execution_ratio": 0.0,
+      "reusability_index": 0.1811,
+      "market_score": 2,
+      "asset_vector": "Internal Utility",
+      "revenue_tag": "personal_regulation",
+      "focus_area": "Growth",
+      "gap": "low_leverage_low_execution",
+      "directive": "Maintain focus on Growth. C100 is balanced.",
+      "top_ngrams": [
+        "feel like",
+        "don know",
+        "like just",
+        "just like",
+        "like like"
+      ]
+    }
+  ],
+  "focus_area_weights": {
+    "Production": {
+      "weight": 10.0,
+      "clusters": [
+        121,
+        110,
+        70,
+        116,
+        195
+      ],
+      "reason": "5 clusters mapped here"
+    },
+    "Image": {
+      "weight": 6.4,
+      "clusters": [
+        205,
+        186,
+        133,
+        206
+      ],
+      "reason": "4 clusters mapped here"
+    },
+    "Growth": {
+      "weight": 3.6,
+      "clusters": [
+        26,
+        97,
+        182,
+        89,
+        68,
+        100
+      ],
+      "reason": "6 clusters mapped here"
+    },
+    "Personal": {
+      "weight": 0.0,
+      "clusters": [],
+      "reason": "No direct cluster alignment"
+    },
+    "Errands": {
+      "weight": 0.0,
+      "clusters": [],
+      "reason": "No direct cluster alignment"
+    },
+    "Network": {
+      "weight": 0.0,
+      "clusters": [],
+      "reason": "No direct cluster alignment"
+    }
+  },
+  "daily_directive": {
+    "primary_focus": "Production",
+    "primary_cluster": 121,
+    "primary_action": "Maintain focus on Production. C121 is balanced.",
+    "suggested_deep_block_mins": 60,
+    "stretch_goal": "Make progress on Production focus area",
+    "mode_escalation": null
+  }
+}

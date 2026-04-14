@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "actions": {
+    "morning":         { "enabled": true },
+    "close_stale":     { "enabled": true, "age_days": 7, "max_score": 3 },
+    "wrap":            { "enabled": true },
+    "process_inbox":   { "enabled": true },
+    "research_queue":  { "enabled": true },
+    "draft_responses": { "enabled": true }
+  }
+}

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>in-PACT – Proven Framework. Reimagined.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+  <script>
+    function updateCountdown() {
+      const countdownDate = new Date("2025-04-15T00:00:00").getTime();
+      const now = new Date().getTime();
+      const distance = countdownDate - now;
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      const timer = document.getElementById("countdown-timer");
+      const ctaButton = document.getElementById("cta-button");
+      const urgencyNote = document.getElementById("urgency-note");
+      const fallbackCTA = document.getElementById("fallback-cta");
+
+      if (distance < 0) {
+        clearInterval(x);
+        timer.innerHTML = "Launch ended.";
+        urgencyNote.innerHTML = "Beta access has closed.";
+        if (ctaButton) ctaButton.style.display = "none";
+        if (fallbackCTA) fallbackCTA.classList.remove("hidden");
+      } else {
+        timer.innerHTML = days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+      }
+    }
+
+    let x = setInterval(updateCountdown, 1000);
+
+    function handleWaitlistSubmit(e) {
+      e.preventDefault();
+      const form = document.getElementById("waitlist-form");
+      const thankYou = document.getElementById("waitlist-thanks");
+      form.style.display = "none";
+      thankYou.classList.remove("hidden");
+    }
+  </script>
+</head>
+<body class="bg-white text-gray-900">
+
+  <!-- Trust Logos Section -->
+  <section class="py-16 px-6 bg-white border-t border-gray-200">
+    <div class="max-w-6xl mx-auto text-center">
+      <h2 class="text-2xl font-bold mb-6">Trusted by professionals and organizations worldwide</h2>
+      <div class="flex justify-center items-center flex-wrap gap-8 opacity-80">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo_Tesla_Motors.svg" alt="Tesla" class="h-10">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" class="h-10">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" class="h-10">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" alt="Netflix" class="h-10">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" class="h-10">
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA Banner -->
+  <section class="bg-black text-white py-20 px-6 text-center">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-4xl font-extrabold mb-4">Ready to build your in-PACT?</h2>
+      <p class="text-lg text-gray-300 mb-4">Start your journey today with the personal growth system trusted by leaders and powered by AI.</p>
+      <p id="urgency-note" class="text-md text-red-400 font-semibold mb-6">Limited launch access closes in <span id="countdown-timer">Loading...</span></p>
+      <a id="cta-button" href="#assessment" class="bg-white text-black px-8 py-4 rounded-lg font-semibold hover:bg-gray-200 transition">Get Started</a>
+      <a id="fallback-cta" href="#waitlist" class="mt-4 block hidden text-sm text-gray-300 underline">Join the waitlist for next access round</a>
+    </div>
+  </section>
+
+  <!-- Waitlist Anchor Section -->
+  <section id="waitlist" class="py-20 px-6 bg-gray-100 text-center border-t border-gray-300">
+    <div class="max-w-xl mx-auto">
+      <h2 class="text-3xl font-bold mb-4">You’re on the list.</h2>
+      <p class="text-gray-700 mb-6">Thanks for your interest in in-PACT. We’ll notify you when the next launch window opens. In the meantime, stay aligned and stay powerful.</p>
+      <form id="waitlist-form" onsubmit="handleWaitlistSubmit(event)" class="mt-6">
+        <input type="email" placeholder="Enter your email" class="w-full md:w-2/3 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black mb-4" required>
+        <button class="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition">Join Waitlist</button>
+      </form>
+      <p id="waitlist-thanks" class="hidden mt-6 text-green-600 font-semibold">You're confirmed! We'll keep you updated.</p>
+      <div class="mt-8 flex justify-center gap-6">
+        <a href="https://twitter.com" target="_blank" class="text-gray-600 hover:text-black">Twitter</a>
+        <a href="https://linkedin.com" target="_blank" class="text-gray-600 hover:text-black">LinkedIn</a>
+        <a href="https://instagram.com" target="_blank" class="text-gray-600 hover:text-black">Instagram</a>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>

@@ -22,7 +22,7 @@ No AI decisions at runtime. Pure LUT rendering.
 
 ```
 ┌─────────────────────────────────────────┐
-│  MODE: CLOSE_LOOPS                      │
+│  MODE: CLOSURE                      │
 │  ─────────────────────────────────────  │
 │                                         │
 │  SIGNALS                                │
@@ -94,9 +94,9 @@ Only actions matching `MODE_ALLOWED_ACTIONS[mode]` are shown.
 
 | Action Type     | Allowed In Modes                    |
 |-----------------|-------------------------------------|
-| reply_message   | CLOSE_LOOPS                         |
-| complete_task   | CLOSE_LOOPS, BUILD                  |
-| review_thread   | CLOSE_LOOPS                         |
+| reply_message   | CLOSURE                         |
+| complete_task   | CLOSURE, BUILD                  |
+| review_thread   | CLOSURE                         |
 | create_asset    | BUILD                               |
 | extend_asset    | COMPOUND                            |
 | delegate        | SCALE                               |

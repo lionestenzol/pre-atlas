@@ -2,6 +2,30 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ── Scrollbar: thin, dark, unobtrusive ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
 /* Governance Lock Styles */
 .governance-locked {
   opacity: 0.4 !important;
@@ -33,6 +57,138 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  padding-top: 40px;
+}
+
+:root {
+  --service-health-height: 40px;
+}
+
+.service-health-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  min-height: var(--service-health-height);
+  background: #0f1117;
+  border-bottom: 1px solid #2a2a3a;
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.service-health-content {
+  max-width: 100%;
+  min-height: var(--service-health-height);
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.service-health-services,
+.service-health-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.service-health-services {
+  flex-shrink: 0;
+}
+
+.service-health-meta {
+  min-width: 0;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.service-health-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.service-health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  display: inline-block;
+  background: #ef4444;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.service-health-dot--up {
+  background: #22c55e;
+}
+
+.service-health-dot--down {
+  background: #ef4444;
+}
+
+.service-health-mode {
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.service-health-directive {
+  color: #f8fafc;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#cognitive-directive {
+  top: var(--service-health-height) !important;
+}
+
+#cognitive-indicator {
+  top: calc(var(--service-health-height) + 0.5rem) !important;
+}
+
+@media (max-width: 1024px) {
+  .service-health-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .service-health-meta {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  body {
+    padding-top: 64px;
+  }
+
+  :root {
+    --service-health-height: 64px;
+  }
+}
+
+@media (max-width: 640px) {
+  .service-health-content {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .service-health-services,
+  .service-health-meta {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  body {
+    padding-top: 88px;
+  }
+
+  :root {
+    --service-health-height: 88px;
+  }
 }
 
 /* Modal Backdrop */

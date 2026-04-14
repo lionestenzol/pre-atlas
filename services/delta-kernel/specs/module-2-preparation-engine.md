@@ -56,7 +56,7 @@ Running engine 100 times on same state = no duplicates.
 | ID | Mode | Purpose | Pattern |
 |----|------|---------|---------|
 | TEMPLATE_RECOVER_REST | RECOVER | Health boundary | "I'm offline until {time} to recover." |
-| TEMPLATE_CLOSE_COMMIT | CLOSE_LOOPS | Commit time | "I will resolve this by {time}." |
+| TEMPLATE_CLOSE_COMMIT | CLOSURE | Commit time | "I will resolve this by {time}." |
 | TEMPLATE_BUILD_OUTLINE | BUILD | Asset outline | "Here is the outline for {asset}." |
 | TEMPLATE_COMPOUND_EXTEND | COMPOUND | Extend asset | "Extending {asset} with {addition}." |
 | TEMPLATE_SCALE_DELEGATE | SCALE | Delegate | "Please take ownership of {task}." |
@@ -131,7 +131,7 @@ Selection (top 5):
 3. Recency
 
 Draft templates per mode:
-- CLOSE_LOOPS: `TEMPLATE_CLOSE_COMMIT`, `TEMPLATE_ACK`
+- CLOSURE: `TEMPLATE_CLOSE_COMMIT`, `TEMPLATE_ACK`
 - BUILD: `TEMPLATE_DEFER`
 - RECOVER: `TEMPLATE_RECOVER_REST`
 
@@ -142,7 +142,7 @@ Draft templates per mode:
 
 Mode relevance LUT:
 - RECOVER: health/admin/light tasks, due soon
-- CLOSE_LOOPS: replies/finishes/cleanup
+- CLOSURE: replies/finishes/cleanup
 - BUILD: tasks linked to ACTIVE projects
 - COMPOUND: tasks extending shipped assets
 - SCALE: delegate/systemize/acquire tasks
@@ -159,7 +159,7 @@ D) SYSTEM drafts — SCALE only
 **Hard caps (v0):**
 - Max drafts visible in cockpit: 12
 - Max drafts created per run: 5
-- Drafts have `expires_at` for RECOVER/CLOSE_LOOPS (24h default)
+- Drafts have `expires_at` for RECOVER/CLOSURE (24h default)
 
 ### 5. LeverageMoveSelector
 
@@ -221,7 +221,7 @@ User confirms APPLY_DRAFT:
 | Mode | Draft TTL |
 |------|-----------|
 | RECOVER | 24h |
-| CLOSE_LOOPS | 24h |
+| CLOSURE | 24h |
 | BUILD | 72h |
 | COMPOUND | 72h |
 | SCALE | No expiry |

@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "TaskExecution.v1",
+  "title": "Task Execution Contract",
+  "description": "Request and result schema for Claude adapter task execution.",
+  "definitions": {
+    "TaskRequest": {
+      "type": "object",
+      "required": ["task_id", "instructions", "priority"],
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "description": "Unique task identifier"
+        },
+        "instructions": {
+          "type": "string",
+          "description": "Full prompt / instructions for the AI to execute"
+        },
+        "files_context": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "File paths to include as context"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 600,
+          "default": 300,
+          "description": "Max execution time"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["critical", "high", "normal", "low"]
+        },
+        "use_fallback": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, prefer Ollama over Claude API"
+        }
+      }
+    },
+    "TaskResult": {
+      "type": "object",
+      "required": ["task_id", "success", "provider", "duration_seconds"],
+      "properties": {
+        "task_id": { "type": "string" },
+        "success": { "type": "boolean" },
+        "output": { "type": "string" },
+        "duration_seconds": { "type": "number" },
+        "tokens_used": { "type": "integer", "default": 0 },
+        "cost_usd": { "type": "number", "default": 0.0 },
+        "provider": {
+          "type": "string",
+          "enum": ["claude", "ollama"]
+        },
+        "error": { "type": "string", "default": "" }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "request": { "$ref": "#/definitions/TaskRequest" },
+    "result": { "$ref": "#/definitions/TaskResult" }
+  }
+}

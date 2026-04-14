@@ -131,12 +131,19 @@ The daemon runs scheduled jobs for autonomous mode governance:
 
 ## Data Storage
 
-State is persisted to `.delta-fabric/` at the repo root:
+State is persisted to `~/.delta-fabric/` by default:
 
-- `entities.json` - Entity state
-- `deltas.json` - Delta audit log
+- `state.db` - SQLite database (entities + deltas)
 
-Set `DELTA_DATA_DIR` environment variable to customize location.
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DELTA_DATA_DIR` | `~/.delta-fabric` | State database directory |
+| `DELTA_REPO_ROOT` | (auto-detected) | Pre Atlas repo root for cross-service file reads |
+| `COGNITIVE_SENSOR_DIR` | `{repo_root}/services/cognitive-sensor` | Path to cognitive-sensor data files (cognitive_state.json, loops, closures, etc.) |
+
+For standalone operation without the monorepo, set `COGNITIVE_SENSOR_DIR` to wherever your cognitive state JSON files live.
 
 ---
 

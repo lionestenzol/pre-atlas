@@ -1,16 +1,21 @@
 {
-  "mode": "CLOSURE",
-  "build_allowed": false,
-  "primary_action": "Close or archive: Extrinsic vs Intrinsic Rewards",
+  "schema_version": "1.1.0",
+  "mode_source": "cognitive-sensor",
+  "mode": "BUILD",
+  "build_allowed": true,
+  "primary_action": "Create freely.",
   "open_loops": [
-    "Extrinsic vs Intrinsic Rewards",
-    "Irritation and Hunger Struggles",
-    "Universal Programming Table Setup",
-    "Understanding Gaslighting Effects",
-    "Understanding Doublespeak"
+    "Universal Programming Table Setup"
   ],
-  "open_loop_count": 14,
-  "closure_ratio": 6.67,
-  "risk": "HIGH",
-  "generated_at": "2026-01-12"
+  "open_loop_count": 1,
+  "closure_ratio": 95.45,
+  "risk": "LOW",
+  "generated_at": "2026-04-14",
+  "predictions": {
+    "status": "unavailable",
+    "top_actions": [],
+    "pattern_count": 0,
+    "mode_forecast": null,
+    "exit_path": null
+  }
 }

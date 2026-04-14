@@ -160,7 +160,44 @@ AGENTS = {
         "can_trigger_agents": False,
     },
 
-    # === Governance agents (NEW) ===
+    # === Genesis / Ghost agents ===
+    "genesis_tree": {
+        "purpose": "Build hierarchical knowledge tree from Atlas HDBSCAN clusters",
+        "autonomy": AutonomyLevel.EXECUTE_REPORT,
+        "mode": "ai_for_itself",
+        "inputs": ["atlas_clusters.json", "results.db", "memory_db.json"],
+        "outputs": [
+            "genesis_output/genesis_tree.json",
+            "genesis_output/genesis_scoreboard.json",
+            "genesis_output/genesis_cross_links.json",
+            "genesis_output/genesis_convergences.json",
+            "genesis_output/genesis_report.md",
+            "genesis_output/vault/",
+        ],
+        "can_modify_files": True,
+        "can_trigger_agents": False,
+    },
+    "ghost_executor": {
+        "purpose": "Generate mode-gated directives from Genesis knowledge tree",
+        "autonomy": AutonomyLevel.EXECUTE_REPORT,
+        "mode": "ai_for_itself",
+        "inputs": [
+            "genesis_output/genesis_tree.json",
+            "genesis_output/genesis_scoreboard.json",
+            "genesis_output/genesis_cross_links.json",
+            "genesis_output/genesis_convergences.json",
+            "governance_state.json",
+        ],
+        "outputs": [
+            "genesis_output/ghost_directives.json",
+            "genesis_output/ghost_collisions.json",
+            "genesis_output/ghost_brief.md",
+        ],
+        "can_modify_files": True,
+        "can_trigger_agents": False,
+    },
+
+    # === Governance agents ===
     "governor_daily": {
         "purpose": "Run daily ingest, analysis, backlog maintenance, and brief generation",
         "autonomy": AutonomyLevel.EXECUTE_REPORT,
@@ -194,6 +231,44 @@ AGENTS = {
         "mode": "ai_for_itself",
         "inputs": ["idea_registry.json", "governance_state.json"],
         "outputs": ["ideas_reservoir.json"],
+        "can_modify_files": True,
+        "can_trigger_agents": False,
+    },
+
+    # === Life-domain signal agents ===
+    "energy_tracker": {
+        "purpose": "Track energy levels, detect red-alert zones, flag burnout risk",
+        "autonomy": AutonomyLevel.DRAFT_ROUTE,
+        "mode": "ai_for_itself",
+        "inputs": ["life_signals.json", "daily_snapshots (behavioral_memory)"],
+        "outputs": ["life_signals.json (energy section)", "cycleboard/brain/energy_metrics.json"],
+        "can_modify_files": True,
+        "can_trigger_agents": False,
+    },
+    "finance_tracker": {
+        "purpose": "Monitor financial runway, flag resource constraints",
+        "autonomy": AutonomyLevel.ADVISORY,
+        "mode": "ai_for_you",
+        "inputs": ["life_signals.json"],
+        "outputs": ["cycleboard/brain/finance_metrics.json"],
+        "can_modify_files": True,
+        "can_trigger_agents": False,
+    },
+    "skills_tracker": {
+        "purpose": "Track skill utilization and mastery progression",
+        "autonomy": AutonomyLevel.ADVISORY,
+        "mode": "ai_for_you",
+        "inputs": ["life_signals.json", "conversation_classifications.json"],
+        "outputs": ["cycleboard/brain/skills_metrics.json"],
+        "can_modify_files": True,
+        "can_trigger_agents": False,
+    },
+    "network_tracker": {
+        "purpose": "Monitor collaboration health and relationship leverage",
+        "autonomy": AutonomyLevel.ADVISORY,
+        "mode": "ai_for_you",
+        "inputs": ["life_signals.json"],
+        "outputs": ["cycleboard/brain/network_metrics.json"],
         "can_modify_files": True,
         "can_trigger_agents": False,
     },
@@ -242,12 +317,13 @@ ROUTING = {
     "closure_ratio_critical": 15.0,   # below = CLOSURE mode
     "open_loops_critical": 20,        # above = CLOSURE mode
     "open_loops_caution": 10,         # above = MAINTENANCE mode
+    "closure_quality_critical": 30.0, # below = CLOSURE mode (archiving is not closing)
     "min_loop_score": 18000,          # only conversations above this score count as open loops
     # else = BUILD mode
 }
 
 
-def compute_mode(closure_ratio: float, open_loops: int) -> tuple:
+def compute_mode(closure_ratio: float, open_loops: int, closure_quality: float = 100.0) -> tuple:
     """Single source of truth for Python-side mode routing.
 
     Returns: (mode, risk, build_allowed)
@@ -256,7 +332,15 @@ def compute_mode(closure_ratio: float, open_loops: int) -> tuple:
     RECOVER, COMPOUND, SCALE require signals Python doesn't track
     (sleep_hours, assets_shipped, money_delta) and are handled by
     the TypeScript governance daemon.
+
+    closure_quality: % of finished loops that are truly CLOSED (not just archived).
+    If you're archiving everything instead of closing, you're still in debt.
     """
+    # First check: are you archiving instead of closing? That's not real closure.
+    if closure_quality < ROUTING["closure_quality_critical"]:
+        return "CLOSURE", "HIGH", False
+
+    # Original checks
     if closure_ratio < ROUTING["closure_ratio_critical"] or open_loops > ROUTING["open_loops_critical"]:
         return "CLOSURE", "HIGH", False
     elif open_loops > ROUTING["open_loops_caution"]:

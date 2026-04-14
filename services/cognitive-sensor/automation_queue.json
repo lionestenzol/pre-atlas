@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-09T00:00:00Z",
+  "tasks": [
+    {
+      "id": "auto_daily_governance",
+      "type": "recurring",
+      "action": "Run daily governance refresh (ingest, classify, route, brief)",
+      "schedule": "daily",
+      "last_run_at": "2026-04-08T07:00:00Z",
+      "next_run_at": "2026-04-09T07:00:00Z",
+      "status": "active",
+      "conditions": { "energy_min": 20 }
+    },
+    {
+      "id": "auto_weekly_governor",
+      "type": "recurring",
+      "action": "Generate weekly governor packet with decision questions",
+      "schedule": "weekly",
+      "last_run_at": "2026-04-07T07:00:00Z",
+      "next_run_at": "2026-04-14T07:00:00Z",
+      "status": "active",
+      "conditions": { "energy_min": 30 }
+    },
+    {
+      "id": "auto_stall_check",
+      "type": "recurring",
+      "action": "Check for 48h task stalls and generate cut list",
+      "schedule": "every_48h",
+      "last_run_at": "2026-04-07T12:00:00Z",
+      "next_run_at": "2026-04-09T12:00:00Z",
+      "status": "active",
+      "conditions": {}
+    },
+    {
+      "id": "auto_backlog_maintenance",
+      "type": "recurring",
+      "action": "Merge duplicate ideas, kill low-score items, enforce 2-lane integrity",
+      "schedule": "weekly",
+      "last_run_at": "2026-04-07T08:00:00Z",
+      "next_run_at": "2026-04-14T08:00:00Z",
+      "status": "active",
+      "conditions": { "energy_min": 20 }
+    }
+  ],
+  "execution_history": []
+}

@@ -10,7 +10,10 @@ const StrategicRouter = {
 
   async init() {
     if (this.initialized) return;
+    await this._loadData(true);
+  },
 
+  async _loadData(isFirstLoad) {
     try {
       const response = await fetch('brain/strategic_priorities.json');
       if (!response.ok) {
@@ -22,19 +25,30 @@ const StrategicRouter = {
         throw new Error('Empty response');
       }
 
-      this.priorities = JSON.parse(text);
+      const newPriorities = JSON.parse(text);
 
-      if (!this.priorities || typeof this.priorities !== 'object') {
+      if (!newPriorities || typeof newPriorities !== 'object') {
         throw new Error('Invalid priorities structure');
       }
 
+      // On refresh: skip if data unchanged
+      if (!isFirstLoad && newPriorities.generated && this.priorities?.generated
+          && newPriorities.generated === this.priorities.generated) {
+        return;
+      }
+
+      this.priorities = newPriorities;
       this.initialized = true;
       this.error = null;
       this.checkStaleness();
+
+      // Remove old banner before re-injecting
+      const existing = document.getElementById('strategic-directive');
+      if (existing) existing.remove();
+
       this.injectDirectiveBanner();
       this.reweightFocusAreas();
 
-      // Re-render current screen so strategic card updates from placeholder
       if (typeof navigate === 'function' && typeof state !== 'undefined') {
         navigate(state.screen || 'Home');
       }
@@ -44,11 +58,15 @@ const StrategicRouter = {
       this.initialized = true;
 
       if (error.message.includes('404')) {
-        console.log('Strategic router offline. Run: python build_strategic_priorities.py');
+        if (isFirstLoad) console.log('Strategic router offline. Run: python build_strategic_priorities.py');
       } else {
         console.warn('Strategic router error:', error.message);
       }
     }
+  },
+
+  async refresh() {
+    await this._loadData(false);
   },
 
   checkStaleness() {
@@ -144,9 +162,9 @@ const StrategicRouter = {
                 <div class="text-xs opacity-75">FOCUS</div>
                 <div class="text-lg font-bold">${directive.primary_focus}</div>
               </div>
-              <div>
+              <div class="cursor-pointer hover:opacity-80 transition" onclick="AtlasNav.open('atlas')" title="View cluster in Cognitive Atlas">
                 <div class="text-xs opacity-75">CLUSTER</div>
-                <div class="text-lg font-bold">C${top.cluster_id}</div>
+                <div class="text-lg font-bold underline decoration-dotted">C${top.cluster_id}</div>
               </div>
               <div>
                 <div class="text-xs opacity-75">DEEP BLOCK</div>

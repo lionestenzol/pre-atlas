@@ -480,22 +480,22 @@ function analyzeRoutingOptimizations(
     modeCounts.set(t.to, (modeCounts.get(t.to) || 0) + t.count);
   }
 
-  // If BUILD mode is rarely reached, suggest easing CLOSE_LOOPS exit
+  // If BUILD mode is rarely reached, suggest easing CLOSURE exit
   const buildCount = modeCounts.get('BUILD') || 0;
   if (buildCount < totalTransitions * 0.1) {
     optimizations.push({
       patch: {
         type: 'ROUTING_PATCH',
-        target_mode: 'CLOSE_LOOPS',
+        target_mode: 'CLOSURE',
         condition_changes: [{
           signal: 'open_loops',
           current_threshold: '≤1 for HIGH',
           proposed_threshold: '≤2 for HIGH',
           effect: 'Easier progression to BUILD mode',
         }],
-        rationale: 'BUILD mode is underutilized; relaxing CLOSE_LOOPS exit',
+        rationale: 'BUILD mode is underutilized; relaxing CLOSURE exit',
       },
-      description: 'Optimize CLOSE_LOOPS→BUILD transition (BUILD underutilized)',
+      description: 'Optimize CLOSURE→BUILD transition (BUILD underutilized)',
       confidence: 0.7,
     });
   }
@@ -613,7 +613,7 @@ function analyzeTaskWorkflows(
         { action_type: 'create_draft', parameters: { draft_type: 'PLAN', template: 'BATCH_UNBLOCK' } },
         { action_type: 'flag_priority', parameters: { level: 'HIGH' } },
       ],
-      modes: ['CLOSE_LOOPS'],
+      modes: ['CLOSURE'],
       description: `Batch unblock workflow for ${blockedTasks.length} blocked tasks`,
       confidence: 0.75,
       sourceEntityIds: blockedTasks.slice(0, 5).map((t) => t.entity.entity_id),
@@ -632,7 +632,7 @@ function analyzeTaskWorkflows(
         { action_type: 'flag_priority', parameters: { level: 'HIGH' } },
         { action_type: 'schedule_review', parameters: { window: '24h' } },
       ],
-      modes: ['CLOSE_LOOPS', 'BUILD'],
+      modes: ['CLOSURE', 'BUILD'],
       description: `Escalation workflow for ${overdueTasks.length} overdue tasks`,
       confidence: 0.8,
       sourceEntityIds: overdueTasks.slice(0, 5).map((t) => t.entity.entity_id),

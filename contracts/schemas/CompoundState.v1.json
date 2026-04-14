@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "CompoundState.v1",
+  "title": "Compound State",
+  "description": "Aggregated cross-domain view computed by mosaic-orchestrator compound_loop. Shows how outputs in one domain affect another.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "compound_score", "domain_scores", "loops"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "compound_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Overall system health across all domains (0=critical, 100=optimal)"
+    },
+    "domain_scores": {
+      "type": "object",
+      "required": ["project", "skill", "network", "finance", "energy", "risk"],
+      "properties": {
+        "project": { "type": "number", "minimum": 0, "maximum": 100 },
+        "skill": { "type": "number", "minimum": 0, "maximum": 100 },
+        "network": { "type": "number", "minimum": 0, "maximum": 100 },
+        "finance": { "type": "number", "minimum": 0, "maximum": 100 },
+        "energy": { "type": "number", "minimum": 0, "maximum": 100 },
+        "risk": { "type": "number", "minimum": 0, "maximum": 100 }
+      },
+      "additionalProperties": false
+    },
+    "loops": {
+      "type": "object",
+      "properties": {
+        "project_health": { "$ref": "#/definitions/loop_result" },
+        "skill_health": { "$ref": "#/definitions/loop_result" },
+        "analyst": { "$ref": "#/definitions/loop_result" },
+        "finance_health": { "$ref": "#/definitions/loop_result" },
+        "network_health": { "$ref": "#/definitions/loop_result" },
+        "energy_health": { "$ref": "#/definitions/loop_result" },
+        "automation_health": { "$ref": "#/definitions/loop_result" },
+        "risk_mitigation": { "$ref": "#/definitions/loop_result" },
+        "closure_to_skill": { "$ref": "#/definitions/loop_result" },
+        "skill_to_network": { "$ref": "#/definitions/loop_result" },
+        "completion_to_finance": { "$ref": "#/definitions/loop_result" },
+        "energy_to_throttle": { "$ref": "#/definitions/loop_result" },
+        "risk_cascade": { "$ref": "#/definitions/loop_result" },
+        "compound_score": { "$ref": "#/definitions/loop_result" }
+      },
+      "additionalProperties": false
+    },
+    "active_constraints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_domain", "target_domain", "constraint", "severity"],
+        "properties": {
+          "source_domain": { "type": "string" },
+          "target_domain": { "type": "string" },
+          "constraint": { "type": "string" },
+          "severity": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "compound_brief": {
+      "type": "string",
+      "description": "Human-readable compound brief showing cross-domain leverage"
+    },
+    "signal_updates": {
+      "type": "object",
+      "description": "Changes pushed back into life_signals.json after this run",
+      "properties": {
+        "skills": { "type": "object" },
+        "skills_from_subtasks": { "type": "object" },
+        "network": { "type": "object" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "loop_result": {
+      "type": "object",
+      "required": ["fired"],
+      "properties": {
+        "fired": { "type": "boolean", "description": "Whether this loop produced a signal delta" },
+        "input_summary": { "type": "string" },
+        "output_summary": { "type": "string" },
+        "signal_delta": { "type": "object" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

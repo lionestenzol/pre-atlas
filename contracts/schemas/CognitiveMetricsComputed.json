@@ -58,7 +58,7 @@
     },
     "closure": {
       "type": "object",
-      "required": ["open", "closed", "ratio"],
+      "required": ["open", "closed", "ratio", "closure_quality"],
       "properties": {
         "open": {
           "type": "integer",
@@ -68,13 +68,29 @@
         "closed": {
           "type": "integer",
           "minimum": 0,
-          "description": "Number of closed/archived loops"
+          "description": "Total decisions made (CLOSE + ARCHIVE)"
+        },
+        "truly_closed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Loops with CLOSE decision (actually finished)"
+        },
+        "archived": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Loops with ARCHIVE decision (parked, not done)"
         },
         "ratio": {
           "type": "number",
           "minimum": 0,
           "maximum": 100,
-          "description": "Closure ratio as percentage (closed / total * 100)"
+          "description": "Decision ratio: % of backlog triaged (decisions / total * 100)"
+        },
+        "closure_quality": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Quality ratio: % of finished loops truly CLOSED vs just ARCHIVED. Below 30% triggers CLOSURE mode."
         }
       }
     }

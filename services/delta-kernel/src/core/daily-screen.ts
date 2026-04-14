@@ -75,9 +75,9 @@ export interface DailyScreenData {
 // === ACTION TYPE → MODE MAPPING ===
 
 const ACTION_MODE_MAP: Record<PreparedAction['action_type'], Mode[]> = {
-  reply_message: ['CLOSE_LOOPS'],
-  complete_task: ['CLOSE_LOOPS', 'BUILD'],
-  review_thread: ['CLOSE_LOOPS'],
+  reply_message: ['CLOSURE'],
+  complete_task: ['CLOSURE', 'BUILD'],
+  review_thread: ['CLOSURE'],
   create_asset: ['BUILD'],
   extend_asset: ['COMPOUND'],
   delegate: ['SCALE'],
@@ -107,7 +107,7 @@ function buildModeReason(
   }
 
   if (buckets.open_loops === 'LOW') {
-    reasons.push('open_loops is LOW (≥4 open) — Global override to CLOSE_LOOPS');
+    reasons.push('open_loops is LOW (≥4 open) — Global override to CLOSURE');
   }
 
   // Mode-specific reasons
@@ -116,11 +116,14 @@ function buildModeReason(
       case 'RECOVER':
         reasons.push('Recovering — rest and light admin only');
         break;
-      case 'CLOSE_LOOPS':
+      case 'CLOSURE':
         reasons.push('Closing loops — finish tasks, reply messages');
         if (buckets.open_loops === 'OK') {
           reasons.push('open_loops is OK (2-3 open)');
         }
+        break;
+      case 'MAINTENANCE':
+        reasons.push('Maintenance — light admin and health actions');
         break;
       case 'BUILD':
         reasons.push('Building — create new assets and systems');
@@ -154,14 +157,14 @@ function buildTransitionHints(
       if (buckets.sleep_hours === 'LOW') {
         const needed = 6 - (rawSignals?.sleep_hours ?? 0);
         hints.push({
-          target_mode: 'CLOSE_LOOPS',
+          target_mode: 'CLOSURE',
           condition: 'sleep_hours reaches OK (≥6h)',
           distance: `Sleep ${needed.toFixed(1)}h more`,
         });
       }
       break;
 
-    case 'CLOSE_LOOPS':
+    case 'CLOSURE':
       if (buckets.open_loops === 'LOW' || buckets.open_loops === 'OK') {
         const needed = (rawSignals?.open_loops ?? 0) - 1;
         hints.push({
@@ -170,6 +173,14 @@ function buildTransitionHints(
           distance: `Close ${needed} more loop${needed !== 1 ? 's' : ''}`,
         });
       }
+      break;
+
+    case 'MAINTENANCE':
+      hints.push({
+        target_mode: 'BUILD',
+        condition: 'sleep OK and loops clear',
+        distance: 'Resolve maintenance items',
+      });
       break;
 
     case 'BUILD':
@@ -200,7 +211,7 @@ function buildTransitionHints(
       }
       if (buckets.money_delta === 'LOW') {
         hints.push({
-          target_mode: 'CLOSE_LOOPS',
+          target_mode: 'CLOSURE',
           condition: 'money_delta is LOW',
           distance: 'Revenue dropped — need to stabilize',
         });

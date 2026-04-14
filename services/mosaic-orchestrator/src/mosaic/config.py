@@ -36,6 +36,7 @@ class MosaicConfig(BaseModel):
     # Auth
     aegis_api_key: str = os.getenv("AEGIS_API_KEY", "")
     anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
+    delta_api_key: str = os.getenv("DELTA_API_KEY", "")  # Loaded from .aegis-tenant-key if empty
 
     # Ollama (fallback for non-critical tasks)
     ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
@@ -65,3 +66,9 @@ class MosaicConfig(BaseModel):
 
 
 config = MosaicConfig()
+
+# Auto-load delta API key from .aegis-tenant-key if not set via env
+if not config.delta_api_key:
+    key_path = config.repo_root / ".aegis-tenant-key"
+    if key_path.exists():
+        config.delta_api_key = key_path.read_text().strip()

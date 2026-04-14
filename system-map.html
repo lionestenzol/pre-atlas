@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre Atlas — System Map</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a0a1a;
+    color: #e0e0e0;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+    background: linear-gradient(180deg, #1a1a3e 0%, #0a0a1a 100%);
+  }
+  .hero h1 {
+    font-size: 3.2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+  .hero .subtitle {
+    font-size: 1.15rem;
+    color: #94a3b8;
+    max-width: 600px;
+    margin: 0 auto 30px;
+    line-height: 1.6;
+  }
+  .hero .tldr {
+    display: inline-block;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 16px 28px;
+    font-size: 1.05rem;
+    color: #fbbf24;
+    font-weight: 600;
+  }
+
+  /* ── SECTION ── */
+  section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  .section-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .section-explain {
+    text-align: center;
+    color: #94a3b8;
+    margin-bottom: 32px;
+    font-size: 1rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  /* ── BIG PICTURE FLOW ── */
+  .big-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .flow-box {
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    width: 200px;
+    border: 2px solid #334155;
+    transition: all 0.3s;
+    cursor: default;
+  }
+  .flow-box:hover { transform: translateY(-4px); border-color: #60a5fa; }
+  .flow-box .icon { font-size: 2.5rem; margin-bottom: 8px; }
+  .flow-box .label { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+  .flow-box .desc { font-size: 0.8rem; color: #94a3b8; line-height: 1.4; }
+  .flow-arrow {
+    font-size: 2rem;
+    color: #60a5fa;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── MODE STRIP ── */
+  .mode-strip {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 20px auto 10px;
+  }
+  .mode-pill {
+    padding: 10px 18px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #fff;
+    position: relative;
+    cursor: default;
+    transition: transform 0.2s;
+  }
+  .mode-pill:hover { transform: scale(1.08); }
+  .mode-pill .tip {
+    display: none;
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #e2e8f0;
+    white-space: nowrap;
+    z-index: 10;
+  }
+  .mode-pill:hover .tip { display: block; }
+  .m-recover  { background: #dc2626; }
+  .m-closure  { background: #ea580c; }
+  .m-maintain { background: #ca8a04; }
+  .m-build    { background: #16a34a; }
+  .m-compound { background: #2563eb; }
+  .m-scale    { background: #7c3aed; }
+
+  .mode-arrow {
+    display: flex;
+    align-items: center;
+    color: #475569;
+    font-size: 1.2rem;
+  }
+
+  /* ── SERVICE CARDS ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+
+  .card {
+    border-radius: 20px;
+    padding: 28px;
+    border: 2px solid;
+    transition: all 0.3s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .card:hover { transform: translateY(-4px); }
+
+  .card-blue   { background: #0f1a2e; border-color: #1e3a5f; }
+  .card-blue::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .card-blue:hover { border-color: #3b82f6; }
+
+  .card-green  { background: #0f1e15; border-color: #1a3d2a; }
+  .card-green::before { background: linear-gradient(90deg, #22c55e, #4ade80); }
+  .card-green:hover { border-color: #22c55e; }
+
+  .card-purple { background: #1a0f2e; border-color: #2d1b5e; }
+  .card-purple::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+  .card-purple:hover { border-color: #8b5cf6; }
+
+  .card-amber  { background: #1e1a0f; border-color: #3d3420; }
+  .card-amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .card-amber:hover { border-color: #f59e0b; }
+
+  .card-pink   { background: #1e0f1a; border-color: #3d1b33; }
+  .card-pink::before { background: linear-gradient(90deg, #ec4899, #f472b6); }
+  .card-pink:hover { border-color: #ec4899; }
+
+  .card .card-icon { font-size: 2.2rem; margin-bottom: 10px; }
+  .card .card-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+  .card .card-role { font-size: 0.85rem; color: #94a3b8; margin-bottom: 14px; font-weight: 600; }
+  .card .card-explain { font-size: 0.9rem; color: #cbd5e1; line-height: 1.55; margin-bottom: 16px; }
+
+  .feature-list { list-style: none; }
+  .feature-list li {
+    padding: 6px 0;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .feature-list .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+  .blue-dot  { background: #3b82f6; }
+  .green-dot { background: #22c55e; }
+  .purp-dot  { background: #8b5cf6; }
+  .amber-dot { background: #f59e0b; }
+  .pink-dot  { background: #ec4899; }
+
+  .card .tech-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .tb-ts  { background: #1e3a5f; color: #60a5fa; }
+  .tb-py  { background: #1a3d2a; color: #4ade80; }
+  .tb-js  { background: #3d3420; color: #fbbf24; }
+  .tb-sql { background: #2d1b5e; color: #a78bfa; }
+  .tb-nx  { background: #3d1b33; color: #f472b6; }
+  .tb-html { background: #1e293b; color: #94a3b8; }
+
+  /* ── DATA FLOW ── */
+  .flow-diagram {
+    background: #111827;
+    border-radius: 20px;
+    padding: 32px 24px;
+    border: 1px solid #1e293b;
+    overflow-x: auto;
+  }
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 8px 0;
+    flex-wrap: nowrap;
+    min-width: max-content;
+  }
+  .flow-row.centered { justify-content: center; }
+  .flow-node {
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    border: 1px solid;
+  }
+  .fn-blue   { background: #0f1a2e; border-color: #1e3a5f; color: #60a5fa; }
+  .fn-green  { background: #0f1e15; border-color: #1a3d2a; color: #4ade80; }
+  .fn-purple { background: #1a0f2e; border-color: #2d1b5e; color: #a78bfa; }
+  .fn-amber  { background: #1e1a0f; border-color: #3d3420; color: #fbbf24; }
+  .fn-pink   { background: #1e0f1a; border-color: #3d1b33; color: #f472b6; }
+  .fn-gray   { background: #1e293b; border-color: #334155; color: #94a3b8; }
+
+  .flow-down {
+    text-align: center;
+    color: #475569;
+    font-size: 1.4rem;
+    margin: 4px 0;
+  }
+  .flow-right {
+    color: #475569;
+    font-size: 1.2rem;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── UI GALLERY ── */
+  .ui-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .ui-card {
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 14px;
+    padding: 20px;
+    transition: all 0.3s;
+  }
+  .ui-card:hover { border-color: #475569; transform: translateY(-2px); }
+  .ui-card .ui-icon { font-size: 1.8rem; margin-bottom: 8px; }
+  .ui-card .ui-name { font-weight: 700; margin-bottom: 4px; }
+  .ui-card .ui-desc { font-size: 0.82rem; color: #94a3b8; line-height: 1.5; }
+  .ui-card .ui-file { font-size: 0.7rem; color: #475569; margin-top: 6px; font-family: monospace; }
+
+  /* ── ISSUES ── */
+  .issue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .issue-card {
+    background: #1c1117;
+    border: 1px solid #3d1b2a;
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .issue-card .issue-icon { font-size: 1.4rem; margin-bottom: 6px; }
+  .issue-card .issue-title { font-weight: 700; color: #fca5a5; margin-bottom: 6px; }
+  .issue-card .issue-desc { font-size: 0.82rem; color: #94a3b8; line-height: 1.5; }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin: 30px 0;
+  }
+  .stat {
+    text-align: center;
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 14px;
+    padding: 18px 24px;
+    min-width: 140px;
+  }
+  .stat .num {
+    font-size: 1.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat .stat-label { font-size: 0.75rem; color: #64748b; margin-top: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #334155;
+    font-size: 0.8rem;
+  }
+
+  /* ── ANALOGY BOXES ── */
+  .analogy {
+    background: #1e293b;
+    border-left: 4px solid #fbbf24;
+    border-radius: 0 12px 12px 0;
+    padding: 16px 20px;
+    margin: 20px auto;
+    max-width: 700px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #e2e8f0;
+  }
+  .analogy strong { color: #fbbf24; }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #334155, transparent);
+    margin: 50px auto;
+    max-width: 600px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 2rem; }
+    .big-flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+    .cards { grid-template-columns: 1fr; }
+    .flow-row { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<div class="hero">
+  <h1>Pre Atlas</h1>
+  <p class="subtitle">
+    Your personal command center that watches what you're doing,
+    tells you what you <em>should</em> be doing, and won't let you lie to yourself.
+  </p>
+  <div class="tldr">
+    Think of it like a fitness tracker — but for your productivity and focus.
+  </div>
+</div>
+
+<!-- ═══════════════════ STATS ═══════════════════ -->
+<section>
+  <div class="stats-bar">
+    <div class="stat"><div class="num">3</div><div class="stat-label">Services</div></div>
+    <div class="stat"><div class="num">220</div><div class="stat-label">Files</div></div>
+    <div class="stat"><div class="num">40K</div><div class="stat-label">Lines of Code</div></div>
+    <div class="stat"><div class="num">93,898</div><div class="stat-label">Messages Analyzed</div></div>
+    <div class="stat"><div class="num">1,397</div><div class="stat-label">Conversations</div></div>
+    <div class="stat"><div class="num">6</div><div class="stat-label">Behavior Modes</div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ THE BIG PICTURE ═══════════════════ -->
+<section>
+  <h2 class="section-title">The Big Picture</h2>
+  <p class="section-explain">
+    Here's how the whole thing works, step by step. Your conversations go in one end, and actionable orders come out the other.
+  </p>
+
+  <div class="big-flow">
+    <div class="flow-box">
+      <div class="icon">💬</div>
+      <div class="label">Your Conversations</div>
+      <div class="desc">1,397 conversations with 93,898 messages you've had</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="border-color: #22c55e;">
+      <div class="icon">🧠</div>
+      <div class="label">Brain Scanner</div>
+      <div class="desc">Python reads everything, finds open loops & patterns</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="border-color: #3b82f6;">
+      <div class="icon">⚙️</div>
+      <div class="label">Rule Engine</div>
+      <div class="desc">TypeScript applies strict rules, picks your mode</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="border-color: #a78bfa;">
+      <div class="icon">📺</div>
+      <div class="label">Your Dashboard</div>
+      <div class="desc">Shows you what to do today — no wiggle room</div>
+    </div>
+  </div>
+
+  <div class="analogy">
+    <strong>Think of it like this:</strong> Your conversations are like a messy room.
+    The Brain Scanner goes through everything and makes a list of what's unfinished.
+    The Rule Engine looks at that list and says "you have too many things open — you're in CLOSURE mode, finish stuff before starting new things."
+    The Dashboard shows you that order on screen.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ THE 6 MODES ═══════════════════ -->
+<section>
+  <h2 class="section-title">The 6 Behavior Modes</h2>
+  <p class="section-explain">
+    The system puts you in one of 6 modes based on your numbers. Each mode controls what you're ALLOWED to do. No AI picks this — it's pure math.
+  </p>
+
+  <div class="mode-strip">
+    <div class="mode-pill m-recover">
+      🛌 RECOVER
+      <div class="tip">You slept less than 6 hours. Stop. Rest. Nothing else allowed.</div>
+    </div>
+    <div class="mode-arrow">→</div>
+    <div class="mode-pill m-closure">
+      🔒 CLOSURE
+      <div class="tip">Too many open loops. Finish things. No new projects.</div>
+    </div>
+    <div class="mode-arrow">→</div>
+    <div class="mode-pill m-maintain">
+      🔧 MAINTENANCE
+      <div class="tip">Things are messy but manageable. Clean up, organize.</div>
+    </div>
+    <div class="mode-arrow">→</div>
+    <div class="mode-pill m-build">
+      🏗️ BUILD
+      <div class="tip">You're clear! Create new things, ship assets, go fast.</div>
+    </div>
+    <div class="mode-arrow">→</div>
+    <div class="mode-pill m-compound">
+      📈 COMPOUND
+      <div class="tip">Building momentum. Stack wins on top of wins.</div>
+    </div>
+    <div class="mode-arrow">→</div>
+    <div class="mode-pill m-scale">
+      🚀 SCALE
+      <div class="tip">Everything is clicking. Expand, delegate, multiply.</div>
+    </div>
+  </div>
+
+  <div class="analogy">
+    <strong>It's like a traffic light system:</strong>
+    🔴 RECOVER/CLOSURE = Red light, stop what you're doing.
+    🟡 MAINTENANCE = Yellow, slow down and fix things.
+    🟢 BUILD/COMPOUND/SCALE = Green light, go create.
+    <br><br>
+    The system won't let you run a green light when your numbers say red.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ THE 3 SERVICES ═══════════════════ -->
+<section>
+  <h2 class="section-title">The 3 Main Services</h2>
+  <p class="section-explain">
+    Pre Atlas has 3 engines that work together. Each one has a specific job.
+  </p>
+
+  <div class="cards">
+
+    <!-- COGNITIVE SENSOR -->
+    <div class="card card-green">
+      <div class="card-icon">🧠</div>
+      <div class="card-title">Cognitive Sensor</div>
+      <div class="card-role">THE BRAIN SCANNER — reads your conversations</div>
+      <div>
+        <span class="tech-badge tb-py">Python</span>
+        <span class="tech-badge tb-sql">SQLite</span>
+      </div>
+      <p class="card-explain" style="margin-top: 12px;">
+        This one reads ALL your past conversations (93,898 messages!) and figures out:
+        What did you start but never finish? What topics keep coming up?
+        How focused or scattered are you?
+      </p>
+      <ul class="feature-list">
+        <li><span class="dot green-dot"></span><strong>Open Loop Detector</strong> — Finds things you started but didn't finish</li>
+        <li><span class="dot green-dot"></span><strong>Closure Ratio</strong> — Calculates what % of things you actually complete</li>
+        <li><span class="dot green-dot"></span><strong>Mode Calculator</strong> — Decides if you should be building or closing</li>
+        <li><span class="dot green-dot"></span><strong>8 AI Agents</strong> — Extract ideas, classify them, rank priorities</li>
+        <li><span class="dot green-dot"></span><strong>Cognitive Atlas</strong> — 84,000-point interactive brain map</li>
+        <li><span class="dot green-dot"></span><strong>Daily Governor</strong> — Generates your daily brief</li>
+        <li><span class="dot green-dot"></span><strong>Weekly Governor</strong> — Weekly review and planning</li>
+        <li><span class="dot green-dot"></span><strong>Book Miner</strong> — Extracts book-worthy content from your convos</li>
+      </ul>
+    </div>
+
+    <!-- DELTA KERNEL -->
+    <div class="card card-blue">
+      <div class="card-icon">⚙️</div>
+      <div class="card-title">Delta Kernel</div>
+      <div class="card-role">THE RULE ENGINE — enforces your behavior</div>
+      <div>
+        <span class="tech-badge tb-ts">TypeScript</span>
+        <span class="tech-badge tb-sql">SQLite</span>
+      </div>
+      <p class="card-explain" style="margin-top: 12px;">
+        This is the strict parent. It takes what the Brain Scanner found
+        and applies hard rules. Every change is recorded forever (like a blockchain).
+        No cheating, no faking progress.
+      </p>
+      <ul class="feature-list">
+        <li><span class="dot blue-dot"></span><strong>Mode Router</strong> — The locked rulebook that picks your mode (no AI)</li>
+        <li><span class="dot blue-dot"></span><strong>Governance Daemon</strong> — 6 automatic jobs running 24/7</li>
+        <li><span class="dot blue-dot"></span><strong>Hash-Chain Deltas</strong> — Every change is permanent and tamper-proof</li>
+        <li><span class="dot blue-dot"></span><strong>Closure Tracking</strong> — Records when you finish things + streaks</li>
+        <li><span class="dot blue-dot"></span><strong>Work Queue</strong> — You must REQUEST permission to start new work</li>
+        <li><span class="dot blue-dot"></span><strong>REST API</strong> — Port 3001, serves all dashboards</li>
+        <li><span class="dot blue-dot"></span><strong>CLI App</strong> — Terminal interface for power users</li>
+        <li><span class="dot blue-dot"></span><strong>Timeline Logger</strong> — Records every system event forever</li>
+      </ul>
+    </div>
+
+    <!-- AEGIS FABRIC -->
+    <div class="card card-purple">
+      <div class="card-icon">🛡️</div>
+      <div class="card-title">Aegis Fabric</div>
+      <div class="card-role">THE SECURITY GUARD — controls AI agent access</div>
+      <div>
+        <span class="tech-badge tb-ts">TypeScript</span>
+      </div>
+      <p class="card-explain" style="margin-top: 12px;">
+        This is the bouncer at the door. When any AI agent (Claude, OpenAI, etc.)
+        wants to DO something, it has to ask Aegis first. Aegis checks the rules
+        and says ALLOW, DENY, or ASK A HUMAN.
+      </p>
+      <ul class="feature-list">
+        <li><span class="dot purp-dot"></span><strong>Policy Engine</strong> — Declarative rules (9 operators, 3 effects)</li>
+        <li><span class="dot purp-dot"></span><strong>Agent Adapter</strong> — Normalizes Claude/OpenAI/custom formats</li>
+        <li><span class="dot purp-dot"></span><strong>Approval Queue</strong> — Humans approve sensitive actions</li>
+        <li><span class="dot purp-dot"></span><strong>Multi-Tenant</strong> — Supports FREE/STARTER/ENTERPRISE tiers</li>
+        <li><span class="dot purp-dot"></span><strong>Audit Log</strong> — Records every agent action permanently</li>
+        <li><span class="dot purp-dot"></span><strong>Webhook Events</strong> — Notifies external systems of actions</li>
+      </ul>
+      <div style="margin-top: 12px; padding: 8px 12px; background: #2d1b5e; border-radius: 8px; font-size: 0.78rem; color: #c4b5fd;">
+        ⚠️ Status: Built & compiled, but not yet connected to the main system
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ YOUR SCREENS ═══════════════════ -->
+<section>
+  <h2 class="section-title">Your Screens (What You See)</h2>
+  <p class="section-explain">
+    These are the visual interfaces — the stuff you actually look at and interact with.
+  </p>
+
+  <div class="ui-grid">
+    <div class="ui-card">
+      <div class="ui-icon">🖥️</div>
+      <div class="ui-name">Atlas Boot</div>
+      <div class="ui-desc">The main screen. Shows your mode, loops, closure ratio. Has tabs for everything else. Updates every 30 seconds.</div>
+      <div class="ui-file">atlas_boot.html (907 lines)</div>
+    </div>
+    <div class="ui-card">
+      <div class="ui-icon">📓</div>
+      <div class="ui-name">CycleBoard</div>
+      <div class="ui-desc">Your bullet journal. Plan your day with A/B/C templates. Morning/evening routines. Task tracking. Cognitive mode displayed at top.</div>
+      <div class="ui-file">cycleboard/index.html + 11 JS modules</div>
+    </div>
+    <div class="ui-card">
+      <div class="ui-icon">🌐</div>
+      <div class="ui-name">Cognitive Atlas</div>
+      <div class="ui-desc">Mind-blowing 84,000-point interactive map of ALL your conversations. 6 view modes. Zoom, pan, click to explore your brain patterns.</div>
+      <div class="ui-file">cognitive_atlas.html (generated, ~5.9 MB)</div>
+    </div>
+    <div class="ui-card">
+      <div class="ui-icon">📊</div>
+      <div class="ui-name">Dashboard</div>
+      <div class="ui-desc">Analytics view. Closure trends, open loop counts, topic distributions, conversation patterns over time.</div>
+      <div class="ui-file">dashboard.html</div>
+    </div>
+    <div class="ui-card">
+      <div class="ui-icon">🎛️</div>
+      <div class="ui-name">Control Panel</div>
+      <div class="ui-desc">Admin panel. See daemon status, trigger manual jobs, inspect system state, view configs.</div>
+      <div class="ui-file">control_panel.html</div>
+    </div>
+    <div class="ui-card">
+      <div class="ui-icon">💡</div>
+      <div class="ui-name">Idea Dashboard</div>
+      <div class="ui-desc">All your extracted ideas ranked and organized. Priority tiers, dependency chains, execution order.</div>
+      <div class="ui-file">idea_dashboard.html</div>
+    </div>
+    <div class="ui-card">
+      <div class="ui-icon">⏱️</div>
+      <div class="ui-name">Timeline</div>
+      <div class="ui-desc">Every system event in chronological order. Mode changes, closures, daemon heartbeats, work requests.</div>
+      <div class="ui-file">src/ui/timeline.html</div>
+    </div>
+    <div class="ui-card">
+      <div class="ui-icon">🏗️</div>
+      <div class="ui-name">Blueprint Generator</div>
+      <div class="ui-desc">Type an idea, get a scope-locked product blueprint. Forces you to ship in under 2 weeks. No feature creep allowed.</div>
+      <div class="ui-file">apps/blueprint-generator/ (Next.js)</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ DATA FLOW ═══════════════════ -->
+<section>
+  <h2 class="section-title">How Data Flows Through the System</h2>
+  <p class="section-explain">
+    This is the path your data takes from raw conversations to "here's what you should do today."
+  </p>
+
+  <div class="flow-diagram">
+
+    <div class="flow-down" style="font-size:0.8rem; color:#64748b; margin-bottom:12px;">Every hour, automatically:</div>
+
+    <div class="flow-row centered">
+      <div class="flow-node fn-gray">💬 results.db<br><span style="font-size:0.65rem; opacity:0.7;">93,898 messages</span></div>
+    </div>
+    <div class="flow-down">⬇</div>
+
+    <div class="flow-row centered">
+      <div class="flow-node fn-green">🔍 loops.py<br><span style="font-size:0.65rem;">Find open loops</span></div>
+      <div class="flow-right">→</div>
+      <div class="flow-node fn-green">📊 completion_stats.py<br><span style="font-size:0.65rem;">Calculate closure %</span></div>
+      <div class="flow-right">→</div>
+      <div class="flow-node fn-green">📦 export_cognitive_state.py<br><span style="font-size:0.65rem;">Package everything</span></div>
+    </div>
+    <div class="flow-down">⬇</div>
+
+    <div class="flow-row centered">
+      <div class="flow-node fn-green">🧭 route_today.py<br><span style="font-size:0.65rem;">Pick your mode</span></div>
+      <div class="flow-right">→</div>
+      <div class="flow-node fn-green">📋 export_daily_payload.py<br><span style="font-size:0.65rem;">Build CycleBoard data</span></div>
+    </div>
+    <div class="flow-down">⬇</div>
+
+    <div class="flow-row centered">
+      <div class="flow-node fn-amber">📄 cognitive_state.json</div>
+      <div class="flow-right">&</div>
+      <div class="flow-node fn-amber">📄 daily_payload.json</div>
+    </div>
+    <div class="flow-down">⬇</div>
+
+    <div class="flow-row centered">
+      <div class="flow-node fn-blue">⚙️ Delta API (port 3001)<br><span style="font-size:0.65rem;">POST /api/ingest/cognitive</span></div>
+    </div>
+    <div class="flow-down">⬇</div>
+
+    <div class="flow-row centered">
+      <div class="flow-node fn-blue">🔄 Governance Daemon<br><span style="font-size:0.65rem;">Apply routing rules → set mode</span></div>
+    </div>
+    <div class="flow-down">⬇</div>
+
+    <div class="flow-row centered">
+      <div class="flow-node fn-purple">📺 atlas_boot.html<br><span style="font-size:0.65rem;">GET /api/state/unified every 30s</span></div>
+      <div class="flow-right">&</div>
+      <div class="flow-node fn-purple">📓 CycleBoard<br><span style="font-size:0.65rem;">Reads brain/ JSON files</span></div>
+    </div>
+
+    <div class="flow-down" style="margin-top: 16px; font-size:0.8rem; color:#22c55e;">✅ You see your mode, orders, and what to do next</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ BONUS FEATURES ═══════════════════ -->
+<section>
+  <h2 class="section-title">Bonus Features</h2>
+  <p class="section-explain">
+    Extra systems built on top of the core engine.
+  </p>
+
+  <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+
+    <div class="card card-amber">
+      <div class="card-icon">💡</div>
+      <div class="card-title">Idea Intelligence</div>
+      <div class="card-role">8 AI agents mine your conversations for ideas</div>
+      <p class="card-explain">
+        Automatically extracts every idea you've ever mentioned,
+        removes duplicates, scores them by priority, and ranks them
+        into tiers: Execute Now, Next Up, Backlog, Archive.
+      </p>
+      <ul class="feature-list">
+        <li><span class="dot amber-dot"></span>Excavator — Finds raw ideas (18 regex patterns)</li>
+        <li><span class="dot amber-dot"></span>Deduplicator — Merges similar ideas</li>
+        <li><span class="dot amber-dot"></span>Classifier — Tags by category and status</li>
+        <li><span class="dot amber-dot"></span>Orchestrator — Ranks by 5-factor priority score</li>
+        <li><span class="dot amber-dot"></span>Reporter — Generates readable registry</li>
+      </ul>
+    </div>
+
+    <div class="card card-pink">
+      <div class="card-icon">📖</div>
+      <div class="card-title">Book Pipeline</div>
+      <div class="card-role">Turns your conversations into book chapters</div>
+      <p class="card-explain">
+        Extracts the best passages from your conversations,
+        ranks them by relevance, and drafts book chapters.
+        Currently working on Chapter 1: "The Anatomy of Disrespect."
+      </p>
+      <ul class="feature-list">
+        <li><span class="dot pink-dot"></span>Book Miner agent — extracts raw material</li>
+        <li><span class="dot pink-dot"></span>Top 20 passages ranked by score</li>
+        <li><span class="dot pink-dot"></span>Draft → Final chapter pipeline</li>
+        <li><span class="dot pink-dot"></span>PDF builder (Markdown → PDF)</li>
+      </ul>
+    </div>
+
+    <div class="card card-green">
+      <div class="card-icon">🗺️</div>
+      <div class="card-title">Cognitive Atlas</div>
+      <div class="card-role">Interactive 3D-style map of your brain</div>
+      <p class="card-explain">
+        Takes 84,848 message embeddings, projects them into 2D space,
+        clusters them, and builds an interactive visualization.
+        You can literally SEE what your brain focuses on.
+      </p>
+      <ul class="feature-list">
+        <li><span class="dot green-dot"></span>6 view modes (Cluster, Role, Time, Convo, Leverage, Graph)</li>
+        <li><span class="dot green-dot"></span>UMAP projection (384 dimensions → 2D)</li>
+        <li><span class="dot green-dot"></span>HDBSCAN auto-clustering</li>
+        <li><span class="dot green-dot"></span>ForceAtlas2 force-directed layout</li>
+        <li><span class="dot green-dot"></span>Plotly WebGL + Sigma.js rendering</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ KNOWN ISSUES ═══════════════════ -->
+<section>
+  <h2 class="section-title">Known Issues</h2>
+  <p class="section-explain">
+    Things that work but could be better. Nothing is broken — these are optimization opportunities.
+  </p>
+
+  <div class="issue-grid">
+    <div class="issue-card">
+      <div class="issue-icon">🔀</div>
+      <div class="issue-title">Triple Mode Routing</div>
+      <div class="issue-desc">Three different places calculate your mode (Python, TypeScript LUT, TypeScript daemon). They could disagree. Should be one source of truth.</div>
+    </div>
+    <div class="issue-card">
+      <div class="issue-icon">📋</div>
+      <div class="issue-title">Duplicated Code</div>
+      <div class="issue-desc">The delta engine (delta.ts) is copy-pasted into both delta-kernel and aegis-fabric. If you change one, the other gets outdated.</div>
+    </div>
+    <div class="issue-card">
+      <div class="issue-icon">🔓</div>
+      <div class="issue-title">No File Locking</div>
+      <div class="issue-desc">Python and TypeScript both read/write the same JSON files without locks. They could step on each other (rare but possible).</div>
+    </div>
+    <div class="issue-card">
+      <div class="issue-icon">🧪</div>
+      <div class="issue-title">Limited Tests</div>
+      <div class="issue-desc">Only 7 Python tests (atlas pipeline). No TypeScript tests. No agent tests, no governance tests.</div>
+    </div>
+    <div class="issue-card">
+      <div class="issue-icon">🔗</div>
+      <div class="issue-title">Aegis Not Connected</div>
+      <div class="issue-desc">Aegis Fabric is fully built but not wired into the main system yet. It runs on port 3002 independently.</div>
+    </div>
+    <div class="issue-card">
+      <div class="issue-icon">📂</div>
+      <div class="issue-title">Overlapping Pipelines</div>
+      <div class="issue-desc">refresh.py, run_daily.py, and atlas_agent.py all do similar things. Should be one pipeline with options.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ FINAL SUMMARY ═══════════════════ -->
+<section>
+  <h2 class="section-title" style="margin-bottom: 20px;">One Last Analogy</h2>
+
+  <div class="analogy" style="max-width: 800px; font-size: 1rem;">
+    <strong>Pre Atlas is like a personal trainer for your brain:</strong><br><br>
+
+    🧠 <strong>Cognitive Sensor</strong> = The trainer who watches your workout (reads your conversations, finds what you're neglecting)<br><br>
+
+    ⚙️ <strong>Delta Kernel</strong> = The training program (strict rules: "you WILL do legs today because you skipped them 3 times")<br><br>
+
+    🛡️ <strong>Aegis Fabric</strong> = The gym rules (any AI assistant that wants to help you train must follow the gym's policies first)<br><br>
+
+    📺 <strong>Your Dashboards</strong> = The workout app on your phone (shows you today's exercises, your streaks, your progress)<br><br>
+
+    The system doesn't care how you feel about it. If your numbers say CLOSURE mode, you're closing loops. Period. That's the whole point — it removes self-deception from your workflow.
+  </div>
+</section>
+
+<footer>
+  Pre Atlas System Map — Generated from full codebase audit — 40,000 lines across 220 files
+</footer>
+
+</body>
+</html>

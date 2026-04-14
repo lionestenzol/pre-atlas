@@ -7,7 +7,7 @@ There is exactly **one active Mode** at all times:
 
 ```
 RECOVER
-CLOSE_LOOPS
+CLOSURE
 BUILD
 COMPOUND
 SCALE
@@ -38,7 +38,7 @@ These apply **from any state**.
 | Condition         | Next Mode   |
 | ----------------- | ----------- |
 | sleep_hours = LOW | RECOVER     |
-| open_loops = HIGH | CLOSE_LOOPS |
+| open_loops = HIGH | CLOSURE |
 
 Note: `open_loops = HIGH` means ≤1 open loops (good state).
 The override triggers on `open_loops = LOW` (≥4 loops = bad).
@@ -49,12 +49,12 @@ The override triggers on `open_loops = LOW` (≥4 loops = bad).
 
 | Current Mode | Condition                                                  | Next Mode   |
 | ------------ | ---------------------------------------------------------- | ----------- |
-| RECOVER      | sleep_hours = OK or HIGH                                   | CLOSE_LOOPS |
-| CLOSE_LOOPS  | open_loops = OK or HIGH                                    | BUILD       |
+| RECOVER      | sleep_hours = OK or HIGH                                   | CLOSURE |
+| CLOSURE  | open_loops = OK or HIGH                                    | BUILD       |
 | BUILD        | assets_shipped = OK or HIGH                                | COMPOUND    |
 | COMPOUND     | deep_work_blocks = OK or HIGH AND money_delta = OK or HIGH | SCALE       |
 | SCALE        | assets_shipped = LOW                                       | BUILD       |
-| SCALE        | money_delta = LOW                                          | CLOSE_LOOPS |
+| SCALE        | money_delta = LOW                                          | CLOSURE |
 
 If no rule fires → remain in current Mode.
 
@@ -65,7 +65,7 @@ If no rule fires → remain in current Mode.
 | Mode        | System Is Allowed To Prepare                   |
 | ----------- | ---------------------------------------------- |
 | RECOVER     | Rest tasks, health actions, sleep, light admin |
-| CLOSE_LOOPS | Finish tasks, reply messages, clean queues     |
+| CLOSURE | Finish tasks, reply messages, clean queues     |
 | BUILD       | Draft new assets, plans, systems               |
 | COMPOUND    | Extend existing assets, marketing, leverage    |
 | SCALE       | Hiring, delegation, infrastructure, funding    |

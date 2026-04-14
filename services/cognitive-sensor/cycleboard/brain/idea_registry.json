@@ -1,0 +1,353 @@
+{
+  "metadata": {
+    "generated_at": "2026-02-09T13:13:58.685196",
+    "total_ideas": 527,
+    "tier_breakdown": {
+      "execute_now": 2,
+      "next_up": 41,
+      "backlog": 277,
+      "archive": 207
+    }
+  },
+  "execute_now": [
+    {
+      "canonical_id": "canon_0042",
+      "canonical_title": "Code to Numeric Logic",
+      "priority_score": 0.588,
+      "priority_breakdown": {
+        "frequency": 0.2,
+        "recency": 0.0,
+        "alignment": 0.075,
+        "feasibility": 0.112,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "idea",
+      "complexity": "massive",
+      "mention_count": 31,
+      "alignment_score": 0.301,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0069",
+        "canon_0383",
+        "canon_0013",
+        "canon_0028",
+        "canon_0035",
+        "canon_0050",
+        "canon_0060",
+        "canon_0066",
+        "canon_0070",
+        "canon_0087",
+        "canon_0141",
+        "canon_0147",
+        "canon_0153",
+        "canon_0155",
+        "canon_0176",
+        "canon_0177",
+        "canon_0193",
+        "canon_0195",
+        "canon_0198",
+        "canon_0241",
+        "canon_0246",
+        "canon_0255",
+        "canon_0256",
+        "canon_0258",
+        "canon_0263",
+        "canon_0264",
+        "canon_0265",
+        "canon_0269",
+        "canon_0271",
+        "canon_0272",
+        "canon_0281",
+        "canon_0329",
+        "canon_0337",
+        "canon_0339",
+        "canon_0365",
+        "canon_0367",
+        "canon_0368",
+        "canon_0375",
+        "canon_0380"
+      ]
+    },
+    {
+      "canonical_id": "canon_0200",
+      "canonical_title": "SaaS Market Growth Trends",
+      "priority_score": 0.533,
+      "priority_breakdown": {
+        "frequency": 0.142,
+        "recency": 0.0,
+        "alignment": 0.082,
+        "feasibility": 0.109,
+        "compounding": 0.2
+      },
+      "category": "saas_product",
+      "status": "idea",
+      "complexity": "massive",
+      "mention_count": 22,
+      "alignment_score": 0.327,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0047",
+        "canon_0201",
+        "canon_0204",
+        "canon_0205",
+        "canon_0209",
+        "canon_0221"
+      ]
+    }
+  ],
+  "next_up": [
+    {
+      "canonical_id": "canon_0386",
+      "canonical_title": "Document Processing with AI",
+      "priority_score": 0.447,
+      "priority_breakdown": {
+        "frequency": 0.013,
+        "recency": 0.0,
+        "alignment": 0.115,
+        "feasibility": 0.12,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "idea",
+      "complexity": "massive",
+      "mention_count": 2,
+      "alignment_score": 0.458,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0027",
+        "canon_0151",
+        "canon_0385",
+        "canon_0471",
+        "canon_0474"
+      ]
+    },
+    {
+      "canonical_id": "canon_0150",
+      "canonical_title": "Custom GPT JSON Setup",
+      "priority_score": 0.425,
+      "priority_breakdown": {
+        "frequency": 0.019,
+        "recency": 0.0,
+        "alignment": 0.09,
+        "feasibility": 0.116,
+        "compounding": 0.2
+      },
+      "category": "content_media",
+      "status": "idea",
+      "complexity": "complex",
+      "mention_count": 3,
+      "alignment_score": 0.361,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0032",
+        "canon_0148"
+      ]
+    },
+    {
+      "canonical_id": "canon_0186",
+      "canonical_title": "AI Execution Optimization",
+      "priority_score": 0.417,
+      "priority_breakdown": {
+        "frequency": 0.006,
+        "recency": 0.0,
+        "alignment": 0.113,
+        "feasibility": 0.098,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "started",
+      "complexity": "complex",
+      "mention_count": 1,
+      "alignment_score": 0.451,
+      "dependencies": [
+        "canon_0180",
+        "canon_0181",
+        "canon_0182"
+      ],
+      "child_ideas": [
+        "canon_0185"
+      ]
+    },
+    {
+      "canonical_id": "canon_0187",
+      "canonical_title": "AI Execution Optimization",
+      "priority_score": 0.416,
+      "priority_breakdown": {
+        "frequency": 0.006,
+        "recency": 0.0,
+        "alignment": 0.112,
+        "feasibility": 0.098,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "started",
+      "complexity": "complex",
+      "mention_count": 1,
+      "alignment_score": 0.448,
+      "dependencies": [
+        "canon_0185",
+        "canon_0186"
+      ],
+      "child_ideas": [
+        "canon_0186"
+      ]
+    },
+    {
+      "canonical_id": "canon_0322",
+      "canonical_title": "AI Workflow for App",
+      "priority_score": 0.412,
+      "priority_breakdown": {
+        "frequency": 0.006,
+        "recency": 0.0,
+        "alignment": 0.078,
+        "feasibility": 0.128,
+        "compounding": 0.2
+      },
+      "category": "technical_project",
+      "status": "started",
+      "complexity": "moderate",
+      "mention_count": 1,
+      "alignment_score": 0.311,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0286"
+      ]
+    },
+    {
+      "canonical_id": "canon_0299",
+      "canonical_title": "Process Optimization Strategy",
+      "priority_score": 0.41,
+      "priority_breakdown": {
+        "frequency": 0.013,
+        "recency": 0.0,
+        "alignment": 0.085,
+        "feasibility": 0.112,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "stalled",
+      "complexity": "massive",
+      "mention_count": 2,
+      "alignment_score": 0.338,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0077",
+        "canon_0307",
+        "canon_0309",
+        "canon_0310",
+        "canon_0317",
+        "canon_0322",
+        "canon_0326",
+        "canon_0341",
+        "canon_0342",
+        "canon_0472",
+        "canon_0476"
+      ]
+    },
+    {
+      "canonical_id": "canon_0277",
+      "canonical_title": "Prompt Engineering Mastery",
+      "priority_score": 0.4,
+      "priority_breakdown": {
+        "frequency": 0.013,
+        "recency": 0.0,
+        "alignment": 0.052,
+        "feasibility": 0.135,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "idea",
+      "complexity": "massive",
+      "mention_count": 2,
+      "alignment_score": 0.208,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0030",
+        "canon_0041",
+        "canon_0142",
+        "canon_0194",
+        "canon_0244",
+        "canon_0296",
+        "canon_0343"
+      ]
+    },
+    {
+      "canonical_id": "canon_0250",
+      "canonical_title": "Quiz JSON GPT Integration",
+      "priority_score": 0.398,
+      "priority_breakdown": {
+        "frequency": 0.013,
+        "recency": 0.0,
+        "alignment": 0.061,
+        "feasibility": 0.124,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "idea",
+      "complexity": "massive",
+      "mention_count": 2,
+      "alignment_score": 0.245,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0328",
+        "canon_0364",
+        "canon_0249",
+        "canon_0363"
+      ]
+    },
+    {
+      "canonical_id": "canon_0188",
+      "canonical_title": "Custom GPT Development Plan",
+      "priority_score": 0.396,
+      "priority_breakdown": {
+        "frequency": 0.006,
+        "recency": 0.0,
+        "alignment": 0.054,
+        "feasibility": 0.135,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "idea",
+      "complexity": "moderate",
+      "mention_count": 1,
+      "alignment_score": 0.218,
+      "dependencies": [],
+      "child_ideas": []
+    },
+    {
+      "canonical_id": "canon_0170",
+      "canonical_title": "Power Dynamics Mastery Guide",
+      "priority_score": 0.393,
+      "priority_breakdown": {
+        "frequency": 0.026,
+        "recency": 0.0,
+        "alignment": 0.051,
+        "feasibility": 0.117,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "idea",
+      "complexity": "massive",
+      "mention_count": 4,
+      "alignment_score": 0.202,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0160",
+        "canon_0250",
+        "canon_0277",
+        "canon_0298",
+        "canon_0336",
+        "canon_0076",
+        "canon_0144",
+        "canon_0228",
+        "canon_0234",
+        "canon_0297",
+        "canon_0340",
+        "canon_0362",
+        "canon_0372",
+        "canon_0373"
+      ]
+    }
+  ]
+}

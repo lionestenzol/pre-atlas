@@ -1,0 +1,390 @@
+/* inPACT Custom Styles */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* Scrollbar: thin, dark, unobtrusive */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  backdrop-filter: blur(2px);
+}
+
+/* Animations */
+.toast { animation: slideIn 0.3s ease-out; }
+.fade-in { animation: fadeIn 0.3s ease-out; }
+.slide-up { animation: slideUp 0.3s ease-out; }
+.pulse { animation: pulse 2s infinite; }
+
+@keyframes slideIn {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Progress Ring */
+.progress-ring__circle {
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Gradient Background */
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Glass Effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Dark Mode Overrides */
+.dark body {
+  background-color: #0a0a0f;
+  color: #e5e5e5;
+}
+
+.dark .bg-white {
+  background-color: #111118 !important;
+}
+
+.dark .bg-slate-50 {
+  background-color: #0a0a0f !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: #1a1a2a !important;
+}
+
+.dark .bg-slate-200 {
+  background-color: #1a1a2a !important;
+}
+
+.dark .text-slate-700,
+.dark .text-slate-800,
+.dark .text-slate-900 {
+  color: #e5e5e5 !important;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-600 {
+  color: #888 !important;
+}
+
+.dark .border,
+.dark .border-b,
+.dark .border-t,
+.dark .border-r,
+.dark .border-l {
+  border-color: #2a2a3a !important;
+}
+
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover {
+  background-color: #1a1a2a !important;
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #111118;
+  color: #e5e5e5;
+  border-color: #2a2a3a;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #6366f1;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* Sidebar */
+.dark .bg-gray-800 {
+  background-color: #111118 !important;
+}
+
+.dark .bg-gray-700 {
+  background-color: #1a1a2a !important;
+}
+
+.dark .border-gray-700 {
+  border-color: #2a2a3a !important;
+}
+
+.dark .text-gray-300 {
+  color: #aaa !important;
+}
+
+.dark .text-gray-400 {
+  color: #888 !important;
+}
+
+/* Accent colors */
+.dark .bg-green-500 {
+  background-color: #34d399 !important;
+}
+
+.dark .bg-blue-600 {
+  background-color: #4338ca !important;
+}
+
+.dark .text-blue-600,
+.dark .text-blue-400 {
+  color: #6366f1 !important;
+}
+
+.dark .hover\:bg-blue-50:hover,
+.dark .hover\:bg-blue-900\/20:hover {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+/* Bottom mobile nav */
+.dark nav[role="navigation"] {
+  background-color: #111118 !important;
+  border-color: #2a2a3a !important;
+}
+
+/* Cards and panels */
+.dark .rounded-lg,
+.dark .rounded-xl {
+  border-color: #2a2a3a;
+}
+
+.dark .shadow,
+.dark .shadow-sm,
+.dark .shadow-lg {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Checkboxes */
+.dark input[type="checkbox"] {
+  accent-color: #6366f1;
+}
+
+/* Gradient card overrides */
+.dark .bg-gradient-to-br,
+.dark [class*="from-blue-50"],
+.dark [class*="from-purple-50"],
+.dark [class*="from-indigo-50"],
+.dark [class*="to-blue-50"],
+.dark [class*="to-purple-50"],
+.dark [class*="to-indigo-50"] {
+  background: #111118 !important;
+}
+
+/* Routine Log header card */
+.dark .border-blue-200 {
+  border-color: #2a2a3a !important;
+}
+
+.dark .border-blue-800 {
+  border-color: #2a2a3a !important;
+}
+
+.dark .text-blue-900 {
+  color: #e5e5e5 !important;
+}
+
+.dark .text-blue-100 {
+  color: #e5e5e5 !important;
+}
+
+.dark .text-blue-700,
+.dark .text-blue-300 {
+  color: #6366f1 !important;
+}
+
+/* Streak/momentum accent backgrounds */
+.dark .bg-orange-50 {
+  background-color: rgba(251, 146, 60, 0.1) !important;
+}
+
+.dark .bg-orange-100 {
+  background-color: rgba(251, 146, 60, 0.1) !important;
+}
+
+.dark .text-orange-500 {
+  color: #fb923c !important;
+}
+
+.dark .text-orange-600,
+.dark .text-orange-400,
+.dark .text-orange-700,
+.dark .text-orange-300 {
+  color: #fb923c !important;
+}
+
+/* Routine color scheme dark overrides */
+.dark .bg-blue-100 {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+.dark .bg-cyan-100 {
+  background-color: rgba(56, 189, 248, 0.1) !important;
+}
+
+.dark .bg-purple-100 {
+  background-color: rgba(167, 139, 250, 0.1) !important;
+}
+
+.dark .bg-orange-100 {
+  background-color: rgba(251, 146, 60, 0.1) !important;
+}
+
+.dark .bg-green-100 {
+  background-color: rgba(52, 211, 153, 0.1) !important;
+}
+
+.dark .bg-indigo-100 {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+.dark .bg-red-100 {
+  background-color: rgba(248, 113, 113, 0.1) !important;
+}
+
+.dark .bg-yellow-100 {
+  background-color: rgba(251, 191, 36, 0.1) !important;
+}
+
+/* Progress bar track */
+.dark .bg-slate-200,
+.dark .bg-gray-600 {
+  background-color: #1a1a2a !important;
+}
+
+/* Semi-transparent gray panels */
+.dark .bg-gray-700\/50 {
+  background-color: rgba(26, 26, 42, 0.5) !important;
+}
+
+.dark .bg-gray-700\/50,
+.dark [class*="dark:bg-gray-700/50"] {
+  background-color: rgba(26, 26, 42, 0.5) !important;
+}
+
+/* Slate-colored badge fallback for no data */
+.dark .bg-slate-400 {
+  background-color: #555 !important;
+}
+
+/* Dashed border buttons */
+.dark .border-dashed {
+  border-color: #2a2a3a !important;
+}
+
+/* Hover states for gray levels */
+.dark .hover\:bg-slate-200:hover,
+.dark .hover\:bg-gray-600:hover {
+  background-color: #2a2a3a !important;
+}
+
+.dark .hover\:bg-gray-700:hover {
+  background-color: #1a1a2a !important;
+}
+
+.dark .hover\:bg-red-100:hover {
+  background-color: rgba(248, 113, 113, 0.1) !important;
+}
+
+.dark .hover\:bg-red-900\/30:hover {
+  background-color: rgba(248, 113, 113, 0.1) !important;
+}
+
+/* Ring colors (completed routines) */
+.dark .ring-green-500 {
+  --tw-ring-color: #34d399 !important;
+}
+
+/* Slate text for completed step strikethrough */
+.dark .text-slate-400 {
+  color: #555 !important;
+}
+
+.dark .text-gray-500 {
+  color: #555 !important;
+}
+
+.dark .text-gray-600 {
+  color: #888 !important;
+}
+
+/* Border slate colors */
+.dark .border-slate-300 {
+  border-color: #2a2a3a !important;
+}
+
+.dark .border-gray-500 {
+  border-color: #2a2a3a !important;
+}
+
+.dark .border-gray-600 {
+  border-color: #2a2a3a !important;
+}
+
+/* Tailwind dark gradient overrides */
+.dark .dark\:from-gray-800 { --tw-gradient-from: #111118 !important; }
+.dark .dark\:to-gray-800 { --tw-gradient-to: #111118 !important; }
+.dark .dark\:from-blue-900\/20 { --tw-gradient-from: rgba(99, 102, 241, 0.08) !important; }
+.dark .dark\:to-indigo-900\/20 { --tw-gradient-to: rgba(99, 102, 241, 0.05) !important; }
+.dark .dark\:bg-orange-900\/20 { background-color: rgba(251, 146, 60, 0.08) !important; }
+.dark .dark\:bg-blue-900\/30 { background-color: rgba(99, 102, 241, 0.1) !important; }
+.dark .dark\:bg-cyan-900\/30 { background-color: rgba(56, 189, 248, 0.1) !important; }
+.dark .dark\:bg-purple-900\/30 { background-color: rgba(167, 139, 250, 0.1) !important; }
+.dark .dark\:bg-orange-900\/30 { background-color: rgba(251, 146, 60, 0.1) !important; }
+.dark .dark\:bg-green-900\/30 { background-color: rgba(52, 211, 153, 0.1) !important; }
+.dark .dark\:bg-indigo-900\/30 { background-color: rgba(99, 102, 241, 0.1) !important; }
+.dark .dark\:bg-red-900\/20 { background-color: rgba(248, 113, 113, 0.08) !important; }
+
+/* Button accent */
+.dark .bg-blue-600 {
+  background-color: #4338ca !important;
+}
+
+.dark .hover\:bg-blue-700:hover {
+  background-color: #4f46e5 !important;
+}

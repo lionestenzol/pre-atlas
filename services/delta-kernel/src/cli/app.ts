@@ -47,7 +47,8 @@ const C = {
 
 const MODE_COLORS: Record<Mode, string> = {
   RECOVER: C.bgRed,
-  CLOSE_LOOPS: C.bgYellow,
+  CLOSURE: C.bgYellow,
+  MAINTENANCE: C.bgYellow,
   BUILD: C.bgGreen,
   COMPOUND: C.bgBlue,
   SCALE: C.bgMagenta,
@@ -226,7 +227,7 @@ export class DeltaApp {
     if (this.systemState.mode === 'RECOVER') {
       actions.push({ type: 'signal', label: 'Signal: Slept well (7+ hours)' });
       actions.push({ type: 'signal', label: 'Signal: Feeling better' });
-    } else if (this.systemState.mode === 'CLOSE_LOOPS') {
+    } else if (this.systemState.mode === 'CLOSURE') {
       actions.push({ type: 'signal', label: 'Signal: Cleared my loops' });
     }
 
@@ -483,17 +484,17 @@ export class DeltaApp {
     if (sleepHours < 5) {
       newMode = 'RECOVER';
     }
-    // Low sleep restricts to RECOVER or CLOSE_LOOPS
+    // Low sleep restricts to RECOVER or CLOSURE
     else if (sleepHours < 7) {
       if (mode === 'BUILD' || mode === 'COMPOUND' || mode === 'SCALE') {
-        newMode = 'CLOSE_LOOPS';
+        newMode = 'CLOSURE';
       }
     }
     // Sleep OK — can progress
     else {
       if (mode === 'RECOVER') {
-        newMode = 'CLOSE_LOOPS';
-      } else if (mode === 'CLOSE_LOOPS' && openLoops <= 3) {
+        newMode = 'CLOSURE';
+      } else if (mode === 'CLOSURE' && openLoops <= 3) {
         newMode = 'BUILD';
       } else if (mode === 'BUILD' && leverageBalance >= 5) {
         newMode = 'COMPOUND';
@@ -504,7 +505,7 @@ export class DeltaApp {
 
     // Many loops forces back
     if (openLoops > 7 && (mode === 'BUILD' || mode === 'COMPOUND' || mode === 'SCALE')) {
-      newMode = 'CLOSE_LOOPS';
+      newMode = 'CLOSURE';
     }
 
     if (newMode !== mode) {

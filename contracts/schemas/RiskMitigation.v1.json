@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "RiskMitigation.v1",
+  "title": "Risk Mitigation State",
+  "description": "Active mitigation plans, interference signals, adaptive guardrails, and recovery targets.",
+  "type": "object",
+  "required": ["schema_version", "generated_at"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "active_plans": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/mitigation_plan" }
+    },
+    "interference_signals": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/interference_signal" }
+    },
+    "guardrails": { "$ref": "#/definitions/adaptive_guardrails" },
+    "recovery_target": {
+      "type": "object",
+      "properties": {
+        "target_score": { "type": "integer" },
+        "target_days": { "type": "integer" },
+        "current_score": { "type": "integer" },
+        "checkpoint_next": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "mitigation_plan": {
+      "type": "object",
+      "required": ["alert_type", "severity", "actions"],
+      "properties": {
+        "alert_type": { "type": "string" },
+        "severity": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+        "actions": { "type": "array", "items": { "type": "string" } },
+        "estimated_days": { "type": "integer" },
+        "success_criteria": { "type": "array", "items": { "type": "string" } },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "interference_signal": {
+      "type": "object",
+      "required": ["type", "pattern", "impact"],
+      "properties": {
+        "type": { "type": "string", "enum": ["internal", "external", "environmental"] },
+        "pattern": { "type": "string" },
+        "impact": { "type": "string", "enum": ["blocks_execution", "reduces_quality", "delays_start"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "response": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "adaptive_guardrails": {
+      "type": "object",
+      "properties": {
+        "risk_level": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "max_work_blocks": { "type": "integer" },
+        "automation_scope": { "type": "string", "enum": ["full", "escalate_non_archive", "all_escalated", "paused"] },
+        "idea_moratorium": { "type": "boolean" },
+        "deep_work_allowed": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

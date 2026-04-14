@@ -1,0 +1,393 @@
+{
+  "generated_at": "2026-03-10",
+  "description": "All runtime data flows in Pre Atlas, showing how data moves through the system",
+  "flows": [
+    {
+      "name": "system_startup",
+      "trigger": "manual (scripts/run_all.ps1)",
+      "frequency": "on_demand",
+      "steps": [
+        {
+          "order": 1,
+          "action": "start_process",
+          "script": "npm run api",
+          "cwd": "services/delta-kernel",
+          "env": {"DELTA_DATA_DIR": ".delta-fabric"},
+          "produces": "Express server on port 3001 + governance daemon (6 cron jobs)",
+          "state_read": [".delta-fabric/entities.json", ".delta-fabric/deltas.json"],
+          "state_write": []
+        },
+        {
+          "order": 2,
+          "action": "wait",
+          "duration_seconds": 3,
+          "reason": "Allow API to initialize"
+        },
+        {
+          "order": 3,
+          "action": "run_script",
+          "script": "python services/cognitive-sensor/refresh.py",
+          "sub_flow": "cognitive_refresh",
+          "state_read": ["results.db"],
+          "state_write": ["cognitive_state.json", "daily_payload.json", "loops_latest.json", "completion_stats.json", "daily_directive.txt", "strategic_priorities.json"]
+        },
+        {
+          "order": 4,
+          "action": "run_script",
+          "script": "python services/cognitive-sensor/build_projection.py",
+          "state_read": ["cognitive_state.json"],
+          "state_write": ["data/projections/today.json"]
+        },
+        {
+          "order": 5,
+          "action": "run_script",
+          "script": "python services/cognitive-sensor/push_to_delta.py",
+          "http_call": "POST http://localhost:3001/api/ingest/cognitive",
+          "payload_source": "data/projections/today.json",
+          "state_read": ["data/projections/today.json"],
+          "state_write": [".delta-fabric/entities.json"]
+        }
+      ]
+    },
+    {
+      "name": "cognitive_refresh",
+      "trigger": "governance_daemon.ts hourly cron OR refresh.py direct",
+      "frequency": "hourly",
+      "steps": [
+        {
+          "order": 1,
+          "script": "loops.py",
+          "reads": ["results.db (messages, topics, convo_titles tables)", "results.db (loop_decisions table)"],
+          "writes": ["loops_latest.json"],
+          "logic": "score = user_words + (intent_weight * 30) - (done_weight * 50); filter score >= 18000"
+        },
+        {
+          "order": 2,
+          "script": "completion_stats.py",
+          "reads": ["results.db (loop_decisions table, last 7 days + lifetime)"],
+          "writes": ["completion_stats.json"],
+          "logic": "closure_ratio = closed_life / max(1, closed_life + archived_life) * 100"
+        },
+        {
+          "order": 3,
+          "script": "export_cognitive_state.py",
+          "reads": ["cognitive_api.py subprocess output"],
+          "writes": ["cognitive_state.json"],
+          "validates": "CognitiveMetricsComputed.json"
+        },
+        {
+          "order": 4,
+          "script": "route_today.py",
+          "reads": ["cognitive_state.json (closure.ratio, closure.open)"],
+          "writes": ["daily_directive.txt"],
+          "logic": "if ratio < 15: CLOSURE; elif open > 20: CLOSURE; elif open > 10: MAINTENANCE; else: BUILD"
+        },
+        {
+          "order": 5,
+          "script": "export_daily_payload.py",
+          "reads": ["cognitive_state.json (loops, closure.open, closure.ratio)"],
+          "writes": ["daily_payload.json", "cycleboard/brain/daily_payload.json"],
+          "validates": "DailyPayload.v1.json",
+          "logic": "SAME thresholds as route_today.py (duplicated)"
+        },
+        {
+          "order": 6,
+          "script": "wire_cycleboard.py",
+          "reads": ["cognitive_state.json", "daily_directive.txt"],
+          "writes": ["cycleboard/brain/cognitive_state.json", "cycleboard/brain/daily_directive.txt"],
+          "logic": "shutil.copy (pure file copy)"
+        },
+        {
+          "order": 7,
+          "script": "reporter.py",
+          "reads": ["cognitive_state.json"],
+          "writes": ["STATE_HISTORY.md"]
+        },
+        {
+          "order": 8,
+          "script": "build_dashboard.py",
+          "reads": ["cognitive_state.json"],
+          "writes": ["dashboard.html"]
+        },
+        {
+          "order": 9,
+          "script": "build_strategic_priorities.py",
+          "reads": ["leverage_map.json", "cognitive_state.json", "cluster_focus_overrides.json (optional)"],
+          "writes": ["strategic_priorities.json", "cycleboard/brain/strategic_priorities.json"]
+        },
+        {
+          "order": 10,
+          "script": "build_docs_manifest.py",
+          "reads": ["*.md files in workspace"],
+          "writes": ["docs_manifest.json"]
+        }
+      ]
+    },
+    {
+      "name": "daily_governance",
+      "trigger": "atlas_cli.py daily OR run_daily.py",
+      "frequency": "daily",
+      "steps": [
+        {"order": 1, "script": "loops.py", "phase": "ingest"},
+        {"order": 2, "script": "completion_stats.py", "phase": "ingest"},
+        {"order": 3, "script": "export_cognitive_state.py", "phase": "ingest"},
+        {"order": 4, "script": "route_today.py", "phase": "ingest"},
+        {"order": 5, "script": "export_daily_payload.py", "phase": "ingest"},
+        {"order": 6, "script": "wire_cycleboard.py", "phase": "backlog"},
+        {"order": 7, "script": "reporter.py", "phase": "backlog"},
+        {
+          "order": 8,
+          "script": "governor_daily.py",
+          "phase": "govern",
+          "reads": ["cognitive_state.json", "idea_registry.json", "conversation_classifications.json", "completion_stats.json"],
+          "writes": ["daily_brief.md", "governance_state.json"],
+          "config_source": "atlas_config.py"
+        }
+      ]
+    },
+    {
+      "name": "weekly_governance",
+      "trigger": "atlas_cli.py weekly OR run_weekly.py",
+      "frequency": "weekly",
+      "steps": [
+        {"order": 1, "script": "run_daily.py", "phase": "daily", "sub_flow": "daily_governance"},
+        {
+          "order": 2,
+          "script": "agent_classifier_convo.py",
+          "phase": "audit",
+          "reads": ["memory_db.json", "results.db"],
+          "writes": ["conversation_classifications.json"]
+        },
+        {
+          "order": 3,
+          "script": "agent_synthesizer.py",
+          "phase": "audit",
+          "reads": ["conversation_classifications.json"],
+          "writes": ["BEHAVIORAL_AUDIT.md"]
+        },
+        {
+          "order": 4,
+          "script": "governor_weekly.py",
+          "phase": "govern",
+          "reads": ["governance_state.json", "idea_registry.json", "conversation_classifications.json", "completion_stats.json"],
+          "writes": ["weekly_governor_packet.md"]
+        }
+      ]
+    },
+    {
+      "name": "idea_intelligence",
+      "trigger": "run_agents.py OR atlas_agent.maintain_backlog()",
+      "frequency": "on_demand",
+      "steps": [
+        {
+          "order": 1,
+          "script": "agent_excavator.py",
+          "reads": ["memory_db.json", "results.db (convo_titles, convo_time)"],
+          "writes": ["excavated_ideas_raw.json"],
+          "model": "all-MiniLM-L6-v2 (384-dim)",
+          "validates": "ExcavatedIdeas.v1.json"
+        },
+        {
+          "order": 2,
+          "script": "agent_deduplicator.py",
+          "reads": ["excavated_ideas_raw.json"],
+          "writes": ["ideas_deduplicated.json"],
+          "algorithm": "Union-Find on cosine similarity matrix",
+          "thresholds": {"same": 0.70, "related": 0.55}
+        },
+        {
+          "order": 3,
+          "script": "agent_classifier.py",
+          "reads": ["ideas_deduplicated.json"],
+          "writes": ["ideas_classified.json"],
+          "thresholds": {"vision_cluster": 0.55, "parent_child": 0.50}
+        },
+        {
+          "order": 4,
+          "script": "agent_orchestrator.py",
+          "reads": ["ideas_classified.json"],
+          "writes": ["idea_registry.json"],
+          "scoring": "priority = freq*0.20 + recency*0.20 + alignment*0.25 + feasibility*0.15 + compounding*0.20",
+          "tier_thresholds": {"execute_now": 0.45, "next_up": 0.30, "backlog": 0.12},
+          "algorithm": "Kahn's topological sort for execution_sequence"
+        },
+        {
+          "order": 5,
+          "script": "agent_reporter.py",
+          "reads": ["idea_registry.json"],
+          "writes": ["IDEA_REGISTRY.md"]
+        }
+      ]
+    },
+    {
+      "name": "atlas_visualization",
+      "trigger": "build_cognitive_atlas.py",
+      "frequency": "on_demand",
+      "steps": [
+        {
+          "order": 1,
+          "module": "atlas_data.py",
+          "reads": ["results.db (message embeddings, 384-dim)"],
+          "produces": "numpy arrays of embeddings + metadata"
+        },
+        {
+          "order": 2,
+          "module": "atlas_projection.py",
+          "algorithm": "UMAP(n_neighbors=30, min_dist=0.05, metric=cosine) → 2D + HDBSCAN(min_cluster_size=50, min_samples=10)",
+          "produces": "2D coordinates + cluster assignments (~207 clusters from 84K points)"
+        },
+        {
+          "order": 3,
+          "module": "atlas_layers.py",
+          "produces": "6 toggle layer arrays (cluster, role, time, conversation, leverage, graph)"
+        },
+        {
+          "order": 4,
+          "module": "atlas_render.py",
+          "reads": ["atlas_template.html"],
+          "writes": ["cognitive_atlas.html (5.9MB self-contained with Plotly + Sigma.js)"]
+        }
+      ]
+    },
+    {
+      "name": "agent_action_processing",
+      "trigger": "POST /api/v1/agent/action (port 3002)",
+      "frequency": "per_request",
+      "steps": [
+        {
+          "order": 1,
+          "module": "agent-adapter.ts",
+          "action": "Detect format (Claude tool_use / OpenAI function_call / Direct) → normalize to CanonicalAgentAction"
+        },
+        {
+          "order": 2,
+          "module": "agent-registry.ts",
+          "action": "Validate agent exists, is enabled, has required capability"
+        },
+        {
+          "order": 3,
+          "module": "tenant-registry.ts",
+          "action": "Fetch tenant config (tier, quotas, mode)"
+        },
+        {
+          "order": 4,
+          "module": "usage-tracker.ts",
+          "action": "Check actions_per_hour quota"
+        },
+        {
+          "order": 5,
+          "module": "policy-engine.ts",
+          "action": "Evaluate rules sorted by priority (first-match-wins). 9 operators, 3 effects.",
+          "outcomes": ["ALLOW → proceed to execute", "DENY → return 403", "REQUIRE_HUMAN → queue for approval (return 202)"]
+        },
+        {
+          "order": 6,
+          "module": "action-processor.ts",
+          "action": "Execute: create/update/complete/delete task, query state, or generic delta"
+        },
+        {
+          "order": 7,
+          "module": "audit-log.ts",
+          "action": "Log immutable audit entry"
+        },
+        {
+          "order": 8,
+          "module": "webhook-dispatcher.ts",
+          "action": "Dispatch event to registered webhooks"
+        }
+      ]
+    },
+    {
+      "name": "daemon_mode_recalc",
+      "trigger": "governance_daemon.ts (*/15 * * * * cron)",
+      "frequency": "every_15_minutes",
+      "steps": [
+        {
+          "order": 1,
+          "action": "Read cognitive_state.json from cognitive-sensor workspace",
+          "state_read": ["services/cognitive-sensor/cognitive_state.json"]
+        },
+        {
+          "order": 2,
+          "action": "Read closures.json from delta-fabric",
+          "state_read": [".delta-fabric/closures.json"]
+        },
+        {
+          "order": 3,
+          "action": "Compute closure_ratio = closures_today / max(1, open_loops)",
+          "thresholds": {"SCALE": ">=0.8", "BUILD": ">=0.6", "MAINTENANCE": ">=0.4", "CLOSURE": "<0.4"}
+        },
+        {
+          "order": 4,
+          "action": "Apply global overrides (sleep < 6 → RECOVER, loops >= 4 → CLOSURE)"
+        },
+        {
+          "order": 5,
+          "action": "Update system_state entity via delta",
+          "state_write": [".delta-fabric/entities.json", ".delta-fabric/deltas.json"]
+        }
+      ]
+    },
+    {
+      "name": "browser_state_polling",
+      "trigger": "atlas_boot.html setInterval",
+      "frequency": "every_30_seconds",
+      "steps": [
+        {
+          "order": 1,
+          "action": "GET http://localhost:3001/api/state/unified",
+          "response": "{mode, risk, open_loops, closure_ratio, primary_order, build_allowed, enforcement, closures_today, streak}"
+        },
+        {
+          "order": 2,
+          "action": "GET http://localhost:3001/api/daemon/status",
+          "response": "{running, last_heartbeat, current_job}"
+        },
+        {
+          "order": 3,
+          "action": "Update 7 UI metrics: Mode, Risk, Open Loops, Closure Ratio, Enforcement Level, Closures Today, Streak"
+        },
+        {
+          "order": 4,
+          "action": "Update primary order text + command buttons"
+        }
+      ]
+    },
+    {
+      "name": "loop_closure_event",
+      "trigger": "User clicks in atlas_boot.html",
+      "frequency": "per_event",
+      "steps": [
+        {
+          "order": 1,
+          "action": "POST http://localhost:3001/api/law/close_loop",
+          "payload": "{loop_id, title, outcome}"
+        },
+        {
+          "order": 2,
+          "action": "server.ts: append to closures.json, increment closures_today"
+        },
+        {
+          "order": 3,
+          "action": "Recalculate closure_ratio"
+        },
+        {
+          "order": 4,
+          "action": "Check if closure_ratio crosses threshold → mode transition"
+        },
+        {
+          "order": 5,
+          "action": "Update streak (consecutive days with at least 1 closure)"
+        },
+        {
+          "order": 6,
+          "action": "Emit timeline event"
+        },
+        {
+          "order": 7,
+          "action": "Return updated state to browser"
+        }
+      ]
+    }
+  ]
+}

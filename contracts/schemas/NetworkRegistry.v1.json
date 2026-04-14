@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "NetworkRegistry.v1",
+  "title": "Network Registry",
+  "description": "Contact database, relationship tracking, outreach scheduling, and opportunity matching.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "contacts"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "contacts": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/contact" }
+    },
+    "interactions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/interaction" }
+    },
+    "opportunities": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/opportunity" }
+    },
+    "outreach_queue": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Contact IDs scheduled for outreach"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "contact": {
+      "type": "object",
+      "required": ["contact_id", "name", "status"],
+      "properties": {
+        "contact_id": { "type": "string" },
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "company": { "type": "string" },
+        "email": { "type": "string" },
+        "status": { "type": "string", "enum": ["cold", "warm", "active", "dormant"] },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "last_contact_at": { "type": ["string", "null"], "format": "date-time" },
+        "next_follow_up": { "type": ["string", "null"], "format": "date" },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "interaction": {
+      "type": "object",
+      "required": ["id", "contact_id", "date", "type"],
+      "properties": {
+        "id": { "type": "string" },
+        "contact_id": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "type": { "type": "string", "enum": ["email", "call", "meeting", "linkedin", "referral"] },
+        "outcome": { "type": "string", "enum": ["positive", "neutral", "no_response"] },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "opportunity": {
+      "type": "object",
+      "required": ["id", "contact_id", "type", "stage"],
+      "properties": {
+        "id": { "type": "string" },
+        "contact_id": { "type": "string" },
+        "type": { "type": "string", "enum": ["consulting", "product", "referral", "collaboration"] },
+        "stage": { "type": "string", "enum": ["identified", "contacted", "discussing", "proposed", "closed"] },
+        "value_estimate": { "type": "number" },
+        "linked_skills": { "type": "array", "items": { "type": "string" } },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

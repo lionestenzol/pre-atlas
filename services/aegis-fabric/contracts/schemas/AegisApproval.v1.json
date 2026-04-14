@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AegisApproval.v1",
+  "title": "Aegis Approval",
+  "description": "Human-in-the-loop approval workflow entity",
+  "type": "object",
+  "required": ["tenant_id", "action_id", "agent_id", "action", "params", "status", "requested_at", "expires_at"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "action_id": { "type": "string", "format": "uuid" },
+    "agent_id": { "type": "string", "format": "uuid" },
+    "action": { "type": "string" },
+    "params": { "type": "object" },
+    "status": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED", "EXPIRED"] },
+    "requested_at": { "type": "integer" },
+    "decided_at": { "type": ["integer", "null"] },
+    "decided_by": { "type": ["string", "null"] },
+    "reason": { "type": ["string", "null"] },
+    "expires_at": { "type": "integer" }
+  }
+}

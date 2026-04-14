@@ -11,6 +11,7 @@ Avoids duplicate refreshes by checking /api/daemon/status first.
 """
 import structlog
 from datetime import datetime, timezone
+from typing import Any
 
 from mosaic.clients.delta_client import DeltaClient
 from mosaic.clients.cognitive_client import CognitiveClient
@@ -21,6 +22,8 @@ log = structlog.get_logger()
 async def run_daily_loop(
     delta: DeltaClient,
     cognitive: CognitiveClient,
+    nats_publisher: Any | None = None,
+    openclaw: Any | None = None,
 ) -> dict:
     """Execute the full daily automation cycle.
 
@@ -74,6 +77,17 @@ async def run_daily_loop(
         results["brief_available"] = bool(brief and "not available" not in brief.lower())
     except Exception as e:
         results["steps"].append({"step": "read_state", "success": False, "error": str(e)})
+
+    # Step 5: Run compound feedback loop (cross-domain signal computation)
+    try:
+        from mosaic.workflows.compound_loop import run_compound_loop
+        compound_result = await run_compound_loop(cognitive, delta, nats_publisher, openclaw)
+        compound_score = compound_result.get("compound_score", -1)
+        results["steps"].append({"step": "compound_loop", "success": True, "compound_score": compound_score})
+        log.info("daily_loop.compound_complete", score=compound_score)
+    except Exception as e:
+        log.warning("daily_loop.compound_failed", error=str(e))
+        results["steps"].append({"step": "compound_loop", "success": False, "error": str(e)})
 
     results["completed"] = datetime.now(timezone.utc).isoformat()
     results["skipped"] = False

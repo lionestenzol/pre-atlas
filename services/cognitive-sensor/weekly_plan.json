@@ -1,0 +1,326 @@
+{
+  "generated_at": "2026-04-06T18:00:47.949204",
+  "week_of": "2026-04-06",
+  "life_phase": 1,
+  "phase_name": "Stabilization",
+  "phase_focus": "Secure energy, housing, transportation, project infrastructure",
+  "mode": "CLOSURE",
+  "risk": "HIGH",
+  "build_allowed": false,
+  "weekly_priorities": [
+    "Close or archive oldest open loop each day",
+    "Do not start any new work",
+    "Review stalled loops — finish or kill each one"
+  ],
+  "phase_targets": [
+    "Protect energy: limit household exposure, schedule recovery",
+    "Backup all digital/cloud projects",
+    "Track micro-budget daily",
+    "Maintain neutral household engagement"
+  ],
+  "energy_notes": [],
+  "compliance_note": "Last 30-day compliance: 0% — directives are being ignored. This week: follow the plan.",
+  "daily_plans": [
+    {
+      "date": "2026-04-06",
+      "day": "Monday",
+      "protocol": [
+        {
+          "block": "Morning Scan",
+          "time": "5-7am",
+          "focus": "Dashboard review, red-alert check, priorities confirmed"
+        },
+        {
+          "block": "Deep Work",
+          "time": "7-12pm",
+          "focus": "High-leverage project execution (protected block)"
+        },
+        {
+          "block": "Midday Check-in",
+          "time": "12-1pm",
+          "focus": "Energy check, nutrition, micro-rest"
+        },
+        {
+          "block": "Afternoon",
+          "time": "1-5pm",
+          "focus": "Continuation or household navigation"
+        },
+        {
+          "block": "Evening Ops",
+          "time": "5-7pm",
+          "focus": "Finance tracking, mobility checks, household tasks"
+        },
+        {
+          "block": "Night Audit",
+          "time": "7-9pm",
+          "focus": "Daily audit, journal, prep tomorrow"
+        },
+        {
+          "block": "Close",
+          "time": "9-10pm",
+          "focus": "Energy recovery, plan next day"
+        }
+      ],
+      "focus": "Close or archive oldest open loop each day",
+      "type": "standard"
+    },
+    {
+      "date": "2026-04-07",
+      "day": "Tuesday",
+      "protocol": [
+        {
+          "block": "Morning Scan",
+          "time": "5-7am",
+          "focus": "Dashboard review, red-alert check, priorities confirmed"
+        },
+        {
+          "block": "Deep Work",
+          "time": "7-12pm",
+          "focus": "High-leverage project execution (protected block)"
+        },
+        {
+          "block": "Midday Check-in",
+          "time": "12-1pm",
+          "focus": "Energy check, nutrition, micro-rest"
+        },
+        {
+          "block": "Afternoon",
+          "time": "1-5pm",
+          "focus": "Continuation or household navigation"
+        },
+        {
+          "block": "Evening Ops",
+          "time": "5-7pm",
+          "focus": "Finance tracking, mobility checks, household tasks"
+        },
+        {
+          "block": "Night Audit",
+          "time": "7-9pm",
+          "focus": "Daily audit, journal, prep tomorrow"
+        },
+        {
+          "block": "Close",
+          "time": "9-10pm",
+          "focus": "Energy recovery, plan next day"
+        }
+      ],
+      "focus": "Close or archive oldest open loop each day",
+      "type": "standard"
+    },
+    {
+      "date": "2026-04-08",
+      "day": "Wednesday",
+      "protocol": [
+        {
+          "block": "Morning Scan",
+          "time": "5-7am",
+          "focus": "Dashboard review, red-alert check, priorities confirmed"
+        },
+        {
+          "block": "Deep Work",
+          "time": "7-12pm",
+          "focus": "High-leverage project execution (protected block)"
+        },
+        {
+          "block": "Midday Check-in",
+          "time": "12-1pm",
+          "focus": "Energy check, nutrition, micro-rest"
+        },
+        {
+          "block": "Afternoon",
+          "time": "1-5pm",
+          "focus": "Continuation or household navigation"
+        },
+        {
+          "block": "Evening Ops",
+          "time": "5-7pm",
+          "focus": "Finance tracking, mobility checks, household tasks"
+        },
+        {
+          "block": "Night Audit",
+          "time": "7-9pm",
+          "focus": "Daily audit, journal, prep tomorrow"
+        },
+        {
+          "block": "Close",
+          "time": "9-10pm",
+          "focus": "Energy recovery, plan next day"
+        }
+      ],
+      "focus": "Close or archive oldest open loop each day",
+      "type": "standard"
+    },
+    {
+      "date": "2026-04-09",
+      "day": "Thursday",
+      "protocol": [
+        {
+          "block": "Morning Scan",
+          "time": "5-7am",
+          "focus": "Dashboard review, red-alert check, priorities confirmed"
+        },
+        {
+          "block": "Deep Work",
+          "time": "7-12pm",
+          "focus": "High-leverage project execution (protected block)"
+        },
+        {
+          "block": "Midday Check-in",
+          "time": "12-1pm",
+          "focus": "Energy check, nutrition, micro-rest"
+        },
+        {
+          "block": "Afternoon",
+          "time": "1-5pm",
+          "focus": "Continuation or household navigation"
+        },
+        {
+          "block": "Evening Ops",
+          "time": "5-7pm",
+          "focus": "Finance tracking, mobility checks, household tasks"
+        },
+        {
+          "block": "Night Audit",
+          "time": "7-9pm",
+          "focus": "Daily audit, journal, prep tomorrow"
+        },
+        {
+          "block": "Close",
+          "time": "9-10pm",
+          "focus": "Energy recovery, plan next day"
+        }
+      ],
+      "focus": "Close or archive oldest open loop each day",
+      "type": "standard"
+    },
+    {
+      "date": "2026-04-10",
+      "day": "Friday",
+      "protocol": [
+        {
+          "block": "Morning Scan",
+          "time": "5-7am",
+          "focus": "Dashboard review, red-alert check, priorities confirmed"
+        },
+        {
+          "block": "Deep Work",
+          "time": "7-12pm",
+          "focus": "High-leverage project execution (protected block)"
+        },
+        {
+          "block": "Midday Check-in",
+          "time": "12-1pm",
+          "focus": "Energy check, nutrition, micro-rest"
+        },
+        {
+          "block": "Afternoon",
+          "time": "1-5pm",
+          "focus": "Continuation or household navigation"
+        },
+        {
+          "block": "Evening Ops",
+          "time": "5-7pm",
+          "focus": "Finance tracking, mobility checks, household tasks"
+        },
+        {
+          "block": "Night Audit",
+          "time": "7-9pm",
+          "focus": "Daily audit, journal, prep tomorrow"
+        },
+        {
+          "block": "Close",
+          "time": "9-10pm",
+          "focus": "Energy recovery, plan next day"
+        }
+      ],
+      "focus": "Close or archive oldest open loop each day",
+      "type": "standard"
+    },
+    {
+      "date": "2026-04-11",
+      "day": "Saturday",
+      "protocol": [
+        {
+          "block": "Morning Scan",
+          "time": "5-7am",
+          "focus": "Dashboard review, red-alert check, priorities confirmed"
+        },
+        {
+          "block": "Deep Work",
+          "time": "7-12pm",
+          "focus": "High-leverage project execution (protected block)"
+        },
+        {
+          "block": "Midday Check-in",
+          "time": "12-1pm",
+          "focus": "Energy check, nutrition, micro-rest"
+        },
+        {
+          "block": "Afternoon",
+          "time": "1-5pm",
+          "focus": "Continuation or household navigation"
+        },
+        {
+          "block": "Evening Ops",
+          "time": "5-7pm",
+          "focus": "Finance tracking, mobility checks, household tasks"
+        },
+        {
+          "block": "Night Audit",
+          "time": "7-9pm",
+          "focus": "Daily audit, journal, prep tomorrow"
+        },
+        {
+          "block": "Close",
+          "time": "9-10pm",
+          "focus": "Energy recovery, plan next day"
+        }
+      ],
+      "focus": "Light project work + backups + reflection",
+      "type": "light"
+    },
+    {
+      "date": "2026-04-12",
+      "day": "Sunday",
+      "protocol": [
+        {
+          "block": "Morning Scan",
+          "time": "5-7am",
+          "focus": "Dashboard review, red-alert check, priorities confirmed"
+        },
+        {
+          "block": "Deep Work",
+          "time": "7-12pm",
+          "focus": "High-leverage project execution (protected block)"
+        },
+        {
+          "block": "Midday Check-in",
+          "time": "12-1pm",
+          "focus": "Energy check, nutrition, micro-rest"
+        },
+        {
+          "block": "Afternoon",
+          "time": "1-5pm",
+          "focus": "Continuation or household navigation"
+        },
+        {
+          "block": "Evening Ops",
+          "time": "5-7pm",
+          "focus": "Finance tracking, mobility checks, household tasks"
+        },
+        {
+          "block": "Night Audit",
+          "time": "7-9pm",
+          "focus": "Daily audit, journal, prep tomorrow"
+        },
+        {
+          "block": "Close",
+          "time": "9-10pm",
+          "focus": "Energy recovery, plan next day"
+        }
+      ],
+      "focus": "Weekly audit + next week prep",
+      "type": "audit"
+    }
+  ]
+}

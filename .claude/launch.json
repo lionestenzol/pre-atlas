@@ -25,8 +25,8 @@
     {
       "name": "blueprint-generator",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev"],
-      "port": 3000,
+      "runtimeArgs": ["next", "dev", "-p", "3030"],
+      "port": 3030,
       "cwd": "apps/blueprint-generator"
     },
     {
@@ -54,6 +54,25 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/aegis-fabric/landing", "-p", "8890", "-c-1", "--cors"],
       "port": 8890
+    },
+    {
+      "name": "code-converter",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["server.py"],
+      "port": 3007,
+      "cwd": "apps/code-converter"
+    },
+    {
+      "name": "cortex-dashboard",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/cortex", "-p", "8891", "-c-1", "--cors"],
+      "port": 8891
+    },
+    {
+      "name": "inpact",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "C:/Users/bruke/OneDrive/Desktop/inPACT-site", "-p", "8892", "-c-1", "--cors"],
+      "port": 8892
     }
   ]
 }

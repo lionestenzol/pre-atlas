@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Delta Fabric</title>
+  <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: #0a0a0f; color: #e5e5e5; font-family: system-ui, -apple-system, sans-serif; margin: 0; }
+    .card { background: #111118; border: 1px solid #2a2a3a; border-radius: 8px; }
+    .card:hover { border-color: #3a3a4a; }
+    .input-dark { background: #1a1a2a; border: 1px solid #2a2a3a; color: #e5e5e5; padding: 8px 12px; border-radius: 6px; outline: none; width: 100%; }
+    .input-dark:focus { border-color: #6366f1; }
+    .input-dark::placeholder { color: #555; }
+    select.input-dark { cursor: pointer; }
+    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+    .btn-primary { background: #6366f1; color: #fff; }
+    .btn-primary:hover { background: #5558e6; }
+    .btn-success { background: #059669; color: #fff; }
+    .btn-success:hover { background: #047857; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-ghost { background: transparent; color: #888; border: 1px solid #2a2a3a; }
+    .btn-ghost:hover { color: #e5e5e5; border-color: #4a4a5a; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-allow { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+    .badge-deny { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+    .badge-require-human { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+    .badge-pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+    .badge-approved { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+    .badge-rejected { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+    .badge-expired { background: rgba(107, 114, 128, 0.15); color: #6b7280; }
+    .badge-tier { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+    .badge-mode { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
+    .tab-btn { padding: 10px 16px; color: #888; border-bottom: 2px solid transparent; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; background: none; border-top: none; border-left: none; border-right: none; white-space: nowrap; }
+    .tab-btn:hover { color: #ccc; }
+    .tab-btn.active { color: #e5e5e5; border-bottom-color: #6366f1; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .status-dot.healthy { background: #34d399; animation: pulse 2s infinite; }
+    .status-dot.degraded { background: #fbbf24; animation: pulse 2s infinite; }
+    .status-dot.unhealthy { background: #f87171; }
+    .status-dot.offline { background: #555; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border-bottom: 1px solid #2a2a3a; }
+    td { padding: 10px 12px; border-bottom: 1px solid #1a1a2a; font-size: 13px; }
+    tr:hover td { background: rgba(99, 102, 241, 0.03); }
+    .hidden { display: none; }
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 8px; font-size: 13px; z-index: 100; animation: slideUp 0.3s ease-out; }
+    .toast-success { background: #059669; color: #fff; }
+    .toast-error { background: #dc2626; color: #fff; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .stat-value { font-size: 28px; font-weight: 700; line-height: 1.2; }
+    .stat-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+    pre.json { background: #0a0a0f; border: 1px solid #2a2a3a; border-radius: 6px; padding: 16px; overflow: auto; max-height: 500px; font-size: 12px; line-height: 1.5; color: #a0a0b0; }
+    .hash { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: #818cf8; }
+    .loading { text-align: center; padding: 40px; color: #555; }
+    .empty { text-align: center; padding: 40px; color: #555; font-size: 13px; }
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .tab-scroll { display: flex; overflow-x: auto; border-bottom: 1px solid #2a2a3a; scrollbar-width: none; }
+    .tab-scroll::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header style="background: #111118; border-bottom: 1px solid #2a2a3a; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <i class="fas fa-shield-halved" style="color: #6366f1; font-size: 20px;"></i>
+      <span style="font-size: 14px; font-weight: 700; letter-spacing: 1px;">AEGIS DELTA FABRIC</span>
+      <span style="font-size: 11px; color: #555; margin-left: 4px;">v0.1.0</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <span id="conn-info" style="font-size: 11px; color: #555;"></span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888;">
+        <span class="status-dot offline" id="gw-dot"></span>
+        <span id="gw-text">Gateway</span>
+      </span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888;">
+        <span class="status-dot offline" id="kernel-dot"></span>
+        <span id="kernel-text">Kernel</span>
+      </span>
+      <button class="btn btn-ghost btn-sm" onclick="disconnect()" id="btn-disconnect" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- AUTH PANEL -->
+  <div id="auth-panel" style="max-width: 480px; margin: 60px auto; padding: 0 24px;">
+    <div class="card" style="padding: 32px;">
+      <h2 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">Connect to Aegis Fabric</h2>
+      <p style="margin: 0 0 24px 0; font-size: 13px; color: #888;">Enter your Kernel URL and tenant database to connect.</p>
+      <div class="form-group">
+        <label class="form-label">Kernel URL</label>
+        <input id="input-kernel-url" class="input-dark" type="text" value="http://localhost:3001" placeholder="http://localhost:3001">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tenant Database</label>
+        <input id="input-tenant-db" class="input-dark" type="text" placeholder="aegis_tnt_abc123">
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Key <span style="color: #555;">(optional)</span></label>
+        <input id="input-api-key" class="input-dark" type="password" placeholder="aegis_...">
+      </div>
+      <div id="auth-error" style="color: #f87171; font-size: 12px; margin-bottom: 12px; display: none;"></div>
+      <button class="btn btn-primary" onclick="connect()" style="width: 100%; margin-top: 8px;">
+        <i class="fas fa-plug"></i> Connect
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN APP (hidden until connected) -->
+  <div id="main-app" class="hidden">
+    <!-- TABS -->
+    <nav class="tab-scroll" style="padding: 0 24px; background: #111118;">
+      <button class="tab-btn active" data-tab="overview"><i class="fas fa-chart-line"></i> Overview</button>
+      <button class="tab-btn" data-tab="tenants"><i class="fas fa-building"></i> Tenants</button>
+      <button class="tab-btn" data-tab="agents"><i class="fas fa-robot"></i> Agents</button>
+      <button class="tab-btn" data-tab="policies"><i class="fas fa-gavel"></i> Policies</button>
+      <button class="tab-btn" data-tab="approvals"><i class="fas fa-check-circle"></i> Approvals</button>
+      <button class="tab-btn" data-tab="deltas"><i class="fas fa-link"></i> Delta Log</button>
+      <button class="tab-btn" data-tab="state"><i class="fas fa-database"></i> State</button>
+      <button class="tab-btn" data-tab="webhooks"><i class="fas fa-globe"></i> Webhooks</button>
+      <button class="tab-btn" data-tab="audit"><i class="fas fa-scroll"></i> Audit</button>
+      <button class="tab-btn" data-tab="metrics"><i class="fas fa-tachometer-alt"></i> Metrics</button>
+    </nav>
+
+    <!-- TAB CONTENT -->
+    <div style="padding: 24px; max-width: 1400px; margin: 0 auto;">
+
+      <!-- OVERVIEW -->
+      <div id="tab-overview" class="tab-content">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;" id="health-cards"></div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px;" id="stat-cards"></div>
+        <div class="card" style="padding: 20px;">
+          <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 600;">Recent Activity</h3>
+          <div id="recent-activity"><div class="loading">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- TENANTS -->
+      <div id="tab-tenants" class="tab-content hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 16px;">Tenants</h3>
+          <button class="btn btn-primary btn-sm" onclick="toggleCreateTenant()"><i class="fas fa-plus"></i> New Tenant</button>
+        </div>
+        <div id="create-tenant-form" class="card hidden" style="padding: 20px; margin-bottom: 16px;">
+          <h4 style="margin: 0 0 16px 0; font-size: 14px;">Create Tenant</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Name</label>
+              <input id="new-tenant-name" class="input-dark" placeholder="My Org">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Tier</label>
+              <select id="new-tenant-tier" class="input-dark">
+                <option value="FREE">FREE</option>
+                <option value="PRO">PRO</option>
+                <option value="ENTERPRISE" selected>ENTERPRISE</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Mode</label>
+              <select id="new-tenant-mode" class="input-dark">
+                <option value="RECOVER">RECOVER</option>
+                <option value="CLOSURE">CLOSURE</option>
+                <option value="MAINTENANCE">MAINTENANCE</option>
+                <option value="BUILD" selected>BUILD</option>
+                <option value="COMPOUND">COMPOUND</option>
+                <option value="SCALE">SCALE</option>
+              </select>
+            </div>
+            <button class="btn btn-success" onclick="createTenant()">Create</button>
+          </div>
+        </div>
+        <div class="card" style="overflow-x: auto;">
+          <table>
+            <thead><tr><th>Name</th><th>Tier</th><th>Mode</th><th>DB Name</th><th>Enabled</th><th>Created</th><th></th></tr></thead>
+            <tbody id="tenants-body"><tr><td colspan="7"><div class="loading">Loading...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AGENTS -->
+      <div id="tab-agents" class="tab-content hidden">
+        <h3 style="margin: 0 0 16px 0; font-size: 16px;">Agents</h3>
+        <div class="card" style="overflow-x: auto;">
+          <table>
+            <thead><tr><th>Name</th><th>Provider</th><th>Version</th><th>Capabilities</th><th>Enabled</th><th>Last Active</th></tr></thead>
+            <tbody id="agents-body"><tr><td colspan="6"><div class="loading">Loading...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- POLICIES -->
+      <div id="tab-policies" class="tab-content hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 16px;">Policy Rules</h3>
+          <button class="btn btn-primary btn-sm" onclick="toggleCreatePolicy()"><i class="fas fa-plus"></i> Add Rule</button>
+        </div>
+        <div id="create-policy-form" class="card hidden" style="padding: 20px; margin-bottom: 16px;">
+          <h4 style="margin: 0 0 16px 0; font-size: 14px;">New Policy Rule</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Action</label>
+              <input id="new-policy-action" class="input-dark" placeholder="create_task">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Effect</label>
+              <select id="new-policy-effect" class="input-dark">
+                <option value="ALLOW">ALLOW</option>
+                <option value="DENY">DENY</option>
+                <option value="REQUIRE_HUMAN">REQUIRE_HUMAN</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Priority</label>
+              <input id="new-policy-priority" class="input-dark" type="number" value="100" min="0">
+            </div>
+          </div>
+          <div style="margin-top: 12px;">
+            <label class="form-label">Conditions (JSON array, optional)</label>
+            <input id="new-policy-conditions" class="input-dark" placeholder='[{"field":"agent.provider","operator":"eq","value":"claude"}]'>
+          </div>
+          <button class="btn btn-success" onclick="createPolicyRule()" style="margin-top: 12px;">Add Rule</button>
+        </div>
+        <div class="card" style="overflow-x: auto;">
+          <table>
+            <thead><tr><th>Action</th><th>Effect</th><th>Conditions</th><th>Priority</th></tr></thead>
+            <tbody id="policies-body"><tr><td colspan="4"><div class="loading">Loading...</div></td></tr></tbody>
+          </table>
+        </div>
+        <div class="card" style="padding: 20px; margin-top: 16px;">
+          <h4 style="margin: 0 0 16px 0; font-size: 14px;">Simulate Policy Decision</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Action</label>
+              <input id="sim-action" class="input-dark" placeholder="create_task">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Agent ID</label>
+              <input id="sim-agent" class="input-dark" placeholder="agent-uuid">
+            </div>
+            <button class="btn btn-primary" onclick="simulatePolicy()">Simulate</button>
+          </div>
+          <div id="sim-result" style="margin-top: 12px; display: none;"></div>
+        </div>
+      </div>
+
+      <!-- APPROVALS -->
+      <div id="tab-approvals" class="tab-content hidden">
+        <h3 style="margin: 0 0 16px 0; font-size: 16px;">Approvals</h3>
+        <div class="card" style="overflow-x: auto;">
+          <table>
+            <thead><tr><th>Action</th><th>Agent</th><th>Status</th><th>Requested</th><th>Expires</th><th></th></tr></thead>
+            <tbody id="approvals-body"><tr><td colspan="6"><div class="loading">Loading...</div></td></tr></tbody>
+          </table>
+        </div>
+        <div id="approval-decide" class="card hidden" style="padding: 20px; margin-top: 16px;">
+          <h4 style="margin: 0 0 12px 0; font-size: 14px;">Decision for <span id="approval-decide-id"></span></h4>
+          <div class="form-group">
+            <label class="form-label">Reason</label>
+            <input id="approval-reason" class="input-dark" placeholder="Reason for decision...">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-success" onclick="decideApproval('approved')"><i class="fas fa-check"></i> Approve</button>
+            <button class="btn btn-danger" onclick="decideApproval('rejected')"><i class="fas fa-times"></i> Reject</button>
+            <button class="btn btn-ghost" onclick="el('approval-decide').classList.add('hidden')">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DELTA LOG -->
+      <div id="tab-deltas" class="tab-content hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 16px;">Delta Log</h3>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-ghost btn-sm" onclick="verifyChain()"><i class="fas fa-check-double"></i> Verify Chain</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadDeltas()"><i class="fas fa-sync"></i> Refresh</button>
+          </div>
+        </div>
+        <div id="chain-status" class="hidden card" style="padding: 16px; margin-bottom: 16px;"></div>
+        <div id="latest-delta" class="card" style="padding: 16px; margin-bottom: 16px;">
+          <div class="loading">Loading chain head...</div>
+        </div>
+        <div class="card" style="overflow-x: auto;">
+          <table>
+            <thead><tr><th>#</th><th>Hash</th><th>Prev</th><th>Author</th><th>Patch</th><th>Created</th></tr></thead>
+            <tbody id="deltas-body"><tr><td colspan="6"><div class="loading">Loading...</div></td></tr></tbody>
+          </table>
+        </div>
+        <div id="delta-detail" class="hidden card" style="padding: 20px; margin-top: 16px;">
+          <h4 style="margin: 0 0 12px 0; font-size: 14px;">Delta Detail</h4>
+          <pre class="json" id="delta-detail-json"></pre>
+        </div>
+      </div>
+
+      <!-- STATE -->
+      <div id="tab-state" class="tab-content hidden">
+        <h3 style="margin: 0 0 16px 0; font-size: 16px;">Entity State</h3>
+        <div style="display: grid; grid-template-columns: 300px 1fr; gap: 16px;">
+          <div>
+            <div class="form-group">
+              <label class="form-label">Filter by Type</label>
+              <input id="state-type-filter" class="input-dark" placeholder="e.g. aegis_task" onchange="loadState()">
+            </div>
+            <div class="card" style="max-height: 600px; overflow-y: auto;" id="entity-list">
+              <div class="loading">Loading...</div>
+            </div>
+          </div>
+          <div class="card" style="padding: 20px;">
+            <div id="entity-detail">
+              <div class="empty">Select an entity to view its state</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WEBHOOKS -->
+      <div id="tab-webhooks" class="tab-content hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 16px;">Webhooks</h3>
+          <button class="btn btn-primary btn-sm" onclick="toggleCreateWebhook()"><i class="fas fa-plus"></i> New Webhook</button>
+        </div>
+        <div id="create-webhook-form" class="card hidden" style="padding: 20px; margin-bottom: 16px;">
+          <h4 style="margin: 0 0 16px 0; font-size: 14px;">Register Webhook</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">URL</label>
+              <input id="new-webhook-url" class="input-dark" placeholder="https://example.com/webhook">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Secret (optional)</label>
+              <input id="new-webhook-secret" class="input-dark" type="password" placeholder="webhook_secret">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 12px;">
+            <label class="form-label">Events</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;" id="webhook-events-checks">
+              <label style="font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 4px;"><input type="checkbox" value="action.submitted"> action.submitted</label>
+              <label style="font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 4px;"><input type="checkbox" value="action.completed"> action.completed</label>
+              <label style="font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 4px;"><input type="checkbox" value="action.denied"> action.denied</label>
+              <label style="font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 4px;"><input type="checkbox" value="approval.requested"> approval.requested</label>
+              <label style="font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 4px;"><input type="checkbox" value="approval.decided"> approval.decided</label>
+              <label style="font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 4px;"><input type="checkbox" value="policy.updated"> policy.updated</label>
+            </div>
+          </div>
+          <button class="btn btn-success" onclick="createWebhook()" style="margin-top: 12px;">Register</button>
+        </div>
+        <div class="card" style="overflow-x: auto;">
+          <table>
+            <thead><tr><th>URL</th><th>Events</th><th>Enabled</th><th>Failures</th><th>Last Triggered</th><th></th></tr></thead>
+            <tbody id="webhooks-body"><tr><td colspan="6"><div class="loading">Loading...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AUDIT -->
+      <div id="tab-audit" class="tab-content hidden">
+        <h3 style="margin: 0 0 16px 0; font-size: 16px;">Audit Log</h3>
+        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+          <input id="audit-agent-filter" class="input-dark" style="max-width: 200px;" placeholder="Filter by agent ID..." onchange="loadAudit()">
+          <input id="audit-action-filter" class="input-dark" style="max-width: 200px;" placeholder="Filter by action..." onchange="loadAudit()">
+          <button class="btn btn-ghost btn-sm" onclick="clearAuditFilters()"><i class="fas fa-times"></i> Clear</button>
+        </div>
+        <div class="card" style="overflow-x: auto;">
+          <table>
+            <thead><tr><th>Agent</th><th>Action</th><th>Effect</th><th>Entities</th><th>Delta</th><th>Timestamp</th></tr></thead>
+            <tbody id="audit-body"><tr><td colspan="6"><div class="loading">Loading...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- METRICS -->
+      <div id="tab-metrics" class="tab-content hidden">
+        <h3 style="margin: 0 0 16px 0; font-size: 16px;">Metrics</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="card" style="padding: 20px;">
+            <h4 style="margin: 0 0 16px 0; font-size: 14px;">Gateway Health</h4>
+            <div id="metrics-gw-health"><div class="loading">Loading...</div></div>
+          </div>
+          <div class="card" style="padding: 20px;">
+            <h4 style="margin: 0 0 16px 0; font-size: 14px;">Prometheus Metrics</h4>
+            <pre class="json" id="metrics-prometheus" style="max-height: 200px;">Loading...</pre>
+          </div>
+        </div>
+        <div class="card" style="padding: 20px;">
+          <h4 style="margin: 0 0 16px 0; font-size: 14px;">Usage by Agent</h4>
+          <div class="card" style="overflow-x: auto;">
+            <table>
+              <thead><tr><th>Agent</th><th>Period</th><th>Actions</th><th>Tokens</th><th>Cost (USD)</th></tr></thead>
+              <tbody id="usage-body"><tr><td colspan="5"><div class="loading">Loading...</div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+const S = {
+  kernelUrl: '',
+  tenantDb: '',
+  apiKey: '',
+  connected: false,
+  refreshTimer: null,
+  currentApprovalId: null,
+};
+
+// ── Helpers ────────────────────────────────────────────
+const el = id => document.getElementById(id);
+const short = (s, n = 12) => s ? s.slice(0, n) + '...' : '-';
+const fmtDate = iso => iso ? new Date(iso).toLocaleString() : '-';
+const fmtJson = obj => JSON.stringify(obj, null, 2);
+
+function toast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function effectBadge(effect) {
+  const cls = {
+    'ALLOW': 'badge-allow', 'DENY': 'badge-deny', 'REQUIRE_HUMAN': 'badge-require-human',
+    'approved': 'badge-approved', 'rejected': 'badge-rejected', 'pending': 'badge-pending', 'expired': 'badge-expired',
+  }[effect] || 'badge-pending';
+  return `<span class="badge ${cls}">${effect}</span>`;
+}
+
+// ── API Clients ────────────────────────────────────────
+async function gw(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (S.tenantDb) headers['x-tenant-db'] = S.tenantDb;
+  if (S.apiKey) headers['x-api-key'] = S.apiKey;
+  try {
+    const res = await fetch(path, { ...opts, headers: { ...headers, ...(opts.headers || {}) } });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  } catch (e) {
+    return { ok: false, status: 0, data: { error: e.message } };
+  }
+}
+
+async function kernel(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (S.tenantDb) headers['x-tenant-db'] = S.tenantDb;
+  try {
+    const res = await fetch(`${S.kernelUrl}${path}`, { ...opts, headers: { ...headers, ...(opts.headers || {}) } });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  } catch (e) {
+    return { ok: false, status: 0, data: { error: e.message } };
+  }
+}
+
+// ── Auth / Connect ─────────────────────────────────────
+async function connect() {
+  const kernelUrl = el('input-kernel-url').value.replace(/\/+$/, '');
+  const tenantDb = el('input-tenant-db').value.trim();
+  const apiKey = el('input-api-key').value.trim();
+
+  if (!kernelUrl) return showAuthError('Kernel URL is required');
+
+  S.kernelUrl = kernelUrl;
+  S.tenantDb = tenantDb;
+  S.apiKey = apiKey;
+
+  // Validate connectivity
+  const [gwHealth, kernelHealth] = await Promise.all([
+    gw('/health'),
+    kernel('/health'),
+  ]);
+
+  if (!gwHealth.ok && !kernelHealth.ok) {
+    return showAuthError('Cannot reach Gateway or Kernel. Are the services running?');
+  }
+
+  // Store in sessionStorage
+  sessionStorage.setItem('aegis_kernel_url', kernelUrl);
+  sessionStorage.setItem('aegis_tenant_db', tenantDb);
+  sessionStorage.setItem('aegis_api_key', apiKey);
+
+  S.connected = true;
+  el('auth-panel').classList.add('hidden');
+  el('main-app').classList.remove('hidden');
+  el('btn-disconnect').style.display = '';
+  el('conn-info').textContent = tenantDb || 'no tenant';
+
+  updateHealthDots(gwHealth, kernelHealth);
+  loadOverview();
+
+  // Auto-refresh
+  S.refreshTimer = setInterval(refreshHealth, 10000);
+}
+
+function disconnect() {
+  S.connected = false;
+  sessionStorage.clear();
+  clearInterval(S.refreshTimer);
+  el('auth-panel').classList.remove('hidden');
+  el('main-app').classList.add('hidden');
+  el('btn-disconnect').style.display = 'none';
+  el('gw-dot').className = 'status-dot offline';
+  el('kernel-dot').className = 'status-dot offline';
+  el('conn-info').textContent = '';
+}
+
+function showAuthError(msg) {
+  const e = el('auth-error');
+  e.textContent = msg;
+  e.style.display = '';
+}
+
+function updateHealthDots(gwRes, kernelRes) {
+  el('gw-dot').className = `status-dot ${gwRes.ok ? 'healthy' : 'unhealthy'}`;
+  el('gw-text').textContent = `Gateway${gwRes.ok && gwRes.data.uptime_ms ? ' (' + Math.floor(gwRes.data.uptime_ms / 1000) + 's)' : ''}`;
+  el('kernel-dot').className = `status-dot ${kernelRes.ok ? 'healthy' : 'unhealthy'}`;
+  el('kernel-text').textContent = `Kernel${kernelRes.ok && kernelRes.data.uptime_s ? ' (' + Math.floor(kernelRes.data.uptime_s) + 's)' : ''}`;
+}
+
+async function refreshHealth() {
+  const [gwRes, kernelRes] = await Promise.all([gw('/health'), kernel('/health')]);
+  updateHealthDots(gwRes, kernelRes);
+}
+
+// ── Tab Routing ────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    el(`tab-${tab}`).classList.remove('hidden');
+    // Load data for the tab
+    const loaders = {
+      overview: loadOverview, tenants: loadTenants, agents: loadAgents,
+      policies: loadPolicies, approvals: loadApprovals, deltas: loadDeltas,
+      state: loadState, webhooks: loadWebhooks, audit: loadAudit, metrics: loadMetrics,
+    };
+    if (loaders[tab]) loaders[tab]();
+  });
+});
+
+// ── OVERVIEW ───────────────────────────────────────────
+async function loadOverview() {
+  const [gwHealth, kernelHealth, tenants] = await Promise.all([
+    gw('/health'),
+    kernel('/health'),
+    kernel('/v1/tenants'),
+  ]);
+
+  updateHealthDots(gwHealth, kernelHealth);
+
+  // Health cards
+  const gwData = gwHealth.data || {};
+  const kData = kernelHealth.data || {};
+  const comps = gwData.components || {};
+  el('health-cards').innerHTML = `
+    <div class="card" style="padding: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span class="status-dot ${gwHealth.ok ? 'healthy' : 'unhealthy'}"></span>
+        <span style="font-size: 12px; font-weight: 600;">Gateway</span>
+      </div>
+      <div style="font-size: 12px; color: #888;">Status: ${gwData.status || 'unknown'}</div>
+      ${comps.kernel ? `<div style="font-size: 11px; color: #555;">Kernel link: ${comps.kernel.status} (${comps.kernel.latency_ms}ms)</div>` : ''}
+      ${comps.redis ? `<div style="font-size: 11px; color: #555;">Redis: ${comps.redis.status} (${comps.redis.latency_ms}ms)</div>` : ''}
+    </div>
+    <div class="card" style="padding: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span class="status-dot ${kernelHealth.ok ? 'healthy' : 'unhealthy'}"></span>
+        <span style="font-size: 12px; font-weight: 600;">Kernel</span>
+      </div>
+      <div style="font-size: 12px; color: #888;">Status: ${kData.status || 'unknown'}</div>
+      ${kData.postgres ? `<div style="font-size: 11px; color: #555;">PostgreSQL: ${kData.postgres.status} (${kData.postgres.latency_ms}ms)</div>` : ''}
+    </div>
+  `;
+
+  // Stat cards
+  const tenantCount = tenants.ok ? (tenants.data.count || 0) : '?';
+  let agentCount = '?', deltaCount = '?', entityCount = '?';
+
+  if (S.tenantDb) {
+    const [agents, deltas, entities] = await Promise.all([
+      kernel('/v1/agents'),
+      kernel('/v1/delta/log?limit=1'),
+      kernel('/v1/state/query'),
+    ]);
+    if (agents.ok) agentCount = agents.data.count || 0;
+    if (deltas.ok) deltaCount = deltas.data.count || 0;
+    if (entities.ok) entityCount = (entities.data.entities || []).length;
+  }
+
+  el('stat-cards').innerHTML = [
+    { label: 'Tenants', value: tenantCount, icon: 'building', color: '#6366f1' },
+    { label: 'Agents', value: agentCount, icon: 'robot', color: '#34d399' },
+    { label: 'Deltas', value: deltaCount, icon: 'link', color: '#818cf8' },
+    { label: 'Entities', value: entityCount, icon: 'database', color: '#38bdf8' },
+  ].map(s => `
+    <div class="card" style="padding: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+        <i class="fas fa-${s.icon}" style="color: ${s.color}; font-size: 14px;"></i>
+        <span class="stat-label">${s.label}</span>
+      </div>
+      <div class="stat-value">${s.value}</div>
+    </div>
+  `).join('');
+
+  // Recent activity
+  if (S.tenantDb) {
+    const audit = await kernel('/v1/audit?limit=5');
+    if (audit.ok && audit.data.entries?.length) {
+      el('recent-activity').innerHTML = audit.data.entries.map(e => `
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1a1a2a; font-size: 12px;">
+          <span>${effectBadge(e.effect)} <span style="color: #aaa;">${e.action}</span> by <span class="hash">${short(e.agent_id, 8)}</span></span>
+          <span style="color: #555;">${fmtDate(e.created_at)}</span>
+        </div>
+      `).join('');
+    } else {
+      el('recent-activity').innerHTML = '<div class="empty">No recent activity</div>';
+    }
+  } else {
+    el('recent-activity').innerHTML = '<div class="empty">Connect with a tenant DB to see activity</div>';
+  }
+}
+
+// ── TENANTS ────────────────────────────────────────────
+function toggleCreateTenant() { el('create-tenant-form').classList.toggle('hidden'); }
+
+async function loadTenants() {
+  const res = await kernel('/v1/tenants');
+  if (!res.ok) { el('tenants-body').innerHTML = `<tr><td colspan="7" class="empty">Error: ${res.data.error}</td></tr>`; return; }
+  const tenants = res.data.tenants || [];
+  if (!tenants.length) { el('tenants-body').innerHTML = '<tr><td colspan="7" class="empty">No tenants</td></tr>'; return; }
+  el('tenants-body').innerHTML = tenants.map(t => `
+    <tr>
+      <td><strong>${t.name}</strong><br><span style="font-size: 11px; color: #555;">${t.tenant_id}</span></td>
+      <td><span class="badge badge-tier">${t.tier}</span></td>
+      <td><span class="badge badge-mode">${t.mode}</span></td>
+      <td><span class="hash">${t.db_name}</span></td>
+      <td>${t.enabled ? '<span style="color: #34d399;">Yes</span>' : '<span style="color: #f87171;">No</span>'}</td>
+      <td style="font-size: 12px; color: #888;">${fmtDate(t.created_at)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="useTenant('${t.db_name}')" title="Switch to this tenant">
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function createTenant() {
+  const name = el('new-tenant-name').value.trim();
+  const tier = el('new-tenant-tier').value;
+  const mode = el('new-tenant-mode').value;
+  if (!name) return toast('Name is required', 'error');
+  const res = await kernel('/v1/tenants', { method: 'POST', body: JSON.stringify({ name, tier, mode }) });
+  if (res.ok) {
+    toast(`Tenant created! API Key: ${res.data.api_key}`, 'success');
+    el('new-tenant-name').value = '';
+    el('create-tenant-form').classList.add('hidden');
+    loadTenants();
+  } else {
+    toast(`Error: ${res.data.error}`, 'error');
+  }
+}
+
+function useTenant(dbName) {
+  S.tenantDb = dbName;
+  sessionStorage.setItem('aegis_tenant_db', dbName);
+  el('conn-info').textContent = dbName;
+  toast(`Switched to ${dbName}`);
+}
+
+// ── AGENTS ─────────────────────────────────────────────
+async function loadAgents() {
+  if (!S.tenantDb) { el('agents-body').innerHTML = '<tr><td colspan="6" class="empty">No tenant selected</td></tr>'; return; }
+  const res = await kernel('/v1/agents');
+  if (!res.ok) { el('agents-body').innerHTML = `<tr><td colspan="6" class="empty">Error: ${res.data.error}</td></tr>`; return; }
+  const agents = res.data.agents || [];
+  if (!agents.length) { el('agents-body').innerHTML = '<tr><td colspan="6" class="empty">No agents registered</td></tr>'; return; }
+  const providerColors = { claude: '#818cf8', openai: '#34d399', direct: '#38bdf8' };
+  el('agents-body').innerHTML = agents.map(a => `
+    <tr>
+      <td><strong>${a.name}</strong><br><span style="font-size: 11px; color: #555;">${a.agent_id}</span></td>
+      <td><span class="badge" style="background: ${providerColors[a.provider] || '#555'}20; color: ${providerColors[a.provider] || '#888'};">${a.provider}</span></td>
+      <td style="font-size: 12px; color: #aaa;">${a.version || '-'}</td>
+      <td>${(a.capabilities || []).map(c => `<span class="badge" style="background: rgba(99,102,241,0.1); color: #818cf8; margin: 1px;">${c}</span>`).join(' ')}</td>
+      <td>${a.enabled ? '<span style="color: #34d399;">Yes</span>' : '<span style="color: #f87171;">No</span>'}</td>
+      <td style="font-size: 12px; color: #888;">${fmtDate(a.last_active_at)}</td>
+    </tr>
+  `).join('');
+}
+
+// ── POLICIES ───────────────────────────────────────────
+function toggleCreatePolicy() { el('create-policy-form').classList.toggle('hidden'); }
+
+async function loadPolicies() {
+  if (!S.tenantDb) { el('policies-body').innerHTML = '<tr><td colspan="4" class="empty">No tenant selected</td></tr>'; return; }
+  const res = await gw('/v1/policies');
+  if (!res.ok) { el('policies-body').innerHTML = `<tr><td colspan="4" class="empty">Error: ${res.data.error}</td></tr>`; return; }
+  const rules = res.data.rules || [];
+  if (!rules.length) { el('policies-body').innerHTML = '<tr><td colspan="4" class="empty">No policy rules</td></tr>'; return; }
+  el('policies-body').innerHTML = rules.map(r => `
+    <tr>
+      <td><code style="color: #818cf8;">${r.action || '*'}</code></td>
+      <td>${effectBadge(r.effect)}</td>
+      <td style="font-size: 11px; color: #aaa;">${r.conditions?.length ? fmtJson(r.conditions) : 'None'}</td>
+      <td style="color: #888;">${r.priority ?? '-'}</td>
+    </tr>
+  `).join('');
+}
+
+async function createPolicyRule() {
+  const action = el('new-policy-action').value.trim();
+  const effect = el('new-policy-effect').value;
+  const priority = parseInt(el('new-policy-priority').value) || 100;
+  let conditions = [];
+  const condStr = el('new-policy-conditions').value.trim();
+  if (condStr) { try { conditions = JSON.parse(condStr); } catch { return toast('Invalid conditions JSON', 'error'); } }
+  const rule = { action, effect, conditions, priority, enabled: true };
+  const res = await gw('/v1/policies', { method: 'POST', body: JSON.stringify({ rules: [rule] }) });
+  if (res.ok) { toast('Rule created'); el('create-policy-form').classList.add('hidden'); loadPolicies(); }
+  else toast(`Error: ${res.data.error}`, 'error');
+}
+
+async function simulatePolicy() {
+  const action = el('sim-action').value.trim();
+  const agentId = el('sim-agent').value.trim();
+  if (!action) return toast('Action is required', 'error');
+  const res = await gw('/v1/policies/simulate', {
+    method: 'POST',
+    body: JSON.stringify({ action: { action, agent_id: agentId, params: {} } }),
+  });
+  const r = el('sim-result');
+  r.style.display = '';
+  if (res.ok) {
+    r.innerHTML = `<div style="padding: 12px; border-radius: 6px; background: #0a0a0f; border: 1px solid #2a2a3a;">
+      ${effectBadge(res.data.effect || res.data.decision)} <span style="margin-left: 8px; font-size: 12px; color: #aaa;">${res.data.reason || ''}</span>
+      ${res.data.matching_rule ? `<pre class="json" style="margin-top: 8px;">${fmtJson(res.data.matching_rule)}</pre>` : ''}
+    </div>`;
+  } else {
+    r.innerHTML = `<div style="color: #f87171; font-size: 12px;">Error: ${res.data.error}</div>`;
+  }
+}
+
+// ── APPROVALS ──────────────────────────────────────────
+async function loadApprovals() {
+  if (!S.tenantDb) { el('approvals-body').innerHTML = '<tr><td colspan="6" class="empty">No tenant selected</td></tr>'; return; }
+  const res = await gw('/v1/approvals');
+  if (!res.ok) { el('approvals-body').innerHTML = `<tr><td colspan="6" class="empty">Error: ${res.data.error}</td></tr>`; return; }
+  const items = res.data.approvals || [];
+  if (!items.length) { el('approvals-body').innerHTML = '<tr><td colspan="6" class="empty">No approvals</td></tr>'; return; }
+  el('approvals-body').innerHTML = items.map(a => `
+    <tr>
+      <td><code style="color: #818cf8;">${a.action}</code></td>
+      <td><span class="hash">${short(a.agent_id, 8)}</span></td>
+      <td>${effectBadge(a.status)}</td>
+      <td style="font-size: 12px; color: #888;">${fmtDate(a.requested_at)}</td>
+      <td style="font-size: 12px; color: #888;">${fmtDate(a.expires_at)}</td>
+      <td>${a.status === 'pending' ? `<button class="btn btn-ghost btn-sm" onclick="showApprovalDecide('${a.approval_id}')">Decide</button>` : (a.reason || '-')}</td>
+    </tr>
+  `).join('');
+}
+
+function showApprovalDecide(id) {
+  S.currentApprovalId = id;
+  el('approval-decide-id').textContent = short(id, 8);
+  el('approval-decide').classList.remove('hidden');
+  el('approval-reason').value = '';
+}
+
+async function decideApproval(decision) {
+  const reason = el('approval-reason').value.trim();
+  const res = await gw(`/v1/approvals/${S.currentApprovalId}`, {
+    method: 'POST',
+    body: JSON.stringify({ decision, decided_by: 'dashboard', reason }),
+  });
+  if (res.ok) { toast(`Approval ${decision}`); el('approval-decide').classList.add('hidden'); loadApprovals(); }
+  else toast(`Error: ${res.data.error}`, 'error');
+}
+
+// ── DELTA LOG ──────────────────────────────────────────
+async function loadDeltas() {
+  if (!S.tenantDb) {
+    el('deltas-body').innerHTML = '<tr><td colspan="6" class="empty">No tenant selected</td></tr>';
+    el('latest-delta').innerHTML = '<div class="empty">No tenant selected</div>';
+    return;
+  }
+  const [logRes, latestRes] = await Promise.all([
+    kernel('/v1/delta/log?limit=50'),
+    kernel('/v1/delta/latest'),
+  ]);
+
+  // Latest delta card
+  if (latestRes.ok && latestRes.data.hash) {
+    const d = latestRes.data;
+    el('latest-delta').innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <i class="fas fa-link" style="color: #818cf8;"></i>
+        <span style="font-size: 13px; font-weight: 600;">Chain Head</span>
+      </div>
+      <div style="font-size: 12px;">
+        Hash: <span class="hash">${d.hash}</span><br>
+        Prev: <span class="hash">${d.hash_prev || 'GENESIS'}</span><br>
+        Delta #${d.delta_id} &mdash; ${fmtDate(d.created_at)}
+      </div>
+    `;
+  } else {
+    el('latest-delta').innerHTML = '<div class="empty">No deltas yet</div>';
+  }
+
+  // Delta log table
+  if (!logRes.ok) { el('deltas-body').innerHTML = `<tr><td colspan="6" class="empty">Error: ${logRes.data.error}</td></tr>`; return; }
+  const deltas = logRes.data.deltas || [];
+  if (!deltas.length) { el('deltas-body').innerHTML = '<tr><td colspan="6" class="empty">No deltas</td></tr>'; return; }
+  el('deltas-body').innerHTML = deltas.map(d => `
+    <tr style="cursor: pointer;" onclick='showDeltaDetail(${JSON.stringify(d).replace(/'/g, "&#39;")})'>
+      <td style="color: #818cf8; font-weight: 600;">${d.delta_id}</td>
+      <td><span class="hash">${short(d.hash)}</span></td>
+      <td><span class="hash">${d.hash_prev ? short(d.hash_prev) : 'GENESIS'}</span></td>
+      <td style="font-size: 12px;">${d.author_type || '-'}:${short(d.author_id, 8)}</td>
+      <td style="font-size: 11px; color: #aaa;">${d.patch ? (Array.isArray(d.patch) ? d.patch.length + ' ops' : '1 op') : '-'}</td>
+      <td style="font-size: 12px; color: #888;">${fmtDate(d.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+function showDeltaDetail(delta) {
+  el('delta-detail').classList.remove('hidden');
+  el('delta-detail-json').textContent = fmtJson(delta);
+}
+
+async function verifyChain() {
+  if (!S.tenantDb) return toast('No tenant selected', 'error');
+  const res = await kernel('/v1/delta/verify');
+  const s = el('chain-status');
+  s.classList.remove('hidden');
+  if (res.ok) {
+    const d = res.data;
+    const ok = d.valid || d.intact;
+    s.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-${ok ? 'check-circle' : 'exclamation-triangle'}" style="color: ${ok ? '#34d399' : '#f87171'}; font-size: 18px;"></i>
+        <div>
+          <div style="font-weight: 600; font-size: 13px;">${ok ? 'Hash Chain Intact' : 'Chain Broken!'}</div>
+          <div style="font-size: 12px; color: #888;">${d.total_deltas || 0} deltas verified at ${fmtDate(d.verified_at)}</div>
+          ${d.first_broken_at ? `<div style="font-size: 12px; color: #f87171;">First break at delta #${d.first_broken_at}</div>` : ''}
+        </div>
+      </div>
+    `;
+  } else {
+    s.innerHTML = `<div style="color: #f87171; font-size: 12px;">Error: ${res.data.error}</div>`;
+  }
+}
+
+// ── STATE ──────────────────────────────────────────────
+async function loadState() {
+  if (!S.tenantDb) {
+    el('entity-list').innerHTML = '<div class="empty">No tenant selected</div>';
+    return;
+  }
+  const typeFilter = el('state-type-filter').value.trim();
+  const params = typeFilter ? `?entity_type=${encodeURIComponent(typeFilter)}` : '';
+  const res = await gw(`/v1/state/query${params}`);
+  if (!res.ok) { el('entity-list').innerHTML = `<div class="empty">Error: ${res.data.error}</div>`; return; }
+  const entities = res.data.entities || [];
+  if (!entities.length) { el('entity-list').innerHTML = '<div class="empty">No entities</div>'; return; }
+  el('entity-list').innerHTML = entities.map(e => `
+    <div class="entity-item" style="padding: 10px 12px; border-bottom: 1px solid #1a1a2a; cursor: pointer;" onclick='showEntity(${JSON.stringify(e).replace(/'/g, "&#39;")})'>
+      <div style="font-size: 12px; font-weight: 600;">${e.entity_type || 'unknown'}</div>
+      <div style="font-size: 11px; color: #555;">${short(e.entity_id, 16)}</div>
+      <div style="font-size: 11px; color: #888;">v${e.version || 0}</div>
+    </div>
+  `).join('');
+}
+
+function showEntity(entity) {
+  el('entity-detail').innerHTML = `
+    <div style="margin-bottom: 12px;">
+      <span style="font-size: 12px; font-weight: 600;">${entity.entity_type}</span>
+      <span style="font-size: 11px; color: #555; margin-left: 8px;">${entity.entity_id}</span>
+    </div>
+    <div style="font-size: 12px; color: #888; margin-bottom: 8px;">
+      Version: ${entity.version || 0} &mdash; Hash: <span class="hash">${short(entity.current_hash, 16)}</span>
+    </div>
+    <pre class="json">${fmtJson(entity.state || entity)}</pre>
+  `;
+}
+
+// ── WEBHOOKS ───────────────────────────────────────────
+function toggleCreateWebhook() { el('create-webhook-form').classList.toggle('hidden'); }
+
+async function loadWebhooks() {
+  if (!S.tenantDb) { el('webhooks-body').innerHTML = '<tr><td colspan="6" class="empty">No tenant selected</td></tr>'; return; }
+  const res = await gw('/v1/webhooks');
+  if (!res.ok) { el('webhooks-body').innerHTML = `<tr><td colspan="6" class="empty">Error: ${res.data.error}</td></tr>`; return; }
+  const hooks = res.data.webhooks || [];
+  if (!hooks.length) { el('webhooks-body').innerHTML = '<tr><td colspan="6" class="empty">No webhooks</td></tr>'; return; }
+  el('webhooks-body').innerHTML = hooks.map(w => `
+    <tr>
+      <td style="font-size: 12px; word-break: break-all;">${w.url}</td>
+      <td>${(w.events || []).map(e => `<span class="badge" style="background: rgba(99,102,241,0.1); color: #818cf8; margin: 1px;">${e}</span>`).join(' ')}</td>
+      <td>${w.enabled ? '<span style="color: #34d399;">Yes</span>' : '<span style="color: #f87171;">No</span>'}</td>
+      <td style="color: ${w.failure_count > 0 ? '#f87171' : '#888'};">${w.failure_count || 0}</td>
+      <td style="font-size: 12px; color: #888;">${fmtDate(w.last_triggered_at)}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deleteWebhook('${w.webhook_id}')"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function createWebhook() {
+  const url = el('new-webhook-url').value.trim();
+  if (!url) return toast('URL is required', 'error');
+  const secret = el('new-webhook-secret').value.trim();
+  const events = [...el('webhook-events-checks').querySelectorAll('input:checked')].map(c => c.value);
+  if (!events.length) return toast('Select at least one event', 'error');
+  const body = { url, events };
+  if (secret) body.secret = secret;
+  const res = await gw('/v1/webhooks', { method: 'POST', body: JSON.stringify(body) });
+  if (res.ok) { toast('Webhook created'); el('create-webhook-form').classList.add('hidden'); loadWebhooks(); }
+  else toast(`Error: ${res.data.error}`, 'error');
+}
+
+async function deleteWebhook(id) {
+  if (!confirm('Delete this webhook?')) return;
+  const res = await gw(`/v1/webhooks/${id}`, { method: 'DELETE' });
+  if (res.ok) { toast('Webhook deleted'); loadWebhooks(); }
+  else toast(`Error: ${res.data.error}`, 'error');
+}
+
+// ── AUDIT ──────────────────────────────────────────────
+function clearAuditFilters() {
+  el('audit-agent-filter').value = '';
+  el('audit-action-filter').value = '';
+  loadAudit();
+}
+
+async function loadAudit() {
+  if (!S.tenantDb) { el('audit-body').innerHTML = '<tr><td colspan="6" class="empty">No tenant selected</td></tr>'; return; }
+  const agentId = el('audit-agent-filter').value.trim();
+  const action = el('audit-action-filter').value.trim();
+  const params = new URLSearchParams();
+  if (agentId) params.set('agent_id', agentId);
+  if (action) params.set('action', action);
+  params.set('limit', '50');
+  const res = await kernel(`/v1/audit?${params}`);
+  if (!res.ok) { el('audit-body').innerHTML = `<tr><td colspan="6" class="empty">Error: ${res.data.error}</td></tr>`; return; }
+  const entries = res.data.entries || [];
+  if (!entries.length) { el('audit-body').innerHTML = '<tr><td colspan="6" class="empty">No audit entries</td></tr>'; return; }
+  el('audit-body').innerHTML = entries.map(e => `
+    <tr>
+      <td><span class="hash">${short(e.agent_id, 8)}</span></td>
+      <td><code style="color: #818cf8;">${e.action}</code></td>
+      <td>${effectBadge(e.effect)}</td>
+      <td style="font-size: 11px; color: #aaa;">${(e.entity_ids || []).map(id => short(id, 8)).join(', ') || '-'}</td>
+      <td style="font-size: 12px; color: #888;">${e.delta_id || '-'}</td>
+      <td style="font-size: 12px; color: #888;">${fmtDate(e.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+// ── METRICS ────────────────────────────────────────────
+async function loadMetrics() {
+  const [healthRes, prometheusRes, usageRes] = await Promise.all([
+    gw('/health'),
+    gw('/metrics').then(r => ({ ...r, text: true })).catch(() => ({ ok: false, data: {} })),
+    S.tenantDb ? gw('/v1/metrics/usage') : Promise.resolve({ ok: false, data: {} }),
+  ]);
+
+  // Gateway health
+  if (healthRes.ok) {
+    const d = healthRes.data;
+    const comps = d.components || {};
+    el('metrics-gw-health').innerHTML = `
+      <div style="margin-bottom: 8px;"><strong>Status:</strong> ${effectBadge(d.status === 'healthy' ? 'ALLOW' : 'DENY')} <span style="margin-left: 8px; font-size: 12px; color: #888;">${d.status}</span></div>
+      <div style="font-size: 12px; color: #888;">Uptime: ${Math.floor((d.uptime_ms || 0) / 1000)}s</div>
+      <div style="font-size: 12px; color: #888;">Version: ${d.version || '?'}</div>
+      ${Object.entries(comps).map(([k, v]) => `
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+          <span class="status-dot ${v.status === 'connected' ? 'healthy' : 'unhealthy'}"></span>
+          <span style="font-size: 12px;">${k}: ${v.status} (${v.latency_ms}ms)</span>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    el('metrics-gw-health').innerHTML = '<div class="empty">Cannot reach gateway</div>';
+  }
+
+  // Prometheus
+  // The /metrics endpoint returns text/plain, so we need to handle differently
+  try {
+    const pRes = await fetch('/metrics');
+    const text = await pRes.text();
+    el('metrics-prometheus').textContent = text;
+  } catch {
+    el('metrics-prometheus').textContent = 'Cannot fetch metrics';
+  }
+
+  // Usage
+  if (usageRes.ok) {
+    const records = usageRes.data.records || usageRes.data.usage || [];
+    if (records.length) {
+      el('usage-body').innerHTML = records.map(r => `
+        <tr>
+          <td><span class="hash">${short(r.agent_id, 8)}</span></td>
+          <td>${r.period || '-'}</td>
+          <td>${r.actions_count || 0}</td>
+          <td>${r.tokens_used || 0}</td>
+          <td>${r.cost_usd ? '$' + Number(r.cost_usd).toFixed(4) : '-'}</td>
+        </tr>
+      `).join('');
+    } else {
+      el('usage-body').innerHTML = '<tr><td colspan="5" class="empty">No usage data</td></tr>';
+    }
+  } else {
+    el('usage-body').innerHTML = '<tr><td colspan="5" class="empty">No tenant selected or no usage data</td></tr>';
+  }
+}
+
+// ── Restore session ────────────────────────────────────
+(function init() {
+  const kernelUrl = sessionStorage.getItem('aegis_kernel_url');
+  const tenantDb = sessionStorage.getItem('aegis_tenant_db');
+  const apiKey = sessionStorage.getItem('aegis_api_key');
+  if (kernelUrl) {
+    el('input-kernel-url').value = kernelUrl;
+    el('input-tenant-db').value = tenantDb || '';
+    el('input-api-key').value = apiKey || '';
+    connect();
+  }
+})();
+</script>
+
+</body>
+</html>

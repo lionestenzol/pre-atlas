@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ExecutionResult.v1",
+  "title": "Execution Result",
+  "description": "Output of the executor agent after walking an ExecutionSpec",
+  "type": "object",
+  "required": ["result_id", "spec_id", "task_id", "status", "step_results", "started_at", "completed_at"],
+  "properties": {
+    "result_id": { "type": "string", "format": "uuid" },
+    "spec_id": { "type": "string", "format": "uuid" },
+    "task_id": { "type": "string", "format": "uuid" },
+    "status": { "type": "string", "enum": ["completed", "failed", "partial", "rolled_back"] },
+    "step_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step_index", "status", "started_at", "completed_at"],
+        "properties": {
+          "step_index": { "type": "integer" },
+          "status": { "type": "string", "enum": ["success", "failed", "skipped", "rolled_back"] },
+          "output": {},
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "retryable": { "type": "boolean" }
+            }
+          },
+          "duration_ms": { "type": "integer" },
+          "cost_usd": { "type": "number" },
+          "started_at": { "type": "integer" },
+          "completed_at": { "type": "integer" }
+        }
+      }
+    },
+    "total_cost_usd": { "type": "number" },
+    "started_at": { "type": "integer" },
+    "completed_at": { "type": "integer" }
+  }
+}

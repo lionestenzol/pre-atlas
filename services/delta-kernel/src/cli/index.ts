@@ -55,7 +55,8 @@ Controls:
 
 Modes:
   RECOVER         Rest and recovery (restricted actions)
-  CLOSE_LOOPS     Clear pending items
+  CLOSURE         Clear pending items
+  MAINTENANCE     Light admin and health actions
   BUILD           Create new things
   COMPOUND        Extend existing work
   SCALE           Delegate and automate

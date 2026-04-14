@@ -63,7 +63,7 @@ There is exactly one global system state entity:
 
 ```json
 SystemState {
-  "mode": "RECOVER | CLOSE_LOOPS | BUILD | COMPOUND | SCALE",
+  "mode": "RECOVER | CLOSURE | BUILD | COMPOUND | SCALE",
   "signals": {
     "sleep_hours": 0,
     "open_loops": 0,

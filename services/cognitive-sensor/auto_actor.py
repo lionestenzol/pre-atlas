@@ -39,10 +39,17 @@ BASE = Path(__file__).parent.resolve()
 DB_PATH = BASE / "results.db"
 MEMORY_PATH = BASE / "memory_db.json"
 CLASSIFICATIONS_PATH = BASE / "conversation_classifications.json"
-ORCHESTRATOR_URL = "http://localhost:3005"
-
+DELTA_URL = "http://localhost:3001"
+_DELTA_API_KEY = ""
+_key_path = BASE.parent.parent / ".aegis-tenant-key"
+if _key_path.exists():
+    _DELTA_API_KEY = _key_path.read_text(encoding="utf-8").strip()
 MAX_AUTO_CLOSE_PER_RUN = 5
 MAX_DIRECTIVES_PER_RUN = 3
+AUTO_CLOSE_LEDGER_PATH = BASE / "auto_close_ledger.json"
+DEFAULT_CONFIDENCE_THRESHOLD = 0.8
+MIN_CONFIDENCE_THRESHOLD = 0.7  # lowest we'll ever auto-approve
+THRESHOLD_DECAY_DAYS = 7  # days without reopen to lower threshold
 
 # Lazy-loaded data
 _memory_db: list[dict] | None = None
@@ -318,39 +325,96 @@ def extract_value(convo_id: str, title: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# LOOP CLOSURE FEEDBACK LEDGER
+# ---------------------------------------------------------------------------
+
+def load_close_ledger() -> dict[str, Any]:
+    """Load auto-close feedback ledger. Tracks accuracy to adapt threshold."""
+    if AUTO_CLOSE_LEDGER_PATH.exists():
+        return json.loads(AUTO_CLOSE_LEDGER_PATH.read_text(encoding="utf-8"))
+    return {
+        "auto_closed": [],  # { convo_id, title, closed_at, confidence, reopened: bool }
+        "threshold": DEFAULT_CONFIDENCE_THRESHOLD,
+        "total_closed": 0,
+        "total_reopened": 0,
+        "last_threshold_update": None,
+    }
+
+
+def save_close_ledger(ledger: dict[str, Any]) -> None:
+    AUTO_CLOSE_LEDGER_PATH.write_text(
+        json.dumps(ledger, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+
+
+def record_auto_close(convo_id: str, title: str, confidence: float) -> None:
+    """Record an auto-close in the feedback ledger."""
+    ledger = load_close_ledger()
+    ledger["auto_closed"].append({
+        "convo_id": convo_id,
+        "title": title,
+        "closed_at": datetime.now().isoformat(),
+        "confidence": confidence,
+        "reopened": False,
+    })
+    ledger["total_closed"] += 1
+    save_close_ledger(ledger)
+
+
+def update_threshold() -> float:
+    """Check auto-close track record. Lower threshold if accuracy is high.
+
+    If all auto-closes from 7+ days ago were never reopened, lower the
+    threshold by 0.02 (minimum 0.7). If any were reopened, raise by 0.05.
+    """
+    ledger = load_close_ledger()
+    now = datetime.now()
+    mature = []  # entries old enough to evaluate
+
+    for entry in ledger["auto_closed"]:
+        closed_at = datetime.fromisoformat(entry["closed_at"])
+        age_days = (now - closed_at).days
+        if age_days >= THRESHOLD_DECAY_DAYS:
+            mature.append(entry)
+
+    if not mature:
+        return ledger["threshold"]
+
+    reopened = [e for e in mature if e.get("reopened")]
+    if reopened:
+        # Something got reopened — raise threshold
+        ledger["threshold"] = min(DEFAULT_CONFIDENCE_THRESHOLD, ledger["threshold"] + 0.05)
+        ledger["total_reopened"] += len(reopened)
+        print(f"  THRESHOLD RAISED to {ledger['threshold']} ({len(reopened)} reopened)")
+    elif len(mature) >= 3:
+        # 3+ mature entries, none reopened — lower threshold
+        new_threshold = max(MIN_CONFIDENCE_THRESHOLD, ledger["threshold"] - 0.02)
+        if new_threshold < ledger["threshold"]:
+            print(f"  THRESHOLD LOWERED: {ledger['threshold']} -> {new_threshold} "
+                  f"({len(mature)} auto-closes, 0 reopened)")
+            ledger["threshold"] = new_threshold
+
+    ledger["last_threshold_update"] = now.isoformat()
+    # Prune evaluated entries (keep last 50)
+    ledger["auto_closed"] = ledger["auto_closed"][-50:]
+    save_close_ledger(ledger)
+    return ledger["threshold"]
+
+
+# ---------------------------------------------------------------------------
 # LOOP CLOSURE — extract value FIRST, then close
 # ---------------------------------------------------------------------------
 
-def compute_auto_decision(convo_id: str, mode: str) -> tuple[str, str] | None:
-    cls = load_classifications().get(str(convo_id), {})
-    outcome = cls.get("outcome", "unknown")
-    trajectory = cls.get("emotional_trajectory", "unknown")
-    intensity = cls.get("intensity", "unknown")
+def analyze_loops(mode: str) -> list[dict[str, Any]]:
+    """Analyze all open loops and produce recommendations.
 
-    if outcome == "abandoned":
-        return ("ARCHIVE", "Abandoned conversation")
-    if outcome == "looped" and trajectory in ("spiral", "negative_arc"):
-        return ("ARCHIVE", "Spiral/negative arc with no resolution")
-    if intensity == "low" and outcome == "looped":
-        return ("ARCHIVE", "Low intensity loop")
-    if outcome == "looped":
-        return ("ARCHIVE", "Looped without resolution")
-    if outcome == "resolved":
-        return ("CLOSE", "Reached resolution")
-    if outcome == "produced":
-        return ("CLOSE", "Produced output")
-    if mode == "CLOSURE" and outcome == "unknown":
-        return ("ARCHIVE", "Unclassified in CLOSURE mode")
-    return None
-
-
-def auto_close_loops(mode: str) -> list[dict[str, Any]]:
-    """Extract value from loops, then close them.
+    DOES NOT archive or close anything. Produces a recommendation file
+    (loop_recommendations.json) that the user reviews and approves.
 
     For each loop:
-    1. Extract all value (topics, content, insights, ideas, decisions)
-    2. Save extraction to extracted_value.json
-    3. Record the closure decision
+    1. Extract value (topics, related ideas, lane connections)
+    2. Compute a recommendation (CLOSE, ARCHIVE, KEEP, NEEDS_WORK)
+    3. Save to loop_recommendations.json for user review
     """
     loops_path = BASE / "loops_latest.json"
     if not loops_path.exists():
@@ -363,100 +427,198 @@ def auto_close_loops(mode: str) -> list[dict[str, Any]]:
     decided = get_already_decided()
     open_loops = [l for l in loops if str(l.get("convo_id", "")) not in decided]
 
-    # Load existing extractions
-    extractions_path = BASE / "extracted_value.json"
-    extractions = load_json(extractions_path)
-    if not isinstance(extractions, dict):
-        extractions = {"extractions": [], "metadata": {"total": 0}}
-    if "extractions" not in extractions:
-        extractions = {"extractions": [], "metadata": {"total": 0}}
-
-    actions: list[dict[str, Any]] = []
+    recommendations: list[dict[str, Any]] = []
     for loop in open_loops:
-        if len(actions) >= MAX_AUTO_CLOSE_PER_RUN:
-            break
-
         convo_id = str(loop.get("convo_id", ""))
         title = loop.get("title", "untitled")
-        result = compute_auto_decision(convo_id, mode)
+        score = loop.get("score", 0)
 
-        if result is None:
-            continue
-
-        decision, reason = result
-
-        # STEP 1: Extract value BEFORE closing
-        print(f"  Extracting value from #{convo_id}: {title}")
+        print(f"  Analyzing #{convo_id}: {title}")
         extraction = extract_value(convo_id, title)
-        extraction["decision"] = decision
-        extraction["reason"] = reason
 
-        topics_str = ", ".join(t["topic"] for t in extraction["topics"][:5])
-        n_msgs = extraction["conversation_summary"].get("total_messages", 0)
+        # Compute recommendation based on data — but DON'T execute it
+        cls = load_classifications().get(str(convo_id), {})
+        outcome = cls.get("outcome", "unknown")
+        trajectory = cls.get("emotional_trajectory", "unknown")
         n_related = len(extraction.get("related_ideas", []))
         connects = extraction.get("strategic_relevance", {}).get("connects_to_active_lane", False)
+        n_msgs = extraction["conversation_summary"].get("total_messages", 0)
+        topics_str = ", ".join(t["topic"] for t in extraction["topics"][:5])
 
-        print(f"    Topics: {topics_str or 'none'}")
-        print(f"    Messages: {n_msgs} | Related ideas: {n_related} | Lane match: {'YES' if connects else 'no'}")
+        # Build recommendation with confidence score
+        confidence = 0.0
+        if connects:
+            rec = "KEEP"
+            reason = f"Connects to active lane — has strategic value"
+            confidence = 0.9
+        elif n_related >= 5:
+            rec = "NEEDS_WORK"
+            reason = f"{n_related} related ideas in registry — value exists but needs extraction"
+            confidence = 0.7
+        elif outcome == "resolved" or outcome == "produced":
+            rec = "CLOSE"
+            reason = f"Conversation reached resolution — mark complete"
+            confidence = 0.9 if outcome == "resolved" else 0.85
+        elif outcome == "abandoned":
+            rec = "ARCHIVE"
+            reason = f"Abandoned — no active value"
+            confidence = 0.85 if n_msgs < 20 else 0.7  # long abandoned convos may have buried value
+        elif n_related > 0:
+            rec = "NEEDS_WORK"
+            reason = f"{n_related} related idea(s) — review before deciding"
+            confidence = 0.6
+        elif n_msgs < 10:
+            rec = "ARCHIVE"
+            reason = f"Only {n_msgs} messages, no related ideas — minimal investment"
+            confidence = 0.9  # very high — tiny conversation with no connections
+        else:
+            rec = "REVIEW"
+            reason = f"{n_msgs} messages but no classified outcome — needs your eyes"
+            confidence = 0.3
 
-        # STEP 2: Save extraction
-        extractions["extractions"].append(extraction)
-        extractions["metadata"]["total"] = len(extractions["extractions"])
-        extractions["metadata"]["last_updated"] = datetime.now().isoformat()
+        entry = {
+            "convo_id": convo_id,
+            "title": title,
+            "score": score,
+            "recommendation": rec,
+            "confidence": round(confidence, 2),
+            "reason": reason,
+            "topics": topics_str,
+            "messages": n_msgs,
+            "related_ideas": n_related,
+            "connects_to_lane": connects,
+            "outcome": outcome,
+            "trajectory": trajectory,
+            "top_related": [r["title"] for r in extraction.get("related_ideas", [])[:3]],
+            "extraction": extraction,
+        }
+        recommendations.append(entry)
 
-        # STEP 3: Record closure
-        if record_decision(convo_id, decision, title):
-            actions.append({
-                "convo_id": convo_id,
-                "title": title,
-                "decision": decision,
-                "reason": reason,
-                "topics": topics_str,
-                "messages": n_msgs,
-                "related_ideas": n_related,
-                "connects_to_lane": connects,
-            })
-            print(f"    [{decision}] — {reason}")
+        print(f"    [{rec}] {reason}")
+        print(f"    Topics: {topics_str or 'none'} | Messages: {n_msgs} | Related: {n_related}")
 
-    # Write all extractions
-    if actions:
-        extractions_path.write_text(json.dumps(extractions, indent=2, ensure_ascii=False), encoding="utf-8")
-        print(f"\n  Value saved to extracted_value.json ({extractions['metadata']['total']} total extractions)")
+    # Auto-execute high-confidence CLOSE/ARCHIVE recommendations
+    # Threshold adapts based on track record (feedback ledger)
+    threshold = update_threshold()
+    print(f"\n  Auto-close threshold: {threshold} (adaptive)")
+    auto_executed: list[dict[str, Any]] = []
+    pending_review: list[dict[str, Any]] = []
 
-    return actions
+    for rec_entry in recommendations:
+        can_auto = (
+            rec_entry["recommendation"] in ("CLOSE", "ARCHIVE")
+            and rec_entry.get("confidence", 0) >= threshold
+            and len(auto_executed) < MAX_AUTO_CLOSE_PER_RUN
+        )
+        if can_auto:
+            success = record_decision(
+                rec_entry["convo_id"],
+                rec_entry["recommendation"],
+                rec_entry["title"],
+            )
+            if success:
+                auto_executed.append(rec_entry)
+                record_auto_close(rec_entry["convo_id"], rec_entry["title"],
+                                  rec_entry.get("confidence", 0))
+                print(f"    AUTO-{rec_entry['recommendation']}: #{rec_entry['convo_id']} "
+                      f"(confidence={rec_entry['confidence']})")
+            else:
+                pending_review.append(rec_entry)
+        else:
+            pending_review.append(rec_entry)
+
+    # Save remaining recommendations for human review
+    if recommendations:
+        rec_path = BASE / "loop_recommendations.json"
+        rec_path.write_text(json.dumps({
+            "generated_at": datetime.now().isoformat(),
+            "mode": mode,
+            "total_open": len(recommendations),
+            "auto_executed": len(auto_executed),
+            "pending_review": len(pending_review),
+            "summary": {
+                "CLOSE": len([r for r in recommendations if r["recommendation"] == "CLOSE"]),
+                "ARCHIVE": len([r for r in recommendations if r["recommendation"] == "ARCHIVE"]),
+                "KEEP": len([r for r in recommendations if r["recommendation"] == "KEEP"]),
+                "NEEDS_WORK": len([r for r in recommendations if r["recommendation"] == "NEEDS_WORK"]),
+                "REVIEW": len([r for r in recommendations if r["recommendation"] == "REVIEW"]),
+            },
+            "recommendations": pending_review,
+            "auto_closed": [{"convo_id": r["convo_id"], "title": r["title"],
+                            "recommendation": r["recommendation"], "confidence": r["confidence"]}
+                           for r in auto_executed],
+        }, indent=2, ensure_ascii=False), encoding="utf-8")
+
+        if auto_executed:
+            print(f"\n  Auto-executed: {len(auto_executed)} (threshold={threshold})")
+        if pending_review:
+            print(f"  Pending review: {len(pending_review)}")
+
+    return recommendations
 
 
 # ---------------------------------------------------------------------------
 # GHOST DIRECTIVE EXECUTION
 # ---------------------------------------------------------------------------
 
-def submit_task_to_queue(task_id: str, instructions: str, priority: str = "normal") -> str | None:
+def emit_task_to_delta(task_id: str, intent: str, domain: str, params: dict, priority: int = 1) -> str | None:
+    """Emit a task to delta-kernel for daemon execution."""
     try:
         payload = json.dumps({
-            "task_id": task_id,
-            "instructions": instructions,
-            "priority": priority,
-            "timeout_seconds": 300,
+            "type": "ai",
+            "title": task_id,
+            "metadata": {
+                "cmd": "@WORK",
+                "inputs": params,
+                "source": "auto_actor",
+                "intent": intent,
+                "domain": domain,
+                "priority": priority,
+                "constraints": {"timeout_seconds": 300, "max_cost_usd": 0.50},
+            }
         }).encode("utf-8")
+        headers = {"Content-Type": "application/json"}
+        if _DELTA_API_KEY:
+            headers["Authorization"] = f"Bearer {_DELTA_API_KEY}"
         req = urllib.request.Request(
-            f"{ORCHESTRATOR_URL}/api/v1/tasks/execute",
+            f"{DELTA_URL}/api/work/request",
             data=payload,
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             method="POST",
         )
-        resp = urllib.request.urlopen(req, timeout=60)
+        resp = urllib.request.urlopen(req, timeout=10)
         result = json.loads(resp.read().decode("utf-8"))
-
-        if result.get("status") == "queued":
-            return result.get("job_id")
-        elif result.get("success"):
-            return f"direct:{result.get('task_id', task_id)}"
-        else:
-            print(f"  Task failed: {result.get('error', 'unknown')}")
-            return None
-    except Exception as e:
-        print(f"  Task submission failed: {e}")
+        if result.get("status") in ("APPROVED", "QUEUED"):
+            return result.get("job_id", task_id)
+        print(f"  Delta denied: {result.get('reason', 'unknown')}")
         return None
+    except Exception as e:
+        print(f"  Delta emission failed: {e}")
+        return None
+
+
+def score_directive_risk(dtype: str, domain: str, mode: str) -> tuple[float, str]:
+    """Score directive risk. Returns (confidence 0-1, risk_level).
+
+    Low-risk (confidence >= 0.8): INVEST in known domains, RESURRECT analysis
+    Medium-risk (0.5-0.8): EXECUTE in active lanes
+    High-risk (< 0.5): EXECUTE outside active lanes, any directive in CLOSURE mode
+    """
+    # CLOSURE mode = everything is higher risk (system wants focus, not new work)
+    if mode == "CLOSURE":
+        return (0.3, "high")
+
+    if dtype == "INVEST":
+        return (0.85, "low")  # Research briefs are read-only, low risk
+    if dtype == "RESURRECT":
+        return (0.8, "low")  # Kill-or-revive analysis is advisory, low risk
+    if dtype == "EXECUTE":
+        return (0.6, "medium")  # Execution creates artifacts, medium risk
+
+    return (0.4, "high")
+
+
+AUTO_DIRECTIVE_CONFIDENCE = 0.8
 
 
 def execute_ghost_directives() -> list[dict[str, Any]]:
@@ -481,6 +643,8 @@ def execute_ghost_directives() -> list[dict[str, Any]]:
 
     results: list[dict[str, Any]] = []
     executed = 0
+    auto_executed = 0
+    skipped_approval = 0
 
     for directive in directives:
         if executed >= MAX_DIRECTIVES_PER_RUN:
@@ -492,6 +656,23 @@ def execute_ghost_directives() -> list[dict[str, Any]]:
         domain = directive.get("domain", "")
         rationale = directive.get("rationale", "")
         suggested = directive.get("suggested_action", "")
+
+        confidence, risk_level = score_directive_risk(dtype, domain, mode)
+
+        # High-risk directives need human approval — skip and log
+        if confidence < AUTO_DIRECTIVE_CONFIDENCE:
+            skipped_approval += 1
+            print(f"  SKIP (needs approval): {dtype}/{domain} "
+                  f"[confidence={confidence}, risk={risk_level}]")
+            results.append({
+                "directive_type": dtype, "domain": domain,
+                "status": "needs_approval", "confidence": confidence,
+                "risk_level": risk_level,
+            })
+            continue
+
+        print(f"  AUTO-EXECUTE: {dtype}/{domain} "
+              f"[confidence={confidence}, risk={risk_level}]")
 
         if dtype == "EXECUTE":
             prompt = (
@@ -540,16 +721,30 @@ def execute_ghost_directives() -> list[dict[str, Any]]:
 
         task_id = f"ghost-{dtype.lower()}-{domain[:20].replace(' ', '_')}"
         print(f"  Submitting: {task_id}")
-        job_id = submit_task_to_queue(task_id, prompt, priority="normal")
+        intent_map = {"EXECUTE": "execute_directive", "INVEST": "execute_directive", "RESURRECT": "execute_directive"}
+        job_id = emit_task_to_delta(
+            task_id=task_id,
+            intent=intent_map.get(dtype, "execute_directive"),
+            domain="cognitive",
+            params={"instructions": prompt, "directive_type": dtype, "domain": domain},
+            priority=2 if dtype == "EXECUTE" else 1,
+        )
 
         results.append({
             "directive_type": dtype,
             "domain": domain,
             "task_id": task_id,
             "job_id": job_id,
+            "confidence": confidence,
+            "risk_level": risk_level,
+            "status": "auto_executed",
             "submitted_at": datetime.now().isoformat(),
         })
         executed += 1
+        auto_executed += 1
+
+    if skipped_approval:
+        print(f"\n  {skipped_approval} directive(s) need human approval (confidence < {AUTO_DIRECTIVE_CONFIDENCE})")
 
     return results
 
@@ -607,11 +802,26 @@ def main():
     mode = gov.get("mode", "BUILD")
     print(f"\n  Mode: {mode}")
 
-    # 1. Extract value from loops, then close them
-    print(f"\n>> Extract & Close Loops")
-    log["loops_closed"] = auto_close_loops(mode)
-    if not log["loops_closed"]:
-        print("  No loops eligible for auto-close")
+    # Energy gate: block heavy execution when energy is depleted
+    life_signals = load_json(BASE / "life_signals.json")
+    energy_level = life_signals.get("energy", {}).get("energy_level", 50)
+    burnout_risk = life_signals.get("energy", {}).get("burnout_risk", False)
+    energy_gated = energy_level < 30 or burnout_risk
+    if energy_gated:
+        print(f"  ENERGY GATE ACTIVE: energy={energy_level}, burnout={burnout_risk}")
+        print(f"  Skipping directive execution. Loop closure still allowed.")
+        log["energy_gated"] = True
+        log["energy_level"] = energy_level
+
+    # 1. Analyze loops, auto-close high-confidence, and produce recommendations
+    print(f"\n>> Analyze Loops")
+    all_recs = analyze_loops(mode)
+    log["loops_analyzed"] = len(all_recs)
+    log["loops_auto_closed"] = [r["convo_id"] for r in all_recs
+                                 if r.get("confidence", 0) >= 0.8
+                                 and r["recommendation"] in ("CLOSE", "ARCHIVE")]
+    if not all_recs:
+        print("  No loops eligible for analysis")
 
     # 2. Park lane violations
     print(f"\n>> Park Lane Violations")
@@ -619,9 +829,13 @@ def main():
     if not log["violations_parked"]:
         print("  No violations to park")
 
-    # 3. Execute ghost directives
+    # 3. Execute ghost directives (energy-gated)
     print(f"\n>> Execute Ghost Directives")
-    log["directives_executed"] = execute_ghost_directives()
+    if energy_gated:
+        print("  SKIPPED — energy gate active (energy<30 or burnout detected)")
+        log["directives_executed"] = []
+    else:
+        log["directives_executed"] = execute_ghost_directives()
 
     # Write action log
     log_path = BASE / "auto_actor_log.json"
@@ -629,13 +843,15 @@ def main():
     log_path.write_text(json.dumps(log, indent=2, ensure_ascii=False), encoding="utf-8")
 
     total_elapsed = time.time() - total_start
-    closed = len(log["loops_closed"])
+    analyzed = log["loops_analyzed"]
+    auto_closed = len(log.get("loops_auto_closed", []))
     directives = len(log["directives_executed"])
     parked = len(log["violations_parked"])
 
     print(f"\n{'=' * 60}")
     print(f"  AUTO ACTOR COMPLETE — {total_elapsed:.1f}s")
-    print(f"  Loops extracted & closed: {closed}")
+    print(f"  Loops analyzed:           {analyzed}")
+    print(f"  Loops auto-closed:        {auto_closed}")
     print(f"  Directives submitted:     {directives}")
     print(f"  Violations parked:        {parked}")
     print(f"{'=' * 60}")

@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-09T19:37:19.035051+00:00",
+  "compound_score": 47,
+  "domain_scores": {
+    "project": 30.1,
+    "skill": 59.2,
+    "network": 30.0,
+    "finance": 50.0,
+    "energy": 63.0,
+    "risk": 55.0
+  },
+  "loops": {
+    "project_health": {
+      "fired": true,
+      "input_summary": "2 active goals, 3 subtasks completed",
+      "output_summary": "Progress: 16.7% | Skills: writing, design",
+      "signal_delta": {
+        "avg_progress": 16.7,
+        "active_goals": 2,
+        "done_goals": 0,
+        "decomposition_coverage": 50.0,
+        "blocked_count": 3,
+        "skills_from_subtasks": {
+          "writing": 1,
+          "design": 2
+        },
+        "subtask_completions": 3
+      }
+    },
+    "closure_to_skill": {
+      "fired": false,
+      "input_summary": "0 loops in log, 0 true closures"
+    },
+    "skill_to_network": {
+      "fired": false,
+      "input_summary": "mastery=0 (need 3), utilization=98.0% (need 70%)"
+    },
+    "completion_to_finance": {
+      "fired": false,
+      "input_summary": "closed_week=0, runway=3.0mo, lanes=2",
+      "output_summary": "Projected revenue: $0. Financial pressure: LOW",
+      "signal_delta": {
+        "finance": {
+          "projected_income": 0.0,
+          "financial_pressure": "LOW",
+          "assets_shipped_week": 0
+        }
+      },
+      "confidence": 0.3
+    },
+    "energy_to_throttle": {
+      "fired": false,
+      "input_summary": "energy=50, load=5, burnout=False"
+    },
+    "risk_cascade": {
+      "fired": true,
+      "input_summary": "drift_score=4, alerts=1, risk=HIGH",
+      "output_summary": "Cascade: MEDIUM. Prediction degradation: 0.2. Automation active",
+      "signal_delta": {
+        "cascade_severity": "MEDIUM",
+        "prediction_degradation": 0.2,
+        "automation_paused": false,
+        "risk_pressure": 3,
+        "alert_types": [
+          "closure_drought"
+        ],
+        "constraints": [
+          {
+            "source_domain": "risk",
+            "target_domain": "project",
+            "constraint": "Closure drought — execution stalled",
+            "severity": "MEDIUM"
+          },
+          {
+            "source_domain": "risk",
+            "target_domain": "project",
+            "constraint": "5 lane violations active",
+            "severity": "MEDIUM"
+          }
+        ]
+      },
+      "confidence": 0.85
+    },
+    "compound_score": {
+      "fired": true,
+      "input_summary": "6 domains scored",
+      "output_summary": "Compound score: 47/100",
+      "signal_delta": {
+        "compound_score": 47,
+        "domain_scores": {
+          "project": 30.085,
+          "skill": 59.2,
+          "network": 30.0,
+          "finance": 50.0,
+          "energy": 63.0,
+          "risk": 55.0
+        }
+      }
+    }
+  },
+  "active_constraints": [
+    {
+      "source_domain": "risk",
+      "target_domain": "project",
+      "constraint": "Closure drought — execution stalled",
+      "severity": "MEDIUM"
+    },
+    {
+      "source_domain": "risk",
+      "target_domain": "project",
+      "constraint": "5 lane violations active",
+      "severity": "MEDIUM"
+    }
+  ],
+  "compound_brief": "## Compound Brief — 2026-04-09 19:37 UTC\n\n**Score: 47/100** | Mode: CLOSURE | Risk: HIGH\n\n### Domain Health\n- Project: ▓▓▓░░░░░░░ 30/100 — LOW\n- Skill: ▓▓▓▓▓▓░░░░ 59/100 — LOW\n- Network: ▓▓▓░░░░░░░ 30/100 — LOW\n- Finance: ▓▓▓▓▓░░░░░ 50/100 — LOW\n- Energy: ▓▓▓▓▓▓░░░░ 63/100 — OK\n- Risk: ▓▓▓▓▓▓░░░░ 55/100 — LOW\n\n### Cross-Domain Signals\n- **project_health**: Progress: 16.7% | Skills: writing, design\n- **risk_cascade**: Cascade: MEDIUM. Prediction degradation: 0.2. Automation active\n- **compound_score**: Compound score: 47/100\n\n### Active Constraints\n- [~] risk → project: Closure drought — execution stalled\n- [~] risk → project: 5 lane violations active\n\n### Leverage Move\n- FOCUS: Raise network (30/100) above 50 to stabilize compound growth.\n",
+  "signal_updates": {
+    "skills_from_subtasks": {
+      "writing": 1,
+      "design": 2
+    }
+  }
+}

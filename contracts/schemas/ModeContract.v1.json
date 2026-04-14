@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ModeContract.v1",
+  "title": "Mode Routing Contract",
+  "description": "Documents the mode system shared between Python (cognitive-sensor) and TypeScript (delta-kernel). Python proposes modes from a 3-mode subset; TypeScript finalizes using the full 6-mode set.",
+  "definitions": {
+    "python_modes": {
+      "type": "string",
+      "enum": ["CLOSURE", "MAINTENANCE", "BUILD"],
+      "description": "Modes that Python cognitive-sensor can propose. Limited because Python lacks signals for RECOVER (sleep_hours), COMPOUND (assets_shipped), and SCALE (money_delta)."
+    },
+    "typescript_modes": {
+      "type": "string",
+      "enum": ["RECOVER", "CLOSURE", "MAINTENANCE", "BUILD", "COMPOUND", "SCALE"],
+      "description": "Full mode set. TypeScript governance daemon can route to any mode using all signal dimensions."
+    },
+    "mode_source": {
+      "type": "string",
+      "enum": ["cognitive-sensor", "governance-daemon"],
+      "description": "Which system proposed the mode. cognitive-sensor = Python 3-mode subset, governance-daemon = TypeScript full routing."
+    }
+  },
+  "routing_contract": {
+    "python_routing": {
+      "description": "Python uses closure_ratio and open_loops only",
+      "thresholds": {
+        "CLOSURE": "closure_ratio < 15.0 OR open_loops > 20",
+        "MAINTENANCE": "open_loops > 10",
+        "BUILD": "otherwise"
+      },
+      "source_file": "services/cognitive-sensor/atlas_config.py:compute_mode()"
+    },
+    "typescript_routing": {
+      "description": "TypeScript uses full 5-signal routing via Markov LUT",
+      "signals": ["sleep_hours", "open_loops", "assets_shipped", "deep_work_blocks", "money_delta"],
+      "source_file": "services/delta-kernel/src/core/routing.ts:route()"
+    },
+    "precedence": "TypeScript daemon finalizes mode. When cognitive-sensor sends a mode via /api/ingest/cognitive, daemon may override it during next mode_recalc cycle using full signal set."
+  }
+}

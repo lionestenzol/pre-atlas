@@ -13,7 +13,6 @@ import {
   Entity,
   Delta,
   JsonPatch,
-  EntityType,
   EntityDataMap,
 } from './types';
 

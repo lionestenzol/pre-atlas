@@ -47,7 +47,8 @@ const MAX_LEVERAGE_MOVES = 3;
 // TTL by mode (milliseconds)
 const DRAFT_TTL: Record<Mode, number | null> = {
   RECOVER: 24 * 60 * 60 * 1000, // 24h
-  CLOSE_LOOPS: 24 * 60 * 60 * 1000, // 24h
+  CLOSURE: 24 * 60 * 60 * 1000, // 24h
+  MAINTENANCE: 24 * 60 * 60 * 1000, // 24h
   BUILD: 72 * 60 * 60 * 1000, // 72h
   COMPOUND: 72 * 60 * 60 * 1000, // 72h
   SCALE: null, // No expiry
@@ -129,8 +130,8 @@ interface LeverageMoveRule {
 const LEVERAGE_MOVE_RULES: LeverageMoveRule[] = [
   {
     move_id: 'close_to_build',
-    modes: ['CLOSE_LOOPS'],
-    condition: (b, m) => m === 'CLOSE_LOOPS' && b.open_loops !== 'HIGH',
+    modes: ['CLOSURE'],
+    condition: (b, m) => m === 'CLOSURE' && b.open_loops !== 'HIGH',
     title: 'Close loops to unlock BUILD',
     description: 'Completing open tasks will transition you to BUILD mode',
     trigger_conditions: { open_loops: 'must reach HIGH (≤1)' },
@@ -183,8 +184,8 @@ const LEVERAGE_MOVE_RULES: LeverageMoveRule[] = [
   },
   {
     move_id: 'batch_close',
-    modes: ['CLOSE_LOOPS'],
-    condition: (b, m) => m === 'CLOSE_LOOPS' && b.open_loops === 'LOW',
+    modes: ['CLOSURE'],
+    condition: (b, m) => m === 'CLOSURE' && b.open_loops === 'LOW',
     title: 'Batch close loops',
     description: 'You have many open loops — batch process them',
     trigger_conditions: { open_loops: 'currently LOW (≥4)' },
@@ -243,12 +244,17 @@ const MODE_RELEVANCE_LUT: Record<Mode, ModeRelevanceRule[]> = {
     { check: (t) => (t.title_template ?? '').includes('admin'), score: 80 },
     { check: (t) => t.due_at != null && t.due_at < now() + 3600000, score: 70 },
   ],
-  CLOSE_LOOPS: [
+  CLOSURE: [
     { check: (t) => t.linked_thread !== null, score: 100 },
     { check: (t) => (t.title_template ?? '').includes('reply'), score: 95 },
     { check: (t) => (t.title_template ?? '').includes('finish'), score: 90 },
     { check: (t) => (t.title_template ?? '').includes('cleanup'), score: 85 },
     { check: (t) => t.priority === 'HIGH', score: 80 },
+  ],
+  MAINTENANCE: [
+    { check: (t) => t.title_template.includes('admin'), score: 100 },
+    { check: (t) => t.title_template.includes('health'), score: 90 },
+    { check: (t) => t.priority === 'LOW', score: 80 },
   ],
   BUILD: [
     { check: (t) => (t.title_template ?? '').includes('CREATE'), score: 100 },
@@ -442,7 +448,7 @@ export async function generateDraftCandidates(
   }
 
   // B) PLAN drafts from task triage (batch close plan)
-  if (mode === 'CLOSE_LOOPS' && taskTriage.length >= 3) {
+  if (mode === 'CLOSURE' && taskTriage.length >= 3) {
     const topTasks = taskTriage.slice(0, 3);
     const planParams = {
       count: String(topTasks.length),

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre Atlas — System Tour</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0f; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; overflow-x: hidden; }
+
+/* NAV */
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(10,10,15,0.95); border-bottom: 1px solid #1a1a2e; backdrop-filter: blur(10px); display: flex; align-items: center; padding: 12px 24px; gap: 8px; overflow-x: auto; }
+.nav-btn { background: #1a1a2e; border: 1px solid #2a2a4e; color: #888; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; white-space: nowrap; transition: all 0.3s; }
+.nav-btn:hover { border-color: #4a4a7e; color: #ccc; }
+.nav-btn.active { background: #2a1a3e; border-color: #8b5cf6; color: #c4b5fd; }
+.nav-label { color: #555; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-right: 8px; }
+
+/* SECTIONS */
+.section { min-height: 100vh; padding: 80px 40px 40px; display: none; animation: fadeIn 0.4s ease; }
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* HERO */
+.hero { text-align: center; padding-top: 120px; }
+.hero h1 { font-size: 64px; font-weight: 800; background: linear-gradient(135deg, #8b5cf6, #06b6d4, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+.hero .subtitle { font-size: 22px; color: #888; max-width: 700px; margin: 0 auto 40px; line-height: 1.6; }
+.hero .stats { display: flex; justify-content: center; gap: 40px; margin: 40px 0; }
+.stat-box { text-align: center; }
+.stat-num { font-size: 42px; font-weight: 800; color: #8b5cf6; }
+.stat-label { font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+.start-btn { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; border: none; padding: 16px 40px; border-radius: 30px; font-size: 18px; cursor: pointer; margin-top: 30px; transition: transform 0.2s; }
+.start-btn:hover { transform: scale(1.05); }
+
+/* FLOW DIAGRAM */
+.flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 40px auto; max-width: 800px; }
+.flow-box { background: #12121f; border: 1px solid #2a2a4e; border-radius: 16px; padding: 24px 32px; width: 100%; position: relative; cursor: pointer; transition: all 0.3s; }
+.flow-box:hover { border-color: #8b5cf6; transform: scale(1.02); }
+.flow-box.highlight { border-color: #8b5cf6; background: #1a1a30; box-shadow: 0 0 30px rgba(139,92,246,0.15); }
+.flow-arrow { font-size: 28px; color: #333; margin: -4px 0; text-align: center; }
+.flow-box h3 { font-size: 18px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+.flow-box p { color: #888; font-size: 14px; line-height: 1.5; }
+.flow-tag { font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+.tag-python { background: #1a2e1a; color: #4ade80; }
+.tag-ts { background: #1a1a2e; color: #60a5fa; }
+.tag-react { background: #2e1a2e; color: #c084fc; }
+.tag-data { background: #2e2a1a; color: #fbbf24; }
+
+/* MODE DISPLAY */
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 900px; margin: 30px auto; }
+.mode-card { border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; }
+.mode-card:hover { transform: translateY(-4px); }
+.mode-card h3 { font-size: 20px; margin-bottom: 8px; }
+.mode-card p { font-size: 13px; opacity: 0.8; line-height: 1.5; }
+.mode-card .icon { font-size: 36px; margin-bottom: 10px; }
+.mode-recover { background: #1a0a0a; border-color: #7f1d1d; color: #fca5a5; }
+.mode-closure { background: #1a0f0a; border-color: #92400e; color: #fcd34d; }
+.mode-maintenance { background: #0a1a1a; border-color: #065f46; color: #6ee7b7; }
+.mode-build { background: #0a0f1a; border-color: #1e40af; color: #93c5fd; }
+.mode-compound { background: #1a0a1a; border-color: #6b21a8; color: #c4b5fd; }
+.mode-scale { background: #0a1a0f; border-color: #166534; color: #86efac; }
+
+/* PIPELINE */
+.pipeline { display: flex; align-items: center; gap: 0; overflow-x: auto; padding: 20px 0; max-width: 100%; }
+.pipe-step { min-width: 160px; background: #12121f; border: 1px solid #2a2a4e; border-radius: 12px; padding: 16px; text-align: center; flex-shrink: 0; transition: all 0.3s; }
+.pipe-step:hover { border-color: #4ade80; background: #121f12; }
+.pipe-step .num { font-size: 24px; font-weight: 800; color: #4ade80; }
+.pipe-step .name { font-size: 13px; color: #ccc; margin-top: 4px; }
+.pipe-step .detail { font-size: 11px; color: #666; margin-top: 4px; }
+.pipe-arrow { color: #333; font-size: 20px; flex-shrink: 0; margin: 0 -4px; }
+
+/* PROJECT CARDS */
+.projects { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; max-width: 1100px; margin: 30px auto; }
+.proj-card { background: #12121f; border: 1px solid #2a2a4e; border-radius: 16px; padding: 28px; transition: all 0.3s; position: relative; overflow: hidden; }
+.proj-card:hover { border-color: #8b5cf6; transform: translateY(-3px); }
+.proj-card h3 { font-size: 20px; margin-bottom: 4px; }
+.proj-card .proj-desc { color: #888; font-size: 14px; margin-bottom: 16px; }
+.proj-card .proj-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+.proj-stat { background: #1a1a2e; padding: 6px 12px; border-radius: 8px; font-size: 12px; }
+.proj-stat b { color: #8b5cf6; }
+.status-badge { position: absolute; top: 16px; right: 16px; padding: 4px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+.badge-shipped { background: #052e16; color: #4ade80; }
+.badge-active { background: #1a1a2e; color: #60a5fa; }
+
+/* DATA FLOW */
+.dataflow { max-width: 900px; margin: 30px auto; }
+.df-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; padding: 12px 16px; background: #12121f; border-radius: 10px; border-left: 3px solid #333; transition: all 0.2s; }
+.df-row:hover { border-left-color: #8b5cf6; background: #16162a; }
+.df-file { font-family: 'Cascadia Code', 'Fira Code', monospace; color: #c084fc; font-size: 13px; min-width: 240px; }
+.df-arrow { color: #555; }
+.df-target { color: #888; font-size: 13px; }
+
+/* SECTION HEADERS */
+.sec-header { text-align: center; margin-bottom: 40px; }
+.sec-header h2 { font-size: 40px; font-weight: 800; margin-bottom: 8px; }
+.sec-header .sec-sub { color: #888; font-size: 16px; }
+.sec-header .sec-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+
+/* ROUTING TABLE */
+.route-table { max-width: 800px; margin: 30px auto; border-collapse: collapse; width: 100%; }
+.route-table th { background: #1a1a2e; padding: 12px 16px; text-align: left; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+.route-table td { padding: 12px 16px; border-bottom: 1px solid #1a1a2e; font-size: 14px; }
+.route-table tr:hover td { background: #12121f; }
+
+/* DETAIL PANEL */
+.detail-panel { background: #12121f; border: 1px solid #2a2a4e; border-radius: 16px; padding: 32px; max-width: 800px; margin: 20px auto; }
+.detail-panel h3 { font-size: 22px; margin-bottom: 12px; color: #c4b5fd; }
+.detail-panel p { color: #999; line-height: 1.7; margin-bottom: 12px; }
+.detail-panel code { background: #1a1a2e; padding: 2px 8px; border-radius: 4px; font-size: 13px; color: #fbbf24; }
+.detail-panel ul { list-style: none; margin: 12px 0; }
+.detail-panel li { padding: 6px 0; color: #ccc; font-size: 14px; }
+.detail-panel li::before { content: "->"; color: #8b5cf6; margin-right: 8px; font-weight: bold; }
+
+/* PHILOSOPHY */
+.phi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1000px; margin: 30px auto; }
+.phi-card { background: #12121f; border-left: 3px solid #8b5cf6; padding: 24px; border-radius: 0 12px 12px 0; }
+.phi-card h4 { font-size: 16px; color: #c4b5fd; margin-bottom: 8px; }
+.phi-card p { color: #888; font-size: 14px; line-height: 1.6; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .hero h1 { font-size: 36px; }
+  .hero .stats { flex-wrap: wrap; gap: 20px; }
+  .modes { grid-template-columns: 1fr; }
+  .section { padding: 80px 20px 20px; }
+  .nav { padding: 10px 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-label">Tour</span>
+  <button class="nav-btn active" onclick="show('home')">Home</button>
+  <button class="nav-btn" onclick="show('bigpicture')">Big Picture</button>
+  <button class="nav-btn" onclick="show('modes')">6 Modes</button>
+  <button class="nav-btn" onclick="show('brain')">The Brain</button>
+  <button class="nav-btn" onclick="show('spine')">The Spine</button>
+  <button class="nav-btn" onclick="show('gate')">The Gate</button>
+  <button class="nav-btn" onclick="show('tools')">The Tools</button>
+  <button class="nav-btn" onclick="show('data')">Data Flow</button>
+  <button class="nav-btn" onclick="show('projects')">5 Projects</button>
+  <button class="nav-btn" onclick="show('why')">Why It Exists</button>
+</div>
+
+<!-- ==================== HOME ==================== -->
+<div class="section active" id="home">
+  <div class="hero">
+    <h1>PRE ATLAS</h1>
+    <p class="subtitle">A behavioral governance system that reads your conversations, detects your patterns, and enforces completion discipline. No AI picks the mode. Pure math. Can't be argued with.</p>
+    <div class="stats">
+      <div class="stat-box"><div class="stat-num">1,397</div><div class="stat-label">Conversations Analyzed</div></div>
+      <div class="stat-box"><div class="stat-num">93,898</div><div class="stat-label">Messages Processed</div></div>
+      <div class="stat-box"><div class="stat-num">220+</div><div class="stat-label">Files</div></div>
+      <div class="stat-box"><div class="stat-num">5</div><div class="stat-label">Shippable Projects</div></div>
+    </div>
+    <button class="start-btn" onclick="show('bigpicture')">Start the Tour &rarr;</button>
+  </div>
+</div>
+
+<!-- ==================== BIG PICTURE ==================== -->
+<div class="section" id="bigpicture">
+  <div class="sec-header">
+    <span class="sec-icon">&#127758;</span>
+    <h2>The Big Picture</h2>
+    <p class="sec-sub">Three services. One direction. Everything flows down.</p>
+  </div>
+
+  <div class="flow">
+    <div class="flow-box highlight" onclick="show('brain')">
+      <h3><span class="flow-tag tag-python">Python</span> Cognitive Sensor — The Brain</h3>
+      <p>Reads 1,397 conversations. Detects open loops. Calculates how much you're finishing vs. starting. Produces a daily brief telling you what to do.</p>
+    </div>
+    <div class="flow-arrow">&darr;</div>
+    <div class="flow-box" onclick="show('spine')">
+      <h3><span class="flow-tag tag-ts">TypeScript</span> Delta Kernel — The Spine</h3>
+      <p>Receives the brain's signal. Computes your mode (RECOVER / CLOSURE / BUILD / etc.) using a lookup table — no AI. Enforces what actions you're allowed to take. Hash-chains every state change so you can't quietly edit your progress.</p>
+    </div>
+    <div class="flow-arrow">&darr;</div>
+    <div class="flow-box" onclick="show('gate')">
+      <h3><span class="flow-tag tag-ts">TypeScript</span> Aegis Fabric — The Gate</h3>
+      <p>Policy layer for AI agents. Every agent action goes through: ALLOW, DENY, or REQUIRE_HUMAN. Multi-tenant. Rate-limited. Audit-logged. This is the product — the part that can be sold.</p>
+    </div>
+    <div class="flow-arrow">&darr;</div>
+    <div class="flow-box" onclick="show('tools')">
+      <h3><span class="flow-tag tag-react">React</span> + <span class="flow-tag tag-data">HTML</span> Interfaces</h3>
+      <p>CycleBoard (daily planner), Dashboard (analytics), Cognitive Atlas (84K-point visualization), Blueprint Generator (idea-to-MVP tool), Control Panel (daemon controls).</p>
+    </div>
+  </div>
+
+  <div class="detail-panel">
+    <h3>How They Talk</h3>
+    <p>Services communicate through <code>JSON files</code> on disk. No message queues. No RPC. Python writes <code>cognitive_state.json</code>, TypeScript reads it. Simple, debuggable, zero infrastructure.</p>
+    <p>Every output is validated against <code>17 JSON Schema contracts</code> before writing. If the data is wrong, it doesn't write. No silent corruption.</p>
+  </div>
+</div>
+
+<!-- ==================== MODES ==================== -->
+<div class="section" id="modes">
+  <div class="sec-header">
+    <span class="sec-icon">&#127922;</span>
+    <h2>The 6 Modes</h2>
+    <p class="sec-sub">Your behavioral state. Computed from signals. Not negotiable.</p>
+  </div>
+
+  <div class="modes">
+    <div class="mode-card mode-recover">
+      <div class="icon">&#128564;</div>
+      <h3>RECOVER</h3>
+      <p>Sleep &lt; 6 hours. Everything stops. Rest tasks only. You can't build when you're broken.</p>
+    </div>
+    <div class="mode-card mode-closure">
+      <div class="icon">&#128274;</div>
+      <h3>CLOSURE</h3>
+      <p>Too many open loops (&ge;4) OR low closure ratio. Finish what you started. Build is locked.</p>
+    </div>
+    <div class="mode-card mode-maintenance">
+      <div class="icon">&#128736;</div>
+      <h3>MAINTENANCE</h3>
+      <p>Light admin. No progression. Handle the small stuff without going backwards.</p>
+    </div>
+    <div class="mode-card mode-build">
+      <div class="icon">&#128296;</div>
+      <h3>BUILD</h3>
+      <p>You've earned it. Loops are under control. Ship assets. Create things. This is the goal.</p>
+    </div>
+    <div class="mode-card mode-compound">
+      <div class="icon">&#128200;</div>
+      <h3>COMPOUND</h3>
+      <p>Assets shipped. Extend them. Market them. Make the thing you built work harder.</p>
+    </div>
+    <div class="mode-card mode-scale">
+      <div class="icon">&#127793;</div>
+      <h3>SCALE</h3>
+      <p>Revenue + deep work sustained. Delegate. Systematize. Build the machine that builds.</p>
+    </div>
+  </div>
+
+  <div class="detail-panel">
+    <h3>How Routing Works</h3>
+    <p>Five signals feed the mode calculator:</p>
+    <ul>
+      <li><b>Sleep hours</b> — &lt;6 = LOW, 6-7.5 = OK, &ge;7.5 = HIGH</li>
+      <li><b>Open loops</b> — &ge;4 = LOW (bad), 2-3 = OK, &le;1 = HIGH (good)</li>
+      <li><b>Assets shipped</b> — 0 = LOW, 1 = OK, &ge;2 = HIGH</li>
+      <li><b>Deep work blocks</b> — 0 = LOW, 1 = OK, &ge;2 = HIGH</li>
+      <li><b>Money delta</b> — &le;0 = LOW, positive = OK, &ge;target = HIGH</li>
+    </ul>
+    <p>Two global overrides that fire from <b>any</b> mode:</p>
+    <ul>
+      <li>Sleep LOW &rarr; RECOVER (rest overrides everything)</li>
+      <li>Open loops LOW &rarr; CLOSURE (finish overrides progression)</li>
+    </ul>
+    <p>This is a <b>lookup table</b>. Not a neural network. Not a prompt. A lookup table. You can read every rule. You can predict every outcome. You cannot sweet-talk a lookup table.</p>
+  </div>
+</div>
+
+<!-- ==================== THE BRAIN ==================== -->
+<div class="section" id="brain">
+  <div class="sec-header">
+    <span class="sec-icon">&#129504;</span>
+    <h2>The Brain</h2>
+    <p class="sec-sub">Cognitive Sensor — 52 Python scripts that read your mind (from your words)</p>
+  </div>
+
+  <div class="detail-panel">
+    <h3>What It Reads</h3>
+    <p><code>memory_db.json</code> — 1,397 conversations exported from ChatGPT. 93,898 messages. 2.3 million words. Every idea you've had, every complaint, every plan you abandoned.</p>
+    <p>It loads these into <code>results.db</code> (SQLite) with 384-dimensional sentence embeddings for semantic understanding.</p>
+  </div>
+
+  <h3 style="text-align:center; margin: 30px 0 20px; color: #4ade80;">The 5-Agent Idea Pipeline</h3>
+  <div class="pipeline">
+    <div class="pipe-step"><div class="num">1</div><div class="name">Excavator</div><div class="detail">18 regex patterns + semantic similarity</div></div>
+    <span class="pipe-arrow">&rarr;</span>
+    <div class="pipe-step"><div class="num">2</div><div class="name">Deduplicator</div><div class="detail">Union-Find clustering (0.70 threshold)</div></div>
+    <span class="pipe-arrow">&rarr;</span>
+    <div class="pipe-step"><div class="num">3</div><div class="name">Classifier</div><div class="detail">Hierarchy + skill categories</div></div>
+    <span class="pipe-arrow">&rarr;</span>
+    <div class="pipe-step"><div class="num">4</div><div class="name">Orchestrator</div><div class="detail">5-factor priority scoring</div></div>
+    <span class="pipe-arrow">&rarr;</span>
+    <div class="pipe-step"><div class="num">5</div><div class="name">Reporter</div><div class="detail">IDEA_REGISTRY.md</div></div>
+  </div>
+
+  <h3 style="text-align:center; margin: 30px 0 20px; color: #fbbf24;">Daily Pipeline (runs in 2 seconds)</h3>
+  <div class="pipeline">
+    <div class="pipe-step"><div class="num">1</div><div class="name">Detect Loops</div><div class="detail">score = words + intent*30 - done*50</div></div>
+    <span class="pipe-arrow">&rarr;</span>
+    <div class="pipe-step"><div class="num">2</div><div class="name">Closure Stats</div><div class="detail">closed / (closed+archived)</div></div>
+    <span class="pipe-arrow">&rarr;</span>
+    <div class="pipe-step"><div class="num">3</div><div class="name">Export State</div><div class="detail">cognitive_state.json</div></div>
+    <span class="pipe-arrow">&rarr;</span>
+    <div class="pipe-step"><div class="num">4</div><div class="name">Route Mode</div><div class="detail">CLOSURE / MAINTENANCE / BUILD</div></div>
+    <span class="pipe-arrow">&rarr;</span>
+    <div class="pipe-step"><div class="num">5</div><div class="name">Daily Brief</div><div class="detail">One directive. One action.</div></div>
+  </div>
+
+  <div class="detail-panel" style="margin-top: 30px;">
+    <h3>Open Loop Detection</h3>
+    <p>A "loop" is a conversation where you talked about doing something but never said you did it.</p>
+    <p>The formula: <code>score = user_words + (intent_weight * 30) - (done_weight * 50)</code></p>
+    <p><b>Intent words:</b> want, need, should, plan, going, gonna, start, try, build, create</p>
+    <p><b>Done words:</b> did, done, finished, completed, solved, shipped, fixed</p>
+    <p>High score = lots of talking about doing + no evidence of doing = open loop. The system currently tracks <b>7 open loops</b> with a closure ratio of <b>72%</b>.</p>
+  </div>
+
+  <div class="detail-panel">
+    <h3>Cognitive Atlas</h3>
+    <p>A 84,000-point interactive visualization of every message, projected from 384 dimensions down to 2D using UMAP. Clustered with HDBSCAN. Six view modes: Cluster, Role, Time, Conversation, Leverage, Graph. It's a map of your mind.</p>
+  </div>
+</div>
+
+<!-- ==================== THE SPINE ==================== -->
+<div class="section" id="spine">
+  <div class="sec-header">
+    <span class="sec-icon">&#129516;</span>
+    <h2>The Spine</h2>
+    <p class="sec-sub">Delta Kernel — The enforcer. Deterministic. Tamper-proof. No negotiation.</p>
+  </div>
+
+  <div class="detail-panel">
+    <h3>What It Does</h3>
+    <p>Reads the Brain's output. Computes your mode using a <b>Markov lookup table</b>. Serves your current state via API on port 3001. Runs a governance daemon with 6 scheduled jobs. Gates every action against mode rules.</p>
+    <ul>
+      <li>API: <code>http://localhost:3001/api/state/unified</code> — your complete state in one call</li>
+      <li>CLI: Terminal cockpit showing mode, signals, allowed actions</li>
+      <li>Daemon: Heartbeat (5min), refresh (hourly), mode recalc (15min), day boundaries (6am/10pm)</li>
+    </ul>
+  </div>
+
+  <div class="detail-panel">
+    <h3>Hash-Chained Deltas</h3>
+    <p>Every state change is a <b>delta</b> — a JSON Patch with a SHA-256 hash linking to the previous delta. Like a blockchain for your personal state. You can't quietly delete a task or edit your progress. Every mutation is permanent and auditable.</p>
+    <p>If someone (including you) tampers with the chain, <code>verifyHashChain()</code> catches it. The system is tamper-proof against the person it governs.</p>
+  </div>
+
+  <div class="detail-panel">
+    <h3>Mode-Gated Actions</h3>
+    <table class="route-table">
+      <tr><th>Action</th><th>Allowed Modes</th></tr>
+      <tr><td>rest_action</td><td style="color:#fca5a5">RECOVER</td></tr>
+      <tr><td>reply_message</td><td style="color:#fcd34d">CLOSURE</td></tr>
+      <tr><td>complete_task</td><td style="color:#fcd34d">CLOSURE, <span style="color:#93c5fd">BUILD</span></td></tr>
+      <tr><td>create_asset</td><td style="color:#93c5fd">BUILD</td></tr>
+      <tr><td>send_draft</td><td style="color:#fcd34d">CLOSURE, <span style="color:#93c5fd">BUILD</span>, <span style="color:#c4b5fd">COMPOUND</span></td></tr>
+      <tr><td>apply_automation</td><td style="color:#93c5fd">BUILD, <span style="color:#c4b5fd">COMPOUND</span>, <span style="color:#86efac">SCALE</span></td></tr>
+      <tr><td>delegate</td><td style="color:#86efac">SCALE</td></tr>
+    </table>
+    <p style="margin-top: 16px; color: #888;">If you're in CLOSURE mode, you literally cannot create new assets. The system doesn't have a button for it. It's not hidden — it doesn't exist.</p>
+  </div>
+</div>
+
+<!-- ==================== THE GATE ==================== -->
+<div class="section" id="gate">
+  <div class="sec-header">
+    <span class="sec-icon">&#128737;</span>
+    <h2>The Gate</h2>
+    <p class="sec-sub">Aegis Fabric — Policy layer for AI agents. The product.</p>
+  </div>
+
+  <div class="detail-panel">
+    <h3>What It Solves</h3>
+    <p>AI agents (Claude, GPT, custom bots) act without guardrails. They can delete data, overspend budgets, bypass restrictions. Aegis sits between the agent and the action. Every request goes through one pipeline:</p>
+    <p style="text-align:center; font-size: 18px; color: #c4b5fd; margin: 20px 0;">
+      Agent &rarr; Normalize &rarr; Evaluate Policy &rarr; <span style="color:#4ade80">ALLOW</span> / <span style="color:#f87171">DENY</span> / <span style="color:#fbbf24">REQUIRE_HUMAN</span> &rarr; Audit
+    </p>
+  </div>
+
+  <div class="detail-panel">
+    <h3>Multi-Tenant Architecture</h3>
+    <table class="route-table">
+      <tr><th>Tier</th><th>Agents</th><th>Actions/hr</th><th>Entities</th><th>Webhooks</th></tr>
+      <tr><td style="color:#ccc">FREE</td><td>2</td><td>100</td><td>1,000</td><td>2</td></tr>
+      <tr><td style="color:#60a5fa">STARTER</td><td>10</td><td>1,000</td><td>5,000</td><td>10</td></tr>
+      <tr><td style="color:#c084fc">ENTERPRISE</td><td>100</td><td>10,000</td><td>100,000</td><td>100</td></tr>
+    </table>
+  </div>
+
+  <div class="detail-panel">
+    <h3>Why This Is The Product</h3>
+    <p>Everything else in Pre Atlas is personal tooling — built for one person. Aegis is built for <b>anyone running AI agents</b>. Multi-tenant. API-driven. Rate-limited. Audit-logged. Webhook-enabled. It's a SaaS product waiting to be deployed.</p>
+    <ul>
+      <li>16 API endpoints, all tested and functional</li>
+      <li>31 tests passing</li>
+      <li>Declarative policy rules with 9 operators</li>
+      <li>Human-in-the-loop approval queue (1hr expiry)</li>
+      <li>File-based storage — zero external infrastructure needed</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== THE TOOLS ==================== -->
+<div class="section" id="tools">
+  <div class="sec-header">
+    <span class="sec-icon">&#128295;</span>
+    <h2>The Tools</h2>
+    <p class="sec-sub">Interfaces and apps that make the system usable</p>
+  </div>
+
+  <div class="projects">
+    <div class="proj-card">
+      <h3>&#128203; Blueprint Generator</h3>
+      <p class="proj-desc">Type an idea, get a scope-locked MVP plan. Max 5 features. Expansion keywords auto-deferred to V2. Forces you to ship small.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>React 19</b> + Next.js 15</span>
+        <span class="proj-stat"><b>Static</b> export</span>
+        <span class="proj-stat"><b>Zero</b> backend</span>
+      </div>
+    </div>
+    <div class="proj-card">
+      <h3>&#128197; CycleBoard</h3>
+      <p class="proj-desc">Bullet journal with cognitive routing overlay. Red banner = CLOSURE mode. Create buttons locked when build_allowed is false.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>11</b> JS modules</span>
+        <span class="proj-stat"><b>A/B/C</b> day templates</span>
+        <span class="proj-stat">Polls <b>/api/state</b></span>
+      </div>
+    </div>
+    <div class="proj-card">
+      <h3>&#127760; Cognitive Atlas</h3>
+      <p class="proj-desc">84,000-point interactive visualization of every message you've ever sent. UMAP projection. HDBSCAN clustering. 6 view modes. WebGL rendering.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>5.9 MB</b> self-contained HTML</span>
+        <span class="proj-stat"><b>Plotly</b> + Sigma.js</span>
+      </div>
+    </div>
+    <div class="proj-card">
+      <h3>&#128200; Dashboard</h3>
+      <p class="proj-desc">Analytics interface. Closure ratio trends, loop counts, topic drift, strategic priorities. Generated fresh by the daily pipeline.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>Auto-generated</b></span>
+        <span class="proj-stat">From <b>cognitive_state</b></span>
+      </div>
+    </div>
+    <div class="proj-card">
+      <h3>&#127891; Control Panel</h3>
+      <p class="proj-desc">Daemon status, manual job triggers, work queue management. The admin interface for the governance daemon.</p>
+      <div class="proj-stats">
+        <span class="proj-stat">Port <b>3001</b></span>
+        <span class="proj-stat"><b>6</b> cron jobs</span>
+      </div>
+    </div>
+    <div class="proj-card">
+      <h3>&#128214; Book Pipeline</h3>
+      <p class="proj-desc">"The Anatomy of Disrespect" — mined from your conversations. 12 chapters outlined. 2,070 passages extracted. Chapter 1 published as PDF.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>494</b> source convos</span>
+        <span class="proj-stat"><b>12</b> chapters</span>
+        <span class="proj-stat"><b>PDF</b> export</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DATA FLOW ==================== -->
+<div class="section" id="data">
+  <div class="sec-header">
+    <span class="sec-icon">&#128257;</span>
+    <h2>Data Flow</h2>
+    <p class="sec-sub">Who writes what. Who reads what. How state moves through the system.</p>
+  </div>
+
+  <div class="dataflow">
+    <h3 style="color: #4ade80; margin-bottom: 16px;">Python Writes (Cognitive Sensor)</h3>
+    <div class="df-row"><span class="df-file">cognitive_state.json</span><span class="df-arrow">&rarr;</span><span class="df-target">Delta Kernel API, Governance Daemon, CycleBoard</span></div>
+    <div class="df-row"><span class="df-file">loops_latest.json</span><span class="df-arrow">&rarr;</span><span class="df-target">Delta Kernel unified state endpoint</span></div>
+    <div class="df-row"><span class="df-file">daily_payload.json</span><span class="df-arrow">&rarr;</span><span class="df-target">CycleBoard (mode, risk, primary action)</span></div>
+    <div class="df-row"><span class="df-file">daily_directive.txt</span><span class="df-arrow">&rarr;</span><span class="df-target">CycleBoard banner text</span></div>
+    <div class="df-row"><span class="df-file">idea_registry.json</span><span class="df-arrow">&rarr;</span><span class="df-target">Governor daily/weekly briefs</span></div>
+    <div class="df-row"><span class="df-file">governance_state.json</span><span class="df-arrow">&rarr;</span><span class="df-target">Governor weekly pipeline</span></div>
+    <div class="df-row"><span class="df-file">strategic_priorities.json</span><span class="df-arrow">&rarr;</span><span class="df-target">CycleBoard strategy view</span></div>
+
+    <h3 style="color: #60a5fa; margin: 30px 0 16px;">TypeScript Writes (Delta Kernel)</h3>
+    <div class="df-row"><span class="df-file">~/.delta-fabric/state.db</span><span class="df-arrow">&rarr;</span><span class="df-target">All entity state + delta audit log (SQLite)</span></div>
+    <div class="df-row"><span class="df-file">timeline_events.json</span><span class="df-arrow">&rarr;</span><span class="df-target">Append-only event log (max 10K events)</span></div>
+    <div class="df-row"><span class="df-file">closures.json</span><span class="df-arrow">&rarr;</span><span class="df-target">Closure registry + streaks</span></div>
+    <div class="df-row"><span class="df-file">work_ledger.json</span><span class="df-arrow">&rarr;</span><span class="df-target">Job admission control (capacity management)</span></div>
+
+    <h3 style="color: #c084fc; margin: 30px 0 16px;">Aegis Fabric Writes</h3>
+    <div class="df-row"><span class="df-file">.aegis-data/tenants/</span><span class="df-arrow">&rarr;</span><span class="df-target">Per-tenant entities, deltas, agents, policies</span></div>
+    <div class="df-row"><span class="df-file">.aegis-data/audit/</span><span class="df-arrow">&rarr;</span><span class="df-target">JSONL append-only audit trail</span></div>
+    <div class="df-row"><span class="df-file">.aegis-data/request-log.jsonl</span><span class="df-arrow">&rarr;</span><span class="df-target">API request history</span></div>
+  </div>
+
+  <div class="detail-panel">
+    <h3>17 JSON Schema Contracts</h3>
+    <p>Every file that crosses a service boundary is validated against a schema. <code>DailyPayload.v1</code>, <code>CognitiveMetricsComputed</code>, <code>Closures.v1</code>, <code>WorkLedger.v1</code>, <code>TimelineEvents.v1</code>, 7 Aegis schemas, and more. If the data doesn't match the contract, it doesn't get written.</p>
+  </div>
+</div>
+
+<!-- ==================== 5 PROJECTS ==================== -->
+<div class="section" id="projects">
+  <div class="sec-header">
+    <span class="sec-icon">&#128230;</span>
+    <h2>5 Shippable Projects</h2>
+    <p class="sec-sub">Each one is self-contained. Own dependencies. Own README. Own tests. Zero cross-imports.</p>
+  </div>
+
+  <div class="projects">
+    <div class="proj-card">
+      <span class="status-badge badge-shipped">SHIPPED</span>
+      <h3>1. Blueprint Generator</h3>
+      <p class="proj-desc">Idea &rarr; scope-locked MVP blueprint. React/Next.js static app.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>npm run build</b> passes</span>
+        <span class="proj-stat">Static export in <b>out/</b></span>
+        <span class="proj-stat">Deploy to <b>Vercel</b></span>
+      </div>
+    </div>
+    <div class="proj-card">
+      <span class="status-badge badge-shipped">SHIPPED</span>
+      <h3>2. Aegis Fabric</h3>
+      <p class="proj-desc">AI agent policy gateway. SaaS API. The monetizable product.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>31</b> tests pass</span>
+        <span class="proj-stat"><b>16</b> API endpoints</span>
+        <span class="proj-stat"><b>8</b> tenants loaded</span>
+      </div>
+    </div>
+    <div class="proj-card">
+      <span class="status-badge badge-shipped">SHIPPED</span>
+      <h3>3. Anatomy of Disrespect</h3>
+      <p class="proj-desc">Power dynamics book. Chapter 1 done. 12-chapter outline. PDF export.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>2,173</b> words Ch1</span>
+        <span class="proj-stat"><b>2,070</b> passages mined</span>
+        <span class="proj-stat"><b>PDF</b> generates clean</span>
+      </div>
+    </div>
+    <div class="proj-card">
+      <span class="status-badge badge-shipped">SHIPPED</span>
+      <h3>4. Cognitive Sensor</h3>
+      <p class="proj-desc">Python behavioral intelligence engine. The analytical brain.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>59</b> tests pass</span>
+        <span class="proj-stat">Daily: <b>2s</b></span>
+        <span class="proj-stat">Weekly: <b>58s</b></span>
+        <span class="proj-stat"><b>52</b> scripts</span>
+      </div>
+    </div>
+    <div class="proj-card">
+      <span class="status-badge badge-shipped">SHIPPED</span>
+      <h3>5. Delta Kernel</h3>
+      <p class="proj-desc">TypeScript state machine. Deterministic routing. Hash-chained deltas.</p>
+      <div class="proj-stats">
+        <span class="proj-stat"><b>4</b> proof tests pass</span>
+        <span class="proj-stat">API on <b>:3001</b></span>
+        <span class="proj-stat"><b>6</b> daemon jobs</span>
+        <span class="proj-stat"><b>0</b> hardcoded paths</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== WHY ==================== -->
+<div class="section" id="why">
+  <div class="sec-header">
+    <span class="sec-icon">&#129300;</span>
+    <h2>Why It Exists</h2>
+    <p class="sec-sub">The architecture is the diagnosis.</p>
+  </div>
+
+  <div class="phi-grid">
+    <div class="phi-card">
+      <h4>You start too many things</h4>
+      <p>The open loop detector exists because 1,397 conversations are full of "I'm gonna..." with no "I did." The system counts unfinished sentences against you.</p>
+    </div>
+    <div class="phi-card">
+      <h4>You don't trust yourself to stay honest</h4>
+      <p>That's why routing is a lookup table, not AI. If Claude picked your mode, you could talk your way out of CLOSURE. Math can't be negotiated with.</p>
+    </div>
+    <div class="phi-card">
+      <h4>You generate too many ideas</h4>
+      <p><code>idea_moratorium: True</code> is in the config. You built a kill switch for new ideas. The Blueprint Generator forces 2-week scope. Max active lanes: 2.</p>
+    </div>
+    <div class="phi-card">
+      <h4>Hash chains are for self-accountability</h4>
+      <p>Every state change is SHA-256 chained. You can't quietly delete a task or edit your streak. The audit log is tamper-proof against the person it governs.</p>
+    </div>
+    <div class="phi-card">
+      <h4>The deferred folder is discipline</h4>
+      <p>IoT, camera feeds, LoRa radio, P2P sync — that's a huge vision. But it's in _deferred/. Not built. Not deleted. Acknowledged and parked. CLOSURE mode applied to the architecture itself.</p>
+    </div>
+    <div class="phi-card">
+      <h4>The system is itself the biggest open loop</h4>
+      <p>40K lines built to solve the problem of building too many things. That's either extraordinary self-awareness or the most sophisticated procrastination ever. Probably both.</p>
+    </div>
+  </div>
+
+  <div class="detail-panel" style="text-align: center; margin-top: 40px;">
+    <h3>The North Star</h3>
+    <p style="font-size: 20px; color: #c4b5fd; margin: 20px 0;">Weekly: Ship 1 asset</p>
+    <p style="font-size: 20px; color: #4ade80;">Monthly: Generate revenue from AI consulting or products</p>
+    <p style="margin-top: 20px;">The bottleneck was never ability. It was finishing.</p>
+    <p style="color: #555; font-style: italic; margin-top: 20px;">This is not a tool. This is a law.</p>
+  </div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // Find matching nav button
+  const btns = document.querySelectorAll('.nav-btn');
+  const labels = ['home','bigpicture','modes','brain','spine','gate','tools','data','projects','why'];
+  const idx = labels.indexOf(id);
+  if (idx >= 0 && btns[idx]) btns[idx].classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>

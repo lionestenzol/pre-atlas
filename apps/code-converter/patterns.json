@@ -1,0 +1,246 @@
+{
+  "version": "0.1.0",
+  "description": "Python-to-C++ pattern conversion table. Each pattern maps a Python construct to its C++ equivalent.",
+  "patterns": [
+    {
+      "id": "P001",
+      "category": "variables",
+      "name": "Integer assignment",
+      "python": "x = 5",
+      "cpp": "int x = 5;",
+      "notes": "Type inferred from value"
+    },
+    {
+      "id": "P002",
+      "category": "variables",
+      "name": "Float assignment",
+      "python": "x = 3.14",
+      "cpp": "double x = 3.14;",
+      "notes": "Python float maps to C++ double"
+    },
+    {
+      "id": "P003",
+      "category": "variables",
+      "name": "String assignment",
+      "python": "s = \"hello\"",
+      "cpp": "std::string s = \"hello\";",
+      "notes": "Requires <string> header"
+    },
+    {
+      "id": "P004",
+      "category": "variables",
+      "name": "Boolean assignment",
+      "python": "flag = True",
+      "cpp": "bool flag = true;",
+      "notes": "True/False → true/false"
+    },
+    {
+      "id": "P005",
+      "category": "variables",
+      "name": "List/vector creation",
+      "python": "arr = [1, 2, 3]",
+      "cpp": "std::vector<int> arr = {1, 2, 3};",
+      "notes": "Requires <vector> header. Element type inferred."
+    },
+    {
+      "id": "P006",
+      "category": "io",
+      "name": "Print integer",
+      "python": "print(x)",
+      "cpp": "std::cout << x << std::endl;",
+      "notes": "Requires <iostream> header"
+    },
+    {
+      "id": "P007",
+      "category": "io",
+      "name": "Print string literal",
+      "python": "print(\"hello world\")",
+      "cpp": "std::cout << \"hello world\" << std::endl;",
+      "notes": ""
+    },
+    {
+      "id": "P008",
+      "category": "io",
+      "name": "Print multiple values",
+      "python": "print(a, b, c)",
+      "cpp": "std::cout << a << \" \" << b << \" \" << c << std::endl;",
+      "notes": "Python print separates with space by default"
+    },
+    {
+      "id": "P009",
+      "category": "io",
+      "name": "Print f-string",
+      "python": "print(f\"value is {x}\")",
+      "cpp": "std::cout << \"value is \" << x << std::endl;",
+      "notes": "f-string interpolation becomes concatenation"
+    },
+    {
+      "id": "P010",
+      "category": "loops",
+      "name": "For range loop",
+      "python": "for i in range(n):",
+      "cpp": "for (int i = 0; i < n; i++) {",
+      "notes": "range(n) → 0 to n-1"
+    },
+    {
+      "id": "P011",
+      "category": "loops",
+      "name": "For range with start",
+      "python": "for i in range(a, b):",
+      "cpp": "for (int i = a; i < b; i++) {",
+      "notes": "range(a, b) → a to b-1"
+    },
+    {
+      "id": "P012",
+      "category": "loops",
+      "name": "For each over list",
+      "python": "for item in items:",
+      "cpp": "for (auto& item : items) {",
+      "notes": "Range-based for loop"
+    },
+    {
+      "id": "P013",
+      "category": "loops",
+      "name": "While loop",
+      "python": "while x > 0:",
+      "cpp": "while (x > 0) {",
+      "notes": ""
+    },
+    {
+      "id": "P014",
+      "category": "conditionals",
+      "name": "If statement",
+      "python": "if x > 5:",
+      "cpp": "if (x > 5) {",
+      "notes": ""
+    },
+    {
+      "id": "P015",
+      "category": "conditionals",
+      "name": "If-elif-else",
+      "python": "if x > 5:\n    ...\nelif x > 0:\n    ...\nelse:\n    ...",
+      "cpp": "if (x > 5) {\n    ...\n} else if (x > 0) {\n    ...\n} else {\n    ...\n}",
+      "notes": "elif → else if"
+    },
+    {
+      "id": "P016",
+      "category": "functions",
+      "name": "Function definition",
+      "python": "def add(a, b):\n    return a + b",
+      "cpp": "auto add(auto a, auto b) {\n    return a + b;\n}",
+      "notes": "Uses C++20 auto params for simplicity"
+    },
+    {
+      "id": "P017",
+      "category": "functions",
+      "name": "Function with type hints",
+      "python": "def add(a: int, b: int) -> int:\n    return a + b",
+      "cpp": "int add(int a, int b) {\n    return a + b;\n}",
+      "notes": "Type hints map directly"
+    },
+    {
+      "id": "P018",
+      "category": "functions",
+      "name": "Function no return",
+      "python": "def greet(name):\n    print(f\"hi {name}\")",
+      "cpp": "void greet(std::string name) {\n    std::cout << \"hi \" << name << std::endl;\n}",
+      "notes": "No return → void"
+    },
+    {
+      "id": "P019",
+      "category": "operators",
+      "name": "Boolean operators",
+      "python": "a and b or not c",
+      "cpp": "a && b || !c",
+      "notes": "and→&&, or→||, not→!"
+    },
+    {
+      "id": "P020",
+      "category": "operators",
+      "name": "Power operator",
+      "python": "x ** 2",
+      "cpp": "pow(x, 2)",
+      "notes": "Requires <cmath> header"
+    },
+    {
+      "id": "P021",
+      "category": "operators",
+      "name": "Integer division",
+      "python": "a // b",
+      "cpp": "a / b",
+      "notes": "C++ int division truncates by default"
+    },
+    {
+      "id": "P022",
+      "category": "collections",
+      "name": "List append",
+      "python": "arr.append(x)",
+      "cpp": "arr.push_back(x);",
+      "notes": ""
+    },
+    {
+      "id": "P023",
+      "category": "collections",
+      "name": "List length",
+      "python": "len(arr)",
+      "cpp": "arr.size()",
+      "notes": ""
+    },
+    {
+      "id": "P024",
+      "category": "collections",
+      "name": "Dictionary / map",
+      "python": "d = {\"key\": \"value\"}",
+      "cpp": "std::map<std::string, std::string> d = {{\"key\", \"value\"}};",
+      "notes": "Requires <map> header"
+    },
+    {
+      "id": "P025",
+      "category": "collections",
+      "name": "Dictionary access",
+      "python": "val = d[\"key\"]",
+      "cpp": "auto val = d[\"key\"];",
+      "notes": ""
+    },
+    {
+      "id": "P026",
+      "category": "strings",
+      "name": "String concatenation",
+      "python": "s = a + b",
+      "cpp": "std::string s = a + b;",
+      "notes": "std::string supports + operator"
+    },
+    {
+      "id": "P027",
+      "category": "strings",
+      "name": "String length",
+      "python": "len(s)",
+      "cpp": "s.length()",
+      "notes": ""
+    },
+    {
+      "id": "P028",
+      "category": "control",
+      "name": "Break",
+      "python": "break",
+      "cpp": "break;",
+      "notes": ""
+    },
+    {
+      "id": "P029",
+      "category": "control",
+      "name": "Continue",
+      "python": "continue",
+      "cpp": "continue;",
+      "notes": ""
+    },
+    {
+      "id": "P030",
+      "category": "structure",
+      "name": "Main entry point",
+      "python": "if __name__ == \"__main__\":\n    main()",
+      "cpp": "int main() {\n    // ...\n    return 0;\n}",
+      "notes": "C++ always needs main()"
+    }
+  ]
+}

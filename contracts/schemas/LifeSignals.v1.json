@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "LifeSignals.v1",
+  "title": "Life Signals",
+  "description": "Multi-domain signal inputs for Target Atlas governance. Tracks energy, finance, skills, and network as first-class routing signals alongside existing conversation-based metrics.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of signal capture"
+    },
+    "energy": {
+      "type": "object",
+      "description": "Physical and mental energy state",
+      "required": ["energy_level"],
+      "properties": {
+        "energy_level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Overall energy score (0=depleted, 100=peak)"
+        },
+        "mental_load": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Cognitive load (1=clear, 10=overwhelmed)"
+        },
+        "sleep_quality": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Last night sleep quality (1=terrible, 5=excellent)"
+        },
+        "burnout_risk": {
+          "type": "boolean",
+          "description": "True if consecutive low-energy days detected"
+        },
+        "red_alert_active": {
+          "type": "boolean",
+          "description": "True if in a predicted interference/energy-drain window"
+        }
+      }
+    },
+    "finance": {
+      "type": "object",
+      "description": "Financial position and resource tracking",
+      "required": ["runway_months"],
+      "properties": {
+        "runway_months": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Months of expenses covered by current reserves"
+        },
+        "monthly_income": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total monthly income (all sources)"
+        },
+        "monthly_expenses": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total monthly expenses"
+        },
+        "money_delta": {
+          "type": "number",
+          "description": "Net monthly change (income - expenses)"
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "description": "Skill utilization and mastery tracking",
+      "required": ["utilization_pct"],
+      "properties": {
+        "utilization_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percentage of current work aligned with top skills/strengths"
+        },
+        "active_learning": {
+          "type": "boolean",
+          "description": "True if actively practicing or studying this week"
+        },
+        "mastery_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of skills at mastery level"
+        },
+        "growth_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of skills actively being developed"
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "Relationship and collaboration tracking",
+      "required": ["collaboration_score"],
+      "properties": {
+        "collaboration_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Collaboration health score (0=isolated, 100=well-connected)"
+        },
+        "active_relationships": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of relationships with interaction in last 30 days"
+        },
+        "outreach_this_week": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of proactive outreach actions this week"
+        }
+      }
+    },
+    "life_phase": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Current life trajectory phase: 1=Stabilization, 2=Leverage Accumulation, 3=Extraction & Autonomy, 4=Scaling, 5=Generational Infrastructure"
+    }
+  }
+}

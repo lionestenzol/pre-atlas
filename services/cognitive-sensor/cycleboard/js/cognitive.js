@@ -30,80 +30,121 @@ const CognitiveController = {
   freshness: null,
   directiveText: null,
 
-  async init() {
-    // Prevent multiple initializations
-    if (this.initialized) return;
+  _pollTimer: null,
 
+  async init() {
+    if (this.initialized) return;
+    await this._loadData(true);
+  },
+
+  // Delta-kernel API base (configurable for standalone vs embedded)
+  _apiBase: 'http://localhost:3001',
+
+  _authHeaders() {
+    const h = {};
+    if (typeof stateManager !== 'undefined' && stateManager.apiKey) {
+      h['Authorization'] = `Bearer ${stateManager.apiKey}`;
+    }
+    return h;
+  },
+
+  async _loadData(isFirstLoad) {
     try {
-      // Try to load cognitive state from workspace
-      const response = await fetch('cognitive_state.json');
+      // Primary: load unified state from delta-kernel API
+      const response = await fetch(`${this._apiBase}/api/state/unified`, {
+        headers: this._authHeaders(),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Invalid content type: expected JSON');
+      const unified = await response.json();
+
+      if (!unified || !unified.ok) {
+        throw new Error('Invalid unified state response');
       }
 
-      const text = await response.text();
-      if (!text.trim()) {
-        throw new Error('Empty response');
+      // Map unified response to the shape CycleBoard expects
+      const newPayload = unified.cognitive?.cognitive_state || {};
+      let newDailyPayload = unified.cognitive?.today || null;
+
+      // Enrich with derived values from unified endpoint
+      if (!newDailyPayload) {
+        newDailyPayload = {
+          build_allowed: unified.derived?.build_allowed ?? true,
+          generated_at: unified.ts,
+        };
       }
 
-      try {
-        this.payload = JSON.parse(text);
-      } catch (parseError) {
-        throw new Error(`JSON parse error: ${parseError.message}`);
-      }
-
-      // Validate payload structure
-      if (!this.payload || typeof this.payload !== 'object') {
-        throw new Error('Invalid payload structure');
-      }
-
-      // Also load daily_payload.json for build_allowed signal
-      try {
-        const dpResp = await fetch('brain/daily_payload.json');
-        if (dpResp.ok) {
-          this.dailyPayload = await dpResp.json();
-          this.buildAllowed = this.dailyPayload.build_allowed !== false;
-        }
-      } catch (_) {
-        // daily_payload not available — default to allowed
-      }
-
-      // Load daily directive text
+      // Load daily directive text (still from file — not in API yet)
+      let newDirective = null;
       try {
         const dtResp = await fetch('brain/daily_directive.txt');
         if (dtResp.ok) {
-          this.directiveText = await dtResp.text();
+          newDirective = await dtResp.text();
         }
-      } catch (_) {
-        // directive not available — leave null
+      } catch (_) {}
+
+      // On refresh: skip re-render if data hasn't changed
+      const newTimestamp = unified.ts || newDailyPayload?.generated_at || newPayload?.generated_at;
+      const oldTimestamp = this.dailyPayload?.generated_at || this.payload?.generated_at;
+      if (!isFirstLoad && newTimestamp && oldTimestamp && newTimestamp === oldTimestamp) {
+        return; // No change
       }
 
+      this.payload = newPayload;
+      this.dailyPayload = newDailyPayload;
+      this.buildAllowed = unified.derived?.build_allowed !== false;
+      this.directiveText = newDirective;
       this.initialized = true;
       this.error = null;
-      this.freshness = DataFreshness.check(this.dailyPayload?.generated_at || this.payload?.generated_at);
+      this.freshness = DataFreshness.check(newTimestamp);
+
+      // Store unified derived data for Command screen
+      this.unified = unified.derived || {};
+
       this.applyGovernance();
 
-      // Re-render so directive card and other template-driven elements pick up loaded data
       if (typeof render === 'function') render();
 
     } catch (error) {
       this.error = error.message;
-      this.initialized = true; // Mark as initialized even on error to prevent retries
+      this.initialized = true;
 
-      // Only log in development or if it's an unexpected error
       if (error.message.includes('HTTP 404') || error.message === 'HTTP 404: Not Found') {
-        console.log('Cognitive system offline. Run: python refresh.py');
+        if (isFirstLoad) console.log('Cognitive system offline. Run: python refresh.py');
       } else {
         console.warn('Cognitive system error:', error.message);
       }
-      // Show banner in offline state
       this.showOfflineState();
+    }
+  },
+
+  async refresh() {
+    await this._loadData(false);
+    await StrategicRouter.refresh();
+  },
+
+  startPolling() {
+    if (this._pollTimer) return;
+    this._pollTimer = setInterval(() => this.refresh(), 30000);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        clearInterval(this._pollTimer);
+        this._pollTimer = null;
+      } else {
+        this.refresh();
+        this._pollTimer = setInterval(() => this.refresh(), 30000);
+      }
+    });
+  },
+
+  stopPolling() {
+    if (this._pollTimer) {
+      clearInterval(this._pollTimer);
+      this._pollTimer = null;
     }
   },
 
@@ -133,12 +174,11 @@ const CognitiveController = {
     if (indicator) indicator.style.display = 'none';
   },
 
-  // Allow manual retry
   async retry() {
     this.initialized = false;
     this.error = null;
     this.payload = null;
-    await this.init();
+    await this._loadData(true);
   },
 
   applyGovernance() {

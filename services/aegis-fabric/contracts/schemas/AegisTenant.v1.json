@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AegisTenant.v1",
+  "title": "Aegis Tenant",
+  "description": "Multi-tenant configuration for the Aegis Enterprise Fabric",
+  "type": "object",
+  "required": ["name", "tier", "mode", "isolation_model", "quotas", "api_key_hash", "enabled", "created_at", "updated_at"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "tier": { "type": "string", "enum": ["FREE", "STARTER", "ENTERPRISE"] },
+    "mode": { "type": "string", "enum": ["RECOVER", "CLOSURE", "MAINTENANCE", "BUILD", "COMPOUND", "SCALE"] },
+    "isolation_model": { "type": "string", "enum": ["SILOED", "POOLED"] },
+    "quotas": {
+      "type": "object",
+      "required": ["max_agents", "max_actions_per_hour", "max_entities", "max_delta_log_size", "max_webhook_count"],
+      "properties": {
+        "max_agents": { "type": "integer", "minimum": 1 },
+        "max_actions_per_hour": { "type": "integer", "minimum": 1 },
+        "max_entities": { "type": "integer", "minimum": 1 },
+        "max_delta_log_size": { "type": "integer", "minimum": 1 },
+        "max_webhook_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "api_key_hash": { "type": "string" },
+    "capabilities": { "type": "array", "items": { "type": "string" } },
+    "enabled": { "type": "boolean" },
+    "created_at": { "type": "integer" },
+    "updated_at": { "type": "integer" }
+  }
+}

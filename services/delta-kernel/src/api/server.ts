@@ -18,6 +18,7 @@ import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { spawn as spawnChild } from 'child_process';
 import { emitEvent } from '../core/event-emitter.js';
+import { AegisClient } from '../clients/aegis-client.js';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -78,10 +79,13 @@ try {
   console.warn('WARNING: No .aegis-tenant-key found — running without auth (dev mode)');
 }
 
-// Auth middleware: require Bearer token on /api/* (except /api/health and /api/auth/token)
+// Initialize Aegis policy client (graceful degradation if unreachable)
+const aegisClient = new AegisClient('http://localhost:3002', API_KEY ?? '', 5000);
+
+// Auth middleware: require Bearer token on /api/* (except health and token endpoints)
 app.use('/api', (req, res, next) => {
   if (!API_KEY) { next(); return; } // dev mode: no key file = no auth
-  if (req.path === '/health' || req.path === '/auth/token') { next(); return; }
+  if (req.path === '/health' || req.path === '/services/health' || req.path === '/auth/token') { next(); return; }
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -1586,7 +1590,7 @@ function getSystemStateForWork(): { mode: string; build_allowed: boolean; open_l
  *   metadata?: object
  * }
  */
-app.post('/api/work/request', (req, res) => {
+app.post('/api/work/request', async (req, res) => {
   const { job_id, type, title, agent, weight, depends_on, timeout_ms, metadata } = req.body;
 
   if (!type || !title) {
@@ -1605,6 +1609,35 @@ app.post('/api/work/request', (req, res) => {
     { job_id, type, title, agent, weight, depends_on, timeout_ms, metadata },
     systemState
   );
+
+  // Aegis policy gate — only for APPROVED jobs, graceful degradation on failure
+  if (result.status === 'APPROVED' && result.job_id) {
+    try {
+      const aegis = await aegisClient.submitAction(
+        agent || 'unknown',
+        'work_request',
+        { title, type, agent, mode: systemState.mode },
+      );
+      if (aegis.decision === 'REQUIRE_HUMAN') {
+        // Low-risk actions auto-approve: system work, morning/wrap routines, stale cleanup
+        const lowRiskPatterns = ['morning', 'wrap', 'close-stale', 'checkpoint', 'refresh', 'process-inbox'];
+        const isLowRisk = type === 'system' || lowRiskPatterns.some(p => (title || '').toLowerCase().includes(p));
+        if (!isLowRisk) {
+          workController.cancel({ job_id: result.job_id, reason: 'Aegis: awaiting human approval' });
+          res.json({ status: 'QUEUED', job_id: result.job_id, position: 0, queue_depth: 0, reason: 'Awaiting human approval (Aegis policy)', blocked_by: [], estimated_wait_ms: 0 });
+          return;
+        }
+        // Low-risk: auto-approve, proceed as APPROVED
+      }
+      if (aegis.decision === 'DENY') {
+        workController.cancel({ job_id: result.job_id, reason: aegis.reason || 'Denied by Aegis policy' });
+        res.json({ status: 'DENIED', reason: aegis.reason || 'Denied by Aegis policy' });
+        return;
+      }
+    } catch {
+      // Aegis unreachable — graceful degradation, proceed with APPROVED
+    }
+  }
 
   res.json(result);
 });
@@ -1896,6 +1929,39 @@ app.get('/api/health', (req, res) => {
     version: '1.0.0',
     service: 'delta-kernel',
   });
+});
+
+app.get('/api/services/health', async (_req, res) => {
+  const results: Record<string, { status: string; data?: any }> = {};
+
+  // Delta is always up if this endpoint responds.
+  results.delta = { status: 'up', data: { service: 'delta-kernel' } };
+
+  // Check UASC
+  try {
+    const uascRes = await fetch('http://localhost:3008/health', { signal: AbortSignal.timeout(3000) });
+    if (uascRes.ok) {
+      results.uasc = { status: 'up', data: await uascRes.json() };
+    } else {
+      results.uasc = { status: 'down' };
+    }
+  } catch {
+    results.uasc = { status: 'down' };
+  }
+
+  // Check Cortex
+  try {
+    const cortexRes = await fetch('http://localhost:3009/health', { signal: AbortSignal.timeout(3000) });
+    if (cortexRes.ok) {
+      results.cortex = { status: 'up', data: await cortexRes.json() };
+    } else {
+      results.cortex = { status: 'down' };
+    }
+  } catch {
+    results.cortex = { status: 'down' };
+  }
+
+  res.json(results);
 });
 
 // === DAEMON ===
@@ -2221,6 +2287,251 @@ app.get('/api/executor/health', async (_req, res) => {
   const healthy = await checkExecutorHealth();
   res.json({ executor_reachable: healthy, url: process.env.UASC_EXECUTOR_URL || 'http://localhost:3008' });
 });
+
+type LifeSignals = {
+  schema_version: string;
+  generated_at: string;
+  energy: {
+    energy_level: number;
+    mental_load: number;
+    sleep_quality: number;
+    burnout_risk: boolean;
+    red_alert_active: boolean;
+  };
+  finance: {
+    runway_months: number;
+    monthly_income: number;
+    monthly_expenses: number;
+    money_delta: number;
+  };
+  skills: {
+    utilization_pct: number;
+    active_learning: boolean;
+    mastery_count: number;
+    growth_count: number;
+  };
+  network: {
+    collaboration_score: number;
+    active_relationships: number;
+    outreach_this_week: number;
+  };
+  life_phase: number;
+};
+
+function clamp(val: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, val));
+}
+
+function loadSignals(): LifeSignals {
+  const signalsPath = path.resolve(cognitiveSensorDir, 'life_signals.json');
+  if (!fs.existsSync(signalsPath)) {
+    return {
+      schema_version: '1.0.0',
+      generated_at: new Date().toISOString(),
+      energy: { energy_level: 50, mental_load: 5, sleep_quality: 3, burnout_risk: false, red_alert_active: false },
+      finance: { runway_months: 3.0, monthly_income: 0, monthly_expenses: 0, money_delta: 0 },
+      skills: { utilization_pct: 50.0, active_learning: false, mastery_count: 0, growth_count: 0 },
+      network: { collaboration_score: 30, active_relationships: 0, outreach_this_week: 0 },
+      life_phase: 1,
+    };
+  }
+
+  return JSON.parse(fs.readFileSync(signalsPath, 'utf-8')) as LifeSignals;
+}
+
+function saveSignals(signals: LifeSignals): void {
+  signals.generated_at = new Date().toISOString();
+
+  const signalsPath = path.resolve(cognitiveSensorDir, 'life_signals.json');
+  fs.mkdirSync(path.dirname(signalsPath), { recursive: true });
+  fs.writeFileSync(signalsPath, JSON.stringify(signals, null, 2));
+
+  const domains: Array<keyof Pick<LifeSignals, 'energy' | 'finance' | 'skills' | 'network'>> = [
+    'energy',
+    'finance',
+    'skills',
+    'network',
+  ];
+
+  for (const domain of domains) {
+    const metricsPath = path.resolve(cognitiveSensorDir, 'cycleboard', 'brain', `${domain}_metrics.json`);
+    fs.mkdirSync(path.dirname(metricsPath), { recursive: true });
+    fs.writeFileSync(
+      metricsPath,
+      JSON.stringify({
+        generated_at: signals.generated_at,
+        life_phase: signals.life_phase,
+        ...signals[domain],
+      }, null, 2),
+    );
+  }
+}
+
+app.get('/api/signals', (_req, res) => {
+  res.json(loadSignals());
+});
+
+app.post('/api/signals/energy', (req, res) => {
+  const body = req.body ?? {};
+  const signals = loadSignals();
+
+  if (typeof body.energy_level === 'number') {
+    signals.energy.energy_level = clamp(body.energy_level, 0, 100);
+  }
+  if (typeof body.mental_load === 'number') {
+    signals.energy.mental_load = clamp(body.mental_load, 1, 10);
+  }
+  if (typeof body.sleep_quality === 'number') {
+    signals.energy.sleep_quality = clamp(body.sleep_quality, 1, 5);
+  }
+  if (typeof body.burnout_risk === 'boolean') {
+    signals.energy.burnout_risk = body.burnout_risk;
+  }
+  if (typeof body.red_alert_active === 'boolean') {
+    signals.energy.red_alert_active = body.red_alert_active;
+  }
+
+  saveSignals(signals);
+  res.json(signals);
+});
+
+app.post('/api/signals/finance', (req, res) => {
+  const body = req.body ?? {};
+  const signals = loadSignals();
+
+  if (typeof body.runway_months === 'number') {
+    signals.finance.runway_months = Math.max(0, body.runway_months);
+  }
+  if (typeof body.monthly_income === 'number') {
+    signals.finance.monthly_income = Math.max(0, body.monthly_income);
+  }
+  if (typeof body.monthly_expenses === 'number') {
+    signals.finance.monthly_expenses = Math.max(0, body.monthly_expenses);
+  }
+
+  signals.finance.money_delta = signals.finance.monthly_income - signals.finance.monthly_expenses;
+
+  saveSignals(signals);
+  res.json(signals);
+});
+
+app.post('/api/signals/skills', (req, res) => {
+  const body = req.body ?? {};
+  const signals = loadSignals();
+
+  if (typeof body.utilization_pct === 'number') {
+    signals.skills.utilization_pct = clamp(body.utilization_pct, 0, 100);
+  }
+  if (typeof body.active_learning === 'boolean') {
+    signals.skills.active_learning = body.active_learning;
+  }
+  if (typeof body.mastery_count === 'number') {
+    signals.skills.mastery_count = Math.max(0, body.mastery_count);
+  }
+  if (typeof body.growth_count === 'number') {
+    signals.skills.growth_count = Math.max(0, body.growth_count);
+  }
+
+  saveSignals(signals);
+  res.json(signals);
+});
+
+app.post('/api/signals/network', (req, res) => {
+  const body = req.body ?? {};
+  const signals = loadSignals();
+
+  if (typeof body.collaboration_score === 'number') {
+    signals.network.collaboration_score = clamp(body.collaboration_score, 0, 100);
+  }
+  if (typeof body.active_relationships === 'number') {
+    signals.network.active_relationships = Math.max(0, body.active_relationships);
+  }
+  if (typeof body.outreach_this_week === 'number') {
+    signals.network.outreach_this_week = Math.max(0, body.outreach_this_week);
+  }
+
+  saveSignals(signals);
+  res.json(signals);
+});
+
+app.post('/api/signals/bulk', (req, res) => {
+  const body = req.body ?? {};
+  const signals = loadSignals();
+
+  if (body.energy && typeof body.energy === 'object') {
+    if (typeof body.energy.energy_level === 'number') {
+      signals.energy.energy_level = clamp(body.energy.energy_level, 0, 100);
+    }
+    if (typeof body.energy.mental_load === 'number') {
+      signals.energy.mental_load = clamp(body.energy.mental_load, 1, 10);
+    }
+    if (typeof body.energy.sleep_quality === 'number') {
+      signals.energy.sleep_quality = clamp(body.energy.sleep_quality, 1, 5);
+    }
+    if (typeof body.energy.burnout_risk === 'boolean') {
+      signals.energy.burnout_risk = body.energy.burnout_risk;
+    }
+    if (typeof body.energy.red_alert_active === 'boolean') {
+      signals.energy.red_alert_active = body.energy.red_alert_active;
+    }
+  }
+
+  if (body.finance && typeof body.finance === 'object') {
+    if (typeof body.finance.runway_months === 'number') {
+      signals.finance.runway_months = Math.max(0, body.finance.runway_months);
+    }
+    if (typeof body.finance.monthly_income === 'number') {
+      signals.finance.monthly_income = Math.max(0, body.finance.monthly_income);
+    }
+    if (typeof body.finance.monthly_expenses === 'number') {
+      signals.finance.monthly_expenses = Math.max(0, body.finance.monthly_expenses);
+    }
+    signals.finance.money_delta = signals.finance.monthly_income - signals.finance.monthly_expenses;
+  }
+
+  if (body.skills && typeof body.skills === 'object') {
+    if (typeof body.skills.utilization_pct === 'number') {
+      signals.skills.utilization_pct = clamp(body.skills.utilization_pct, 0, 100);
+    }
+    if (typeof body.skills.active_learning === 'boolean') {
+      signals.skills.active_learning = body.skills.active_learning;
+    }
+    if (typeof body.skills.mastery_count === 'number') {
+      signals.skills.mastery_count = Math.max(0, body.skills.mastery_count);
+    }
+    if (typeof body.skills.growth_count === 'number') {
+      signals.skills.growth_count = Math.max(0, body.skills.growth_count);
+    }
+  }
+
+  if (body.network && typeof body.network === 'object') {
+    if (typeof body.network.collaboration_score === 'number') {
+      signals.network.collaboration_score = clamp(body.network.collaboration_score, 0, 100);
+    }
+    if (typeof body.network.active_relationships === 'number') {
+      signals.network.active_relationships = Math.max(0, body.network.active_relationships);
+    }
+    if (typeof body.network.outreach_this_week === 'number') {
+      signals.network.outreach_this_week = Math.max(0, body.network.outreach_this_week);
+    }
+  }
+
+  if (typeof body.life_phase === 'number') {
+    signals.life_phase = clamp(body.life_phase, 1, 5);
+  }
+
+  signals.finance.money_delta = signals.finance.monthly_income - signals.finance.monthly_expenses;
+
+  saveSignals(signals);
+  res.json(signals);
+});
+
+// Serve CycleBoard SPA
+const resolvedPath = path.resolve(__dirname, '..', '..', '..', 'cognitive-sensor', 'cycleboard');
+app.use('/cycleboard', express.static(resolvedPath));
+const cognitiveSensorStaticPath = path.resolve(resolvedPath, '..');
+app.use('/cognitive-sensor', express.static(cognitiveSensorStaticPath));
+app.get(/^\/cycleboard(?:\/.*)?$/, (_req, res) => res.sendFile('index.html', { root: resolvedPath }));
 
 // Start server
 app.listen(PORT, '127.0.0.1', () => {

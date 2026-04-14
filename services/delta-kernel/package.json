@@ -4,17 +4,21 @@
   "description": "Delta-State Fabric v0 — Deterministic, delta-driven personal operating system",
   "type": "module",
   "bin": {
-    "delta": "./src/cli/index.ts"
+    "delta": "./src/cli/index.ts",
+    "atlas": "./src/cli/atlas.ts"
   },
   "scripts": {
     "start": "tsx src/cli/index.ts",
+    "atlas": "tsx src/cli/atlas.ts",
     "api": "tsx src/api/server.ts",
     "gate": "tsx src/tools/gate.ts",
     "test": "tsx src/core/run-tests.ts",
     "test:api": "tsx src/tests/api-tests.ts",
     "test:work": "tsx src/tests/work-controller-tests.ts",
     "build": "tsc",
-    "cycleboard": "tsx ../cognitive-sensor/cycleboard/cli.ts"
+    "cycleboard": "tsx ../cognitive-sensor/cycleboard/cli.ts",
+    "atlas-ai": "tsx src/cli/atlas-ai.ts",
+    "agent": "tsx src/cli/atlas-ai.ts agent --daemon"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.8",

@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Cognitive Atlas — Strategic Dashboard</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/graphology/0.25.4/graphology.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.min.js"></script>
+<style>
+/* ── Root: viewport authority ── */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%;overflow:hidden;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0f;color:#e5e5e5;display:flex;flex-direction:column}
+
+/* ── Top bar: fixed height, never shrinks ── */
+header{padding:20px 24px 0;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;flex-shrink:0}
+header h1{font-size:22px;font-weight:700;letter-spacing:-0.5px}
+header .sub{color:#888;font-size:12px}
+.stats{display:flex;gap:12px;padding:12px 24px;flex-wrap:wrap;flex-shrink:0}
+.stat{background:#111118;border:1px solid #2a2a3a;border-radius:8px;padding:8px 14px;font-size:12px}
+.stat b{color:#6366f1;font-size:16px;display:block;margin-bottom:2px}
+.controls{padding:8px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.controls .label{color:#888;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-right:4px}
+.layer-btn{background:#1a1a2a;border:1px solid #2a2a3a;color:#888;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;transition:all 0.15s ease}
+.layer-btn:hover{border-color:#4338ca;color:#ccc}
+.layer-btn.active{background:#4338ca;border-color:#6366f1;color:#fff}
+.layer-btn.lev-btn{border-color:#f59e0b33}
+.layer-btn.lev-btn:hover{border-color:#f59e0b;color:#fbbf24}
+.layer-btn.lev-btn.active{background:#92400e;border-color:#f59e0b;color:#fbbf24}
+.layer-btn.pred-btn{border-color:#06b6d433}
+.layer-btn.pred-btn:hover{border-color:#06b6d4;color:#22d3ee}
+.layer-btn.pred-btn.active{background:#164e63;border-color:#06b6d4;color:#22d3ee}
+
+/* ── Main area: flex row, fills remaining viewport ── */
+.main-area{display:flex;flex:1;overflow:hidden;padding:0 24px 14px;gap:14px}
+
+/* ── Map panel: flex-grow, owns rendering surface ── */
+.atlas-box{flex:1;background:#111118;border:1px solid #2a2a3a;border-radius:12px;overflow:hidden;position:relative;min-width:0}
+
+/* ── Sidebar: fixed width, SOLE SCROLLER ── */
+.sidebar{width:420px;min-width:380px;overflow-y:auto;overflow-x:hidden;display:block;flex-shrink:0;padding:0}
+.sidebar>.panel,.sidebar>.inspector{margin-bottom:14px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.16)}
+::-webkit-scrollbar-corner{background:transparent}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent}
+
+/* ── Panels ── */
+.panel{background:#111118;border:1px solid #2a2a3a;border-radius:12px;padding:16px;overflow:hidden;transition:max-height 0.3s ease}
+.panel.collapsed>.panel-body,.inspector.collapsed>.panel-body{display:none}
+.panel.collapsed,.inspector.collapsed{padding:16px 16px 12px}
+.panel-title{font-size:13px;font-weight:600;color:#aaa;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.panel-title:hover{color:#e5e5e5}
+.panel-title::after{content:'▾';font-size:10px;color:#555;transition:transform 0.2s ease}
+.panel.collapsed .panel-title::after,.inspector.collapsed .panel-title::after{transform:rotate(-90deg)}
+.panel.collapsed .panel-title,.inspector.collapsed .panel-title{margin-bottom:0}
+#lev-panel{overflow-y:auto}
+#lev-panel.expanded{max-height:none}
+#lev-panel:not(.expanded){max-height:260px}
+#summary-panel{overflow-y:auto}
+.inspector{border:1px solid #2a2a3a;border-radius:12px;background:#111118;padding:16px;overflow:hidden;overflow-y:auto;flex-shrink:1;transition:max-height 0.3s ease}
+.inspector.expanded{max-height:none}
+.inspector:not(.expanded){max-height:320px}
+.inspector-empty{color:#555;font-size:12px;text-align:center;padding:30px 0}
+
+/* ── Tables ── */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;color:#888;padding:4px 8px;border-bottom:1px solid #2a2a3a;white-space:nowrap}
+td{padding:4px 8px;border-bottom:1px solid #1a1a2a}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.lev-row{cursor:pointer;transition:background 0.1s}
+.lev-row:hover{background:#1a1a2a}
+.lev-row.selected{background:#1e1b4b;border-left:3px solid #6366f1}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap}
+.bv-fw{background:#312e81;color:#a78bfa}
+.bv-tl{background:#1e3a5f;color:#38bdf8}
+.bv-ce{background:#064e3b;color:#34d399}
+.bv-ca{background:#451a03;color:#fbbf24}
+.bv-iu{background:#1f2937;color:#9ca3af}
+.bt-hi{background:#064e3b;color:#34d399}
+.bt-md{background:#451a03;color:#fbbf24}
+.bt-lo{background:#450a0a;color:#f87171}
+.lev-bar{height:6px;border-radius:3px;background:#1a1a2a;overflow:hidden;min-width:60px}
+.lev-bar-fill{height:100%;border-radius:3px}
+
+/* ── Metrics ── */
+.metric-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.metric-label{font-size:11px;color:#888;width:90px;flex-shrink:0}
+.metric-bar{flex:1;height:8px;background:#1a1a2a;border-radius:4px;overflow:hidden}
+.metric-bar-fill{height:100%;border-radius:4px}
+.metric-val{font-size:11px;color:#aaa;width:40px;text-align:right;font-variant-numeric:tabular-nums}
+.ngram-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.ngram-tag{background:#1a1a2a;border:1px solid #2a2a3a;color:#aaa;padding:2px 8px;border-radius:4px;font-size:10px}
+.central-msg{font-size:11px;color:#999;padding:6px 0;border-bottom:1px solid #1a1a2a;line-height:1.4}
+.central-msg:last-child{border-bottom:none}
+
+/* ── Bottom panels (inside sidebar) ── */
+.av-group{margin-bottom:12px}
+.av-group-title{font-size:12px;font-weight:600;margin-bottom:4px}
+.av-cluster-list{font-size:11px;color:#888}
+
+/* ── Mode toggle ── */
+.mode-toggle{display:inline-flex;background:#111118;border:1px solid #2a2a3a;border-radius:8px;overflow:hidden;margin-right:16px}
+.mode-btn{background:transparent;border:none;color:#888;padding:6px 16px;font-size:13px;cursor:pointer;transition:all 0.15s ease;font-family:inherit}
+.mode-btn:hover{color:#ccc}
+.mode-btn.active{background:#4338ca;color:#fff}
+
+/* ── Graph: container-bound, no hardcoded height ── */
+#graph-container{width:100%;height:100%;display:none;position:relative;background:#111118}
+#graph-container canvas{background:transparent !important}
+.graph-tooltip{position:absolute;background:#1a1a2a;border:1px solid #2a2a3a;border-radius:8px;padding:10px 14px;font-size:12px;color:#e5e5e5;pointer-events:none;z-index:1000;display:none;max-width:280px;box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+.graph-tooltip b{color:#6366f1;font-size:13px}
+.graph-tooltip .gt-badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:4px}
+
+/* ── Responsive ── */
+@media(max-width:1200px){
+  .main-area{flex-direction:column}
+  .sidebar{width:100%;min-width:0;max-height:50vh;flex-shrink:0}
+  .atlas-box{min-height:400px}
+  #lev-panel:not(.expanded){max-height:none}
+  .inspector:not(.expanded){max-height:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <button onclick="(window!==window.parent)?window.parent.postMessage({type:'atlas-navigate',target:'cycleboard'},'*'):window.open('cycleboard/index.html','_blank')" style="background:none;border:none;color:#818cf8;cursor:pointer;font-size:13px;padding:0;margin-right:8px">← CycleBoard</button>
+  <h1>Cognitive Atlas</h1>
+  <span class="sub">__SUBTITLE__</span>
+</header>
+<div class="stats" id="stats-bar"></div>
+<div class="controls">
+  <div class="mode-toggle" id="mode-toggle" style="display:none">
+    <button class="mode-btn active" id="mode-analytics" onclick="switchMode('analytics')">Analytics</button>
+    <button class="mode-btn" id="mode-graph" onclick="switchMode('graph')">Graph</button>
+  </div>
+  <span class="label" id="layer-label">Atlas Layer:</span>
+  <button class="layer-btn active" data-layer="cluster" onclick="switchLayer('cluster')">Cluster</button>
+  <button class="layer-btn" data-layer="role" onclick="switchLayer('role')">Role</button>
+  <button class="layer-btn" data-layer="time" onclick="switchLayer('time')">Time</button>
+  <button class="layer-btn" data-layer="convo" onclick="switchLayer('convo')">Conversation</button>
+  <button class="layer-btn lev-btn" data-layer="leverage" onclick="switchLayer('leverage')" id="lev-btn" style="display:none">Leverage</button>
+  <button class="layer-btn pred-btn" data-layer="prediction" onclick="switchLayer('prediction')" id="pred-btn" style="display:none">Prediction</button>
+</div>
+<div class="main-area">
+  <div class="atlas-box">
+    <div id="atlas-chart"></div>
+    <div id="graph-container"><div class="graph-tooltip" id="graph-tooltip"></div></div>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="panel" id="pred-panel" style="display:none;max-height:350px;overflow-y:auto">
+      <div class="panel-title" onclick="togglePanel('pred-panel')">Prediction Engine</div>
+      <div class="panel-body" id="pred-body"></div>
+    </div>
+    <div class="panel" id="lev-panel" style="display:none">
+      <div class="panel-title" onclick="togglePanel('lev-panel')">Leverage Ranking</div>
+      <div class="panel-body" id="lev-table"></div>
+    </div>
+    <div class="inspector" id="insp-panel">
+      <div class="panel-title" onclick="togglePanel('insp-panel')">Cluster Inspector</div>
+      <div class="panel-body" id="insp-content"><div class="inspector-empty">Click a cluster in the leverage table to inspect</div></div>
+    </div>
+    <div class="panel" id="summary-panel" style="max-height:300px">
+      <div class="panel-title" onclick="togglePanel('summary-panel')">Cluster Summary</div>
+      <div class="panel-body" id="cluster-table"></div>
+    </div>
+    <div class="panel" id="roi-panel" style="display:none">
+      <div class="panel-title">Cognitive ROI</div>
+      <div class="panel-body" id="roi-table"></div>
+    </div>
+    <div class="panel" id="av-panel" style="display:none">
+      <div class="panel-title">Asset Vectors</div>
+      <div class="panel-body" id="av-content"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Role Distribution</div>
+      <div class="panel-body" id="role-chart"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const D = __DATA_PAYLOAD__;
+const hasLev = D.leverage !== null && D.leverage !== undefined;
+
+const CC = [
+  '#6366f1','#22d3ee','#f59e0b','#ef4444','#10b981','#ec4899','#8b5cf6','#f97316',
+  '#14b8a6','#f43f5e','#a855f7','#84cc16','#06b6d4','#e11d48','#7c3aed','#eab308',
+  '#0ea5e9','#d946ef','#65a30d','#fb923c','#2dd4bf','#f472b6','#a78bfa','#fbbf24',
+  '#38bdf8','#c084fc','#4ade80','#fb7185','#818cf8','#facc15',
+];
+const NC = '#333333';
+const RC = {user:'#22d3ee', assistant:'#6366f1', tool:'#f59e0b'};
+const CV = [];
+for(let i=0;i<50;i++) CV.push('hsl('+(i*137.5%360)+',65%,55%)');
+const VC = {'Framework':'bv-fw','Tool':'bv-tl','Content Engine':'bv-ce','Consulting Angle':'bv-ca','Internal Utility':'bv-iu'};
+
+// ── Container-bound layout (no hardcoded dimensions) ──
+function getChartLayout(){
+  var box=document.querySelector('.atlas-box');
+  return {
+    paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(17,17,24,1)',
+    font:{color:'#ccc',size:11}, margin:{l:10,r:10,t:10,b:10},
+    hovermode:'closest',
+    xaxis:{showgrid:false,zeroline:false,showticklabels:false},
+    yaxis:{showgrid:false,zeroline:false,showticklabels:false},
+    height:box.clientHeight,
+    width:box.clientWidth,
+    legend:{orientation:'h',y:-0.02,font:{size:10},bgcolor:'rgba(0,0,0,0)'},
+  };
+}
+
+const tL = D.titleLookup, dL = D.dateLookup;
+
+function hoverText(i) {
+  const cid=D.convo_ids[i], title=tL[cid]||'(untitled)', date=dL[cid]||'',
+    role=D.roles[i], mi=D.msg_indices[i], wc=D.word_counts[i],
+    cl=D.layers.cluster[i], clbl=cl===-1?'Noise':'Cluster '+cl;
+  let extra='';
+  if(hasLev && cl!==-1){const e=D.leverage.cluster_lookup[String(cl)];if(e) extra='<br>Leverage: '+e.normalized_leverage.toFixed(1)+'/10';}
+  return '<b>'+title+'</b><br>'+role+' | msg #'+mi+'<br>'+wc+' words | '+date+'<br>'+clbl+extra;
+}
+const hA=[];for(let i=0;i<D.x.length;i++) hA.push(hoverText(i));
+
+// Stats Bar
+(function(){
+  const s=D.stats, bar=document.getElementById('stats-bar');
+  const items=[['Messages',s.total.toLocaleString()],['Clusters',s.clusters],
+    ['Noise',s.noise.toLocaleString()+' ('+s.noise_pct+'%)'],['User msgs',s.user.toLocaleString()],
+    ['Assistant msgs',s.assistant.toLocaleString()],['Conversations',s.conversations.toLocaleString()]];
+  bar.innerHTML=items.map(([k,v])=>'<div class="stat"><b>'+v+'</b>'+k+'</div>').join('');
+})();
+
+// Cluster Table
+(function(){
+  const cs=D.cluster_summary;
+  let h='<table><tr><th>#</th><th>Size</th><th>User%</th><th>Dates</th><th>Top Conversations</th></tr>';
+  cs.forEach(c=>{
+    const t=c.top_titles.map(t=>'<span style="color:#aaa">'+t.title+'</span> ('+t.msgs+')').join(', ');
+    h+='<tr><td class="num">'+c.id+'</td><td class="num">'+c.count+'</td>'+
+      '<td class="num">'+c.user_pct+'%</td><td style="color:#666;font-size:11px">'+c.date_range+'</td>'+
+      '<td style="font-size:11px">'+t+'</td></tr>';
+  });
+  h+='</table>';
+  document.getElementById('cluster-table').innerHTML=h;
+})();
+
+// Role Chart
+(function(){
+  const s=D.stats;
+  Plotly.newPlot('role-chart',[{x:['User','Assistant','Tool'],y:[s.user,s.assistant,s.tool],type:'bar',
+    marker:{color:['#22d3ee','#6366f1','#f59e0b']},hovertemplate:'%{x}: %{y}<extra></extra>'}],
+    {paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(17,17,24,1)',font:{color:'#ccc',size:11},
+    margin:{l:50,r:20,t:10,b:40},yaxis:{gridcolor:'#1a1a2a'},height:250},{responsive:true});
+})();
+
+// ── Layer Builders ──
+function buildClusterTraces(){
+  const labels=D.layers.cluster,unique=[...new Set(labels)].sort((a,b)=>a-b),traces=[];
+  const nI=[];for(let i=0;i<labels.length;i++) if(labels[i]===-1) nI.push(i);
+  if(nI.length>0) traces.push({x:nI.map(i=>D.x[i]),y:nI.map(i=>D.y[i]),text:nI.map(i=>hA[i]),
+    mode:'markers',type:'scattergl',name:'Noise ('+nI.length+')',
+    marker:{color:NC,size:2,opacity:0.25},hovertemplate:'%{text}<extra></extra>'});
+  for(const cl of unique){if(cl===-1) continue;const idx=[];
+    for(let i=0;i<labels.length;i++) if(labels[i]===cl) idx.push(i);
+    traces.push({x:idx.map(i=>D.x[i]),y:idx.map(i=>D.y[i]),text:idx.map(i=>hA[i]),
+      mode:'markers',type:'scattergl',name:'C'+cl+' ('+idx.length+')',
+      marker:{color:CC[cl%CC.length],size:3,opacity:0.7},hovertemplate:'%{text}<extra></extra>',showlegend:false});}
+  return traces;
+}
+
+function buildRoleTraces(){
+  const roles=D.layers.role,g={};
+  for(let i=0;i<roles.length;i++){const r=roles[i];if(!g[r])g[r]=[];g[r].push(i);}
+  return['user','assistant','tool'].filter(r=>g[r]).map(r=>{const idx=g[r];
+    return{x:idx.map(i=>D.x[i]),y:idx.map(i=>D.y[i]),text:idx.map(i=>hA[i]),
+      mode:'markers',type:'scattergl',name:r+' ('+idx.length+')',
+      marker:{color:RC[r],size:3,opacity:0.6},hovertemplate:'%{text}<extra></extra>'};});
+}
+
+function buildTimeTrace(){
+  return[{x:D.x,y:D.y,text:hA,mode:'markers',type:'scattergl',
+    marker:{color:D.layers.time,colorscale:[[0,'#1e1b4b'],[0.25,'#4338ca'],[0.5,'#6366f1'],[0.75,'#f59e0b'],[1,'#fbbf24']],
+      size:3,opacity:0.6,colorbar:{title:'Time',tickvals:[0,1],ticktext:['Oldest','Newest'],len:0.5,thickness:12}},
+    hovertemplate:'%{text}<extra></extra>',showlegend:false}];
+}
+
+function buildConvoTrace(){
+  return[{x:D.x,y:D.y,text:hA,mode:'markers',type:'scattergl',
+    marker:{color:D.layers.convo.map(v=>CV[v%50]),size:3,opacity:0.5},
+    hovertemplate:'%{text}<extra></extra>',showlegend:false}];
+}
+
+function buildLeverageTrace(){
+  if(!hasLev) return buildClusterTraces();
+  const labels=D.layers.cluster,lk=D.leverage.cluster_lookup;
+  const nI=[],sI=[],sV=[];
+  for(let i=0;i<labels.length;i++){
+    const cl=labels[i];
+    if(cl===-1){nI.push(i);continue;}
+    const e=lk[String(cl)];
+    if(!e){nI.push(i);continue;}
+    sI.push(i);sV.push(e.normalized_leverage);
+  }
+  const traces=[];
+  if(nI.length>0) traces.push({x:nI.map(i=>D.x[i]),y:nI.map(i=>D.y[i]),text:nI.map(i=>hA[i]),
+    mode:'markers',type:'scattergl',name:'Unscored ('+nI.length+')',
+    marker:{color:NC,size:2,opacity:0.2},hovertemplate:'%{text}<extra></extra>'});
+  if(sI.length>0) traces.push({x:sI.map(i=>D.x[i]),y:sI.map(i=>D.y[i]),text:sI.map(i=>hA[i]),
+    mode:'markers',type:'scattergl',name:'Leverage Scored',
+    marker:{color:sV,colorscale:[[0,'#ef4444'],[0.3,'#f59e0b'],[0.6,'#eab308'],[0.8,'#22c55e'],[1,'#10b981']],
+      cmin:0,cmax:10,size:3,opacity:0.7,
+      colorbar:{title:'Leverage',tickvals:[0,2.5,5,7.5,10],ticktext:['0','2.5','5','7.5','10'],len:0.5,thickness:12}},
+    hovertemplate:'%{text}<extra></extra>',showlegend:false});
+  return traces;
+}
+
+let activeLayer='cluster';
+function switchLayer(name){
+  activeLayer=name;
+  document.querySelectorAll('.layer-btn').forEach(b=>b.classList.toggle('active',b.dataset.layer===name));
+  var t;
+  if(name==='cluster') t=buildClusterTraces();
+  else if(name==='role') t=buildRoleTraces();
+  else if(name==='time') t=buildTimeTrace();
+  else if(name==='convo') t=buildConvoTrace();
+  else if(name==='leverage') t=buildLeverageTrace();
+  Plotly.react('atlas-chart',t,getChartLayout());
+}
+
+// ── Leverage UI ──
+function renderLevTable(){
+  if(!hasLev) return;
+  const cls=D.leverage.clusters;
+  let h='<table><tr><th>#</th><th>ID</th><th>Score</th><th>Vector</th><th>Tag</th></tr>';
+  cls.forEach((c,i)=>{
+    const pct=(c.normalized_leverage/10*100).toFixed(0);
+    const bc=c.normalized_leverage>=7?'#10b981':c.normalized_leverage>=4?'#eab308':'#ef4444';
+    const vc=VC[c.asset_vector]||'bv-iu';
+    h+='<tr class="lev-row" data-cid="'+c.cluster_id+'" onclick="inspectCluster('+c.cluster_id+')">'+
+      '<td class="num">'+(i+1)+'</td><td>C'+c.cluster_id+'</td>'+
+      '<td><div style="display:flex;align-items:center;gap:6px"><span class="num" style="width:28px">'+
+        c.normalized_leverage.toFixed(1)+'</span>'+
+        '<div class="lev-bar"><div class="lev-bar-fill" style="width:'+pct+'%;background:'+bc+'"></div></div></div></td>'+
+      '<td><span class="badge '+vc+'">'+c.asset_vector+'</span></td>'+
+      '<td style="font-size:10px;color:#888;max-width:100px;word-break:break-word">'+c.revenue_tag.replace(/_/g,' ')+'</td></tr>';
+  });
+  h+='</table>';
+  document.getElementById('lev-table').innerHTML=h;
+}
+
+function inspectCluster(cid){
+  if(!hasLev) return;
+  const cl=D.leverage.cluster_lookup[String(cid)];
+  if(!cl){document.getElementById('insp-content').innerHTML='<div class="inspector-empty">Cluster '+cid+' not in leverage analysis</div>';return;}
+  document.querySelectorAll('.lev-row').forEach(r=>r.classList.toggle('selected',r.dataset.cid===String(cid)));
+  const metrics=[
+    {l:'Tightness',v:cl.tightness,mx:1,c:'#6366f1'},
+    {l:'Execution',v:cl.execution_ratio,mx:1,c:'#22d3ee'},
+    {l:'Reusability',v:cl.reusability_index,mx:0.5,c:'#10b981'},
+    {l:'Dependency',v:cl.dependency_load,mx:0.15,c:'#f59e0b'},
+    {l:'Market',v:cl.market_score/10,mx:1,c:'#ec4899'},
+  ];
+  const vc=VC[cl.asset_vector]||'bv-iu';
+  let h='<div style="margin-bottom:12px"><span style="font-size:16px;font-weight:700">C'+cid+'</span> '+
+    '<span class="badge '+vc+'">'+cl.asset_vector+'</span> '+
+    '<span class="badge" style="background:#1a1a2a;color:#888">'+cl.revenue_tag.replace(/_/g,' ')+'</span>'+
+    '<div style="font-size:11px;color:#666;margin-top:4px">'+cl.size.toLocaleString()+' msgs | '+cl.conversations+' convos | '+
+    cl.user_pct+'% user | score '+cl.normalized_leverage.toFixed(1)+'/10</div></div>';
+  metrics.forEach(m=>{
+    const pct=Math.min((m.v/m.mx)*100,100).toFixed(0);
+    h+='<div class="metric-row"><span class="metric-label">'+m.l+'</span>'+
+      '<div class="metric-bar"><div class="metric-bar-fill" style="width:'+pct+'%;background:'+m.c+'"></div></div>'+
+      '<span class="metric-val">'+m.v.toFixed(3)+'</span></div>';
+  });
+  if(cl.top_ngrams && cl.top_ngrams.length>0){
+    h+='<div style="margin-top:10px"><span style="font-size:11px;color:#888">Top N-grams:</span><div class="ngram-tags">';
+    cl.top_ngrams.forEach(ng=>{h+='<span class="ngram-tag">'+ng+'</span>';});
+    h+='</div></div>';
+  }
+  if(cl.central_messages && cl.central_messages.length>0){
+    h+='<div style="margin-top:10px"><span style="font-size:11px;color:#888">Central Messages:</span>';
+    cl.central_messages.forEach(msg=>{
+      const safe=msg.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,' ');
+      h+='<div class="central-msg">'+safe+'</div>';
+    });
+    h+='</div>';
+  }
+  document.getElementById('insp-content').innerHTML=h;
+  // Auto-expand inspector, collapse others
+  document.querySelectorAll('#lev-panel,#insp-panel,#summary-panel').forEach(function(el){
+    el.classList.remove('expanded','collapsed');
+    if(el.id==='summary-panel') el.style.maxHeight='300px';
+  });
+  var insp=document.getElementById('insp-panel');
+  insp.classList.add('expanded');
+  document.querySelectorAll('#lev-panel,#summary-panel').forEach(function(el){el.classList.add('collapsed');});
+  insp.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderROI(){
+  if(!hasLev) return;
+  const cls=D.leverage.clusters,tg={};
+  cls.forEach(c=>{const t=c.revenue_tag;if(!tg[t])tg[t]={cls:[],msgs:0,levs:[]};
+    tg[t].cls.push('C'+c.cluster_id);tg[t].msgs+=c.size;tg[t].levs.push(c.normalized_leverage);});
+  const sorted=Object.entries(tg).sort((a,b)=>{
+    const aA=a[1].levs.reduce((s,v)=>s+v,0)/a[1].levs.length;
+    const bA=b[1].levs.reduce((s,v)=>s+v,0)/b[1].levs.length;return bA-aA;});
+  let h='<table><tr><th>Category</th><th>Clusters</th><th>Msgs</th><th>Avg</th><th>Status</th></tr>';
+  sorted.forEach(([tag,g])=>{
+    const avg=g.levs.reduce((s,v)=>s+v,0)/g.levs.length;
+    let a,ac;if(avg>=7){a='HIGH ROI';ac='bt-hi';}else if(avg>=4){a='MODERATE';ac='bt-md';}else{a='ENERGY LEAK';ac='bt-lo';}
+    h+='<tr><td style="font-size:11px">'+tag.replace(/_/g,' ')+'</td>'+
+      '<td style="font-size:10px;color:#888">'+g.cls.join(', ')+'</td>'+
+      '<td class="num">'+g.msgs.toLocaleString()+'</td>'+
+      '<td class="num">'+avg.toFixed(1)+'</td>'+
+      '<td><span class="badge '+ac+'">'+a+'</span></td></tr>';
+  });
+  h+='</table>';
+  document.getElementById('roi-table').innerHTML=h;
+}
+
+function renderAV(){
+  if(!hasLev) return;
+  const cls=D.leverage.clusters,vg={};
+  const vo=['Framework','Tool','Content Engine','Consulting Angle','Internal Utility'];
+  cls.forEach(c=>{const v=c.asset_vector;if(!vg[v])vg[v]=[];vg[v].push(c);});
+  let h='';
+  vo.forEach(v=>{if(!vg[v])return;const cs=vg[v];
+    const avg=cs.reduce((s,c)=>s+c.normalized_leverage,0)/cs.length;
+    const ids=cs.map(c=>'C'+c.cluster_id).join(', ');
+    const vc=VC[v]||'bv-iu';
+    h+='<div class="av-group"><div class="av-group-title"><span class="badge '+vc+'">'+v+'</span> '+
+      '<span style="font-size:10px;color:#888">avg '+avg.toFixed(1)+'</span></div>'+
+      '<div class="av-cluster-list">'+ids+'</div></div>';
+  });
+  document.getElementById('av-content').innerHTML=h;
+}
+
+// ── Graph Mode ──
+const AVC = {
+  'Framework':'#a78bfa','Tool':'#38bdf8','Content Engine':'#34d399',
+  'Consulting Angle':'#fbbf24','Internal Utility':'#9ca3af'
+};
+const USC = '#333333';
+const hasGraph = D.graph && D.graph.nodes && D.graph.nodes.length > 0;
+const hasSigma = typeof Sigma !== 'undefined' && typeof graphology !== 'undefined';
+
+let sigmaInst = null;
+let graphInst = null;
+let currentMode = 'analytics';
+
+function initGraph() {
+  if (graphInst || !hasGraph || !hasSigma) return;
+  const Graph = graphology.Graph;
+  graphInst = new Graph();
+
+  D.graph.nodes.forEach(n => {
+    const hl = n.has_leverage;
+    const lv = n.normalized_leverage || 0;
+    const ns = hl ? 8 + (lv / 10) * 32 : 4;
+    const nc = hl ? (AVC[n.asset_vector] || USC) : USC;
+
+    graphInst.addNode(n.id, {
+      x: n.fx, y: n.fy,
+      size: ns, color: nc,
+      label: n.id + ' (' + n.size.toLocaleString() + ')',
+      forceLabel: false,
+      _cid: n.cluster_id, _size: n.size,
+      _hl: hl, _lev: lv,
+      _av: n.asset_vector || '', _rt: n.revenue_tag || '',
+      _conv: n.conversations || 0,
+    });
+  });
+
+  D.graph.edges.forEach((e, i) => {
+    const a = 0.05 + e.weight * 0.07;
+    const w = 0.5 + e.weight * 1.5;
+    graphInst.addEdge(e.source, e.target, {
+      size: w,
+      color: 'rgba(68,68,68,' + a.toFixed(2) + ')',
+      _w: e.weight, _t: e.type,
+    });
+  });
+}
+
+function renderGraph() {
+  if (!graphInst) initGraph();
+  if (!graphInst || sigmaInst) return;
+
+  const container = document.getElementById('graph-container');
+  sigmaInst = new Sigma(graphInst, container, {
+    renderLabels: true,
+    labelRenderedSizeThreshold: 12,
+    labelColor: { color: '#aaaaaa' },
+    labelFont: 'sans-serif',
+    labelSize: 11,
+    labelWeight: '400',
+    defaultEdgeType: 'line',
+    minCameraRatio: 0.2,
+    maxCameraRatio: 5,
+    zoomDuration: 200,
+    inertiaDuration: 200,
+    inertiaRatio: 0.6,
+    stagePadding: 40,
+    nodeReducer: function(node, data) {
+      var res = Object.assign({}, data);
+      if (!data._hl) { res.label = ''; }
+      return res;
+    },
+  });
+
+  // Tooltip
+  const tip = document.getElementById('graph-tooltip');
+  sigmaInst.on('enterNode', function(ev) {
+    var at = graphInst.getNodeAttributes(ev.node);
+    var h = '<b>' + ev.node + '</b> (' + at._size.toLocaleString() + ' msgs)';
+    if (at._hl) {
+      var vc = AVC[at._av] || '#9ca3af';
+      h += '<br>Leverage: <b>' + at._lev.toFixed(1) + '/10</b>';
+      h += '<br><span class="gt-badge" style="background:' + vc + '22;color:' + vc + '">' + at._av + '</span>';
+      if (at._rt) h += '<br>Tag: ' + at._rt.replace(/_/g, ' ');
+      h += '<br>Conversations: ' + at._conv;
+    }
+    tip.innerHTML = h;
+    tip.style.display = 'block';
+  });
+
+  sigmaInst.on('leaveNode', function() { tip.style.display = 'none'; });
+
+  sigmaInst.getMouseCaptor().on('mousemovebody', function(ev) {
+    tip.style.left = (ev.x + 15) + 'px';
+    tip.style.top = (ev.y + 15) + 'px';
+  });
+
+  // Click node -> inspect
+  sigmaInst.on('clickNode', function(ev) {
+    var at = graphInst.getNodeAttributes(ev.node);
+    if (at._hl && hasLev) inspectCluster(at._cid);
+  });
+}
+
+function destroyGraph() {
+  if (sigmaInst) { sigmaInst.kill(); sigmaInst = null; }
+}
+
+function switchMode(mode) {
+  if (mode === currentMode) return;
+  currentMode = mode;
+  document.getElementById('mode-analytics').classList.toggle('active', mode === 'analytics');
+  document.getElementById('mode-graph').classList.toggle('active', mode === 'graph');
+
+  var ac = document.getElementById('atlas-chart');
+  var gc = document.getElementById('graph-container');
+  var ll = document.getElementById('layer-label');
+  var btns = document.querySelectorAll('.layer-btn');
+
+  if (mode === 'analytics') {
+    gc.style.display = 'none';
+    ac.style.display = '';
+    ll.style.display = '';
+    btns.forEach(function(b) { b.style.display = ''; });
+    destroyGraph();
+    switchLayer(activeLayer);
+  } else {
+    ac.style.display = 'none';
+    gc.style.display = 'block';
+    ll.style.display = 'none';
+    btns.forEach(function(b) { b.style.display = 'none'; });
+    renderGraph();
+  }
+}
+
+// ── Panel Toggle ──
+function togglePanel(id){
+  var p=document.getElementById(id);
+  var wasExpanded=p.classList.contains('expanded');
+  document.querySelectorAll('#lev-panel,#insp-panel,#summary-panel').forEach(function(el){
+    el.classList.remove('expanded');
+    el.classList.remove('collapsed');
+    if(el.id==='summary-panel') el.style.maxHeight='300px';
+  });
+  if(!wasExpanded){
+    p.classList.add('expanded');
+    if(p.id==='summary-panel') p.style.maxHeight='none';
+    document.querySelectorAll('#lev-panel,#insp-panel,#summary-panel').forEach(function(el){
+      if(el!==p) el.classList.add('collapsed');
+    });
+  }
+  p.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── Resize handler: Plotly + Sigma respond to container ──
+window.addEventListener('resize', function(){
+  if(currentMode==='analytics'){
+    Plotly.relayout('atlas-chart', {height:document.querySelector('.atlas-box').clientHeight, width:document.querySelector('.atlas-box').clientWidth});
+  }
+  if(sigmaInst){
+    sigmaInst.refresh();
+  }
+});
+
+// ── Init ──
+if(hasLev){
+  document.getElementById('lev-btn').style.display='';
+  document.getElementById('lev-panel').style.display='';
+  document.getElementById('roi-panel').style.display='';
+  document.getElementById('av-panel').style.display='';
+  renderLevTable();
+  renderROI();
+  renderAV();
+}
+if (hasGraph && hasSigma) {
+  document.getElementById('mode-toggle').style.display='';
+  initGraph();
+}
+
+// ── Prediction Layer ──
+var hasPred = D.predictions && D.predictions.status === 'ok';
+if(hasPred){
+  document.getElementById('pred-btn').style.display='';
+  document.getElementById('pred-panel').style.display='';
+  buildPredictionPanel(D.predictions);
+}
+
+function buildPredictionPanel(pred){
+  var html = '';
+  // Exit path
+  if(pred.exit_path && pred.exit_path.closes_needed){
+    html += '<div style="padding:6px 8px;background:#164e63;border-radius:6px;margin-bottom:8px">';
+    html += '<b style="color:#22d3ee">Exit Path:</b> ' + pred.exit_path.message;
+    html += '</div>';
+  }
+  // Mode forecast
+  if(pred.mode_forecast && pred.mode_forecast.mode_changed){
+    html += '<div style="padding:6px 8px;background:#1e3a5f;border-radius:6px;margin-bottom:8px">';
+    html += '<b style="color:#60a5fa">Forecast:</b> ';
+    html += pred.mode_forecast.transitions.join(' | ');
+    html += '</div>';
+  }
+  // Top actions
+  if(pred.top_actions && pred.top_actions.length){
+    html += '<table style="width:100%;font-size:11px;border-collapse:collapse">';
+    html += '<tr style="color:#94a3b8"><td>Loop</td><td>P(resolve)</td><td>Outcome</td></tr>';
+    pred.top_actions.forEach(function(a){
+      var color = a.most_likely_outcome === 'abandoned' ? '#f87171' :
+                  a.most_likely_outcome === 'looped' ? '#fbbf24' :
+                  a.most_likely_outcome === 'resolved' ? '#60a5fa' : '#34d399';
+      html += '<tr style="border-top:1px solid #334155">';
+      html += '<td style="padding:4px 2px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (a.title||'') + '">' + (a.title||'').substring(0,25) + '</td>';
+      html += '<td style="padding:4px 2px;color:#22d3ee">' + (a.resolve_probability*100).toFixed(0) + '%</td>';
+      html += '<td style="padding:4px 2px;color:' + color + '">' + (a.most_likely_outcome||'?') + '</td>';
+      html += '</tr>';
+    });
+    html += '</table>';
+  }
+  // Pattern summary
+  if(pred.active_patterns && pred.active_patterns.length){
+    var types = {};
+    pred.active_patterns.forEach(function(p){ types[p.type] = (types[p.type]||0) + 1; });
+    html += '<div style="margin-top:8px;font-size:11px;color:#94a3b8">Patterns: ';
+    Object.keys(types).forEach(function(t){ html += '<span style="color:#22d3ee">' + t + '</span>(' + types[t] + ') '; });
+    html += '</div>';
+  }
+  document.getElementById('pred-body').innerHTML = html || '<div style="color:#64748b">No predictions available</div>';
+}
+
+switchLayer('cluster');
+</script>
+</body>
+</html>

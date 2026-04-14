@@ -1,0 +1,154 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-08T21:20:07.650890+00:00",
+  "goals": [
+    {
+      "goal_id": "goal_lane1",
+      "lane_id": "lane_1",
+      "title": "Power Dynamics Book + Companion GPT",
+      "ship_criteria": "Published on Kindle/Gumroad with companion GPT live",
+      "status": "active",
+      "due_at": null,
+      "milestones": [
+        {
+          "milestone_id": "ms_goal_lane1_1",
+          "title": "Finalize manuscript and format for publishing",
+          "order": 1,
+          "status": "done",
+          "subtasks": [
+            {
+              "subtask_id": "st_gl1_1_1",
+              "title": "Final proofread of all 12 chapters",
+              "status": "done",
+              "tags": [
+                "writing"
+              ],
+              "depends_on": [],
+              "completed_at": "2026-04-08T10:00:00Z"
+            },
+            {
+              "subtask_id": "st_gl1_1_2",
+              "title": "Format PDF for Gumroad upload",
+              "status": "done",
+              "tags": [
+                "design"
+              ],
+              "depends_on": [
+                "st_gl1_1_1"
+              ],
+              "completed_at": "2026-04-08T11:00:00Z"
+            },
+            {
+              "subtask_id": "st_gl1_1_3",
+              "title": "Create Kindle-formatted EPUB",
+              "status": "done",
+              "tags": [
+                "design"
+              ],
+              "depends_on": [
+                "st_gl1_1_1"
+              ],
+              "completed_at": "2026-04-08T21:20:07.650860+00:00"
+            }
+          ]
+        },
+        {
+          "milestone_id": "ms_goal_lane1_2",
+          "title": "Build Companion GPT",
+          "order": 2,
+          "status": "active",
+          "subtasks": [
+            {
+              "subtask_id": "st_gl1_2_1",
+              "title": "Design GPT system prompt from book themes",
+              "status": "pending",
+              "tags": [
+                "ai_ml",
+                "writing"
+              ],
+              "depends_on": [],
+              "completed_at": null
+            },
+            {
+              "subtask_id": "st_gl1_2_2",
+              "title": "Upload knowledge base to GPT Builder",
+              "status": "pending",
+              "tags": [
+                "ai_ml"
+              ],
+              "depends_on": [
+                "st_gl1_2_1"
+              ],
+              "completed_at": null
+            },
+            {
+              "subtask_id": "st_gl1_2_3",
+              "title": "Test GPT with 10 sample queries",
+              "status": "pending",
+              "tags": [
+                "ai_ml",
+                "research"
+              ],
+              "depends_on": [
+                "st_gl1_2_2"
+              ],
+              "completed_at": null
+            }
+          ]
+        },
+        {
+          "milestone_id": "ms_goal_lane1_3",
+          "title": "Launch and distribute",
+          "order": 3,
+          "status": "pending",
+          "subtasks": [
+            {
+              "subtask_id": "st_gl1_3_1",
+              "title": "Set up Gumroad product page",
+              "status": "pending",
+              "tags": [
+                "marketing",
+                "sales"
+              ],
+              "depends_on": [],
+              "completed_at": null
+            },
+            {
+              "subtask_id": "st_gl1_3_2",
+              "title": "Publish to Kindle Direct",
+              "status": "pending",
+              "tags": [
+                "marketing"
+              ],
+              "depends_on": [],
+              "completed_at": null
+            },
+            {
+              "subtask_id": "st_gl1_3_3",
+              "title": "Share launch post on LinkedIn",
+              "status": "pending",
+              "tags": [
+                "marketing",
+                "networking"
+              ],
+              "depends_on": [
+                "st_gl1_3_1",
+                "st_gl1_3_2"
+              ],
+              "completed_at": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "goal_id": "goal_lane2",
+      "lane_id": "lane_2",
+      "title": "AI Automation Consulting (First Client)",
+      "ship_criteria": "1 paid engagement completed",
+      "status": "active",
+      "due_at": null,
+      "milestones": []
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[project]
+name = "cognitive-sensor"
+version = "0.1.0"
+description = "Behavioral intelligence engine — analyzes conversations, detects patterns, produces governance briefs"
+requires-python = ">=3.10"
+dependencies = [
+    "sentence-transformers>=2.2.0",
+    "numpy>=1.24.0",
+    "scikit-learn>=1.3.0",
+    "umap-learn>=0.5.5",
+    "hdbscan>=0.8.33",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests requiring UMAP/HDBSCAN (deselect with '-m \"not slow\"')",
+]

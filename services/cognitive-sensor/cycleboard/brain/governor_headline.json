@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-04-14T07:00:09.568946",
+  "mode": "BUILD",
+  "risk": "LOW",
+  "build_allowed": true,
+  "life_phase": 1,
+  "energy_level": 75,
+  "burnout_risk": false,
+  "runway_months": 3,
+  "closure_quality": 100.0,
+  "open_loops": 1,
+  "top_move": "'Universal Programming Table Setup' has been open 403 days (avg: 403d). Ship it this week or kill it permanently.",
+  "top_decision": "Park 'Code to Numeric Logic' (priority 0.59) \u2014 it's outside active lanes?",
+  "warning": null,
+  "confrontation": "'Universal Programming Table Setup' has been open 403 days (avg: 403d). Ship it this week or kill it permanently.",
+  "compliance_rate": 11,
+  "drift_score": 0,
+  "drift_alerts": [],
+  "genesis_top": "Spend 30min reviewing the 'overview / chatgpt / execution' domain. Has the market, your skills, or your interest changed?"
+}

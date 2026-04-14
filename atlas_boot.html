@@ -8,9 +8,9 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #0a0a0f;
-      color: #e0e0e0;
+      color: #e5e5e5;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -19,8 +19,8 @@
 
     /* === TOP DIRECTIVE BAR === */
     .directive-bar {
-      background: linear-gradient(180deg, #1a1a2e 0%, #16162a 100%);
-      border-bottom: 1px solid #2a2a4a;
+      background: #111118;
+      border-bottom: 1px solid #2a2a3a;
       padding: 12px 20px;
       display: flex;
       align-items: center;
@@ -32,7 +32,7 @@
       font-size: 14px;
       font-weight: 700;
       letter-spacing: 2px;
-      color: #8888aa;
+      color: #6366f1;
       text-transform: uppercase;
     }
 
@@ -52,7 +52,7 @@
       font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #666680;
+      color: #888;
     }
 
     .metric-value {
@@ -60,18 +60,21 @@
       font-weight: 700;
     }
 
-    .metric-value.mode-closure { color: #ff4444; }
-    .metric-value.mode-maintenance { color: #ffaa00; }
-    .metric-value.mode-build { color: #44ff88; }
-    .metric-value.risk-high { color: #ff4444; }
-    .metric-value.risk-medium { color: #ffaa00; }
-    .metric-value.risk-low { color: #44ff88; }
+    .metric-value.mode-closure { color: #f87171; }
+    .metric-value.mode-maintenance { color: #fbbf24; }
+    .metric-value.mode-build { color: #34d399; }
+    .metric-value.mode-recover { color: #f87171; }
+    .metric-value.mode-compound { color: #a78bfa; }
+    .metric-value.mode-scale { color: #38bdf8; }
+    .metric-value.risk-high { color: #f87171; }
+    .metric-value.risk-medium { color: #fbbf24; }
+    .metric-value.risk-low { color: #34d399; }
 
     .primary-order {
       flex: 2;
-      background: rgba(255, 68, 68, 0.15);
-      border: 1px solid rgba(255, 68, 68, 0.3);
-      border-radius: 6px;
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.25);
+      border-radius: 8px;
       padding: 8px 16px;
     }
 
@@ -79,13 +82,13 @@
       font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #ff6666;
+      color: #f87171;
     }
 
     .primary-order-text {
       font-size: 14px;
       font-weight: 600;
-      color: #ffaaaa;
+      color: #fca5a5;
     }
 
     /* === MAIN CONTENT AREA === */
@@ -99,13 +102,13 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      border-right: 1px solid #2a2a4a;
+      border-right: 1px solid #2a2a3a;
     }
 
     .viewport-tabs {
       display: flex;
-      background: #12121a;
-      border-bottom: 1px solid #2a2a4a;
+      background: #111118;
+      border-bottom: 1px solid #2a2a3a;
     }
 
     .viewport-tab {
@@ -114,26 +117,26 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #666680;
+      color: #888;
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
     }
 
     .viewport-tab:hover {
-      color: #8888aa;
+      color: #ccc;
       background: rgba(255, 255, 255, 0.02);
     }
 
     .viewport-tab.active {
-      color: #aaaacc;
-      border-bottom-color: #6666aa;
+      color: #e5e5e5;
+      border-bottom-color: #6366f1;
     }
 
     .viewport-frame {
       flex: 1;
       border: none;
-      background: #0f0f18;
+      background: #0a0a0f;
     }
 
     /* === RIGHT PANEL (DASHBOARD) === */
@@ -141,7 +144,7 @@
       width: 400px;
       display: flex;
       flex-direction: column;
-      background: #0f0f18;
+      background: #0a0a0f;
       transition: width 0.3s;
     }
 
@@ -154,8 +157,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 10px 12px;
-      background: #12121a;
-      border-bottom: 1px solid #2a2a4a;
+      background: #111118;
+      border-bottom: 1px solid #2a2a3a;
     }
 
     .panel-title {
@@ -163,7 +166,7 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #666680;
+      color: #888;
     }
 
     .right-panel.collapsed .panel-title {
@@ -173,20 +176,20 @@
     .panel-toggle {
       background: none;
       border: none;
-      color: #666680;
+      color: #888;
       cursor: pointer;
       padding: 4px 8px;
       font-size: 14px;
     }
 
     .panel-toggle:hover {
-      color: #aaaacc;
+      color: #e5e5e5;
     }
 
     .panel-frame {
       flex: 1;
       border: none;
-      background: #0f0f18;
+      background: #0a0a0f;
     }
 
     .right-panel.collapsed .panel-frame {
@@ -215,8 +218,8 @@
       width: 90%;
       max-width: 900px;
       height: 80%;
-      background: #1a1a2e;
-      border: 1px solid #2a2a4a;
+      background: #111118;
+      border: 1px solid #2a2a3a;
       border-radius: 12px;
       overflow: hidden;
       display: flex;
@@ -228,8 +231,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 16px 20px;
-      background: #12121a;
-      border-bottom: 1px solid #2a2a4a;
+      background: #111118;
+      border-bottom: 1px solid #2a2a3a;
     }
 
     .control-modal-title {
@@ -237,20 +240,20 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 2px;
-      color: #8888aa;
+      color: #aaa;
     }
 
     .control-modal-close {
       background: none;
       border: none;
-      color: #666680;
+      color: #888;
       cursor: pointer;
       font-size: 20px;
       padding: 4px 8px;
     }
 
     .control-modal-close:hover {
-      color: #ff4444;
+      color: #f87171;
     }
 
     .control-modal-frame {
@@ -284,7 +287,7 @@
       position: fixed;
       top: 10px;
       right: 10px;
-      background: rgba(255, 68, 68, 0.9);
+      background: rgba(248, 113, 113, 0.9);
       color: #fff;
       border: none;
       padding: 8px 16px;
@@ -293,18 +296,18 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       cursor: pointer;
-      border-radius: 4px;
+      border-radius: 8px;
       z-index: 201;
     }
 
     .desktop-exit:hover {
-      background: #ff4444;
+      background: #f87171;
     }
 
     /* === BOTTOM COMMAND STRIP === */
     .command-strip {
-      background: linear-gradient(180deg, #16162a 0%, #1a1a2e 100%);
-      border-top: 1px solid #2a2a4a;
+      background: #111118;
+      border-top: 1px solid #2a2a3a;
       padding: 12px 20px;
       display: flex;
       align-items: center;
@@ -319,42 +322,42 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       border: 1px solid;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
     }
 
     .command-btn.primary {
-      background: rgba(255, 68, 68, 0.2);
-      border-color: rgba(255, 68, 68, 0.5);
-      color: #ff8888;
+      background: rgba(248, 113, 113, 0.15);
+      border-color: rgba(248, 113, 113, 0.4);
+      color: #fca5a5;
     }
 
     .command-btn.primary:hover {
-      background: rgba(255, 68, 68, 0.3);
-      border-color: #ff4444;
+      background: rgba(248, 113, 113, 0.25);
+      border-color: #f87171;
     }
 
     .command-btn.secondary {
-      background: rgba(100, 100, 150, 0.2);
-      border-color: rgba(100, 100, 150, 0.5);
-      color: #aaaacc;
+      background: #1a1a2a;
+      border-color: #2a2a3a;
+      color: #aaa;
     }
 
     .command-btn.secondary:hover {
-      background: rgba(100, 100, 150, 0.3);
-      border-color: #8888aa;
+      border-color: #4338ca;
+      color: #ccc;
     }
 
     .command-btn.accent {
-      background: rgba(68, 255, 136, 0.2);
-      border-color: rgba(68, 255, 136, 0.5);
-      color: #88ffaa;
+      background: rgba(52, 211, 153, 0.15);
+      border-color: rgba(52, 211, 153, 0.4);
+      color: #6ee7b7;
     }
 
     .command-btn.accent:hover {
-      background: rgba(68, 255, 136, 0.3);
-      border-color: #44ff88;
+      background: rgba(52, 211, 153, 0.25);
+      border-color: #34d399;
     }
 
     .command-spacer {
@@ -363,7 +366,7 @@
 
     .system-status {
       font-size: 10px;
-      color: #444466;
+      color: #555;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -374,7 +377,7 @@
       height: 8px;
       border-radius: 50%;
       margin-right: 6px;
-      background: #44ff88;
+      background: #34d399;
       animation: pulse 2s infinite;
     }
 
@@ -385,17 +388,17 @@
 
     .daemon-status {
       font-size: 10px;
-      color: #444466;
+      color: #555;
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-left: 16px;
       padding-left: 16px;
-      border-left: 1px solid #2a2a4a;
+      border-left: 1px solid #2a2a3a;
     }
 
-    .daemon-status.running .status-dot { background: #44ff88; }
-    .daemon-status.stopped .status-dot { background: #ff4444; animation: none; }
-    .daemon-status.job-running .status-dot { background: #ffaa00; }
+    .daemon-status.running .status-dot { background: #34d399; }
+    .daemon-status.stopped .status-dot { background: #f87171; animation: none; }
+    .daemon-status.job-running .status-dot { background: #fbbf24; }
 
     .enforcement-badge {
       font-size: 10px;
@@ -407,10 +410,10 @@
       margin-left: 16px;
     }
 
-    .enforcement-badge.level-0 { background: rgba(68, 255, 136, 0.2); color: #44ff88; }
-    .enforcement-badge.level-1 { background: rgba(255, 170, 0, 0.2); color: #ffaa00; }
-    .enforcement-badge.level-2 { background: rgba(255, 136, 68, 0.2); color: #ff8844; }
-    .enforcement-badge.level-3 { background: rgba(255, 68, 68, 0.3); color: #ff4444; animation: pulse 1s infinite; }
+    .enforcement-badge.level-0 { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+    .enforcement-badge.level-1 { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+    .enforcement-badge.level-2 { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
+    .enforcement-badge.level-3 { background: rgba(248, 113, 113, 0.2); color: #f87171; animation: pulse 1s infinite; }
 
     /* === NOTIFICATIONS === */
     .notification {
@@ -419,7 +422,7 @@
       left: 50%;
       transform: translateX(-50%);
       padding: 12px 24px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 13px;
       font-weight: 600;
       z-index: 300;
@@ -427,154 +430,33 @@
     }
 
     .notification-success {
-      background: rgba(68, 255, 136, 0.2);
-      border: 1px solid rgba(68, 255, 136, 0.5);
-      color: #88ffaa;
+      background: rgba(52, 211, 153, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: #6ee7b7;
     }
 
     .notification-error {
-      background: rgba(255, 68, 68, 0.2);
-      border: 1px solid rgba(255, 68, 68, 0.5);
-      color: #ff8888;
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid rgba(248, 113, 113, 0.4);
+      color: #fca5a5;
     }
 
     .notification-info {
-      background: rgba(100, 100, 150, 0.2);
-      border: 1px solid rgba(100, 100, 150, 0.5);
-      color: #aaaacc;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
     }
 
     @keyframes slideDown {
       from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
       to { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
-
-    /* === MOBILE RESPONSIVE === */
-    @media (max-width: 768px) {
-      body {
-        overflow: auto;
-        height: auto;
-        min-height: 100vh;
-      }
-
-      /* Directive bar: stack vertically */
-      .directive-bar {
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 10px 12px;
-      }
-
-      .system-title {
-        width: 100%;
-        font-size: 12px;
-        margin-bottom: 4px;
-      }
-
-      .directive-metrics {
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .metric {
-        min-width: calc(33% - 12px);
-      }
-
-      .metric-value {
-        font-size: 15px;
-      }
-
-      .primary-order {
-        flex-basis: 100%;
-        margin-top: 4px;
-      }
-
-      .primary-order-text {
-        font-size: 13px;
-      }
-
-      /* Main content: stack vertically */
-      .main-content {
-        flex-direction: column;
-        overflow: auto;
-        min-height: 0;
-      }
-
-      .center-viewport {
-        border-right: none;
-        border-bottom: 1px solid #2a2a4a;
-        min-height: 60vh;
-      }
-
-      .viewport-frame {
-        min-height: 55vh;
-      }
-
-      /* Right panel: full width below */
-      .right-panel {
-        width: 100% !important;
-        min-height: 40vh;
-      }
-
-      .right-panel.collapsed {
-        width: 100% !important;
-        min-height: 40px;
-      }
-
-      .panel-frame {
-        min-height: 35vh;
-      }
-
-      /* Command strip: wrap buttons */
-      .command-strip {
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 10px 12px;
-      }
-
-      .command-btn {
-        padding: 8px 14px;
-        font-size: 10px;
-        flex: 1 1 auto;
-        min-width: fit-content;
-        text-align: center;
-      }
-
-      .command-spacer {
-        display: none;
-      }
-
-      .system-status,
-      .daemon-status {
-        width: 100%;
-        text-align: center;
-        margin-left: 0;
-        padding-left: 0;
-        border-left: none;
-        border-top: 1px solid #2a2a4a;
-        padding-top: 8px;
-      }
-
-      /* Control modal: full screen on mobile */
-      .control-modal-content {
-        width: 100%;
-        height: 100%;
-        max-width: none;
-        border-radius: 0;
-      }
-
-      /* Notifications */
-      .notification {
-        left: 10px;
-        right: 10px;
-        transform: none;
-        text-align: center;
-      }
-
-      @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+    ::-webkit-scrollbar-corner { background: transparent; }
+    * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
   </style>
 </head>
 <body>
@@ -599,6 +481,10 @@
         <div class="metric-value" id="metric-ratio">6.67%</div>
       </div>
       <div class="metric">
+        <div class="metric-label">Closure Quality</div>
+        <div class="metric-value" id="metric-closure-quality" style="color: #f87171;">—</div>
+      </div>
+      <div class="metric">
         <div class="metric-label">Enforcement</div>
         <div class="metric-value" id="metric-enforcement">
           <span class="enforcement-badge level-0" id="enforcement-badge">CLEAR</span>
@@ -606,11 +492,11 @@
       </div>
       <div class="metric">
         <div class="metric-label">Today</div>
-        <div class="metric-value" id="metric-closures-today" style="color: #88ffaa;">0</div>
+        <div class="metric-value" id="metric-closures-today" style="color: #34d399;">0</div>
       </div>
       <div class="metric">
         <div class="metric-label">Streak</div>
-        <div class="metric-value" id="metric-streak" style="color: #ffcc44;">0d</div>
+        <div class="metric-value" id="metric-streak" style="color: #fbbf24;">0d</div>
       </div>
       <div class="primary-order">
         <div class="primary-order-label">Primary Order</div>
@@ -624,16 +510,22 @@
     <!-- CENTER VIEWPORT -->
     <div class="center-viewport">
       <div class="viewport-tabs">
-        <div class="viewport-tab active" onclick="switchTab('cycleboard')">CycleBoard</div>
-        <div class="viewport-tab" onclick="switchTab('control')">Control Panel</div>
+        <div class="viewport-tab active" onclick="switchTab('cycleboard', event)">CycleBoard</div>
+        <div class="viewport-tab" onclick="switchTab('control', event)">Control Panel <span id="tab-badge-control" style="display:none;font-size:10px;background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-left:4px;"></span></div>
+        <div class="viewport-tab" onclick="switchTab('atlas', event)">Cognitive Atlas</div>
+        <div class="viewport-tab" onclick="switchTab('ideas', event)">Ideas <span id="tab-badge-ideas" style="display:none;font-size:10px;background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-left:4px;"></span></div>
+        <div class="viewport-tab" onclick="switchTab('docs', event)">Docs</div>
+        <div class="viewport-tab" onclick="switchTab('aegis', event)">Aegis</div>
+        <div class="viewport-tab" onclick="switchTab('blueprint', event)">Blueprint</div>
+        <div class="viewport-tab" onclick="switchTab('cortex', event)">Cortex</div>
       </div>
-      <iframe id="viewport-frame" class="viewport-frame" src="services/cognitive-sensor/cycleboard_app3.html"></iframe>
+      <iframe id="viewport-frame" class="viewport-frame" src="services/cognitive-sensor/cycleboard/index.html?v=4"></iframe>
     </div>
 
     <!-- RIGHT PANEL -->
     <div class="right-panel" id="right-panel">
       <div class="panel-header">
-        <span class="panel-title">Telemetry</span>
+        <span class="panel-title">Governance + Ideas</span>
         <button class="panel-toggle" onclick="toggleRightPanel()">◀</button>
       </div>
       <iframe class="panel-frame" src="services/cognitive-sensor/dashboard.html"></iframe>
@@ -687,18 +579,59 @@
     };
 
     // === TAB SWITCHING ===
-    function switchTab(tab) {
+    function switchTab(tab, evt) {
       currentTab = tab;
       document.querySelectorAll('.viewport-tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
+      evt.target.classList.add('active');
 
       const frame = document.getElementById('viewport-frame');
       if (tab === 'cycleboard') {
-        frame.src = 'services/cognitive-sensor/cycleboard_app3.html';
+        frame.src = 'services/cognitive-sensor/cycleboard/index.html?v=4';
       } else if (tab === 'control') {
         frame.src = 'services/cognitive-sensor/control_panel.html';
+      } else if (tab === 'atlas') {
+        frame.src = 'services/cognitive-sensor/cognitive_atlas.html';
+      } else if (tab === 'docs') {
+        frame.src = 'services/cognitive-sensor/docs_viewer.html';
+      } else if (tab === 'ideas') {
+        frame.src = 'services/cognitive-sensor/idea_dashboard.html';
+      } else if (tab === 'aegis') {
+        frame.src = 'services/aegis-fabric/src/ui/dashboard.html';
+      } else if (tab === 'blueprint') {
+        frame.src = 'services/cognitive-sensor/blueprint.html';
+      } else if (tab === 'cortex') {
+        frame.src = 'services/cortex/dashboard.html';
       }
     }
+
+    // === IFRAME NAVIGATION BRIDGE ===
+    window.addEventListener('message', function(event) {
+      if (!event.data || event.data.type !== 'atlas-navigate') return;
+      const target = event.data.target;
+      const tabUrls = {
+        cycleboard: 'services/cognitive-sensor/cycleboard/index.html?v=4',
+        control: 'services/cognitive-sensor/control_panel.html',
+        atlas: 'services/cognitive-sensor/cognitive_atlas.html',
+        ideas: 'services/cognitive-sensor/idea_dashboard.html',
+        docs: 'services/cognitive-sensor/docs_viewer.html',
+        aegis: 'services/aegis-fabric/src/ui/dashboard.html',
+        blueprint: 'services/cognitive-sensor/blueprint.html',
+        cortex: 'services/cortex/dashboard.html'
+      };
+      if (tabUrls[target]) {
+        currentTab = target;
+        document.querySelectorAll('.viewport-tab').forEach(t => t.classList.remove('active'));
+        const tabIndex = { cycleboard: 0, control: 1, atlas: 2, ideas: 3, docs: 4, aegis: 5, blueprint: 6, cortex: 7 };
+        const tabs = document.querySelectorAll('.viewport-tab');
+        if (tabs[tabIndex[target]]) tabs[tabIndex[target]].classList.add('active');
+        document.getElementById('viewport-frame').src = tabUrls[target];
+        if (target === 'control') closeControlModal();
+      } else if (target === 'dashboard') {
+        const panel = document.getElementById('right-panel');
+        if (panel.classList.contains('collapsed')) toggleRightPanel();
+        closeControlModal();
+      }
+    });
 
     // === RIGHT PANEL ===
     function toggleRightPanel() {
@@ -823,119 +756,188 @@
       setTimeout(() => notification.remove(), 4000);
     }
 
-    // === UNIFIED STATE UPDATES ===
+    // === UNIFIED STATE POLLING (exponential backoff) ===
     let apiOnline = false;
-    let unifiedPollInterval = null;
-    let unifiedEventSource = null;
-    const POLL_INTERVAL_MS = 30000; // 30 seconds
-
-    function applyUnifiedState(data) {
-      if (!data || !data.ok) return;
-
-      apiOnline = true;
-      updateStatusIndicator(true);
-
-      // Update UI from derived values (single truth)
-      const { mode, risk, open_loops, closure_ratio, primary_order,
-              build_allowed, enforcement_level, violations_count,
-              closures_today, total_closures, streak_days, best_streak } = data.derived;
-
-      // Mode
-      const modeEl = document.getElementById('metric-mode');
-      modeEl.textContent = mode;
-      modeEl.className = 'metric-value mode-' + mode.toLowerCase();
-
-      // Risk
-      const riskEl = document.getElementById('metric-risk');
-      riskEl.textContent = risk;
-      riskEl.className = 'metric-value risk-' + risk.toLowerCase();
-
-      // Open Loops
-      document.getElementById('metric-loops').textContent = open_loops;
-
-      // Closure Ratio (as percentage)
-      const ratioPercent = (typeof closure_ratio === 'number' ? closure_ratio * 100 : closure_ratio);
-      document.getElementById('metric-ratio').textContent =
-        (typeof ratioPercent === 'number' ? ratioPercent.toFixed(1) : ratioPercent) + '%';
-
-      // Primary Order
-      document.getElementById('primary-order').textContent = primary_order;
-
-      // Enforcement Badge
-      const enforcementBadge = document.getElementById('enforcement-badge');
-      if (enforcementBadge) {
-        const levelLabels = ['CLEAR', 'WARN', 'LOCKED', 'HARD LOCK'];
-        enforcementBadge.textContent = violations_count > 0
-          ? `${levelLabels[enforcement_level]} (${violations_count})`
-          : levelLabels[enforcement_level];
-        enforcementBadge.className = `enforcement-badge level-${enforcement_level}`;
-      }
-
-      // Closures Today
-      const closuresTodayEl = document.getElementById('metric-closures-today');
-      if (closuresTodayEl) {
-        closuresTodayEl.textContent = closures_today;
-        // Color based on productivity: green if >= 3, yellow if 1-2, gray if 0
-        if (closures_today >= 3) {
-          closuresTodayEl.style.color = '#44ff88';
-        } else if (closures_today > 0) {
-          closuresTodayEl.style.color = '#ffcc44';
-        } else {
-          closuresTodayEl.style.color = '#666680';
-        }
-      }
-
-      // Streak
-      const streakEl = document.getElementById('metric-streak');
-      if (streakEl) {
-        streakEl.textContent = streak_days + 'd';
-        // Color based on streak: gold if >= 7, green if >= 3, yellow otherwise
-        if (streak_days >= 7) {
-          streakEl.style.color = '#ffd700';
-        } else if (streak_days >= 3) {
-          streakEl.style.color = '#44ff88';
-        } else {
-          streakEl.style.color = '#ffcc44';
-        }
-        // Show best streak on hover
-        streakEl.title = `Best: ${best_streak}d | Total: ${total_closures}`;
-      }
-
-      // Update local state cache
-      systemState = {
-        mode,
-        risk,
-        openLoops: open_loops,
-        closureRatio: closure_ratio,
-        primaryAction: primary_order,
-        buildAllowed: build_allowed,
-        enforcementLevel: enforcement_level,
-        violationsCount: violations_count,
-        closuresToday: closures_today,
-        streakDays: streak_days,
-        bestStreak: best_streak,
-        totalClosures: total_closures
-      };
-
-      // Log any non-fatal errors
-      if (data.errors && data.errors.length > 0) {
-        console.log('Unified state warnings:', data.errors);
-      }
-    }
+    let pollTimer = null;
+    const POLL_MIN_MS = 10000;       // 10 seconds minimum
+    const POLL_MAX_MS = 120000;      // 2 minutes maximum
+    const POLL_BACKOFF_FACTOR = 1.5;
+    let currentPollInterval = POLL_MIN_MS;
+    let consecutiveFailures = 0;
 
     async function loadUnifiedState() {
       try {
         const response = await fetch(`${API_BASE}/api/state/unified`);
         const data = await response.json();
-        applyUnifiedState(data);
+
+        if (data.ok) {
+          apiOnline = true;
+          consecutiveFailures = 0;
+          currentPollInterval = POLL_MIN_MS;
+          updateStatusIndicator(true);
+
+          // Update UI from derived values (single truth)
+          const { mode, risk, open_loops, closure_ratio, primary_order,
+                  build_allowed, enforcement_level, violations_count,
+                  closures_today, total_closures, streak_days, best_streak } = data.derived;
+
+          // Mode
+          const modeEl = document.getElementById('metric-mode');
+          modeEl.textContent = mode;
+          modeEl.className = 'metric-value mode-' + mode.toLowerCase();
+
+          // Risk
+          const riskEl = document.getElementById('metric-risk');
+          riskEl.textContent = risk;
+          riskEl.className = 'metric-value risk-' + risk.toLowerCase();
+
+          // Open Loops
+          document.getElementById('metric-loops').textContent = open_loops;
+
+          // Tab badges
+          const controlBadge = document.getElementById('tab-badge-control');
+          if (controlBadge && open_loops > 0) {
+            controlBadge.textContent = open_loops;
+            controlBadge.style.display = 'inline';
+          }
+
+          // Closure Ratio (as percentage)
+          const ratioPercent = (typeof closure_ratio === 'number' ? closure_ratio * 100 : closure_ratio);
+          document.getElementById('metric-ratio').textContent =
+            (typeof ratioPercent === 'number' ? ratioPercent.toFixed(1) : ratioPercent) + '%';
+
+          // Primary Order
+          document.getElementById('primary-order').textContent = primary_order;
+
+          // Enforcement Badge
+          const enforcementBadge = document.getElementById('enforcement-badge');
+          if (enforcementBadge) {
+            const levelLabels = ['CLEAR', 'WARN', 'LOCKED', 'HARD LOCK'];
+            enforcementBadge.textContent = violations_count > 0
+              ? `${levelLabels[enforcement_level]} (${violations_count})`
+              : levelLabels[enforcement_level];
+            enforcementBadge.className = `enforcement-badge level-${enforcement_level}`;
+          }
+
+          // Closures Today
+          const closuresTodayEl = document.getElementById('metric-closures-today');
+          if (closuresTodayEl) {
+            closuresTodayEl.textContent = closures_today;
+            // Color based on productivity: green if >= 3, yellow if 1-2, gray if 0
+            if (closures_today >= 3) {
+              closuresTodayEl.style.color = '#34d399';
+            } else if (closures_today > 0) {
+              closuresTodayEl.style.color = '#fbbf24';
+            } else {
+              closuresTodayEl.style.color = '#555';
+            }
+          }
+
+          // Streak
+          const streakEl = document.getElementById('metric-streak');
+          if (streakEl) {
+            streakEl.textContent = streak_days + 'd';
+            // Color based on streak: gold if >= 7, green if >= 3, yellow otherwise
+            if (streak_days >= 7) {
+              streakEl.style.color = '#fbbf24';
+            } else if (streak_days >= 3) {
+              streakEl.style.color = '#34d399';
+            } else {
+              streakEl.style.color = '#fbbf24';
+            }
+            // Show best streak on hover
+            streakEl.title = `Best: ${best_streak}d | Total: ${total_closures}`;
+          }
+
+          // Update local state cache
+          systemState = {
+            mode,
+            risk,
+            openLoops: open_loops,
+            closureRatio: closure_ratio,
+            primaryAction: primary_order,
+            buildAllowed: build_allowed,
+            enforcementLevel: enforcement_level,
+            violationsCount: violations_count,
+            closuresToday: closures_today,
+            streakDays: streak_days,
+            bestStreak: best_streak,
+            totalClosures: total_closures
+          };
+
+          // Log any non-fatal errors
+          if (data.errors && data.errors.length > 0) {
+            console.log('Unified state warnings:', data.errors);
+          }
+        }
       } catch (e) {
         if (apiOnline) {
-          // Only show notification on transition from online to offline
           showNotification('API offline - using cached values', 'info');
         }
         apiOnline = false;
+        consecutiveFailures++;
+        currentPollInterval = Math.min(
+          POLL_MIN_MS * Math.pow(POLL_BACKOFF_FACTOR, consecutiveFailures),
+          POLL_MAX_MS
+        );
         updateStatusIndicator(false);
-        console.log('Unified state fetch failed, keeping cached values:', e.message);
+        console.log(`Unified state fetch failed (retry in ${Math.round(currentPollInterval/1000)}s):`, e.message);
+      }
+    }
+
+    // Load governor headline from local file (works even when API is down)
+    async function loadGovernorHeadline() {
+      try {
+        const response = await fetch('services/cognitive-sensor/governor_headline.json');
+        if (!response.ok) return;
+        const headline = await response.json();
+
+        // Update closure quality metric
+        const cqEl = document.getElementById('metric-closure-quality');
+        if (cqEl && headline.closure_quality !== undefined) {
+          cqEl.textContent = headline.closure_quality.toFixed(1) + '%';
+          if (headline.closure_quality < 30) {
+            cqEl.style.color = '#f87171';  // red
+            cqEl.title = 'Archiving is not closing. Truly close loops to raise this.';
+          } else if (headline.closure_quality < 60) {
+            cqEl.style.color = '#fbbf24';  // yellow
+          } else {
+            cqEl.style.color = '#34d399';  // green
+          }
+        }
+
+        // If API is offline, use headline as fallback for directive bar
+        if (!apiOnline && headline.mode) {
+          const modeEl = document.getElementById('metric-mode');
+          if (modeEl) {
+            modeEl.textContent = headline.mode;
+            modeEl.className = 'metric-value mode-' + headline.mode.toLowerCase();
+          }
+          const riskEl = document.getElementById('metric-risk');
+          if (riskEl) {
+            riskEl.textContent = headline.risk;
+            riskEl.className = 'metric-value risk-' + headline.risk.toLowerCase();
+          }
+          if (headline.open_loops !== undefined) {
+            document.getElementById('metric-loops').textContent = headline.open_loops;
+          }
+          if (headline.top_move) {
+            document.getElementById('primary-order').textContent = headline.top_move;
+          }
+        }
+
+        // Show warning banner if governor says so
+        if (headline.warning) {
+          const orderEl = document.getElementById('primary-order');
+          if (orderEl && !orderEl.dataset.warningShown) {
+            orderEl.textContent = headline.warning + ' — ' + (headline.top_move || '');
+            orderEl.style.color = '#f87171';
+            orderEl.dataset.warningShown = 'true';
+          }
+        }
+      } catch (e) {
+        // Governor headline is optional — fail silently
+        console.log('Governor headline not available:', e.message);
       }
     }
 
@@ -943,58 +945,50 @@
       const statusDot = document.querySelector('.status-dot');
       const statusText = document.querySelector('.system-status');
       if (online) {
-        statusDot.style.background = '#44ff88';
-        statusText.innerHTML = '<span class="status-dot" style="background:#44ff88"></span>System Online';
+        statusDot.style.background = '#34d399';
+        statusText.innerHTML = '<span class="status-dot" style="background:#34d399"></span>System Online';
       } else {
-        statusDot.style.background = '#ff4444';
-        statusText.innerHTML = '<span class="status-dot" style="background:#ff4444"></span>API Offline';
+        statusDot.style.background = '#f87171';
+        statusText.innerHTML = '<span class="status-dot" style="background:#f87171"></span>API Offline';
       }
     }
 
-    function startUnifiedPolling() {
+    function startPolling() {
       loadUnifiedState();
-      unifiedPollInterval = setInterval(loadUnifiedState, POLL_INTERVAL_MS);
+      loadDaemonStatus();
+      loadGovernorHeadline();
+      schedulePoll();
     }
 
-    function stopUnifiedPolling() {
-      if (unifiedPollInterval) {
-        clearInterval(unifiedPollInterval);
-        unifiedPollInterval = null;
+    function schedulePoll() {
+      if (pollTimer) clearTimeout(pollTimer);
+      pollTimer = setTimeout(() => {
+        loadUnifiedState();
+        loadDaemonStatus();
+        schedulePoll();
+      }, currentPollInterval);
+    }
+
+    function stopPolling() {
+      if (pollTimer) {
+        clearTimeout(pollTimer);
+        pollTimer = null;
       }
     }
 
-    function startUnifiedStream() {
-      if (!('EventSource' in window)) {
-        startUnifiedPolling();
-        return;
+    // Pause polling when tab is hidden, resume on focus
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        currentPollInterval = POLL_MIN_MS;
+        consecutiveFailures = 0;
+        startPolling();
       }
-
-      const streamUrl = `${API_BASE}/api/state/unified/stream`;
-      unifiedEventSource = new EventSource(streamUrl);
-
-      unifiedEventSource.addEventListener('unified_state', (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          applyUnifiedState(data);
-        } catch (err) {
-          console.log('Unified state stream parse error:', err);
-        }
-      });
-
-      unifiedEventSource.onerror = () => {
-        if (unifiedEventSource) {
-          unifiedEventSource.close();
-          unifiedEventSource = null;
-        }
-        if (!unifiedPollInterval) {
-          startUnifiedPolling();
-        }
-      };
-    }
+    });
 
     // === DAEMON STATUS POLLING ===
     let daemonOnline = false;
-    let daemonPollInterval = null;
 
     async function loadDaemonStatus() {
       try {
@@ -1055,14 +1049,8 @@
       }
     });
 
-    function startDaemonPolling() {
-      loadDaemonStatus();
-      daemonPollInterval = setInterval(loadDaemonStatus, POLL_INTERVAL_MS);
-    }
-
     // === INIT ===
-    startUnifiedStream();
-    startDaemonPolling();
+    startPolling();
   </script>
 </body>
 </html>

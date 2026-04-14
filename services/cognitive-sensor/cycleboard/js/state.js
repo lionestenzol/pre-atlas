@@ -1,4 +1,4 @@
-// CycleBoard State Management Module
+// Atlas Dashboard State Management Module
 // Handles state persistence, undo/redo, and data migration
 
 // Task Status Constants
@@ -198,7 +198,7 @@ class CycleBoardState {
 
   loadFromStorage() {
     try {
-      const saved = localStorage.getItem('cycleboard-state');
+      const saved = localStorage.getItem('atlas-dashboard-state');
       if (saved) {
         this.state = JSON.parse(saved);
         if (!this.state.version) {
@@ -352,7 +352,10 @@ class CycleBoardState {
 
   syncToApiDebounced() {
     clearTimeout(this.apiSyncTimer);
-    this.apiSyncTimer = setTimeout(() => this.syncToApi(), API_SYNC_DEBOUNCE_MS);
+    this.apiSyncTimer = setTimeout(() => {
+      this.apiSyncTimer = null;
+      this.syncToApi();
+    }, API_SYNC_DEBOUNCE_MS);
   }
 
   // === Storage Methods ===
@@ -361,8 +364,10 @@ class CycleBoardState {
     try {
       this.state._savedAt = Date.now();
       this.state._offline = this.apiAvailable === false;
-      localStorage.setItem('cycleboard-state', JSON.stringify(this.state));
-      this.syncToApiDebounced();
+      localStorage.setItem('atlas-dashboard-state', JSON.stringify(this.state));
+      if (!this.apiSyncTimer) {
+        this.syncToApiDebounced();
+      }
     } catch (e) {
       console.error('Failed to save state:', e);
 
@@ -372,7 +377,7 @@ class CycleBoardState {
 
         // Try again after cleanup
         try {
-          localStorage.setItem('cycleboard-state', JSON.stringify(this.state));
+          localStorage.setItem('atlas-dashboard-state', JSON.stringify(this.state));
           this.syncToApiDebounced();
           if (typeof UI !== 'undefined') {
             UI.showToast('Storage Warning', 'Cleaned up old data to save space', 'warning');
@@ -420,6 +425,7 @@ class CycleBoardState {
   update(updates) {
     Object.assign(this.state, updates);
     this.pushHistory(); // Save state for undo/redo
+    this.syncToApiDebounced();
     if (this.state.Settings.autoSave) {
       this.saveDebounced();
     }

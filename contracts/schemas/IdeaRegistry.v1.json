@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "IdeaRegistry.v1",
+  "title": "Idea Registry",
+  "description": "Priority-ranked master registry of all ideas, produced by the Idea Intelligence System",
+  "type": "object",
+  "required": ["metadata", "tiers", "full_registry"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["generated_at", "total_ideas", "tier_breakdown"],
+      "properties": {
+        "generated_at": { "type": "string" },
+        "total_ideas": { "type": "integer" },
+        "reference_date": { "type": "string" },
+        "tier_breakdown": {
+          "type": "object",
+          "properties": {
+            "execute_now": { "type": "integer" },
+            "next_up": { "type": "integer" },
+            "backlog": { "type": "integer" },
+            "archive": { "type": "integer" }
+          }
+        },
+        "max_priority": { "type": "number" },
+        "avg_priority": { "type": "number" }
+      }
+    },
+    "tiers": {
+      "type": "object",
+      "properties": {
+        "execute_now": { "type": "array" },
+        "next_up": { "type": "array" },
+        "backlog": { "type": "array" },
+        "archive": { "type": "array" }
+      }
+    },
+    "execution_sequence": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "gateway_ideas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "canonical_id": { "type": "string" },
+          "canonical_title": { "type": "string" },
+          "unlocks_count": { "type": "integer" },
+          "unlocked_ideas": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "vision_clusters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cluster_id": { "type": "string" },
+          "name": { "type": "string" },
+          "size": { "type": "integer" },
+          "idea_ids": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "full_registry": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["canonical_id", "canonical_title", "priority_score", "tier"],
+        "properties": {
+          "canonical_id": { "type": "string" },
+          "canonical_title": { "type": "string" },
+          "canonical_text": { "type": "string" },
+          "category": { "type": "string" },
+          "mention_count": { "type": "integer" },
+          "status": { "type": "string" },
+          "priority_score": { "type": "number" },
+          "priority_breakdown": { "type": "object" },
+          "tier": { "type": "string" },
+          "complexity": { "type": "string" },
+          "alignment_score": { "type": "number" },
+          "skills_required": { "type": "array", "items": { "type": "string" } },
+          "vision_cluster": { "type": ["string", "null"] },
+          "parent_idea": { "type": ["string", "null"] },
+          "child_ideas": { "type": "array", "items": { "type": "string" } },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "version_timeline": { "type": "array" }
+        }
+      }
+    }
+  }
+}

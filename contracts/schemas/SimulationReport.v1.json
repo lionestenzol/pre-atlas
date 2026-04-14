@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "SimulationReport.v1",
+  "title": "MiroFish Simulation Report",
+  "description": "Structured report from a completed MiroFish swarm simulation — predictions, consensus, dissent, and recommendations.",
+  "type": "object",
+  "required": ["simulation_id", "schema_version", "topic", "agent_count", "tick_count", "summary", "created_at"],
+  "properties": {
+    "simulation_id": {
+      "type": "string",
+      "description": "Unique simulation identifier (UUID)"
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "topic": {
+      "type": "string",
+      "description": "The topic or question the simulation explored"
+    },
+    "agent_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500,
+      "description": "Number of agents in the simulation"
+    },
+    "tick_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "description": "Number of ticks the simulation ran"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total simulation runtime in seconds"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Executive summary of simulation findings"
+    },
+    "key_insights": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Notable insights from the simulation"
+    },
+    "consensus_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim", "confidence"],
+        "properties": {
+          "claim": { "type": "string", "description": "The consensus claim" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence score 0-1" },
+          "supporting_agents": { "type": "integer", "description": "Number of agents supporting this claim" }
+        }
+      },
+      "description": "Claims most agents agree on"
+    },
+    "dissent_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim"],
+        "properties": {
+          "claim": { "type": "string", "description": "The contested claim" },
+          "agents_for": { "type": "integer", "description": "Agents supporting" },
+          "agents_against": { "type": "integer", "description": "Agents opposing" }
+        }
+      },
+      "description": "Claims with strong disagreement"
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "description": "Recommended action" },
+          "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+          "rationale": { "type": "string", "description": "Why this is recommended" }
+        }
+      },
+      "description": "Recommended actions based on simulation"
+    },
+    "agent_contributions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["agent_id", "archetype"],
+        "properties": {
+          "agent_id": { "type": "string" },
+          "archetype": { "type": "string" },
+          "message_count": { "type": "integer" },
+          "influence_score": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      },
+      "description": "Per-agent contribution metrics"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when report was generated"
+    }
+  },
+  "additionalProperties": false
+}

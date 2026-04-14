@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-09T10:00:00+00:00",
+  "contacts": {
+    "c_37cfc8fab003": {
+      "contact_id": "c_37cfc8fab003",
+      "name": "Alex Chen",
+      "title": "VP Operations",
+      "company": "TechFlow Inc",
+      "email": "alex@techflow.com",
+      "status": "active",
+      "tags": [
+        "automation",
+        "consulting",
+        "ai_ml"
+      ],
+      "last_contact_at": "2026-04-09T10:00:00+00:00",
+      "next_follow_up": "2026-04-16",
+      "notes": ""
+    },
+    "c_363133828c64": {
+      "contact_id": "c_363133828c64",
+      "name": "Sarah Kim",
+      "title": "CEO",
+      "company": "DataPulse",
+      "email": "sarah@datapulse.io",
+      "status": "active",
+      "tags": [
+        "ai_ml",
+        "data",
+        "productizable_system"
+      ],
+      "last_contact_at": "2026-04-09T10:00:00+00:00",
+      "next_follow_up": "2026-04-15",
+      "notes": ""
+    },
+    "c_d8f8b1a43258": {
+      "contact_id": "c_d8f8b1a43258",
+      "name": "Marcus Rivera",
+      "title": "CTO",
+      "company": "BuildRight",
+      "email": "marcus@buildright.co",
+      "status": "cold",
+      "tags": [
+        "automation",
+        "infrastructure_build"
+      ],
+      "last_contact_at": null,
+      "next_follow_up": "2026-04-12",
+      "notes": ""
+    }
+  },
+  "interactions": [
+    {
+      "id": "ix_b28c643a74bd",
+      "contact_id": "c_37cfc8fab003",
+      "date": "2026-04-05",
+      "type": "email",
+      "outcome": "positive",
+      "notes": "Discussed AI workflow automation"
+    },
+    {
+      "id": "ix_114b91a8a528",
+      "contact_id": "c_363133828c64",
+      "date": "2026-04-08",
+      "type": "call",
+      "outcome": "positive",
+      "notes": "Discovery call - interested in audit"
+    },
+    {
+      "id": "ix_70c9260dbd0f",
+      "contact_id": "c_37cfc8fab003",
+      "date": "2026-04-09",
+      "type": "meeting",
+      "outcome": "positive",
+      "notes": "Demo of automation pipeline"
+    }
+  ],
+  "opportunities": [],
+  "outreach_queue": []
+}

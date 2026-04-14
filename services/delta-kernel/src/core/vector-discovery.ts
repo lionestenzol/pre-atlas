@@ -528,7 +528,7 @@ export async function runRoutingPatternJob(
   }
 
   // Detect skipped modes (expected progression not followed)
-  const expectedProgression: Mode[] = ['RECOVER', 'CLOSE_LOOPS', 'BUILD', 'COMPOUND', 'SCALE'];
+  const expectedProgression: Mode[] = ['RECOVER', 'CLOSURE', 'BUILD', 'COMPOUND', 'SCALE'];
   for (let i = 0; i < expectedProgression.length - 2; i++) {
     const skipTransition = `${expectedProgression[i]}->${expectedProgression[i + 2]}`;
     if (input.routingHistory.transition_counts[skipTransition] > 0) {

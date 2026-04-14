@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "north_star": {
+    "weekly": "Ship 1 asset (doc, tool, GPT, chapter, client deliverable)",
+    "monthly": "Generate revenue from AI consulting or products",
+    "system": "Increase closure_ratio, decrease active_lanes",
+    "guard": "Block new ideas unless current lane is shipped or archived"
+  },
+  "targets": {
+    "max_active_lanes": 2,
+    "weekly_ship_target": 1,
+    "min_closure_ratio": 15.0,
+    "max_open_loops": 20,
+    "idea_moratorium": true,
+    "max_research_minutes": 30,
+    "min_build_minutes": 90,
+    "daily_work_blocks": 3
+  },
+  "routing": {
+    "closure_ratio_critical": 15.0,
+    "open_loops_critical": 20,
+    "open_loops_caution": 10,
+    "closure_quality_critical": 30.0,
+    "min_loop_score": 18000
+  },
+  "active_lanes": [
+    {
+      "id": "lane_1",
+      "name": "Power Dynamics Book + Companion GPT",
+      "type": "product",
+      "status": "in_progress",
+      "ship_criteria": "Published on Kindle/Gumroad with companion GPT live",
+      "deadline_weeks": 4
+    },
+    {
+      "id": "lane_2",
+      "name": "AI Automation Consulting (First Client)",
+      "type": "service",
+      "status": "in_progress",
+      "ship_criteria": "1 paid engagement completed",
+      "deadline_weeks": 8
+    }
+  ],
+  "reservoir_rules": {
+    "max_active_lanes": 2,
+    "promotion_requires": "governor_approval",
+    "auto_park_threshold": 0.0
+  },
+  "brief_template": {
+    "sections": [
+      "mode",
+      "world_changed",
+      "leverage_moves",
+      "automation_target",
+      "decisions"
+    ],
+    "max_decisions": 3,
+    "format": "markdown"
+  },
+  "weekly_template": {
+    "sections": [
+      "reality_check",
+      "lane_progress",
+      "autonomy_proposals",
+      "lane_integrity",
+      "stop_list",
+      "decisions"
+    ],
+    "max_decisions": 5,
+    "format": "markdown"
+  }
+}

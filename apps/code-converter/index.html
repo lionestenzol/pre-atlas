@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code to Numeric Logic</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 20px 32px;
+            border-bottom: 1px solid #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+
+        header h1 span {
+            color: #6366f1;
+        }
+
+        .version {
+            font-size: 11px;
+            color: #555;
+            padding: 3px 8px;
+            border: 1px solid #222;
+            border-radius: 4px;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            height: calc(100vh - 180px);
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel:first-child {
+            border-right: 1px solid #1a1a2e;
+        }
+
+        .panel-header {
+            padding: 12px 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            border-bottom: 1px solid #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-header .lang-tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+
+        .lang-python { background: #1e3a5f; color: #60a5fa; }
+        .lang-cpp { background: #3a1e5f; color: #a78bfa; }
+
+        textarea, .output-area {
+            flex: 1;
+            padding: 20px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.7;
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            resize: none;
+            outline: none;
+            tab-size: 4;
+        }
+
+        textarea::placeholder {
+            color: #333;
+        }
+
+        .output-area {
+            white-space: pre;
+            overflow: auto;
+        }
+
+        .output-area.empty {
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .action-bar {
+            padding: 16px 32px;
+            border-top: 1px solid #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-convert {
+            padding: 10px 32px;
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: background 0.15s;
+        }
+
+        .btn-convert:hover { background: #5558e6; }
+        .btn-convert:active { background: #4f46e5; }
+        .btn-convert:disabled {
+            background: #2a2a3e;
+            color: #555;
+            cursor: not-allowed;
+        }
+
+        .status {
+            font-size: 12px;
+            color: #555;
+        }
+
+        .verification-bar {
+            padding: 12px 32px;
+            border-top: 1px solid #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            min-height: 48px;
+        }
+
+        .verify-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .verify-match {
+            background: #0d3320;
+            color: #34d399;
+            border: 1px solid #166534;
+        }
+
+        .verify-mismatch {
+            background: #3b1219;
+            color: #f87171;
+            border: 1px solid #7f1d1d;
+        }
+
+        .verify-error {
+            background: #3b2e12;
+            color: #fbbf24;
+            border: 1px solid #78350f;
+        }
+
+        .verify-idle {
+            background: #1a1a2e;
+            color: #555;
+            border: 1px solid #222;
+        }
+
+        .output-compare {
+            display: flex;
+            gap: 24px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .output-compare pre {
+            font-family: inherit;
+            max-height: 60px;
+            overflow: auto;
+            padding: 4px 8px;
+            background: #111;
+            border-radius: 4px;
+            max-width: 300px;
+        }
+
+        .output-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #444;
+            margin-bottom: 4px;
+        }
+
+        .patterns-used {
+            font-size: 11px;
+            color: #444;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .pattern-chip {
+            padding: 2px 6px;
+            background: #1a1a2e;
+            border-radius: 3px;
+            color: #6366f1;
+            font-size: 10px;
+        }
+
+        .warnings {
+            font-size: 11px;
+            color: #f59e0b;
+        }
+
+        @media (max-width: 768px) {
+            .workspace {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .panel:first-child {
+                border-right: none;
+                border-bottom: 1px solid #1a1a2e;
+            }
+            textarea, .output-area {
+                min-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span>C2NL</span> Code to Numeric Logic</h1>
+        <span class="version">v0.1.0 — MVP</span>
+    </header>
+
+    <div class="workspace">
+        <div class="panel">
+            <div class="panel-header">
+                Input
+                <span class="lang-tag lang-python">PYTHON</span>
+            </div>
+            <textarea id="python-input" placeholder="Paste Python code here...
+
+Example:
+for i in range(10):
+    if i % 2 == 0:
+        print(f&quot;even: {i}&quot;)
+    else:
+        print(i)" spellcheck="false"></textarea>
+        </div>
+        <div class="panel">
+            <div class="panel-header">
+                Output
+                <span class="lang-tag lang-cpp">C++</span>
+            </div>
+            <div id="cpp-output" class="output-area empty">C++ output appears here</div>
+        </div>
+    </div>
+
+    <div class="verification-bar" id="verification-bar">
+        <span class="verify-badge verify-idle" id="verify-badge">WAITING</span>
+        <div class="output-compare" id="output-compare"></div>
+        <div class="patterns-used" id="patterns-used"></div>
+        <div class="warnings" id="warnings"></div>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn-convert" id="btn-convert" onclick="doConvert()">Convert + Verify</button>
+        <span class="status" id="status">Ready</span>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

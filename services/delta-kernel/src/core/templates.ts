@@ -124,7 +124,7 @@ const MODE_TAGGED_TEMPLATES: Record<TemplateId, Mode | null> = {
 
   // Mode-tagged — must match
   [TEMPLATE_IDS.RECOVER_REST]: 'RECOVER',
-  [TEMPLATE_IDS.CLOSE_COMMIT]: 'CLOSE_LOOPS',
+  [TEMPLATE_IDS.CLOSE_COMMIT]: 'CLOSURE',
   [TEMPLATE_IDS.BUILD_OUTLINE]: 'BUILD',
   [TEMPLATE_IDS.COMPOUND_EXTEND]: 'COMPOUND',
   [TEMPLATE_IDS.SCALE_DELEGATE]: 'SCALE',
@@ -245,8 +245,10 @@ export function getThreadTriageTemplates(mode: Mode): TemplateId[] {
   switch (mode) {
     case 'RECOVER':
       return [TEMPLATE_IDS.RECOVER_REST, TEMPLATE_IDS.DEFER];
-    case 'CLOSE_LOOPS':
+    case 'CLOSURE':
       return [TEMPLATE_IDS.CLOSE_COMMIT, TEMPLATE_IDS.ACK, TEMPLATE_IDS.CLOSE];
+    case 'MAINTENANCE':
+      return [TEMPLATE_IDS.DEFER, TEMPLATE_IDS.ACK];
     case 'BUILD':
       return [TEMPLATE_IDS.DEFER, TEMPLATE_IDS.UPDATE];
     case 'COMPOUND':

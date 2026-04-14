@@ -45,7 +45,8 @@
 │                         ┌─────────────┐        ┌─────────────┐   │
 │                         │ GLOBAL      │        │ next Mode   │   │
 │                         │ OVERRIDES   │        │ RECOVER     │   │
-│                         │ check first │        │ CLOSE_LOOPS │   │
+│                         │ check first │        │ CLOSURE     │   │
+│                         │             │        │ MAINTENANCE │   │
 │                         │             │        │ BUILD       │   │
 │                         │             │        │ COMPOUND    │   │
 │                         │             │        │ SCALE       │   │

@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-09T14:14:11.601893+00:00",
+  "skills": {
+    "python": {
+      "skill_id": "python",
+      "category": "core",
+      "usage_count": 18,
+      "proficiency": "mastered",
+      "last_used_at": "2026-04-08T12:00:00Z",
+      "sources": [
+        "closure_technical_1",
+        "closure_technical_2",
+        "closure_technical_3",
+        "st_gl1_1_1"
+      ]
+    },
+    "ai_ml": {
+      "skill_id": "ai_ml",
+      "category": "core",
+      "usage_count": 16,
+      "proficiency": "mastered",
+      "last_used_at": "2026-04-08T11:00:00Z",
+      "sources": [
+        "closure_learning_1",
+        "closure_technical_1"
+      ]
+    },
+    "automation": {
+      "skill_id": "automation",
+      "category": "core",
+      "usage_count": 12,
+      "proficiency": "proficient",
+      "last_used_at": "2026-04-07T14:00:00Z",
+      "sources": [
+        "closure_technical_1",
+        "closure_execution_1"
+      ]
+    },
+    "prompt_engineering": {
+      "skill_id": "prompt_engineering",
+      "category": "core",
+      "usage_count": 8,
+      "proficiency": "proficient",
+      "last_used_at": "2026-04-06T10:00:00Z",
+      "sources": [
+        "closure_learning_1"
+      ]
+    },
+    "data": {
+      "skill_id": "data",
+      "category": "core",
+      "usage_count": 6,
+      "proficiency": "developing",
+      "last_used_at": "2026-04-05T16:00:00Z",
+      "sources": []
+    },
+    "sales": {
+      "skill_id": "sales",
+      "category": "core",
+      "usage_count": 2,
+      "proficiency": "novice",
+      "last_used_at": "2026-04-01T09:00:00Z",
+      "sources": []
+    },
+    "writing": {
+      "skill_id": "writing",
+      "category": "core",
+      "usage_count": 29,
+      "proficiency": "mastered",
+      "last_used_at": "2026-04-09T14:14:11.601893+00:00",
+      "sources": [
+        "st_gl1_1_1",
+        "closure_business_1",
+        "compound_loop_2026-04-08",
+        "compound_loop_2026-04-09"
+      ]
+    },
+    "pattern_recognition": {
+      "skill_id": "pattern_recognition",
+      "category": "core",
+      "usage_count": 5,
+      "proficiency": "developing",
+      "last_used_at": "2026-04-04T11:00:00Z",
+      "sources": []
+    },
+    "design": {
+      "skill_id": "design",
+      "category": "gap",
+      "usage_count": 17,
+      "proficiency": "mastered",
+      "last_used_at": "2026-04-09T14:14:11.601893+00:00",
+      "sources": [
+        "st_gl1_1_2",
+        "st_gl1_1_3",
+        "compound_loop_2026-04-08",
+        "compound_loop_2026-04-09"
+      ]
+    },
+    "marketing": {
+      "skill_id": "marketing",
+      "category": "gap",
+      "usage_count": 1,
+      "proficiency": "novice",
+      "last_used_at": null,
+      "sources": []
+    },
+    "javascript": {
+      "skill_id": "javascript",
+      "category": "gap",
+      "usage_count": 0,
+      "proficiency": "novice",
+      "last_used_at": null,
+      "sources": []
+    },
+    "finance": {
+      "skill_id": "finance",
+      "category": "gap",
+      "usage_count": 0,
+      "proficiency": "novice",
+      "last_used_at": null,
+      "sources": []
+    },
+    "devops": {
+      "skill_id": "devops",
+      "category": "gap",
+      "usage_count": 1,
+      "proficiency": "novice",
+      "last_used_at": null,
+      "sources": []
+    },
+    "networking": {
+      "skill_id": "networking",
+      "category": "emerging",
+      "usage_count": 1,
+      "proficiency": "novice",
+      "last_used_at": null,
+      "sources": []
+    },
+    "research": {
+      "skill_id": "research",
+      "category": "emerging",
+      "usage_count": 1,
+      "proficiency": "novice",
+      "last_used_at": null,
+      "sources": []
+    }
+  }
+}

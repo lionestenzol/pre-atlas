@@ -1,25 +1,26 @@
-"""MiroFish REST API — FastAPI on port 3003."""
-import asyncio
+"""MiroFish REST API — prediction engine for conversation analysis."""
 import structlog
+from dataclasses import asdict
 from datetime import datetime, timezone
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from mirofish.config import config
-from mirofish.swarm.store import SimulationStore
-from mirofish.swarm.personality import PersonalityGenerator
-from mirofish.swarm.simulator import SimulationRunner, SimulationConfig
-from mirofish.reports.builder import ReportBuilder
-from mirofish.reports.export import to_json, to_markdown
-from mirofish.graph.ingester import DocumentIngester
+from mirofish.ingest_state import load_state
+from mirofish.graph.neo4j_client import Neo4jClient
+from mirofish.graph.ingester import ConversationIngester
+from mirofish.prediction.insight_engine import InsightEngine
+from mirofish.prediction.loop_predictor import LoopPredictor
+from mirofish.prediction.pattern_detector import PatternDetector
+from mirofish.prediction.mode_simulator import ModeSimulator
 
 log = structlog.get_logger()
 
 app = FastAPI(
     title="MiroFish",
-    version="0.1.0",
-    description="Swarm simulation engine for the Mosaic platform",
+    version="0.2.0",
+    description="Conversation prediction engine — real data, deterministic algorithms, no fake agents",
 )
 
 app.add_middleware(
@@ -30,130 +31,186 @@ app.add_middleware(
 )
 
 # Shared instances
-store = SimulationStore()
-personality_gen = PersonalityGenerator()
-runner = SimulationRunner(store=store)
-report_builder = ReportBuilder()
+neo4j = Neo4jClient()
+ingester = ConversationIngester(neo4j=neo4j)
+insight_engine = InsightEngine(neo4j=neo4j)
+mode_simulator = ModeSimulator()
 
 
-class SimulationRequest(BaseModel):
-    topic: str
-    agent_count: int = 20
-    tick_count: int = 10
-    document_text: str | None = None
-
+# ── Health ───────────────────────────────────────────────────
 
 @app.get("/api/v1/health")
 async def health():
-    """Health check."""
     return {
         "status": "ok",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "version": "0.1.0",
+        "version": "0.2.0",
         "service": "mirofish",
+        "engine": "prediction",
     }
 
 
-async def _run_simulation(sim_id: str, req: SimulationRequest):
-    """Background task: run the full simulation pipeline."""
+# ── Ingestion ────────────────────────────────────────────────
+
+class IngestRequest(BaseModel):
+    batch_size: int = 50
+    force: bool = False
+    build_edges: bool = False
+
+
+_ingest_running = False
+
+
+async def _run_ingest(req: IngestRequest):
+    global _ingest_running
+    _ingest_running = True
     try:
-        # Ingest document if provided
-        if req.document_text:
-            ingester = DocumentIngester()
-            try:
-                await ingester.ingest_document(req.document_text)
-            except Exception as e:
-                log.warning("api.ingest_failed", error=str(e))
-            finally:
-                await ingester.close()
+        result = await ingester.ingest_batch(batch_size=req.batch_size, force=req.force)
+        log.info("api.ingest_complete", **result)
 
-        # Generate agent personalities
-        agents = await personality_gen.generate(
-            topic=req.topic,
-            count=req.agent_count,
-        )
-
-        # Run simulation
-        sim_config = SimulationConfig(
-            topic=req.topic,
-            agents=agents,
-            tick_count=req.tick_count,
-            document_context=req.document_text or "",
-        )
-        result = await runner.run(sim_config, simulation_id=sim_id)
-
-        # Generate report
-        report = await report_builder.build(result)
-        store.save_report(result.simulation_id, report)
-
-        log.info("api.simulation_complete", simulation_id=result.simulation_id)
+        if req.build_edges:
+            log.info("api.building_similarity_edges")
+            await ingester.build_similarity_edges()
+            log.info("api.building_temporal_edges")
+            await ingester.build_temporal_edges()
     except Exception as e:
-        log.error("api.simulation_failed", simulation_id=sim_id, error=str(e))
-        store.fail_simulation(sim_id, str(e))
+        log.error("api.ingest_failed", error=str(e))
+    finally:
+        _ingest_running = False
 
 
-@app.post("/api/v1/simulations")
-async def start_simulation(req: SimulationRequest, background_tasks: BackgroundTasks):
-    """Start a new simulation in the background."""
-    import uuid
-    sim_id = str(uuid.uuid4())
+@app.post("/api/v1/ingest")
+async def start_ingest(req: IngestRequest, background_tasks: BackgroundTasks):
+    """Trigger incremental conversation ingestion."""
+    if _ingest_running:
+        return {"status": "already_running", "message": "Ingestion is already in progress."}
 
-    # Pre-create in store so it shows up immediately
-    store.create_simulation(
-        simulation_id=sim_id,
-        topic=req.topic,
-        agent_count=req.agent_count,
-        tick_count=req.tick_count,
-        agents=[],
-    )
-
-    background_tasks.add_task(_run_simulation, sim_id, req)
-
+    background_tasks.add_task(_run_ingest, req)
+    state = load_state()
     return {
-        "simulation_id": sim_id,
         "status": "started",
-        "topic": req.topic,
-        "agent_count": req.agent_count,
-        "tick_count": req.tick_count,
+        "batch_size": req.batch_size,
+        "force": req.force,
+        "current_progress": state.total_ingested,
     }
 
 
-@app.get("/api/v1/simulations")
-async def list_simulations():
-    """List all simulations."""
-    return {"simulations": store.list_simulations()}
+@app.get("/api/v1/ingest/status")
+async def ingest_status():
+    """Get ingestion progress."""
+    state = load_state()
+    return {
+        "running": _ingest_running,
+        "total_ingested": state.total_ingested,
+        "last_convo_index": state.last_convo_index,
+        "last_run": state.last_run,
+        "topics_created": state.topics_created,
+        "similarity_edges_built": state.similarity_edges_built,
+        "temporal_edges_built": state.temporal_edges_built,
+    }
 
 
-@app.get("/api/v1/simulations/{simulation_id}")
-async def get_simulation(simulation_id: str, from_tick: int = Query(0, ge=0)):
-    """Get simulation detail with tick data. Use from_tick for incremental polling."""
-    sim = store.get_simulation(simulation_id)
-    if not sim:
-        raise HTTPException(status_code=404, detail="Simulation not found")
+# ── Predictions ──────────────────────────────────────────────
 
-    ticks = store.get_ticks(simulation_id, from_tick=from_tick)
-    sim["ticks"] = ticks
-    return sim
-
-
-@app.get("/api/v1/simulations/{simulation_id}/report")
-async def get_report(simulation_id: str):
-    """Get the generated report for a completed simulation."""
-    sim = store.get_simulation(simulation_id)
-    if not sim:
-        raise HTTPException(status_code=404, detail="Simulation not found")
-    if sim["status"] != "completed":
-        raise HTTPException(status_code=400, detail=f"Simulation status is '{sim['status']}', not 'completed'")
-    if not sim.get("report"):
-        raise HTTPException(status_code=404, detail="Report not yet generated")
-    return sim["report"]
+@app.get("/api/v1/predictions")
+async def get_predictions():
+    """Full daily insights — loop predictions, patterns, mode forecast, top actions."""
+    try:
+        insights = await insight_engine.get_daily_insights()
+        return asdict(insights)
+    except Exception as e:
+        log.error("api.predictions_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/api/v1/simulations/{simulation_id}")
-async def delete_simulation(simulation_id: str):
-    """Delete a simulation and all its data."""
-    sim = store.get_simulation(simulation_id)
-    if not sim:
-        raise HTTPException(status_code=404, detail="Simulation not found")
-    store.delete_simulation(simulation_id)
-    return {"status": "deleted", "simulation_id": simulation_id}
+@app.get("/api/v1/predictions/loop/{convo_id}")
+async def get_loop_prediction(convo_id: str):
+    """Prediction for a specific open loop."""
+    predictor = LoopPredictor(neo4j)
+    pred = await predictor.predict(convo_id)
+    if not pred:
+        raise HTTPException(status_code=404, detail=f"No prediction available for conversation {convo_id}")
+    return {
+        "convo_id": pred.convo_id,
+        "title": pred.title,
+        "probabilities": pred.probabilities,
+        "most_likely": pred.most_likely,
+        "confidence": pred.confidence,
+        "evidence": pred.evidence,
+        "similar_conversations": pred.similar_conversations[:5],
+    }
+
+
+# ── Patterns ─────────────────────────────────────────────────
+
+@app.get("/api/v1/patterns")
+async def get_patterns():
+    """All detected behavioral patterns."""
+    detector = PatternDetector(neo4j)
+    patterns = await detector.detect_all()
+    return {
+        "pattern_count": len(patterns),
+        "patterns": [
+            {
+                "pattern_id": p.pattern_id,
+                "type": p.type,
+                "description": p.description,
+                "confidence": p.confidence,
+                "evidence": p.evidence,
+                "data": p.data,
+            }
+            for p in patterns
+        ],
+    }
+
+
+# ── Mode Simulation ──────────────────────────────────────────
+
+class SimulateRequest(BaseModel):
+    actions: list[dict]  # [{"type": "close_loop", "target_id": "143"}, ...]
+
+
+@app.post("/api/v1/simulate")
+async def simulate_mode(req: SimulateRequest):
+    """Simulate mode transitions with hypothetical actions."""
+    sim = mode_simulator.simulate(req.actions)
+    return {
+        "current_mode": sim.current_mode,
+        "current_risk": sim.current_risk,
+        "current_build_allowed": sim.current_build_allowed,
+        "current_metrics": sim.current_metrics,
+        "projected_mode": sim.projected_mode,
+        "projected_risk": sim.projected_risk,
+        "projected_build_allowed": sim.projected_build_allowed,
+        "projected_metrics": sim.projected_metrics,
+        "actions_applied": [asdict(a) for a in sim.actions_applied],
+        "transitions": sim.transitions,
+        "mode_changed": sim.mode_changed,
+    }
+
+
+@app.get("/api/v1/simulate/exit-path")
+async def get_exit_path():
+    """Find minimum actions to exit CLOSURE mode."""
+    return mode_simulator.find_exit_path()
+
+
+# ── Graph ────────────────────────────────────────────────────
+
+@app.get("/api/v1/graph/stats")
+async def graph_stats():
+    """Neo4j graph statistics — node counts, edge counts, top topics."""
+    try:
+        return await neo4j.get_graph_stats()
+    except Exception as e:
+        log.error("api.graph_stats_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/graph/topic/{topic_name}")
+async def topic_timeline(topic_name: str):
+    """All conversations about a specific topic, date-ordered."""
+    timeline = await neo4j.get_topic_timeline(topic_name)
+    if not timeline:
+        raise HTTPException(status_code=404, detail=f"Topic '{topic_name}' not found")
+    return {"topic": topic_name, "conversations": timeline}

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "EnergyLog.v1",
+  "title": "Energy Log",
+  "description": "Daily energy tracking with burnout detection and trend analysis.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "entries"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/energy_entry" }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "energy_entry": {
+      "type": "object",
+      "required": ["date", "energy_level"],
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "energy_level": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "mental_load": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "sleep_quality": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "sleep_hours": { "type": "number", "minimum": 0, "maximum": 24 },
+        "exercise_minutes": { "type": "integer", "minimum": 0 },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

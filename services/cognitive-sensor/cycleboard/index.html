@@ -1,24 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CycleBoard - in-PACT Self-Sustaining Bullet Journal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Atlas Dashboard</title>
+  <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="bg-slate-50">
+<body class="bg-gray-900 text-white">
+  <div id="service-health-bar" class="service-health-bar" role="status" aria-live="polite">
+    <div class="service-health-content">
+      <div class="service-health-services">
+        <span class="service-health-item"><span id="health-dot-delta" class="service-health-dot service-health-dot--down"></span><span>Delta</span></span>
+        <span class="service-health-item"><span id="health-dot-uasc" class="service-health-dot service-health-dot--down"></span><span>UASC</span></span>
+        <span class="service-health-item"><span id="health-dot-cortex" class="service-health-dot service-health-dot--down"></span><span>Cortex</span></span>
+      </div>
+      <div class="service-health-meta">
+        <span class="service-health-last">Last refresh: <span id="health-last-refresh">--</span></span>
+        <span class="service-health-mode">MODE: <span id="health-mode">--</span></span>
+        <span class="service-health-directive" id="health-directive">Loading directive...</span>
+      </div>
+    </div>
+  </div>
+
   <!-- COGNITIVE DIRECTIVE BANNER -->
   <div id="cognitive-directive" class="w-full text-white shadow-lg" style="position: sticky; top: 0; z-index: 50; display: none;">
-    <div class="max-w-7xl mx-auto p-4">
+    <!-- Online state: normal cognitive data -->
+    <div id="cognitive-online-msg" class="max-w-7xl mx-auto p-4">
       <div class="flex items-center justify-between">
         <div class="flex-1">
           <div class="text-xs uppercase tracking-wider opacity-75 mb-1">
             <i class="fas fa-brain mr-1"></i> Cognitive Routing System
           </div>
           <div class="flex items-center gap-6">
-            <div>
+            <div class="cursor-pointer hover:opacity-80 transition" onclick="AtlasNav.open('atlas')" title="Open Cognitive Atlas">
               <div class="text-xs opacity-75">MODE</div>
               <div id="directive-mode" class="text-xl font-bold">--</div>
             </div>
@@ -26,9 +43,9 @@
               <div class="text-xs opacity-75">RISK</div>
               <div id="directive-risk" class="text-lg font-bold">--</div>
             </div>
-            <div>
+            <div class="cursor-pointer hover:opacity-80 transition" onclick="AtlasNav.open('control')" title="Manage open loops">
               <div class="text-xs opacity-75">OPEN LOOPS</div>
-              <div id="directive-loops" class="text-lg font-bold">--</div>
+              <div id="directive-loops" class="text-lg font-bold underline decoration-dotted">--</div>
             </div>
             <div class="flex-1">
               <div class="text-xs opacity-75">ACTION</div>
@@ -46,6 +63,21 @@
         </div>
       </div>
     </div>
+    <!-- Offline state: brain data unavailable -->
+    <div id="cognitive-offline-msg" class="max-w-7xl mx-auto p-4 bg-gray-800" style="display: none;">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-terminal text-gray-400 text-lg"></i>
+          <div>
+            <div class="text-gray-400 font-medium">Cognitive system offline</div>
+            <div class="text-gray-500 text-xs">Run: <code class="bg-gray-700 px-1.5 py-0.5 rounded text-gray-300">python refresh.py</code> to generate brain data</div>
+          </div>
+        </div>
+        <button onclick="toggleCognitiveBanner()" class="p-2 hover:bg-white/20 rounded-lg transition text-gray-400" title="Minimize">
+          <i class="fas fa-chevron-up"></i>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- MINIMIZED COGNITIVE INDICATOR -->
@@ -59,7 +91,7 @@
         <button id="mobile-menu-toggle" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-700" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="sidebar">
           <i class="fas fa-bars" aria-hidden="true"></i>
         </button>
-        <div class="text-lg font-bold dark:text-white">CycleBoard</div>
+        <div class="text-lg font-bold dark:text-white">Atlas</div>
       </div>
       <div class="flex items-center gap-2">
         <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-700" aria-label="Toggle dark mode">
@@ -72,23 +104,13 @@
     <aside id="sidebar" class="w-64 bg-white border-r p-4 space-y-6 fixed md:static inset-0 z-40 hidden md:block dark:bg-gray-800 dark:border-gray-700 overflow-y-auto" role="navigation" aria-label="Main navigation">
       <div class="fade-in">
         <div class="text-xs uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-1">
-          Plan, execute, and review A–Z monthly goals
+          Cognitive governance system
         </div>
-        <div class="text-xl font-bold dark:text-white">in-PACT Self-Sustaining Bullet Journal</div>
+        <div class="text-xl font-bold dark:text-white">Atlas Dashboard</div>
       </div>
       <nav class="space-y-1" id="nav" aria-label="Page navigation"></nav>
 
-      <div class="mt-8 pt-6 border-t dark:border-gray-700">
-        <div class="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Weekly Progress</div>
-        <div class="space-y-2">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-slate-600 dark:text-gray-400">Tasks Completed</span>
-            <span id="weekly-tasks" class="font-semibold dark:text-white">0/0</span>
-          </div>
-          <div class="w-full bg-slate-200 dark:bg-gray-700 rounded-full h-2">
-            <div id="weekly-progress-bar" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
-          </div>
-        </div>
+      
       </div>
 
       <div class="mt-4 space-y-2">
@@ -121,17 +143,17 @@
         <i class="fas fa-home text-lg" aria-hidden="true"></i>
         <span class="text-xs mt-1">Home</span>
       </button>
-      <button onclick="navigate('Daily')" class="flex flex-col items-center p-2 dark:text-gray-300" aria-label="Go to Daily planner">
-        <i class="fas fa-calendar-day text-lg" aria-hidden="true"></i>
-        <span class="text-xs mt-1">Daily</span>
+      <button onclick="navigate('Command')" class="flex flex-col items-center p-2 dark:text-gray-300" aria-label="Go to Command">
+        <i class="fas fa-terminal text-lg" aria-hidden="true"></i>
+        <span class="text-xs mt-1">Command</span>
       </button>
-      <button onclick="navigate('AtoZ')" class="flex flex-col items-center p-2 dark:text-gray-300" aria-label="Go to A to Z tasks">
-        <i class="fas fa-tasks text-lg" aria-hidden="true"></i>
-        <span class="text-xs mt-1">A-Z</span>
+      <button onclick="navigate('Statistics')" class="flex flex-col items-center p-2 dark:text-gray-300" aria-label="Go to Statistics">
+        <i class="fas fa-chart-line text-lg" aria-hidden="true"></i>
+        <span class="text-xs mt-1">Stats</span>
       </button>
-      <button onclick="navigate('Journal')" class="flex flex-col items-center p-2 dark:text-gray-300" aria-label="Go to Journal">
-        <i class="fas fa-book text-lg" aria-hidden="true"></i>
-        <span class="text-xs mt-1">Journal</span>
+      <button onclick="navigate('OSINT')" class="flex flex-col items-center p-2 dark:text-gray-300" aria-label="Go to OSINT">
+        <i class="fas fa-satellite-dish text-lg" aria-hidden="true"></i>
+        <span class="text-xs mt-1">OSINT</span>
       </button>
     </nav>
   </div>
@@ -140,21 +162,23 @@
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
   <!-- Core modules -->
-  <script src="js/state.js"></script>
+  <script src="js/state.js?v=4"></script>
   <script src="js/validator.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/helpers.js"></script>
 
   <!-- Application modules -->
-  <script src="js/screens.js"></script>
-  <script src="js/functions.js"></script>
-  <script src="js/cognitive.js"></script>
+  <script src="js/screens.js?v=4"></script>
+  <script src="js/functions.js?v=4"></script>
+  <script src="js/command.js?v=1"></script>
+  <script src="js/cognitive.js?v=3"></script>
+  <script src="js/strategic.js"></script>
 
   <!-- AI Integration modules -->
   <script src="js/ai-context.js"></script>
   <script src="js/ai-actions.js"></script>
 
   <!-- Initialize app -->
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=4"></script>
 </body>
 </html>

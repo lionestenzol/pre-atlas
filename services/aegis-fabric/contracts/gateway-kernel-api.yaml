@@ -1,0 +1,872 @@
+openapi: 3.0.3
+info:
+  title: Aegis Delta Fabric — Gateway ↔ Kernel API
+  version: 0.1.0
+  description: |
+    Internal API contract between the Aegis Gateway (stateless, port 3010)
+    and the Delta Kernel (stateful, port 3001).
+
+    Gateway authenticates external requests, applies rate limiting and
+    policy pre-checks, then forwards to Kernel for state mutations.
+
+    Tenant isolation: separate PostgreSQL database per tenant.
+    Tenant context is passed via the x-tenant-db header.
+
+servers:
+  - url: http://localhost:3001
+    description: Kernel (internal)
+  - url: http://localhost:3010
+    description: Gateway (external)
+
+components:
+  parameters:
+    TenantDbHeader:
+      name: x-tenant-db
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Tenant database name (e.g., aegis_tnt_abc123)
+    ApiKeyHeader:
+      name: x-api-key
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Tenant API key (Gateway only)
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    TenantCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        tier:
+          type: string
+          enum: [FREE, STARTER, ENTERPRISE]
+        mode:
+          type: string
+          enum: [RECOVER, CLOSURE, MAINTENANCE, BUILD, COMPOUND, SCALE]
+        quotas:
+          $ref: '#/components/schemas/Quotas'
+
+    Quotas:
+      type: object
+      properties:
+        max_agents:
+          type: integer
+        max_actions_per_hour:
+          type: integer
+        max_entities:
+          type: integer
+        max_delta_log_size:
+          type: integer
+        max_webhook_count:
+          type: integer
+
+    Tenant:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        tier:
+          type: string
+        mode:
+          type: string
+        quotas:
+          $ref: '#/components/schemas/Quotas'
+        db_name:
+          type: string
+        enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    AgentRegister:
+      type: object
+      required: [name, provider]
+      properties:
+        name:
+          type: string
+        provider:
+          type: string
+          enum: [claude, openai, local, custom]
+        version:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+        cost_center:
+          type: string
+        metadata:
+          type: object
+
+    Agent:
+      type: object
+      properties:
+        agent_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        provider:
+          type: string
+        version:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+        enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        last_active_at:
+          type: string
+          format: date-time
+
+    DeltaAppend:
+      type: object
+      required: [author, patch]
+      properties:
+        author:
+          type: object
+          required: [type, id]
+          properties:
+            type:
+              type: string
+              enum: [agent, human, system, policy-engine]
+            id:
+              type: string
+            source:
+              type: string
+        patch:
+          type: array
+          items:
+            type: object
+            required: [op, path]
+            properties:
+              op:
+                type: string
+                enum: [add, replace, remove]
+              path:
+                type: string
+              value: {}
+        entity_id:
+          type: string
+        hash_prev:
+          type: string
+          description: Expected previous hash for optimistic concurrency
+        meta:
+          type: object
+          properties:
+            requestId:
+              type: string
+            idempotencyKey:
+              type: string
+            reason:
+              type: string
+
+    DeltaResult:
+      type: object
+      properties:
+        delta_id:
+          type: integer
+        hash:
+          type: string
+        hash_prev:
+          type: string
+          nullable: true
+        timestamp:
+          type: integer
+        entity:
+          type: object
+          nullable: true
+          properties:
+            entity_id:
+              type: string
+            version:
+              type: integer
+            current_hash:
+              type: string
+
+    AgentAction:
+      type: object
+      required: [agent_id]
+      properties:
+        agent_id:
+          type: string
+        source:
+          type: string
+          enum: [claude, openai, local, custom]
+        type:
+          type: string
+        name:
+          type: string
+        input:
+          type: object
+        function:
+          type: object
+        action:
+          type: string
+        params:
+          type: object
+        metadata:
+          type: object
+        idempotency_key:
+          type: string
+
+    ActionResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [executed, denied, pending_approval]
+        action_id:
+          type: string
+          format: uuid
+        result:
+          type: object
+        policy_decision:
+          type: object
+          properties:
+            effect:
+              type: string
+              enum: [ALLOW, DENY, REQUIRE_HUMAN]
+            matched_rule:
+              type: string
+              nullable: true
+            reason:
+              type: string
+            cached:
+              type: boolean
+        usage:
+          type: object
+          properties:
+            actions_remaining_this_hour:
+              type: integer
+
+    PolicyRules:
+      type: object
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyRule'
+        rule:
+          $ref: '#/components/schemas/PolicyRule'
+
+    PolicyRule:
+      type: object
+      required: [name, conditions, effect]
+      properties:
+        rule_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        priority:
+          type: integer
+        conditions:
+          type: array
+          items:
+            type: object
+            required: [field, operator, value]
+            properties:
+              field:
+                type: string
+              operator:
+                type: string
+                enum: [eq, neq, in, not_in, gt, lt, gte, lte, exists]
+              value: {}
+        effect:
+          type: string
+          enum: [ALLOW, DENY, REQUIRE_HUMAN]
+        reason:
+          type: string
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        uptime_ms:
+          type: number
+        version:
+          type: string
+        components:
+          type: object
+
+paths:
+  # === KERNEL ENDPOINTS (Internal) ===
+
+  /health:
+    get:
+      tags: [Health]
+      summary: Service health check
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Unhealthy
+
+  /v1/tenants:
+    post:
+      tags: [Tenants]
+      summary: Create a new tenant (provisions database)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantCreate'
+      responses:
+        '201':
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+    get:
+      tags: [Tenants]
+      summary: List all tenants
+      responses:
+        '200':
+          description: Tenant list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tenant'
+                  count:
+                    type: integer
+
+  /v1/tenants/{id}:
+    get:
+      tags: [Tenants]
+      summary: Get tenant by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tenant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          description: Not found
+    put:
+      tags: [Tenants]
+      summary: Update tenant settings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                tier:
+                  type: string
+                mode:
+                  type: string
+                quotas:
+                  $ref: '#/components/schemas/Quotas'
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated tenant
+
+  /v1/agents:
+    post:
+      tags: [Agents]
+      summary: Register an agent
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRegister'
+      responses:
+        '201':
+          description: Agent registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+    get:
+      tags: [Agents]
+      summary: List agents for tenant
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      responses:
+        '200':
+          description: Agent list
+
+  /v1/agents/{id}:
+    get:
+      tags: [Agents]
+      summary: Get agent by ID
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent details
+        '404':
+          description: Not found
+    put:
+      tags: [Agents]
+      summary: Update agent
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated agent
+
+  /v1/delta/append:
+    post:
+      tags: [Delta]
+      summary: Append a validated delta to the hash chain
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeltaAppend'
+      responses:
+        '201':
+          description: Delta appended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeltaResult'
+        '409':
+          description: Hash chain conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/delta/verify:
+    get:
+      tags: [Delta]
+      summary: Verify hash chain integrity
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  brokenAtDeltaId:
+                    type: integer
+                  total_deltas:
+                    type: integer
+
+  /v1/delta/latest:
+    get:
+      tags: [Delta]
+      summary: Get latest delta (chain head)
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      responses:
+        '200':
+          description: Latest delta
+        '404':
+          description: No deltas
+
+  /v1/delta/log:
+    get:
+      tags: [Delta]
+      summary: Get delta log entries
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: entity_id
+          in: query
+          schema:
+            type: string
+        - name: after
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Delta log
+
+  /v1/state/query:
+    get:
+      tags: [State]
+      summary: Query entities by ID or type
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: entity_id
+          in: query
+          schema:
+            type: string
+        - name: entity_type
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Entity results
+
+  /v1/state/snapshot:
+    get:
+      tags: [State]
+      summary: Get state at specific delta (point-in-time)
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: as_of_delta
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: State snapshot
+
+  /v1/policies:
+    post:
+      tags: [Policies]
+      summary: Create or replace policy rules
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyRules'
+      responses:
+        '201':
+          description: Policy created
+    get:
+      tags: [Policies]
+      summary: Get current policy and rules
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      responses:
+        '200':
+          description: Current policy
+
+  /v1/policies/rules:
+    get:
+      tags: [Policies]
+      summary: Get sorted enabled rules (for Gateway policy engine)
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      responses:
+        '200':
+          description: Enabled rules sorted by priority
+
+  /v1/approvals:
+    get:
+      tags: [Approvals]
+      summary: List pending approvals
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED, EXPIRED]
+      responses:
+        '200':
+          description: Approval list
+
+  /v1/approvals/{id}:
+    get:
+      tags: [Approvals]
+      summary: Get approval by ID
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Approval details
+        '404':
+          description: Not found
+    post:
+      tags: [Approvals]
+      summary: Approve or reject
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [APPROVED, REJECTED]
+                decided_by:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Approval decided
+
+  /v1/webhooks:
+    post:
+      tags: [Webhooks]
+      summary: Register a webhook
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, events, secret]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                events:
+                  type: array
+                  items:
+                    type: string
+                secret:
+                  type: string
+      responses:
+        '201':
+          description: Webhook registered
+    get:
+      tags: [Webhooks]
+      summary: List webhooks
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      responses:
+        '200':
+          description: Webhook list
+
+  /v1/webhooks/{id}:
+    get:
+      tags: [Webhooks]
+      summary: Get webhook by ID
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook details
+        '404':
+          description: Not found
+    delete:
+      tags: [Webhooks]
+      summary: Delete a webhook
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+
+  /v1/audit:
+    get:
+      tags: [Audit]
+      summary: Query audit log entries
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: agent_id
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Audit entries
+
+  /v1/usage:
+    get:
+      tags: [Usage]
+      summary: Get usage records
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+        - name: agent_id
+          in: query
+          schema:
+            type: string
+        - name: period
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Usage records
+
+  /v1/usage/totals:
+    get:
+      tags: [Usage]
+      summary: Get aggregate usage totals
+      parameters:
+        - $ref: '#/components/parameters/TenantDbHeader'
+      responses:
+        '200':
+          description: Usage totals
+
+  # === GATEWAY-ONLY ENDPOINTS (External) ===
+
+  /v1/agent/action:
+    post:
+      tags: [Gateway]
+      summary: Submit agent action (main pipeline)
+      description: |
+        Normalize → Auth → Rate limit → Policy pre-check → Forward to Kernel.
+        Supports Claude, OpenAI, and direct action formats.
+      parameters:
+        - $ref: '#/components/parameters/ApiKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentAction'
+      responses:
+        '201':
+          description: Action executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResponse'
+        '202':
+          description: Pending approval
+        '403':
+          description: Denied by policy
+        '409':
+          description: Hash chain conflict
+        '429':
+          description: Rate limited
+
+  /v1/policies/simulate:
+    post:
+      tags: [Gateway]
+      summary: Policy engine dry-run (local)
+      parameters:
+        - $ref: '#/components/parameters/ApiKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: PolicyEvaluationContext
+      responses:
+        '200':
+          description: Simulation result
+
+  /metrics:
+    get:
+      tags: [Gateway]
+      summary: Prometheus-style metrics
+      responses:
+        '200':
+          description: Metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /v1/metrics/usage:
+    get:
+      tags: [Gateway]
+      summary: Proxied usage metrics from Kernel
+      parameters:
+        - $ref: '#/components/parameters/ApiKeyHeader'
+      responses:
+        '200':
+          description: Usage metrics

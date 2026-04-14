@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AnalystDecision.v1",
+  "title": "Analyst Decision Log",
+  "description": "Autonomous decision log with confidence thresholds and audit trail. Analyst agent auto-executes high-confidence decisions, escalates low-confidence ones.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "decisions"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "decisions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/decision" }
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "auto_executed": { "type": "integer" },
+        "escalated": { "type": "integer" },
+        "deferred": { "type": "integer" },
+        "total": { "type": "integer" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "decision": {
+      "type": "object",
+      "required": ["decision_id", "type", "confidence", "action", "rationale", "outcome", "created_at"],
+      "properties": {
+        "decision_id": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["close_loop", "promote_idea", "park_idea", "adjust_priority", "execute_directive", "escalate"]
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "action": { "type": "string", "description": "What was decided" },
+        "rationale": { "type": "string", "description": "Why this decision was made" },
+        "outcome": {
+          "type": "string",
+          "enum": ["auto_executed", "escalated", "deferred", "approved", "rejected"]
+        },
+        "created_at": { "type": "string", "format": "date-time" },
+        "approved_at": { "type": ["string", "null"], "format": "date-time" },
+        "context": {
+          "type": "object",
+          "description": "Snapshot of signals that informed this decision",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pre Atlas - Docs Viewer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/14.0.0/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Manifest loaded as JS global — works on both http:// and file:// -->
+  <script src="../../docs_manifest.js"></script>
+  <style>
+    /* ============ RESET & BASE ============ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      color: #e5e5e5;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ============ HEADER ============ */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 20px;
+      background: #111118;
+      border-bottom: 1px solid #2a2a3a;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #6366f1;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .header-title i { margin-right: 6px; }
+
+    .search-box {
+      flex: 1;
+      max-width: 400px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      color: #e5e5e5;
+      padding: 8px 12px 8px 34px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+    }
+
+    .search-box input::placeholder { color: #555; }
+
+    .search-box i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #555;
+      font-size: 12px;
+    }
+
+    .file-count {
+      font-size: 12px;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    /* ============ LAYOUT ============ */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ============ SIDEBAR ============ */
+    .sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: #111118;
+      border-right: 1px solid #2a2a3a;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex-shrink: 0;
+      padding: 8px 0;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+    ::-webkit-scrollbar-corner { background: transparent; }
+    * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
+
+    .dir-group { margin-bottom: 2px; }
+
+    .dir-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: color 0.15s;
+    }
+
+    .dir-header:hover { color: #bbb; }
+
+    .dir-header .dir-chevron {
+      font-size: 8px;
+      transition: transform 0.2s;
+      width: 12px;
+      text-align: center;
+    }
+
+    .dir-header .dir-chevron.collapsed { transform: rotate(-90deg); }
+
+    .dir-header .dir-count {
+      margin-left: auto;
+      font-size: 10px;
+      color: #555;
+      font-weight: 400;
+    }
+
+    .dir-files { overflow: hidden; }
+    .dir-files.collapsed { display: none; }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px 5px 32px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #999;
+      transition: all 0.12s;
+      border-left: 3px solid transparent;
+      text-decoration: none;
+    }
+
+    .file-item:hover {
+      color: #e5e5e5;
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .file-item.active {
+      color: #e5e5e5;
+      background: rgba(99, 102, 241, 0.1);
+      border-left-color: #6366f1;
+    }
+
+    .file-item i {
+      font-size: 11px;
+      color: #555;
+      width: 14px;
+      text-align: center;
+    }
+
+    .file-item.active i { color: #6366f1; }
+
+    .file-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .file-size {
+      font-size: 10px;
+      color: #444;
+      white-space: nowrap;
+    }
+
+    /* ============ CONTENT AREA ============ */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 48px;
+    }
+
+
+    /* ============ BREADCRUMB ============ */
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .breadcrumb span { color: #444; }
+    .breadcrumb .bc-file { color: #6366f1; font-weight: 600; }
+
+    /* ============ WELCOME SCREEN ============ */
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      color: #555;
+    }
+
+    .welcome i {
+      font-size: 48px;
+      color: #2a2a3a;
+      margin-bottom: 16px;
+    }
+
+    .welcome h2 {
+      font-size: 20px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .welcome p {
+      font-size: 14px;
+      color: #555;
+      max-width: 400px;
+      line-height: 1.6;
+    }
+
+    /* ============ LOADING ============ */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .loading i { margin-right: 8px; }
+
+    /* ============ ERROR ============ */
+    .error-msg {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      border-radius: 8px;
+      padding: 16px 20px;
+      color: #f87171;
+      font-size: 14px;
+    }
+
+    .error-msg i { margin-right: 8px; }
+
+    /* ============ MARKDOWN CONTENT STYLES ============ */
+    .md-content {
+      max-width: 860px;
+      line-height: 1.7;
+    }
+
+    .md-content h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #e5e5e5;
+      border-bottom: 1px solid #2a2a3a;
+      padding-bottom: 10px;
+      margin: 32px 0 16px;
+    }
+
+    .md-content h1:first-child { margin-top: 0; }
+
+    .md-content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #e5e5e5;
+      border-bottom: 1px solid #1a1a2a;
+      padding-bottom: 8px;
+      margin: 28px 0 14px;
+    }
+
+    .md-content h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ccc;
+      margin: 24px 0 10px;
+    }
+
+    .md-content h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #bbb;
+      margin: 20px 0 8px;
+    }
+
+    .md-content h5, .md-content h6 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #aaa;
+      margin: 16px 0 8px;
+    }
+
+    .md-content p {
+      margin: 12px 0;
+      color: #ccc;
+    }
+
+    .md-content a {
+      color: #6366f1;
+      text-decoration: none;
+    }
+
+    .md-content a:hover { text-decoration: underline; }
+
+    .md-content strong { color: #e5e5e5; }
+
+    .md-content em { color: #bbb; }
+
+    .md-content code {
+      background: #1a1a2a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      color: #a78bfa;
+    }
+
+    .md-content pre {
+      margin: 16px 0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .md-content pre code {
+      display: block;
+      background: #111118;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #e5e5e5;
+    }
+
+    .md-content blockquote {
+      border-left: 4px solid #6366f1;
+      padding: 8px 16px;
+      margin: 16px 0;
+      color: #999;
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .md-content blockquote p { margin: 4px 0; color: #999; }
+
+    .md-content ul, .md-content ol {
+      padding-left: 24px;
+      margin: 12px 0;
+    }
+
+    .md-content li {
+      margin: 6px 0;
+      color: #ccc;
+    }
+
+    .md-content li::marker { color: #555; }
+
+    .md-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    .md-content th {
+      background: #111118;
+      border: 1px solid #2a2a3a;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #999;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .md-content td {
+      border: 1px solid #2a2a3a;
+      padding: 8px 12px;
+      color: #ccc;
+    }
+
+    .md-content tr:hover td { background: rgba(99, 102, 241, 0.03); }
+
+    .md-content hr {
+      border: none;
+      border-top: 1px solid #2a2a3a;
+      margin: 28px 0;
+    }
+
+    .md-content img {
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid #2a2a3a;
+    }
+
+    .md-content input[type="checkbox"] {
+      margin-right: 6px;
+      accent-color: #6366f1;
+    }
+
+    /* ============ NO RESULTS ============ */
+    .no-results {
+      padding: 20px 14px;
+      text-align: center;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .no-results i {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    /* ============ TOOLBAR ============ */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 10px;
+      background: #111118;
+      border-bottom: 1px solid #2a2a3a;
+      flex-shrink: 0;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .toolbar-sep {
+      width: 1px;
+      height: 18px;
+      background: #2a2a3a;
+      margin: 0 6px;
+    }
+
+    .tb-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: #777;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .tb-btn:hover {
+      color: #ccc;
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .tb-btn.active {
+      color: #6366f1;
+      background: rgba(99, 102, 241, 0.12);
+    }
+
+    .tb-btn i { font-size: 10px; }
+
+    /* ============ UPLOAD / IMPORT ============ */
+    .upload-zone {
+      margin: 8px 10px;
+      border: 2px dashed #2a2a3a;
+      border-radius: 8px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(99, 102, 241, 0.02);
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .upload-zone.drag-over {
+      transform: scale(1.01);
+    }
+
+    .upload-zone i {
+      font-size: 20px;
+      color: #555;
+      margin-bottom: 6px;
+      display: block;
+      transition: color 0.2s;
+    }
+
+    .upload-zone:hover i,
+    .upload-zone.drag-over i { color: #6366f1; }
+
+    .upload-zone .upload-label {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .upload-zone .upload-label strong {
+      color: #6366f1;
+      cursor: pointer;
+    }
+
+    .upload-zone .upload-hint {
+      font-size: 10px;
+      color: #444;
+      margin-top: 4px;
+    }
+
+    .upload-input { display: none; }
+
+    /* Imported section separator */
+    .import-section-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #f59e0b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-top: 1px solid #2a2a3a;
+      margin-top: 8px;
+    }
+
+    .import-section-header i { font-size: 9px; }
+
+    .import-section-header .import-clear {
+      margin-left: auto;
+      font-size: 10px;
+      color: #555;
+      cursor: pointer;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      transition: color 0.15s;
+    }
+
+    .import-section-header .import-clear:hover { color: #f87171; }
+
+    /* Imported file badge */
+    .file-item .imported-badge {
+      font-size: 8px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .file-item .remove-import {
+      font-size: 9px;
+      color: #444;
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 3px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    .file-item:hover .remove-import { display: inline; }
+    .file-item .remove-import:hover { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+
+    /* Security status in toolbar */
+    .security-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #555;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(34, 197, 94, 0.06);
+      margin-left: auto;
+    }
+
+    .security-badge i { color: #22c55e; font-size: 9px; }
+
+    /* Upload toast notification */
+    .upload-toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 1000;
+      animation: toastIn 0.3s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    .upload-toast.success {
+      background: #111118;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
+    }
+
+    .upload-toast.error {
+      background: #111118;
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      color: #f87171;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-title"><i class="fas fa-book-open"></i>Docs Viewer</div>
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="search-input" placeholder="Search files..." oninput="onSearch(this.value)">
+    </div>
+    <div class="file-count" id="file-count">Loading...</div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <button class="tb-btn active" id="sort-az" onclick="setSort('az')" title="Sort A-Z">
+        <i class="fas fa-arrow-down-a-z"></i> A-Z
+      </button>
+      <button class="tb-btn" id="sort-size" onclick="setSort('size')" title="Sort by size">
+        <i class="fas fa-weight-hanging"></i> Size
+      </button>
+      <button class="tb-btn" id="sort-modified" onclick="setSort('modified')" title="Sort by recently modified">
+        <i class="fas fa-clock"></i> Recent
+      </button>
+    </div>
+    <div class="toolbar-sep"></div>
+    <div class="toolbar-group">
+      <button class="tb-btn" onclick="expandAll()" title="Expand all folders">
+        <i class="fas fa-folder-open"></i> Expand All
+      </button>
+      <button class="tb-btn" onclick="collapseAll()" title="Collapse all folders">
+        <i class="fas fa-folder"></i> Collapse All
+      </button>
+    </div>
+    <div class="toolbar-sep"></div>
+    <div class="toolbar-group">
+      <button class="tb-btn" onclick="document.getElementById('file-upload').click()" title="Import .md files">
+        <i class="fas fa-upload"></i> Import
+      </button>
+    </div>
+    <div class="security-badge">
+      <i class="fas fa-shield-halved"></i> .md only &middot; 5MB max &middot; sanitized
+    </div>
+  </div>
+
+  <!-- Hidden file input for upload -->
+  <input type="file" id="file-upload" class="upload-input" accept=".md,text/markdown" multiple onchange="handleFileUpload(this.files)">
+
+  <!-- LAYOUT -->
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar"></div>
+
+    <!-- DROP ZONE (overlays the whole layout area when dragging) -->
+    <div class="upload-zone" id="drop-zone" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:999; margin:0; border-radius:0; border:none; background:rgba(10,10,15,0.92); flex-direction:column; justify-content:center; align-items:center;">
+      <i class="fas fa-cloud-arrow-up" style="font-size:48px; color:#6366f1; margin-bottom:12px;"></i>
+      <div class="upload-label" style="font-size:16px; color:#e5e5e5;">Drop <strong>.md</strong> files here to import</div>
+      <div class="upload-hint" style="font-size:12px; margin-top:8px;">Only markdown files &middot; Max 5MB each &middot; Content is sanitized</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content" id="content">
+      <div class="welcome">
+        <i class="fas fa-book-open"></i>
+        <h2>Pre Atlas Documentation</h2>
+        <p>Select a file from the sidebar to view its contents. Use the search bar to filter files by name.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ STATE ============
+    let manifest = null;
+    let currentFile = null;
+    let searchQuery = '';
+    let collapsedDirs = {};
+    let sortMode = 'az'; // 'az', 'size', 'modified'
+    const basePath = '../../';
+
+    // ============ IMPORTED FILES STATE ============
+    const IMPORT_STORAGE_KEY = 'docsViewer_importedFiles';
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    const ALLOWED_EXTENSIONS = ['.md'];
+    let importedFiles = []; // { id, name, content, size, importedAt, source }
+
+    // ============ CROSS-PROTOCOL FETCH ============
+    // Works on both http:// and file:// protocols
+    function xhrGet(url) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onload = function () {
+          if (xhr.status === 200 || xhr.status === 0) { // status 0 = file:// success
+            resolve(xhr.responseText);
+          } else {
+            reject(new Error(`HTTP ${xhr.status}`));
+          }
+        };
+        xhr.onerror = function () {
+          reject(new Error('Network error'));
+        };
+        xhr.send();
+      });
+    }
+
+    // ============ INIT ============
+    async function init() {
+      // Load imported files from localStorage
+      loadImportedFiles();
+
+      // Initialize drag & drop
+      initDragDrop();
+
+      try {
+        // Prefer the <script>-loaded global (works on file://)
+        if (window.DOCS_MANIFEST) {
+          manifest = window.DOCS_MANIFEST;
+        } else {
+          // Fallback: XHR fetch (works on http://)
+          const text = await xhrGet(basePath + 'docs_manifest.json');
+          manifest = JSON.parse(text);
+        }
+        updateFileCount();
+        renderSidebar();
+      } catch (err) {
+        console.error('Init error:', err);
+        document.getElementById('file-count').textContent = 'Error';
+        document.getElementById('sidebar').innerHTML = `
+          <div class="no-results">
+            <i class="fas fa-exclamation-triangle"></i>
+            Failed to load manifest.<br>
+            Run: python build_docs_manifest.py
+          </div>`;
+        // Still render imported files even if manifest fails
+        if (importedFiles.length > 0) {
+          renderSidebar();
+        }
+      }
+    }
+
+    // ============ SIDEBAR ============
+    function renderSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const filter = searchQuery.toLowerCase().trim();
+
+      // Sort directory keys: root first, then alphabetically
+      const dirs = manifest ? Object.keys(manifest.tree).sort((a, b) => {
+        if (a === '.') return -1;
+        if (b === '.') return 1;
+        return a.localeCompare(b);
+      }) : [];
+
+      let html = '';
+      let visibleFileCount = 0;
+
+      for (const dir of dirs) {
+        const files = manifest.tree[dir];
+        const filteredFiles = sortFiles(filter
+          ? files.filter(f => f.name.toLowerCase().includes(filter))
+          : files);
+
+        if (filteredFiles.length === 0) continue;
+        visibleFileCount += filteredFiles.length;
+
+        const label = (manifest.dir_labels && manifest.dir_labels[dir]) || dir;
+        const isCollapsed = filter ? false : (collapsedDirs[dir] === true);
+
+        html += `
+          <div class="dir-group">
+            <div class="dir-header" onclick="toggleDir('${dir}')">
+              <i class="fas fa-chevron-down dir-chevron ${isCollapsed ? 'collapsed' : ''}"></i>
+              <i class="fas fa-folder" style="color: #6366f1; font-size: 10px;"></i>
+              <span>${escHtml(label)}</span>
+              <span class="dir-count">${filteredFiles.length}</span>
+            </div>
+            <div class="dir-files ${isCollapsed ? 'collapsed' : ''}">
+              ${filteredFiles.map(f => `
+                <div class="file-item ${currentFile === f.path ? 'active' : ''}"
+                     onclick="loadFile('${escAttr(f.path)}')"
+                     title="${escAttr(f.path)}">
+                  <i class="fas fa-file-lines"></i>
+                  <span class="file-name">${escHtml(f.name)}</span>
+                  <span class="file-size">${formatSize(f.size)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+      }
+
+      // ============ IMPORTED FILES SECTION ============
+      const filteredImports = filter
+        ? importedFiles.filter(f => f.name.toLowerCase().includes(filter))
+        : importedFiles;
+
+      if (filteredImports.length > 0) {
+        const sortedImports = sortImportedFiles(filteredImports);
+        visibleFileCount += sortedImports.length;
+
+        html += `
+          <div class="import-section-header">
+            <i class="fas fa-upload"></i> Imported Files
+            <span style="font-weight:400; color:#666; text-transform:none; letter-spacing:0;">(${sortedImports.length})</span>
+            <span class="import-clear" onclick="clearAllImports()" title="Remove all imported files">
+              <i class="fas fa-trash-can"></i> Clear
+            </span>
+          </div>`;
+
+        for (const f of sortedImports) {
+          const isActive = currentFile === 'imported:' + f.id;
+          html += `
+            <div class="file-item ${isActive ? 'active' : ''}"
+                 onclick="loadImportedFile('${f.id}')"
+                 title="Imported: ${escAttr(f.name)}">
+              <i class="fas fa-file-import" style="color: #f59e0b;"></i>
+              <span class="file-name">${escHtml(f.name)}</span>
+              <span class="imported-badge">Imported</span>
+              <span class="file-size">${formatSize(f.size)}</span>
+              <i class="fas fa-xmark remove-import" onclick="removeImportedFile('${f.id}', event)" title="Remove"></i>
+            </div>`;
+        }
+      }
+
+      // No results message
+      if (visibleFileCount === 0 && filter) {
+        html += `
+          <div class="no-results">
+            <i class="fas fa-search"></i>
+            No files match "${escHtml(filter)}"
+          </div>`;
+      }
+
+      // Upload drop hint at bottom of sidebar (always visible)
+      html += `
+        <div class="upload-zone" onclick="document.getElementById('file-upload').click()" style="margin:12px 10px;">
+          <i class="fas fa-cloud-arrow-up"></i>
+          <div class="upload-label">Drop <strong>.md</strong> files or click to import</div>
+          <div class="upload-hint">.md only &middot; 5MB max &middot; stored locally</div>
+        </div>`;
+
+      sidebar.innerHTML = html;
+
+      // Update count
+      const totalCount = (manifest ? manifest.total_files : 0) + importedFiles.length;
+      const importLabel = importedFiles.length > 0 ? ` (${importedFiles.length} imported)` : '';
+      if (filter) {
+        document.getElementById('file-count').textContent = `${visibleFileCount} / ${totalCount} files${importLabel}`;
+      } else {
+        document.getElementById('file-count').textContent = `${totalCount} files${importLabel}`;
+      }
+    }
+
+    // ============ TOGGLE DIRECTORY ============
+    function toggleDir(dir) {
+      collapsedDirs[dir] = !collapsedDirs[dir];
+      renderSidebar();
+    }
+
+    // ============ EXPAND / COLLAPSE ALL ============
+    function expandAll() {
+      if (!manifest) return;
+      Object.keys(manifest.tree).forEach(d => collapsedDirs[d] = false);
+      renderSidebar();
+    }
+
+    function collapseAll() {
+      if (!manifest) return;
+      Object.keys(manifest.tree).forEach(d => collapsedDirs[d] = true);
+      renderSidebar();
+    }
+
+    // ============ SORT ============
+    function setSort(mode) {
+      sortMode = mode;
+      // Update active button
+      document.querySelectorAll('.toolbar .tb-btn[id^="sort-"]').forEach(btn => btn.classList.remove('active'));
+      const active = document.getElementById('sort-' + mode);
+      if (active) active.classList.add('active');
+      renderSidebar();
+    }
+
+    function sortFiles(files) {
+      const sorted = [...files];
+      if (sortMode === 'az') {
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sortMode === 'size') {
+        sorted.sort((a, b) => b.size - a.size);
+      } else if (sortMode === 'modified') {
+        sorted.sort((a, b) => b.modified - a.modified);
+      }
+      return sorted;
+    }
+
+    function sortImportedFiles(files) {
+      const sorted = [...files];
+      if (sortMode === 'az') {
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sortMode === 'size') {
+        sorted.sort((a, b) => b.size - a.size);
+      } else if (sortMode === 'modified') {
+        sorted.sort((a, b) => b.importedAt - a.importedAt); // newest first for imports
+      }
+      return sorted;
+    }
+
+    // ============ LOAD FILE ============
+    async function loadFile(path) {
+      currentFile = path;
+      renderSidebar(); // update active highlight
+
+      const content = document.getElementById('content');
+      content.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i>Loading...</div>';
+      content.scrollTop = 0;
+
+      try {
+        // Try embedded content first (works on file://), then XHR fallback
+        let text = null;
+        const fileEntry = manifest && manifest.files.find(f => f.path === path);
+        if (fileEntry && fileEntry.content != null) {
+          text = fileEntry.content;
+        } else {
+          text = await xhrGet(basePath + path);
+        }
+
+        // Build breadcrumb
+        const parts = path.split('/');
+        const fileName = parts.pop();
+        const dirPath = parts.join('/') || 'Root';
+
+        const breadcrumbHtml = `
+          <div class="breadcrumb">
+            <i class="fas fa-folder" style="color: #555; font-size: 11px;"></i>
+            <span>${escHtml(dirPath)}</span>
+            <span>/</span>
+            <span class="bc-file">${escHtml(fileName)}</span>
+          </div>`;
+
+        // Parse markdown
+        const html = marked.parse(text, {
+          gfm: true,
+          breaks: false
+        });
+
+        content.innerHTML = breadcrumbHtml + `<div class="md-content">${html}</div>`;
+
+        // Apply syntax highlighting to code blocks
+        content.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+
+      } catch (err) {
+        console.error('Load error:', err);
+        content.innerHTML = `
+          <div class="error-msg">
+            <i class="fas fa-exclamation-circle"></i>
+            Failed to load <strong>${escHtml(path)}</strong>: ${escHtml(err.message)}
+          </div>`;
+      }
+    }
+
+    // ============ SEARCH ============
+    function onSearch(value) {
+      searchQuery = value;
+      renderSidebar();
+    }
+
+    // ============ UTILS ============
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function escAttr(str) {
+      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + 'B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'K';
+      return (bytes / (1024 * 1024)).toFixed(1) + 'M';
+    }
+
+    // ============ IMPORT: STORAGE ============
+    function loadImportedFiles() {
+      try {
+        const raw = localStorage.getItem(IMPORT_STORAGE_KEY);
+        importedFiles = raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.warn('Failed to load imported files:', e);
+        importedFiles = [];
+      }
+    }
+
+    function saveImportedFiles() {
+      try {
+        localStorage.setItem(IMPORT_STORAGE_KEY, JSON.stringify(importedFiles));
+      } catch (e) {
+        console.warn('Storage full or blocked:', e);
+        showToast('Storage full — cannot save import', 'error');
+      }
+    }
+
+    // ============ IMPORT: SECURITY ============
+    function validateFile(file) {
+      const errors = [];
+
+      // Check extension
+      const ext = '.' + file.name.split('.').pop().toLowerCase();
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        errors.push(`Rejected: "${file.name}" — only .md files allowed`);
+      }
+
+      // Check MIME type (loose — some systems don't set it for .md)
+      if (file.type && !file.type.match(/^text\/(markdown|plain|x-markdown)$/i) && file.type !== '') {
+        // Only warn, don't block — MIME types for .md are unreliable
+      }
+
+      // Check size
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`Rejected: "${file.name}" — exceeds 5MB limit (${formatSize(file.size)})`);
+      }
+
+      // Check for empty files
+      if (file.size === 0) {
+        errors.push(`Rejected: "${file.name}" — file is empty`);
+      }
+
+      return errors;
+    }
+
+    function sanitizeContent(text) {
+      // Strip <script> tags (XSS via markdown HTML injection)
+      text = text.replace(/<script[\s\S]*?<\/script>/gi, '<!-- script removed -->');
+      // Strip on* event handlers in HTML tags
+      text = text.replace(/\s+on\w+\s*=\s*(['"])[\s\S]*?\1/gi, '');
+      text = text.replace(/\s+on\w+\s*=\s*[^\s>]+/gi, '');
+      // Strip javascript: URLs
+      text = text.replace(/javascript\s*:/gi, 'blocked:');
+      // Strip data: URLs with script content
+      text = text.replace(/data\s*:\s*text\/html/gi, 'blocked:text/html');
+      // Strip <iframe>, <object>, <embed>, <form>
+      text = text.replace(/<(iframe|object|embed|form)[\s\S]*?<\/\1>/gi, '<!-- $1 removed -->');
+      text = text.replace(/<(iframe|object|embed|form)[^>]*\/?>/gi, '<!-- $1 removed -->');
+      return text;
+    }
+
+    // ============ IMPORT: FILE HANDLING ============
+    async function handleFileUpload(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      const files = Array.from(fileList);
+      let successCount = 0;
+
+      for (const file of files) {
+        const errors = validateFile(file);
+        if (errors.length > 0) {
+          errors.forEach(err => showToast(err, 'error'));
+          continue;
+        }
+
+        // Check for duplicate name
+        const existing = importedFiles.find(f => f.name === file.name);
+        if (existing) {
+          // Overwrite with new version
+          const text = await readFileAsText(file);
+          existing.content = sanitizeContent(text);
+          existing.size = file.size;
+          existing.importedAt = Date.now();
+          existing.source = 'upload';
+          showToast(`Updated: ${file.name}`, 'success');
+          successCount++;
+          continue;
+        }
+
+        try {
+          const text = await readFileAsText(file);
+          const sanitized = sanitizeContent(text);
+
+          importedFiles.push({
+            id: 'import_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            name: file.name,
+            content: sanitized,
+            size: file.size,
+            importedAt: Date.now(),
+            source: 'upload'
+          });
+          successCount++;
+        } catch (err) {
+          showToast(`Failed to read: ${file.name}`, 'error');
+        }
+      }
+
+      if (successCount > 0) {
+        saveImportedFiles();
+        renderSidebar();
+        showToast(`Imported ${successCount} file${successCount > 1 ? 's' : ''}`, 'success');
+        updateFileCount();
+      }
+
+      // Reset input so same file can be re-uploaded
+      document.getElementById('file-upload').value = '';
+    }
+
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(file);
+      });
+    }
+
+    function removeImportedFile(id, event) {
+      event.stopPropagation();
+      importedFiles = importedFiles.filter(f => f.id !== id);
+      saveImportedFiles();
+      if (currentFile === 'imported:' + id) {
+        currentFile = null;
+        document.getElementById('content').innerHTML = `
+          <div class="welcome">
+            <i class="fas fa-book-open"></i>
+            <h2>Pre Atlas Documentation</h2>
+            <p>Select a file from the sidebar to view its contents.</p>
+          </div>`;
+      }
+      renderSidebar();
+      updateFileCount();
+      showToast('File removed', 'success');
+    }
+
+    function clearAllImports() {
+      if (importedFiles.length === 0) return;
+      importedFiles = [];
+      saveImportedFiles();
+      if (currentFile && currentFile.startsWith('imported:')) {
+        currentFile = null;
+        document.getElementById('content').innerHTML = `
+          <div class="welcome">
+            <i class="fas fa-book-open"></i>
+            <h2>Pre Atlas Documentation</h2>
+            <p>Select a file from the sidebar to view its contents.</p>
+          </div>`;
+      }
+      renderSidebar();
+      updateFileCount();
+      showToast('All imports cleared', 'success');
+    }
+
+    function loadImportedFile(id) {
+      const file = importedFiles.find(f => f.id === id);
+      if (!file) return;
+
+      currentFile = 'imported:' + id;
+      renderSidebar();
+
+      const content = document.getElementById('content');
+      content.scrollTop = 0;
+
+      const importDate = new Date(file.importedAt).toLocaleString();
+      const breadcrumbHtml = `
+        <div class="breadcrumb">
+          <i class="fas fa-upload" style="color: #f59e0b; font-size: 11px;"></i>
+          <span style="color: #f59e0b;">Imported</span>
+          <span>/</span>
+          <span class="bc-file">${escHtml(file.name)}</span>
+          <span style="margin-left: auto; font-size: 10px; color: #555;">
+            <i class="fas fa-clock" style="font-size: 9px;"></i> ${importDate} &middot; ${formatSize(file.size)}
+          </span>
+        </div>`;
+
+      const html = marked.parse(file.content, { gfm: true, breaks: false });
+      content.innerHTML = breadcrumbHtml + `<div class="md-content">${html}</div>`;
+
+      content.querySelectorAll('pre code').forEach(block => {
+        hljs.highlightElement(block);
+      });
+    }
+
+    function updateFileCount() {
+      const total = (manifest ? manifest.total_files : 0) + importedFiles.length;
+      const importLabel = importedFiles.length > 0 ? ` (${importedFiles.length} imported)` : '';
+      if (searchQuery) {
+        // Recalculated by renderSidebar, but update total context
+      } else {
+        document.getElementById('file-count').textContent = `${total} files${importLabel}`;
+      }
+    }
+
+    // ============ IMPORT: DRAG & DROP ============
+    function initDragDrop() {
+      let dragCounter = 0;
+      const dropZone = document.getElementById('drop-zone');
+
+      document.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dragCounter++;
+        if (dragCounter === 1) {
+          dropZone.style.display = 'flex';
+        }
+      });
+
+      document.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+          dragCounter = 0;
+          dropZone.style.display = 'none';
+        }
+      });
+
+      document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+      });
+
+      document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragCounter = 0;
+        dropZone.style.display = 'none';
+
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleFileUpload(e.dataTransfer.files);
+        }
+      });
+    }
+
+    // ============ TOAST NOTIFICATIONS ============
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `upload-toast ${type}`;
+      toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${escHtml(message)}`;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ============ KEYBOARD SHORTCUTS ============
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+K or Cmd+K to focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('search-input').focus();
+      }
+      // Escape to clear search
+      if (e.key === 'Escape') {
+        const input = document.getElementById('search-input');
+        if (input === document.activeElement) {
+          input.value = '';
+          searchQuery = '';
+          renderSidebar();
+          input.blur();
+        }
+      }
+    });
+
+    // ============ START ============
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

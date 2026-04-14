@@ -1,0 +1,425 @@
+{
+  "document": {
+    "title": "Pre Atlas — System Debrief",
+    "version": "1.0",
+    "date": "2026-02-12",
+    "purpose": "Comprehensive reference for a project manager or system orchestrator to understand, operate, and extend the Pre Atlas system"
+  },
+
+  "executive_summary": {
+    "description": "Pre Atlas is a federated monorepo containing five interconnected projects that form a personal behavioral governance and productivity system. It analyzes 1,397 conversations (93,898 messages) exported from ChatGPT, detects unresolved cognitive loops, computes a daily operational mode, and enforces behavioral constraints through progressive UI lockouts. All state changes are recorded as append-only, hash-chained deltas. The system runs entirely on the local machine with no cloud dependencies.",
+    "metrics": {
+      "lines_of_code": 39750,
+      "conversations_analyzed": 1397,
+      "messages_in_database": 93898,
+      "ideas_tracked": 527,
+      "agent_scripts": 17,
+      "specification_documents": 19,
+      "phases_completed": 9,
+      "current_mode": "CLOSURE",
+      "current_closure_ratio": 6.7,
+      "open_loops": 15,
+      "active_lanes": 2,
+      "active_lanes_started": 0
+    }
+  },
+
+  "architecture": {
+    "type": "federated_monorepo",
+    "structure": ["services/", "apps/", "research/", "contracts/", "data/", "scripts/"],
+    "pipeline": {
+      "orchestrator": "scripts/run_all.ps1",
+      "steps": [
+        {"step": 1, "action": "Start Delta API server", "target": "http://localhost:3001"},
+        {"step": 2, "action": "Run Cognitive Sensor refresh pipeline", "target": "cognitive_state.json"},
+        {"step": 3, "action": "Build daily projection artifact", "target": "data/projections/today.json"},
+        {"step": 4, "action": "Push cognitive metrics to Delta", "target": "POST /api/ingest/cognitive"}
+      ]
+    },
+    "components": {
+      "delta_fabric": {
+        "location": ".delta-fabric/",
+        "technology": "JSON",
+        "purpose": "Persistent state synchronization layer. Append-only delta log and entity store with hash chains.",
+        "files": {
+          "entities.json": "Entity store — entity_id, entity_type, created_at, current_version, current_hash, is_archived",
+          "deltas.json": "Delta operation log — delta_id, entity_id, timestamp, author, patch (JSON Patch), prev_hash, new_hash"
+        },
+        "design": "Every change is a delta with a hash chain linking to previous state. Tamper-evident. State reconstruction by folding deltas in order.",
+        "known_issue": "10 hash chain fork points from concurrent daemon writes without file lock. No data loss but state divergence possible. Fix needed: add file lock to deltas.json writes."
+      },
+
+      "delta_kernel": {
+        "location": "services/delta-kernel/",
+        "technology": "TypeScript, Node.js, Express",
+        "lines_of_code": 15000,
+        "purpose": "Deterministic OS engine. Routing, mode governance, REST API, sync protocol, work admission, timeline logging.",
+        "design_principles": [
+          "No overwrites — every state change is a delta",
+          "No uncontrolled AI execution — all actions pass through confirmation gates",
+          "Deterministic routing — mode computation is pure lookup table, no heuristics or probabilities",
+          "Hash-chain verification — all deltas linked cryptographically"
+        ],
+        "mode_system": {
+          "description": "Exactly one active mode at all times. Routing determined by 5 signals bucketed into LOW/OK/HIGH.",
+          "signals": {
+            "sleep_hours": {"LOW": "< 6", "OK": "6–7.5", "HIGH": ">= 7.5"},
+            "open_loops": {"LOW": ">= 4", "OK": "2–3", "HIGH": "<= 1"},
+            "assets_shipped": {"LOW": "0", "OK": "1", "HIGH": ">= 2"},
+            "deep_work_blocks": {"LOW": "0", "OK": "1", "HIGH": ">= 2"},
+            "money_delta": {"LOW": "<= 0", "OK": "> 0 & < target", "HIGH": ">= target"}
+          },
+          "modes": [
+            {"mode": "RECOVER", "trigger": "sleep_hours = LOW (global override)", "allowed": "Rest, health, light admin", "restrictions": "BUILD/COMPOUND/SCALE blocked"},
+            {"mode": "CLOSURE", "trigger": "open_loops = LOW (>= 4) or closure_ratio < 40%", "allowed": "Finish tasks, reply messages, clean queues", "restrictions": "BUILD/COMPOUND/SCALE blocked"},
+            {"mode": "MAINTENANCE", "trigger": "closure_ratio 40–60%", "allowed": "Light admin, review", "restrictions": "None"},
+            {"mode": "BUILD", "trigger": "closure_ratio 60–80%", "allowed": "Create new assets, plans, systems", "restrictions": "None"},
+            {"mode": "COMPOUND", "trigger": "deep_work + money both OK/HIGH", "allowed": "Extend existing assets, leverage", "restrictions": "None"},
+            {"mode": "SCALE", "trigger": "closure_ratio >= 80%", "allowed": "Hiring, delegation, infrastructure", "restrictions": "None"}
+          ],
+          "global_overrides": [
+            {"condition": "sleep_hours = LOW", "forces": "RECOVER"},
+            {"condition": "open_loops = LOW (>= 4)", "forces": "CLOSURE"}
+          ]
+        },
+        "governance_daemon": {
+          "description": "Autonomous daemon running scheduled jobs alongside API server",
+          "jobs": [
+            {"job": "heartbeat", "schedule": "*/5 * * * *", "description": "Update daemon status"},
+            {"job": "refresh", "schedule": "0 * * * *", "description": "Run cognitive refresh pipeline"},
+            {"job": "day_start", "schedule": "0 6 * * *", "description": "Reset daily counters, recalculate mode"},
+            {"job": "day_end", "schedule": "0 22 * * *", "description": "Streak reset if no BUILD closure that day"},
+            {"job": "mode_recalc", "schedule": "*/15 * * * *", "description": "Autonomous mode governance based on closure ratio"}
+          ]
+        },
+        "work_admission_control": {
+          "phase": "6A",
+          "description": "All work (human and AI) passes through universal work controller",
+          "primitives": [
+            {"endpoint": "POST /api/work/request", "purpose": "Ask permission to start a job. Checks mode, capacity (max 1 concurrent, queue depth 5), dependencies."},
+            {"endpoint": "POST /api/work/complete", "purpose": "Report job completion with optional AI metrics (tokens_used, cost_usd)."},
+            {"endpoint": "GET /api/work/status", "purpose": "Query current work state, active jobs, queue."},
+            {"endpoint": "POST /api/work/cancel", "purpose": "Cancel a job."},
+            {"endpoint": "GET /api/work/history", "purpose": "Get job history."}
+          ],
+          "constraints": {
+            "max_concurrent_jobs": 1,
+            "max_queue_depth": 5,
+            "ai_jobs_denied_in_closure": true
+          }
+        },
+        "enforcement_ladder": [
+          {"violations": 0, "level": 0, "behavior": "Warning banner only"},
+          {"violations": 1, "level": 1, "behavior": "Warn + require ACKNOWLEDGE ORDER"},
+          {"violations": 2, "level": 2, "behavior": "Disable Create / New Project / Add Task actions"},
+          {"violations": "3+", "level": 3, "behavior": "Hard lock build surfaces until loop closed/archived"}
+        ],
+        "api_endpoints": [
+          {"endpoint": "/api/state", "methods": ["GET", "PUT"], "category": "State", "description": "Read or update system state"},
+          {"endpoint": "/api/state/unified", "methods": ["GET"], "category": "State", "description": "Merged Delta + Cognitive state"},
+          {"endpoint": "/api/ingest/cognitive", "methods": ["POST"], "category": "Bridge", "description": "Ingest cognitive metrics from sensor"},
+          {"endpoint": "/api/tasks", "methods": ["GET", "POST"], "category": "Tasks", "description": "List or create tasks"},
+          {"endpoint": "/api/tasks/:id", "methods": ["PUT", "DELETE"], "category": "Tasks", "description": "Update or archive a task"},
+          {"endpoint": "/api/stats", "methods": ["GET"], "category": "Stats", "description": "System statistics"},
+          {"endpoint": "/api/health", "methods": ["GET"], "category": "Health", "description": "Health check"},
+          {"endpoint": "/api/law/close_loop", "methods": ["POST"], "category": "Law", "description": "Canonical closure event (Phase 5B)"},
+          {"endpoint": "/api/law/acknowledge", "methods": ["POST"], "category": "Law", "description": "Acknowledge daily order"},
+          {"endpoint": "/api/law/violation", "methods": ["POST"], "category": "Law", "description": "Log build violation"},
+          {"endpoint": "/api/law/override", "methods": ["POST"], "category": "Law", "description": "Emergency override with reason"},
+          {"endpoint": "/api/law/archive", "methods": ["POST"], "category": "Law", "description": "Archive loop without closure"},
+          {"endpoint": "/api/law/refresh", "methods": ["POST"], "category": "Law", "description": "Trigger cognitive refresh"},
+          {"endpoint": "/api/daemon/status", "methods": ["GET"], "category": "Daemon", "description": "Governance daemon status"},
+          {"endpoint": "/api/daemon/run", "methods": ["POST"], "category": "Daemon", "description": "Manually trigger daemon job"},
+          {"endpoint": "/api/work/request", "methods": ["POST"], "category": "Work", "description": "Request permission to start a job"},
+          {"endpoint": "/api/work/complete", "methods": ["POST"], "category": "Work", "description": "Report job completion"},
+          {"endpoint": "/api/work/status", "methods": ["GET"], "category": "Work", "description": "Query current work state"},
+          {"endpoint": "/api/work/cancel", "methods": ["POST"], "category": "Work", "description": "Cancel a job"},
+          {"endpoint": "/api/work/history", "methods": ["GET"], "category": "Work", "description": "Get job history"},
+          {"endpoint": "/api/timeline", "methods": ["GET"], "category": "Timeline", "description": "Query events with filters"},
+          {"endpoint": "/api/timeline/stats", "methods": ["GET"], "category": "Timeline", "description": "Event statistics"},
+          {"endpoint": "/api/timeline/day/:date", "methods": ["GET"], "category": "Timeline", "description": "All events for a specific day"}
+        ],
+        "modules": [
+          {"number": 1, "name": "Daily Cockpit", "status": "implemented", "purpose": "Main UI — mode, signals, actions, tasks, drafts, leverage moves"},
+          {"number": 2, "name": "Preparation Engine", "status": "implemented", "purpose": "Background workers that prepare (never execute) drafts and actions. 12 templates, 5 workers, idempotent by fingerprint."},
+          {"number": 3, "name": "Matryoshka Dictionary", "status": "specified", "purpose": "Template compression — message templates with slot parameters"},
+          {"number": 4, "name": "Vector Discovery", "status": "specified", "purpose": "Semantic search across entities"},
+          {"number": 5, "name": "AI Design", "status": "specified", "purpose": "AI integration patterns and constraints"},
+          {"number": 6, "name": "Delta Sync", "status": "implemented", "purpose": "Multi-node sync protocol (HELLO/HEADS/WANT/DELTAS/ACK)"},
+          {"number": 7, "name": "Off-Grid Nodes", "status": "specified", "purpose": "Offline support and eventual consistency"},
+          {"number": 8, "name": "UI Surface Streaming", "status": "implemented", "purpose": "Remote UI rendering with delta patches"},
+          {"number": 9, "name": "Camera Tile Streaming", "status": "implemented", "purpose": "Video scene composition with baseline + delta extraction"},
+          {"number": 10, "name": "Remote Control (Actuation)", "status": "implemented", "purpose": "Device control with intent/policy/execution model"},
+          {"number": 11, "name": "Audio Streaming", "status": "specified", "purpose": "Voice and audio codec adapters"}
+        ],
+        "ports": [
+          {"port": 3001, "service": "REST API"},
+          {"port": 5173, "service": "Vite dev server (React web UI)"}
+        ]
+      },
+
+      "cognitive_sensor": {
+        "location": "services/cognitive-sensor/",
+        "technology": "Python, SQLite",
+        "lines_of_code": 12000,
+        "purpose": "Behavioral governance through conversation analysis. Loop detection, idea mining, self-analysis profiles, governor briefs.",
+        "architecture_layers": [
+          {"layer": 6, "name": "Interface Governance", "components": "CycleBoard, Dashboard, Control Panel"},
+          {"layer": 5, "name": "Law Generation", "components": "daily_directive.txt, daily_payload.json"},
+          {"layer": 4, "name": "Nervous System", "components": "cognitive_state.json"},
+          {"layer": 3, "name": "Intelligence", "components": "radar.py, loops.py, completion_stats.py"},
+          {"layer": 2, "name": "Decision Tracking", "components": "loop_decisions table in results.db"},
+          {"layer": 1, "name": "Memory", "components": "results.db (93,898 messages)"}
+        ],
+        "database": {
+          "file": "results.db",
+          "engine": "SQLite",
+          "tables": [
+            {"name": "messages", "rows": 93898, "columns": ["convo_id", "role", "words", "chars"], "purpose": "Message metadata per conversation turn"},
+            {"name": "topics", "rows": 13934, "columns": ["convo_id", "topic", "weight"], "purpose": "Topic keywords extracted per conversation"},
+            {"name": "convo_time", "rows": 1397, "columns": ["convo_id", "timestamp_fields"], "purpose": "Conversation timestamps"},
+            {"name": "convo_titles", "rows": 1397, "columns": ["convo_id", "title"], "purpose": "Conversation title lookup"},
+            {"name": "loop_decisions", "rows": "1+", "columns": ["convo_id", "decision", "date"], "purpose": "User decisions on loop closure (CLOSE/CONTINUE/ARCHIVE)"}
+          ]
+        },
+        "loop_detection": {
+          "script": "loops.py",
+          "algorithm": "score = user_words + (intent_topic_weight × 30) - (done_topic_weight × 50)",
+          "intent_topics": ["want", "need", "should", "plan", "going", "gonna", "start", "try", "trying", "build", "create", "make", "learn", "begin"],
+          "done_topics": ["did", "done", "finished", "completed", "solved", "shipped", "fixed", "achieved"],
+          "output": "loops_latest.json (top 15 by score)",
+          "critical_gap": "loops.py does NOT read loop_decisions table or closures.json. It regenerates from scratch on every run. Closed loops reappear. The open loop count and closure ratio use different data paths — loops_latest.json comes from loops.py (ignores decisions), closure ratio comes from completion_stats.py (reads loop_decisions)."
+        },
+        "routing_logic": {
+          "script": "route_today.py",
+          "input": "cognitive_state.json",
+          "rules": [
+            {"condition": "closure_ratio < 15%", "mode": "CLOSURE", "action": "Close or archive 1 loop today"},
+            {"condition": "open_loops > 20", "mode": "CLOSURE", "action": "Close 2 loops today"},
+            {"condition": "open_loops > 10", "mode": "MAINTENANCE", "action": "Review top loop"},
+            {"condition": "open_loops <= 10 AND ratio >= 15%", "mode": "BUILD", "action": "Focus on creation"}
+          ]
+        },
+        "idea_intelligence_pipeline": {
+          "orchestrator": "run_agents.py",
+          "agents": [
+            {"order": 1, "script": "agent_excavator.py", "input": "memory_db.json, results.db", "output": "excavated_ideas_raw.json", "method": "Regex + semantic similarity (threshold 0.40)"},
+            {"order": 2, "script": "agent_deduplicator.py", "input": "excavated_ideas_raw.json", "output": "ideas_deduplicated.json", "method": "Cosine similarity + union-find (same >= 0.70, related >= 0.55)"},
+            {"order": 3, "script": "agent_classifier.py", "input": "ideas_deduplicated.json", "output": "ideas_classified.json", "method": "Hierarchical clustering + status detection + alignment scoring"},
+            {"order": 4, "script": "agent_orchestrator.py", "input": "ideas_classified.json", "output": "idea_registry.json", "method": "Priority: freq 20% + recency 20% + alignment 25% + feasibility 15% + compounding 20%"},
+            {"order": 5, "script": "agent_reporter.py", "input": "idea_registry.json", "output": "IDEA_REGISTRY.md", "method": "Renders tables, hierarchy trees, timelines, recommendations"}
+          ],
+          "schema_validation": "Agents 1-4 call require_valid() before writing JSON, enforcing ExcavatedIdeas.v1.json or IdeaRegistry.v1.json contracts"
+        },
+        "behavioral_analysis_pipeline": {
+          "orchestrator": "run_audit.py",
+          "agents": [
+            {"script": "agent_classifier_convo.py", "output": "conversation_classifications.json", "method": "Semantic signatures + keyword signals for domain/outcome/emotion/intensity"},
+            {"script": "agent_synthesizer.py", "output": "BEHAVIORAL_AUDIT.md", "method": "30-question analysis across 6 layers (identity, power, execution, decisions, cognition, opportunity)"},
+            {"script": "agent_book_miner.py", "output": "book_raw_material.json, BOOK_OUTLINE.md", "method": "Extracts power dynamics content, clusters into 12 chapter themes, 2,070 passages"}
+          ]
+        },
+        "governor_system": {
+          "daily": {"script": "governor_daily.py", "output": ["daily_brief.md", "governance_state.json"], "content": "Mode assessment, lane status, top moves, binary decisions, guardrails, early warning signs"},
+          "weekly": {"script": "governor_weekly.py", "output": ["weekly_governor_packet.md"], "content": "Weekly audit, idea pipeline status, 3-5 strategic decisions"}
+        },
+        "autonomy_model": {
+          "level_2": {"name": "AI-for-itself", "description": "Ingest, classify, maintain backlog, park new ideas — no human approval needed. All 17 agent scripts."},
+          "level_1": {"name": "AI-for-you", "description": "Generate briefs with binary decisions — human approves or rejects. Governor scripts only."}
+        },
+        "refresh_pipeline": {
+          "orchestrator": "refresh.py",
+          "execution_order": [
+            {"order": 1, "script": "loops.py", "output": "loops_latest.json", "validates_against": null},
+            {"order": 2, "script": "completion_stats.py", "output": "completion_stats.json", "validates_against": null},
+            {"order": 3, "script": "export_cognitive_state.py", "output": "cognitive_state.json", "validates_against": "CognitiveMetricsComputed.json"},
+            {"order": 4, "script": "route_today.py", "output": "daily_directive.txt", "validates_against": null},
+            {"order": 5, "script": "export_daily_payload.py", "output": "daily_payload.json", "validates_against": "DailyPayload.v1.json"},
+            {"order": 6, "script": "wire_cycleboard.py", "output": "cycleboard/brain/*", "validates_against": null},
+            {"order": 7, "script": "reporter.py", "output": "STATE_HISTORY.md", "validates_against": null},
+            {"order": 8, "script": "build_dashboard.py", "output": "dashboard.html", "validates_against": null}
+          ]
+        },
+        "closure_mechanism": {
+          "proper_method": [
+            "Run python resurfacer.py to surface the top unresolved loop (appends to RESURFACER_LOG.md)",
+            "Run python decide.py — reads most recently resurfaced loop, prompts for CLOSE/CONTINUE/ARCHIVE",
+            "Decision written to loop_decisions table in results.db",
+            "Run python atlas_cli.py daily to refresh pipeline — completion_stats.py recalculates closure ratio"
+          ],
+          "critical_note": "Due to loops.py gap, the loop will still appear in loops_latest.json even after being decided on. Closure ratio improves (via completion_stats.py) but open loop count does not decrease."
+        },
+        "self_analysis_profiles": [
+          {"file": "DEEP_PSYCHOLOGICAL_PROFILE.md", "contents": "Core wounds (Invalidation, Powerlessness), attachment style (dismissive-avoidant), values, defense mechanisms"},
+          {"file": "EMOTIONAL_PROFILE.md", "contents": "Emotional landscape — agency 26%, connection 97% negativity, 61.8% negative emotion ratio"},
+          {"file": "CONVERSATION_PATTERNS.md", "contents": "60% of conversations exceed 2,000 words, 51% loop without resolution"},
+          {"file": "THE_CYCLE.md", "contents": "5-step stuck loop: INTEND (9,643) → OBSTACLE (11,711) → JUSTIFY (13,233) → DISMISS (2,506) → RESET (4,324)"},
+          {"file": "GROWTH_REPORT.md", "contents": "Cognitive fallacies (All-or-Nothing at 39%), blindspots, growth opportunities"},
+          {"file": "LANGUAGE_LOOPS.md", "contents": "Phrase frequency — 'i feel like' (6,209x), 'i dont know' (2,042x), 'and then i' (2,518x)"},
+          {"file": "DERAILMENT_FACTORS.md", "contents": "What knocks you off course — phone (1,509 mentions), people, emotional spirals"},
+          {"file": "STALL_SIGNATURES.md", "contents": "EMPTY — header only, never populated"},
+          {"file": "ACCELERATION_PHRASES.md", "contents": "EMPTY — header only, never populated"}
+        ],
+        "cli_interface": {
+          "script": "atlas_cli.py",
+          "commands": [
+            {"command": "python atlas_cli.py daily", "duration": "~30s", "description": "Full daily loop: ingest + analyze + backlog + daily brief"},
+            {"command": "python atlas_cli.py weekly", "duration": "~90s", "description": "Full weekly loop: daily + audit + weekly packet"},
+            {"command": "python atlas_cli.py backlog", "duration": "~120s", "description": "Full idea intelligence pipeline + conversation classifier"},
+            {"command": "python atlas_cli.py briefs", "duration": "<5s", "description": "Generate governor briefs from current state (no refresh)"},
+            {"command": "python atlas_cli.py status", "duration": "<1s", "description": "Show config (North Star, lanes, moratorium) and file freshness"}
+          ]
+        },
+        "ports": [
+          {"port": 8080, "service": "Static file server for HTML interfaces"}
+        ]
+      },
+
+      "webos_333": {
+        "location": "apps/webos-333/",
+        "technology": "HTML, CSS, JavaScript (single file)",
+        "lines_of_code": 3443,
+        "purpose": "Standalone browser-based OS simulator. No connection to main system.",
+        "features": ["Boot sequence + login", "Virtual filesystem (localStorage)", "3 themes (Win95, XP, Dark)", "12 applications", "Draggable/resizable windows", "Terminal with shell commands"],
+        "applications": ["File Explorer", "Notepad", "Calculator", "Terminal", "Browser", "Paint", "Music Player", "Minesweeper", "Solitaire", "Settings", "Task Manager", "Image Viewer"],
+        "dependencies": "None. Open web-os-simulator.html in browser."
+      },
+
+      "uasc_m2m": {
+        "location": "research/uasc-m2m/",
+        "technology": "Python, JavaScript",
+        "purpose": "Standalone research. Ultra-Compressed Symbolic Encoding for Machine-to-Machine Communication. Encodes workflows into single Chinese-inspired glyphs using stroke patterns as logical operations.",
+        "compression_levels": [
+          {"level": 1, "description": "One sentence → one glyph"},
+          {"level": 4, "description": "A city's conversations → one glyph"},
+          {"level": 7, "description": "All human knowledge → one glyph (theoretical)"}
+        ],
+        "dependencies": "Python 3.x stdlib only. No connection to main system."
+      }
+    }
+  },
+
+  "shared_contracts": {
+    "location": "contracts/schemas/",
+    "enforcement": "All exports call require_valid() from validate.py before writing",
+    "schemas": [
+      {"schema": "DailyPayload.v1.json", "consumed_by": "CycleBoard HTML", "purpose": "UI consumption payload with mode, loops, directive"},
+      {"schema": "CognitiveMetricsComputed.json", "consumed_by": "Delta API (ingest)", "purpose": "Cognitive state metrics format"},
+      {"schema": "DailyProjection.v1.json", "consumed_by": "Delta API, consumers", "purpose": "Combined daily artifact (cognitive + directive)"},
+      {"schema": "DirectiveProposed.json", "consumed_by": "Routing engine", "purpose": "Proposed routing decision format"},
+      {"schema": "Closures.v1.json", "consumed_by": "Phase 5B closure system", "purpose": "Closure registry with streak stats"},
+      {"schema": "WorkLedger.v1.json", "consumed_by": "Phase 6A work controller", "purpose": "Work admission job registry"},
+      {"schema": "TimelineEvents.v1.json", "consumed_by": "Phase 6C timeline", "purpose": "Append-only event log structure"},
+      {"schema": "IdeaRegistry.v1.json", "consumed_by": "Idea pipeline agents", "purpose": "Prioritized idea registry"},
+      {"schema": "ExcavatedIdeas.v1.json", "consumed_by": "Idea pipeline agents", "purpose": "Raw extracted ideas before dedup"}
+    ]
+  },
+
+  "phase_history": [
+    {"phase": "1", "date": "2026-01-03", "name": "Genesis", "status": "complete", "summary": "Cognitive-sensor from scratch: results.db, loop detection, routing, dashboard, CycleBoard, refresh pipeline"},
+    {"phase": "2", "date": "2026-01-08", "name": "Bridge", "status": "complete", "summary": "JSON Schema contracts, daily projection artifact, C→D bridge via POST /api/ingest/cognitive, 4-step pipeline"},
+    {"phase": "3", "date": "2026-01-08", "name": "Autonomy", "status": "complete", "summary": "Governance daemon with scheduled jobs, unified state endpoint, day boundary tracking"},
+    {"phase": "4", "date": "2026-01-09", "name": "Enforcement", "status": "complete", "summary": "Progressive enforcement ladder (warn → acknowledge → disable → hard lock), violation logging, emergency overrides"},
+    {"phase": "5A", "date": null, "name": "Live Push", "status": "deferred", "summary": "WebSocket push instead of polling. Deferred in favor of 5B — closure mechanics prioritized."},
+    {"phase": "5B", "date": "2026-01-09", "name": "Closure Mechanics", "status": "complete", "summary": "Closure as atomic state event, streak tracking, automatic mode transitions, physical loop removal, Law Genesis Layer. Mode transition rules: >= 80% → SCALE, >= 60% → BUILD, >= 40% → MAINTENANCE, < 40% → CLOSURE."},
+    {"phase": "6A", "date": "2026-01-09", "name": "Work Admission Control", "status": "complete", "summary": "Universal work controller for humans + AI, capacity bounds, dependency tracking, job queue. Design principle: 'First you make law apply to machines. Then machines become safe to automate.'"},
+    {"phase": "6A.1", "date": "2026-01-09", "name": "Ambient Gate", "status": "complete", "summary": "Gate client auto-starts kernel, CLI interface, control panel UI. Law is never optional."},
+    {"phase": "6C", "date": "2026-01-09", "name": "Timeline Layer", "status": "complete", "summary": "Append-only event log, temporal visibility, intent vs. reality gap tracking. Two timelines: Calendar A (intent/plan) and Calendar B (what actually happened)."},
+    {"phase": "agents", "date": "2026-02-09 to 2026-02-12", "name": "Agent Pipeline", "status": "complete", "summary": "17 agent scripts formalized. Idea intelligence pipeline (5 agents). Behavioral analysis pipeline (3 agents). Governor system (daily + weekly). Dead code audit: 12 scripts archived."}
+  ],
+
+  "current_state": {
+    "as_of": "2026-02-12",
+    "governance": {
+      "mode": "CLOSURE",
+      "risk": "HIGH",
+      "build_allowed": false,
+      "open_loops": 15,
+      "closed_loops_lifetime": 1,
+      "closure_ratio_percent": 6.7,
+      "conversations_looping_percent": 51,
+      "conversations_with_output": 233,
+      "idea_moratorium": true,
+      "max_research_minutes_before_building": 30,
+      "daily_work_blocks_target": 3
+    },
+    "north_star": {
+      "weekly": "Ship 1 asset (doc, tool, GPT, chapter, client deliverable)",
+      "monthly": "Generate revenue from AI consulting or products",
+      "system": "Increase closure_ratio, decrease active_lanes",
+      "guard": "Block new ideas unless current lane is shipped or archived"
+    },
+    "active_lanes": [
+      {"name": "Power Dynamics Book + Companion GPT", "status": "not_started", "ship_criteria": "Published on Kindle/Gumroad with companion GPT live", "related_ideas": 1, "existing_material": "2,070 passages across 12 chapters in book_raw_material.json, BOOK_OUTLINE.md generated"},
+      {"name": "AI Automation Consulting (First Client)", "status": "not_started", "ship_criteria": "1 paid engagement completed", "related_ideas": 26, "existing_material": "None — no service offering, pricing, or outreach artifacts exist"}
+    ],
+    "open_loops": [
+      {"rank": 1, "convo_id": "266", "title": "ChatGPT o1 Overview", "messages": 223, "user_words": 84057, "score": 84057, "topics": ["self", "meaning", "data", "system", "symbolic", "reasoning"]},
+      {"rank": 2, "convo_id": "1356", "title": "Extrinsic vs Intrinsic Rewards", "messages": 410, "user_words": 60406, "score": 60406, "topics": ["pay", "compensation", "benefits", "employees", "market"]},
+      {"rank": 3, "convo_id": "1209", "title": "Irritation and Hunger Struggles", "messages": 1701, "user_words": 37229, "score": 37229, "topics": ["like", "not", "can", "feel", "about"]},
+      {"rank": 4, "convo_id": "81", "title": "Universal Programming Table Setup", "messages": 931, "user_words": 34490, "score": 34490, "topics": ["code", "python", "execution", "output", "file"]},
+      {"rank": 5, "convo_id": "1247", "title": "Understanding Gaslighting Effects", "messages": 1315, "user_words": 32195, "score": 32195, "topics": ["his", "like", "can", "just", "but"]},
+      {"rank": 6, "convo_id": "1136", "title": "Understanding Doublespeak", "messages": 952, "user_words": 31960, "score": 31960, "topics": ["like", "not", "their", "but", "people"]},
+      {"rank": 7, "convo_id": "1075", "title": "What is Psychology", "messages": 357, "user_words": 30702, "score": 30702, "topics": ["how", "like", "have", "their", "what"]},
+      {"rank": 8, "convo_id": "1222", "title": "Awkward Growth Calibration Phase", "messages": 973, "user_words": 30576, "score": 30576, "topics": ["like", "can", "not", "just", "how"]},
+      {"rank": 9, "convo_id": "715", "title": "C957 Knowledge Base Summary", "messages": 97, "user_words": 26900, "score": 26900, "topics": ["graph", "function", "question", "data", "curve"]},
+      {"rank": 10, "convo_id": "546", "title": "Anger and Intensity", "messages": 1081, "user_words": 25679, "score": 25679, "topics": ["just", "like", "but", "because", "didn"]},
+      {"rank": 11, "convo_id": "889", "title": "CRM Process Analysis", "messages": 45, "user_words": 24372, "score": 24372, "topics": ["sales", "question", "data", "customer"]},
+      {"rank": 12, "convo_id": "430", "title": "The Power of Pleasing", "messages": 688, "user_words": 22202, "score": 22202, "topics": ["just", "like", "but", "didn", "because"]},
+      {"rank": 13, "convo_id": "717", "title": "Quiz Solutions and Explanations", "messages": 59, "user_words": 21946, "score": 21946, "topics": ["question", "line", "graph", "answer"]},
+      {"rank": 14, "convo_id": "143", "title": "AI Workflow Orchestration", "messages": 387, "user_words": 21538, "score": 21538, "topics": ["just", "like", "because", "but", "people"]},
+      {"rank": 15, "convo_id": "1207", "title": "Understanding Relationship Dynamics", "messages": 1399, "user_words": 21158, "score": 21158, "topics": ["can", "like", "could", "might", "not"]}
+    ],
+    "vocabulary_shift": {
+      "rising": {"execution": 35568, "system": 19388, "data": 17795, "png": 12916, "user": 10595},
+      "falling": {"feel": -11968, "control": -5295, "none": -4650, "customer": -3867, "brand": -3853}
+    }
+  },
+
+  "known_issues": [
+    {"issue": "loops.py ignores closures", "severity": "HIGH", "location": "loops.py", "description": "Does not read loop_decisions table or closures.json. Closed loops reappear on next pipeline run. Open loop count and closure ratio use different data paths."},
+    {"issue": "Hash chain forks", "severity": "MEDIUM", "location": "deltas.json", "description": "10 fork points from concurrent daemon writes without file lock. No data loss but state divergence possible."},
+    {"issue": "Empty profile files", "severity": "LOW", "location": "STALL_SIGNATURES.md, ACCELERATION_PHRASES.md", "description": "Created with headers only, never populated."},
+    {"issue": "Phase 5A deferred", "severity": "LOW", "location": "WebSocket push", "description": "UI still polls unified endpoint. Real-time push not implemented."},
+    {"issue": "Unbuilt modules", "severity": "INFO", "location": "Modules 3,4,5,7,11", "description": "Matryoshka Dictionary, Vector Discovery, AI Design, Off-Grid Nodes, Audio Streaming specified but not implemented beyond types."},
+    {"issue": "Standalone projects", "severity": "INFO", "location": "webos-333, uasc-m2m", "description": "No integration with main system. Consume repo space without contributing to governance."}
+  ],
+
+  "operational_runbook": {
+    "first_time_setup": [
+      "cd services/delta-kernel && npm install",
+      "cd services/cognitive-sensor && pip install -r requirements.txt",
+      "Verify results.db exists at services/cognitive-sensor/results.db"
+    ],
+    "daily_operations": {
+      "full_stack": ".\\scripts\\run_all.ps1",
+      "cognitive_only": "python atlas_cli.py daily",
+      "weekly_audit": "python atlas_cli.py weekly",
+      "idea_pipeline": "python atlas_cli.py backlog",
+      "quick_briefs": "python atlas_cli.py briefs",
+      "system_status": "python atlas_cli.py status"
+    },
+    "proper_loop_closure": [
+      "python resurfacer.py — surfaces top unresolved loop, appends to RESURFACER_LOG.md",
+      "python decide.py — prompts for CLOSE / CONTINUE / ARCHIVE, writes to loop_decisions table",
+      "python atlas_cli.py daily — refreshes pipeline, completion_stats.py recalculates closure ratio",
+      "NOTE: Loop will still appear in loops_latest.json due to loops.py gap. Ratio improves but count does not."
+    ],
+    "interfaces": [
+      {"url": "http://localhost:3001/control/control.html", "name": "Control Panel", "function": "Live governor state, mode, capacity, active jobs"},
+      {"url": "http://localhost:3001/control/timeline.html", "name": "Timeline Viewer", "function": "Event replay, intent vs. reality gap"},
+      {"url": "services/cognitive-sensor/dashboard.html", "name": "Analytics Dashboard", "function": "State history, loop trends, completion metrics"},
+      {"url": "services/cognitive-sensor/control_panel.html", "name": "Master Control", "function": "Mode display, risk assessment, action buttons"},
+      {"url": "services/cognitive-sensor/cycleboard_app3.html", "name": "CycleBoard", "function": "Planning tool with governance overlay and UI lockouts"}
+    ],
+    "backup": {
+      "critical_irreplaceable": ["results.db", "memory_db.json (140 MB)", "STATE_HISTORY.md", "All self-analysis profile .md files"],
+      "derived_regenerable": ["cognitive_state.json", "loops_latest.json", "daily_payload.json", "completion_stats.json", "dashboard.html"],
+      "recovery": "python refresh.py regenerates all derived files"
+    },
+    "security": {
+      "network": "NO external network. NO cloud services. NO authentication.",
+      "boundary": "All data stays within repo boundary. Runs entirely on local machine."
+    }
+  }
+}

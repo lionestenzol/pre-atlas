@@ -6,6 +6,15 @@
   "type": "object",
   "required": ["mode", "build_allowed", "primary_action", "generated_at"],
   "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Payload schema version (semver)"
+    },
+    "mode_source": {
+      "type": "string",
+      "enum": ["cognitive-sensor", "governance-daemon"],
+      "description": "Which system proposed this mode"
+    },
     "mode": {
       "type": "string",
       "enum": ["CLOSURE", "MAINTENANCE", "BUILD"],
@@ -41,6 +50,45 @@
       "type": "string",
       "format": "date",
       "description": "Date payload was generated (YYYY-MM-DD)"
+    },
+    "life_signals": {
+      "type": "object",
+      "description": "Multi-domain life signals (energy, finance, skills, network). Optional, absent when no signals ingested.",
+      "$ref": "LifeSignals.v1.json"
+    },
+    "active_constraints": {
+      "type": "array",
+      "description": "Life-signal constraints currently modifying the routing mode",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "predictions": {
+      "type": "object",
+      "description": "MiroFish prediction engine results (optional, absent when Neo4j unavailable)",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["ok", "unavailable"]
+        },
+        "top_actions": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "pattern_count": {
+          "type": "integer"
+        },
+        "mode_forecast": {
+          "type": ["object", "null"]
+        },
+        "exit_path": {
+          "type": ["object", "null"]
+        }
+      }
     }
   }
 }

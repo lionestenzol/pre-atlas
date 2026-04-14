@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre Atlas — Pattern Map</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e0e0e8;
+    --text-dim: #8888a0;
+    --accent: #6366f1;
+    --accent-dim: #4f46e520;
+    --red: #ef4444;
+    --red-dim: #ef444420;
+    --amber: #f59e0b;
+    --amber-dim: #f59e0b20;
+    --green: #22c55e;
+    --green-dim: #22c55e20;
+    --cyan: #06b6d4;
+    --cyan-dim: #06b6d420;
+    --purple: #a855f7;
+    --purple-dim: #a855f720;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Header */
+  .header {
+    padding: 48px 40px 32px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #12121a 0%, var(--bg) 100%);
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  .header .subtitle {
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 32px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  /* Nav */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .nav-item {
+    padding: 14px 20px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .nav-item:hover { color: var(--text); }
+  .nav-item.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* Sections */
+  .section {
+    display: none;
+    padding: 40px;
+    max-width: 1200px;
+    animation: fadeIn 0.3s ease;
+  }
+  .section.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Pattern Cards */
+  .pattern-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .pattern-card:hover { border-color: var(--accent); }
+  .pattern-header {
+    padding: 20px 24px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .pattern-num {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .pattern-name {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .pattern-subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .pattern-toggle {
+    font-size: 18px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+  .pattern-card.open .pattern-toggle { transform: rotate(180deg); }
+  .pattern-body {
+    display: none;
+    padding: 0 24px 24px;
+    border-top: 1px solid var(--border);
+  }
+  .pattern-card.open .pattern-body { display: block; }
+
+  /* Evidence */
+  .evidence {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+  }
+  .evidence-source {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+  .evidence.red { border-left-color: var(--red); }
+  .evidence.amber { border-left-color: var(--amber); }
+  .evidence.green { border-left-color: var(--green); }
+  .evidence.cyan { border-left-color: var(--cyan); }
+  .evidence.purple { border-left-color: var(--purple); }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .tag-red { background: var(--red-dim); color: var(--red); }
+  .tag-amber { background: var(--amber-dim); color: var(--amber); }
+  .tag-green { background: var(--green-dim); color: var(--green); }
+  .tag-cyan { background: var(--cyan-dim); color: var(--cyan); }
+  .tag-purple { background: var(--purple-dim); color: var(--purple); }
+  .tag-accent { background: var(--accent-dim); color: var(--accent); }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding-left: 32px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .tl-item {
+    position: relative;
+    margin-bottom: 28px;
+  }
+  .tl-dot {
+    position: absolute;
+    left: -28px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+  }
+  .tl-dot.red { background: var(--red); }
+  .tl-dot.amber { background: var(--amber); }
+  .tl-dot.green { background: var(--green); }
+  .tl-dot.cyan { background: var(--cyan); }
+  .tl-date {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .tl-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tl-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  /* Contradictions */
+  .contra-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .contra-vs {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: start;
+    margin-top: 12px;
+  }
+  .contra-side {
+    padding: 14px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .contra-left { background: var(--red-dim); border: 1px solid #ef444430; }
+  .contra-right { background: var(--green-dim); border: 1px solid #22c55e30; }
+  .contra-arrow {
+    color: var(--text-dim);
+    font-size: 20px;
+    align-self: center;
+    padding-top: 4px;
+  }
+
+  /* Threads */
+  .thread-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .thread-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .thread-status.stalled { background: var(--red); }
+  .thread-status.started { background: var(--amber); }
+  .thread-status.growing { background: var(--green); }
+  .thread-title { font-weight: 600; margin-bottom: 4px; }
+  .thread-detail { font-size: 13px; color: var(--text-dim); }
+
+  /* Connection Map */
+  .conn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .conn-node {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    cursor: default;
+    transition: all 0.2s;
+  }
+  .conn-node:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .conn-node-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .conn-links {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  /* Metrics bar */
+  .metric-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0;
+  }
+  .metric-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    width: 140px;
+    flex-shrink: 0;
+  }
+  .metric-track {
+    flex: 1;
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .metric-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+  .metric-value {
+    font-size: 12px;
+    font-weight: 600;
+    width: 48px;
+    text-align: right;
+  }
+
+  /* Sub-section headers */
+  .sub-header {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin: 28px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  p { margin: 10px 0; font-size: 13px; color: var(--text-dim); line-height: 1.7; }
+  strong { color: var(--text); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header, .section { padding: 24px 20px; }
+    .nav { padding: 0 20px; }
+    .stats-row { gap: 20px; }
+    .contra-vs { grid-template-columns: 1fr; }
+    .contra-arrow { display: none; }
+    .conn-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Pre Atlas — Pattern Map</h1>
+  <div class="subtitle">Analysis of 483 files &middot; 93,898 messages &middot; 1,397 conversations &middot; Jan 2025 — Feb 2026</div>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-value">527</div>
+      <div class="stat-label">Ideas Tracked</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:var(--red)">6.7%</div>
+      <div class="stat-label">Closure Ratio</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">14</div>
+      <div class="stat-label">Open Loops</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:var(--amber)">0 / 2</div>
+      <div class="stat-label">Lanes Started</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:var(--green)">9</div>
+      <div class="stat-label">Phases Built</div>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="nav-item active" data-tab="patterns">Patterns</div>
+  <div class="nav-item" data-tab="evolution">Evolution</div>
+  <div class="nav-item" data-tab="contradictions">Contradictions</div>
+  <div class="nav-item" data-tab="threads">Unfinished Threads</div>
+  <div class="nav-item" data-tab="connections">Connections</div>
+  <div class="nav-item" data-tab="numbers">By the Numbers</div>
+</div>
+
+<!-- ========== PATTERNS ========== -->
+<div class="section active" id="patterns">
+  <div class="section-title">5 Core Patterns</div>
+
+  <div class="pattern-card open">
+    <div class="pattern-header" onclick="toggleCard(this)">
+      <div>
+        <div class="pattern-num">Pattern 01 &middot; <span class="tag tag-red">CRITICAL</span></div>
+        <div class="pattern-name">The Completion Paradox</div>
+        <div class="pattern-subtitle">Building the cure for not finishing — instead of finishing</div>
+      </div>
+      <div class="pattern-toggle">▼</div>
+    </div>
+    <div class="pattern-body">
+      <p>Pre Atlas is a system designed to solve non-completion that has become the most elaborate instance of it. The Idea Registry tracks <strong>527 business ideas with a 0.0% execution rate</strong>. THE_CYCLE.md documents the exact loop: INTEND (9,643 instances) → OBSTACLE (11,711) → JUSTIFY (13,233) → DISMISS (2,506) → RESET (4,324). Meanwhile, the system itself has evolved through 9 implementation phases across 6 weeks, adding camera streaming, audio codecs, distributed sync, and a symbolic glyph language to what started as a personal productivity tracker.</p>
+
+      <div class="evidence red">
+        <strong>BEHAVIORAL_AUDIT.md:</strong> "527 ideas generated with 0% closure ratio. Justification engine activates 13,233 times before execution. Stall point: between ideation and first action."
+        <div class="evidence-source">services/cognitive-sensor/BEHAVIORAL_AUDIT.md</div>
+      </div>
+
+      <div class="evidence red">
+        <strong>THE_CYCLE.md:</strong> The 5-step stuck loop — INTEND → OBSTACLE → JUSTIFY → DISMISS → RESET — with "whatever" as the primary dismissal word (2,087 times). Only 7% follow-through on boundary-setting commitments.
+        <div class="evidence-source">services/cognitive-sensor/THE_CYCLE.md</div>
+      </div>
+
+      <div class="evidence amber">
+        <strong>PHASE_ROADMAP.md:</strong> System expanded from Phase 1 (simple loop detection) to Phase 6C (timeline layer with event replay) in 6 days. Phase 5A (Live Push — WebSocket) was deferred, but Phases 6A, 6A.1, and 6C were all completed on the same day (2026-01-09).
+        <div class="evidence-source">PHASE_ROADMAP.md</div>
+      </div>
+
+      <div class="evidence amber">
+        <strong>Delta-Kernel scope:</strong> A personal daily planner now includes Module 6 (distributed multi-node sync), Module 7 (off-grid nodes), Module 8 (UI streaming), Module 9 (camera tile streaming), Module 10 (remote device actuation), and Module 11 (audio streaming with codec adapters).
+        <div class="evidence-source">services/delta-kernel/specs/</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-header" onclick="toggleCard(this)">
+      <div>
+        <div class="pattern-num">Pattern 02 &middot; <span class="tag tag-amber">STRUCTURAL</span></div>
+        <div class="pattern-name">Self-Analysis as Primary Mode</div>
+        <div class="pattern-subtitle">93,898 messages analyzed, but the gap between knowing and doing remains</div>
+      </div>
+      <div class="pattern-toggle">▼</div>
+    </div>
+    <div class="pattern-body">
+      <p>The depth of self-examination is extraordinary. 93,898 messages processed through 17 agent scripts. Deep psychological profiles. Emotional profiles. Belief cores. Language loop frequency analysis. Behavioral audits across 6 layers answering 30 questions. Conversation classifications. The system <em>knows</em> everything. GROWTH_REPORT.md flags All-or-Nothing thinking at 39%. THE_THEORY.md calls you a "wounded warrior in a self-protective loop." The daily brief warns "end every AI conversation with a written decision, not more analysis." And yet — the primary activity documented across all files is more analysis.</p>
+
+      <div class="evidence amber">
+        <strong>MY_COGNITIVE_PROFILE.md — Top action verbs:</strong> "feel" (9,268), "think" (7,887), "want" (5,730), "know" (5,450), "need" (2,988). All internal states, not external actions. "build" appears 1,401 times; "ship" appears 0 times in the top 50.
+        <div class="evidence-source">services/cognitive-sensor/MY_COGNITIVE_PROFILE.md</div>
+      </div>
+
+      <div class="evidence amber">
+        <strong>CONVERSATION_PATTERNS.md:</strong> 60% of conversations exceed 2,000 words. Average conversation length suggests deep processing but potentially circular engagement. 51% of conversations loop without resolution.
+        <div class="evidence-source">services/cognitive-sensor/CONVERSATION_PATTERNS.md</div>
+      </div>
+
+      <div class="evidence amber">
+        <strong>LANGUAGE_LOOPS.md:</strong> "i feel like" appears 6,209 times. "i dont know" appears 2,042 times. "and then i" appears 2,518 times. The hedging language of someone processing endlessly without committing to a position.
+        <div class="evidence-source">services/cognitive-sensor/LANGUAGE_LOOPS.md</div>
+      </div>
+
+      <div class="evidence">
+        <strong>daily_brief.md (Feb 9):</strong> "Today's target: end every AI conversation with a written decision, not more analysis." This directive exists because the system detected that the primary use of AI is to process feelings, not produce output.
+        <div class="evidence-source">services/cognitive-sensor/daily_brief.md</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-header" onclick="toggleCard(this)">
+      <div>
+        <div class="pattern-num">Pattern 03 &middot; <span class="tag tag-purple">DEEP</span></div>
+        <div class="pattern-name">Control as Architecture</div>
+        <div class="pattern-subtitle">Deterministic systems as emotional armor — vulnerability engineered out</div>
+      </div>
+      <div class="pattern-toggle">▼</div>
+    </div>
+    <div class="pattern-body">
+      <p>The entire delta-kernel philosophy encodes a psychological need for control into architecture: "No AI decisions at runtime. Pure LUT rendering. No heuristics. No drift." Every schema doc opens with "THE LAW OF THE SYSTEM." Hash chains verify tamper-evidence. A confirmation gate prevents any action without explicit approval. The governance daemon runs autonomously but only within pre-approved rules. Meanwhile, DEEP_PSYCHOLOGICAL_PROFILE.md identifies a dismissive-avoidant attachment style with core wounds of Invalidation (#1) and Powerlessness (#2). The architecture isn't engineering — it's a psychological defense system rendered in TypeScript.</p>
+
+      <div class="evidence purple">
+        <strong>v0-schemas.md:</strong> "These are <em>not negotiable</em>. Everything builds on these." — The law is absolute. No overwrites. No raw blobs. No uncontrolled AI execution. Everything is delta. Everything is routed through LUT modes.
+        <div class="evidence-source">services/delta-kernel/specs/v0-schemas.md</div>
+      </div>
+
+      <div class="evidence purple">
+        <strong>BOOK_OUTLINE.md:</strong> 2,070 passages extracted about power dynamics across 12 chapters. "The Anatomy of Disrespect" has 614 passages from 208 conversations — the single largest cluster. The book project <em>is</em> the processing of powerlessness.
+        <div class="evidence-source">services/cognitive-sensor/BOOK_OUTLINE.md</div>
+      </div>
+
+      <div class="evidence purple">
+        <strong>EMOTIONAL_PROFILE.md:</strong> Agency at 26% but connection at 97% negativity. Autonomy is safety; connection is threat. The system architecture mirrors this: fully self-contained, no external network, no cloud services, no authentication. Security boundary diagram explicitly states "NO EXTERNAL NETWORK."
+        <div class="evidence-source">services/cognitive-sensor/EMOTIONAL_PROFILE.md + SYSTEM_MAP.md</div>
+      </div>
+
+      <div class="evidence">
+        <strong>Phase 6A design principle:</strong> "First you make law apply to machines. Then machines become safe to automate." — The need for control is so strong that even AI must ask permission and report completion through a formal admission gate before doing anything.
+        <div class="evidence-source">PHASE_ROADMAP.md — Phase 6A</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-header" onclick="toggleCard(this)">
+      <div>
+        <div class="pattern-num">Pattern 04 &middot; <span class="tag tag-cyan">SCOPE</span></div>
+        <div class="pattern-name">Ambition Exceeds Operational Need</div>
+        <div class="pattern-subtitle">Every project aims for maximum scope — the system to encode all human knowledge in a glyph</div>
+      </div>
+      <div class="pattern-toggle">▼</div>
+    </div>
+    <div class="pattern-body">
+      <p>There's a consistent pattern of scope expansion. UASC-M2M proposes encoding "all human knowledge into one glyph" (compression level 7). WebOS-333 is a 3,443-line browser OS with 12 apps, 3 themes, and a virtual filesystem. The delta-kernel has a distributed sync protocol modeled after production systems. The cognitive-sensor went from counting conversation loops to a 6-layer nervous system with 17 agent scripts, a governance daemon, and a book-mining pipeline. Every project starts practical and escalates toward a grand vision.</p>
+
+      <div class="evidence cyan">
+        <strong>UASC-M2M compression levels:</strong> Level 1: one sentence → one glyph. Level 4: a city's conversations → one glyph. Level 7: all human knowledge → one glyph (theoretical). The vision scales from useful to cosmic in 7 steps.
+        <div class="evidence-source">research/uasc-m2m/README.md</div>
+      </div>
+
+      <div class="evidence cyan">
+        <strong>IDEA_REGISTRY.md:</strong> 527 ideas across 11 business clusters. Top 5 priority ideas, 41 "next up," 277 in backlog, 207 archived. Skills gap analysis shows 343 ideas need Design, 186 need Marketing, 142 need JavaScript — skills not yet acquired.
+        <div class="evidence-source">services/cognitive-sensor/IDEA_REGISTRY.md</div>
+      </div>
+
+      <div class="evidence cyan">
+        <strong>BUSINESS_IDEAS_CLUSTERED.md:</strong> 79 conversations spanning AI & Automation, SaaS, Crypto, Career, Sales, Economic Theory. 10 concrete ideas plus 5 "big vision" plans. Active lanes: Power Dynamics Book + AI Consulting. Status on both: not_started.
+        <div class="evidence-source">services/cognitive-sensor/BUSINESS_IDEAS_CLUSTERED.md</div>
+      </div>
+
+      <div class="evidence">
+        <strong>PRE_ATLAS_MAP.md:</strong> The system describes itself as "a personal operating system stack consisting of 5 interconnected projects" with ~39,750 lines of code, 19 specification documents, 35 TypeScript modules, and 11 planned modules.
+        <div class="evidence-source">PRE_ATLAS_MAP.md</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-header" onclick="toggleCard(this)">
+      <div>
+        <div class="pattern-num">Pattern 05 &middot; <span class="tag tag-green">GROWTH</span></div>
+        <div class="pattern-name">Evolution Is Happening — Hidden in Infrastructure</div>
+        <div class="pattern-subtitle">Real maturation encoded in architectural choices, not yet in outcomes</div>
+      </div>
+      <div class="pattern-toggle">▼</div>
+    </div>
+    <div class="pattern-body">
+      <p>Despite the completion paradox, real evolution is happening. Phase 5B made "closure" a first-class state event — the system literally formalized finishing as law. Phase 6A gates all work through admission control. Dead code was audited and 12 scripts archived. Hash chain forks were caught and documented instead of ignored. The STATE_HISTORY.md word frequency trends show "execution" rising (+35,568) while "feel" is falling (-11,968). The system is gradually shifting from sensing toward enforcement. The question is whether the enforcement infrastructure can outrun the analysis addiction.</p>
+
+      <div class="evidence green">
+        <strong>Phase 5B — Closure as law:</strong> "Establishes closure as a real state-transition event with automatic mode flips and streak compounding." Before this, closing a loop was just a concept. Now it's an atomic delta that patches system state, updates the registry, physically removes the loop, and recalculates mode.
+        <div class="evidence-source">services/delta-kernel/specs/phase-5b-closure-mechanics.md</div>
+      </div>
+
+      <div class="evidence green">
+        <strong>STATE_HISTORY.md — Word frequency evolution:</strong> Rising: "execution" (+35,568), "system" (+19,388), "data" (+17,795). Falling: "feel" (-11,968), "control" (-5,295), "customer" (-3,867). The vocabulary is shifting from emotional processing toward building.
+        <div class="evidence-source">services/cognitive-sensor/STATE_HISTORY.md</div>
+      </div>
+
+      <div class="evidence green">
+        <strong>AGENTS.md — Dead code audit:</strong> 12 scripts moved to _archive/ on 2026-02-11: brain.py, brain_2.py, belief_core.py, belief_grammar.py, decision_engine.py, language_loops.py, profile_report.py, semantic_loops.py, search_loops.py, cluster_topics.py, cluster_business_topics.py, test_vectorization.py. This is cleanup. This is maturation.
+        <div class="evidence-source">services/cognitive-sensor/AGENTS.md</div>
+      </div>
+
+      <div class="evidence green">
+        <strong>HASH_CHAIN_FORKS.md:</strong> 10 fork points found and documented with root cause analysis ("concurrent daemon runs without a write lock"), risk assessment ("no data loss"), and recommended actions. This is the behavior of someone becoming an engineer, not just an architect.
+        <div class="evidence-source">services/delta-kernel/HASH_CHAIN_FORKS.md</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== EVOLUTION ========== -->
+<div class="section" id="evolution">
+  <div class="section-title">Evolution Timeline</div>
+  <p style="margin-bottom:28px;">How the system — and the thinking behind it — has changed from earliest files to most recent.</p>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot red"></div>
+      <div class="tl-date">Aug 2024 — Oct 2024</div>
+      <div class="tl-title">The Raw Processing Era</div>
+      <div class="tl-desc">First conversations in results.db. Topics: power dynamics, gaslighting, self-identity, feeling high without substances. Language is raw, unstructured voice memos ("i feel like" at peak frequency). The core wounds are being articulated for the first time. No system. No structure. Just processing.</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot red"></div>
+      <div class="tl-date">Nov 2024 — Dec 2024</div>
+      <div class="tl-title">Pattern Recognition Begins</div>
+      <div class="tl-desc">Conversations shift toward analysis: "What is Psychology," "Strategic Ambition Framework," "Understanding Doublespeak," "Ego battles distractions growth." The self-analysis impulse crystallizes. Business ideas start appearing (79 conversations). Still no system, but the seeds of "I need to understand myself" are planted.</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot amber"></div>
+      <div class="tl-date">Jan 2025 — Mar 2025</div>
+      <div class="tl-title">Idea Explosion + First Systems</div>
+      <div class="tl-desc">527 business ideas generated across 11 categories. SaaS, AI automation, crypto, consulting — the scope is maximum. Conversations about power dynamics reach their densest period (494 conversations flagged). The bullet journal (in-PACT) appears — a first attempt at structured self-governance before code.</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot amber"></div>
+      <div class="tl-date">Jan 3, 2026</div>
+      <div class="tl-title">Phase 1 — Genesis: The System Is Born</div>
+      <div class="tl-desc">Cognitive-sensor built from scratch. results.db ingested. Loop detection algorithm created. First routing: CLOSURE / MAINTENANCE / BUILD. The bullet journal becomes code. The self-analysis instinct is now automated.</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot cyan"></div>
+      <div class="tl-date">Jan 8, 2026</div>
+      <div class="tl-title">Phase 2 — Bridge: Systems Connect</div>
+      <div class="tl-desc">JSON Schema contracts enforced. Daily projection artifact created. Cognitive-sensor and delta-kernel bridged via REST API. The "federated monorepo" takes shape. The system starts talking to itself.</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot cyan"></div>
+      <div class="tl-date">Jan 8, 2026</div>
+      <div class="tl-title">Phase 3 — Autonomy: The Daemon Wakes</div>
+      <div class="tl-desc">Governance daemon with scheduled jobs. Heartbeat, refresh, day-start/day-end markers. The system no longer needs you to run it. It governs itself within pre-set rules.</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-date">Jan 9, 2026</div>
+      <div class="tl-title">Phase 4 — Enforcement: Real Teeth</div>
+      <div class="tl-desc">Progressive enforcement ladder: warning → require acknowledgment → disable creation buttons → hard lock. The system can now prevent you from starting new things until loops are closed. For the first time, there are consequences.</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot green"></div>
+      <div class="tl-date">Jan 9, 2026</div>
+      <div class="tl-title">Phase 5B — Closure: Finishing Becomes Law</div>
+      <div class="tl-desc">This is the inflection point. Closure becomes an atomic state event. Streak tracking. Automatic mode transitions based on closure ratio. The system formally encodes "finishing things" as the most important behavior. Before 5B, closure was advice. After 5B, it's constitutional law.</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot green"></div>
+      <div class="tl-date">Jan 9, 2026</div>
+      <div class="tl-title">Phase 6A-6C — Work Control + Timeline</div>
+      <div class="tl-desc">Work admission control gates ALL work (human and AI). Timeline layer provides temporal visibility. The gap between Calendar A (intent) and Calendar B (reality) is made visible. The system now has memory of what actually happened versus what was planned.</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot green"></div>
+      <div class="tl-date">Feb 9-12, 2026</div>
+      <div class="tl-title">Agent Pipeline + Governance Maturation</div>
+      <div class="tl-desc">17 agent scripts formalized with validated pipelines. 12 dead scripts archived. Book outline generated from 2,070 passages. Governor briefs with binary decisions. Autonomy model formalized (Level 2: AI-for-itself, Level 1: AI-for-you). The system is consolidating rather than expanding.</div>
+    </div>
+  </div>
+
+  <div class="sub-header" style="margin-top:40px">The Vocabulary Shift</div>
+  <p>STATE_HISTORY.md tracks word frequency over time. The direction of drift reveals an identity in transition:</p>
+
+  <div class="sub-header" style="font-size:12px;margin-top:20px">Rising (Building Identity)</div>
+  <div class="metric-bar">
+    <div class="metric-label">execution</div>
+    <div class="metric-track"><div class="metric-fill" style="width:90%;background:var(--green)"></div></div>
+    <div class="metric-value" style="color:var(--green)">+35,568</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">system</div>
+    <div class="metric-track"><div class="metric-fill" style="width:55%;background:var(--green)"></div></div>
+    <div class="metric-value" style="color:var(--green)">+19,388</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">data</div>
+    <div class="metric-track"><div class="metric-fill" style="width:50%;background:var(--green)"></div></div>
+    <div class="metric-value" style="color:var(--green)">+17,795</div>
+  </div>
+
+  <div class="sub-header" style="font-size:12px;margin-top:20px">Falling (Releasing)</div>
+  <div class="metric-bar">
+    <div class="metric-label">feel</div>
+    <div class="metric-track"><div class="metric-fill" style="width:70%;background:var(--red)"></div></div>
+    <div class="metric-value" style="color:var(--red)">-11,968</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">control</div>
+    <div class="metric-track"><div class="metric-fill" style="width:35%;background:var(--red)"></div></div>
+    <div class="metric-value" style="color:var(--red)">-5,295</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">customer</div>
+    <div class="metric-track"><div class="metric-fill" style="width:25%;background:var(--red)"></div></div>
+    <div class="metric-value" style="color:var(--red)">-3,867</div>
+  </div>
+</div>
+
+<!-- ========== CONTRADICTIONS ========== -->
+<div class="section" id="contradictions">
+  <div class="section-title">Contradictions &amp; Tensions</div>
+  <p style="margin-bottom:24px;">Places where your files say conflicting things, or where stated beliefs don't match observed patterns.</p>
+
+  <div class="contra-card">
+    <div class="pattern-name" style="margin-bottom:4px">"I need to stop analyzing and start building"</div>
+    <div class="contra-vs">
+      <div class="contra-side contra-left">
+        <strong>What the system says:</strong><br>
+        daily_brief.md: "End every AI conversation with a written decision, not more analysis."<br>
+        Guardrails: Max 30 min research before building.<br>
+        Idea moratorium: ON.
+      </div>
+      <div class="contra-arrow">⟷</div>
+      <div class="contra-side contra-right">
+        <strong>What actually happened:</strong><br>
+        Since the moratorium, the system added: a book-mining agent, a conversation classifier, a behavioral synthesizer, a daily governor, a weekly governor, a book outline generator, and this pattern analysis you're reading right now.
+      </div>
+    </div>
+  </div>
+
+  <div class="contra-card">
+    <div class="pattern-name" style="margin-bottom:4px">"Closure is the highest priority"</div>
+    <div class="contra-vs">
+      <div class="contra-side contra-left">
+        <strong>System enforcement:</strong><br>
+        Mode locked to CLOSURE since closure_ratio < 15%.<br>
+        Build actions disabled.<br>
+        Risk: HIGH.
+      </div>
+      <div class="contra-arrow">⟷</div>
+      <div class="contra-side contra-right">
+        <strong>Actual closure stats:</strong><br>
+        Open loops: 14. Closed: 1. Ratio: 6.67%.<br>
+        Both active lanes — Power Dynamics Book and AI Consulting — status: not_started.<br>
+        The system enforces closure but hasn't closed anything.
+      </div>
+    </div>
+  </div>
+
+  <div class="contra-card">
+    <div class="pattern-name" style="margin-bottom:4px">"No AI decisions at runtime" vs. 17 AI agent scripts</div>
+    <div class="contra-vs">
+      <div class="contra-side contra-left">
+        <strong>Delta-kernel law:</strong><br>
+        "Pure LUT rendering. No AI. No heuristics. No drift."<br>
+        The philosophical foundation is absolute determinism.
+      </div>
+      <div class="contra-arrow">⟷</div>
+      <div class="contra-side contra-right">
+        <strong>Cognitive-sensor reality:</strong><br>
+        17 agent scripts using sentence-transformer embeddings, cosine similarity, hierarchical clustering, semantic analysis, and an AI-powered behavioral synthesizer that answers 30 questions across 6 layers.
+      </div>
+    </div>
+  </div>
+
+  <div class="contra-card">
+    <div class="pattern-name" style="margin-bottom:4px">Autonomy vs. Connection</div>
+    <div class="contra-vs">
+      <div class="contra-side contra-left">
+        <strong>Identity claim:</strong><br>
+        EMOTIONAL_PROFILE: Agency 26%.<br>
+        Architecture: fully local, no network, no cloud.<br>
+        DEEP_PSYCH: Dismissive-avoidant attachment.<br>
+        "I don't need people."
+      </div>
+      <div class="contra-arrow">⟷</div>
+      <div class="contra-side contra-right">
+        <strong>Behavioral evidence:</strong><br>
+        93,898 messages — all to an AI.<br>
+        "people" appears 15,670 times in drift metrics.<br>
+        Book is about social power dynamics.<br>
+        THE_THEORY: "Actual values: need for connection, processing through conflict."
+      </div>
+    </div>
+  </div>
+
+  <div class="contra-card">
+    <div class="pattern-name" style="margin-bottom:4px">Sophistication of system vs. simplicity of need</div>
+    <div class="contra-vs">
+      <div class="contra-side contra-left">
+        <strong>What was built:</strong><br>
+        39,750 lines of code. 5 interconnected projects. Hash chains. Governance daemon. 19 spec documents. Distributed sync protocol. Camera streaming. Symbolic glyph language.
+      </div>
+      <div class="contra-arrow">⟷</div>
+      <div class="contra-side contra-right">
+        <strong>What the daily brief actually says:</strong><br>
+        "Close or archive your oldest open loop before doing anything else."<br>
+        "Do not start any new work until closure ratio improves."<br>
+        The prescription is simple. The infrastructure is not.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== UNFINISHED THREADS ========== -->
+<div class="section" id="threads">
+  <div class="section-title">Unfinished Threads &amp; Action Items</div>
+  <p style="margin-bottom:24px;">Ideas started but never completed. Decisions deferred. Threads left hanging.</p>
+
+  <div class="sub-header">Active Lanes (Both Not Started)</div>
+
+  <div class="thread-card">
+    <div class="thread-status stalled"></div>
+    <div>
+      <div class="thread-title">Power Dynamics Book + Companion GPT</div>
+      <div class="thread-detail">
+        Status: not_started. Ship criteria: Published on Kindle/Gumroad with companion GPT live.<br>
+        Material exists: 2,070 passages across 12 chapters. BOOK_OUTLINE.md generated. book_raw_material.json populated.<br>
+        <strong>Gap:</strong> Raw material → edited prose. The book miner extracted content, but no writing has started.
+      </div>
+    </div>
+  </div>
+
+  <div class="thread-card">
+    <div class="thread-status stalled"></div>
+    <div>
+      <div class="thread-title">AI Automation Consulting (First Client)</div>
+      <div class="thread-detail">
+        Status: not_started. Ship criteria: 1 paid engagement completed.<br>
+        26 related ideas in pipeline. No outreach, no service offering defined, no pricing.<br>
+        <strong>Gap:</strong> Everything. This lane has no artifacts beyond the idea.
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-header">Top Priority Ideas (Parked)</div>
+
+  <div class="thread-card">
+    <div class="thread-status started"></div>
+    <div>
+      <div class="thread-title">Code to Numeric Logic (Priority: 0.59)</div>
+      <div class="thread-detail">Governor recommendation: Park. Outside active lanes. Highest-priority idea in registry but no lane assignment.</div>
+    </div>
+  </div>
+
+  <div class="thread-card">
+    <div class="thread-status started"></div>
+    <div>
+      <div class="thread-title">SaaS Market Growth Trends (Priority: 0.53)</div>
+      <div class="thread-detail">Governor recommendation: Park. Research-heavy, no execution plan.</div>
+    </div>
+  </div>
+
+  <div class="sub-header">System Deferred Work</div>
+
+  <div class="thread-card">
+    <div class="thread-status started"></div>
+    <div>
+      <div class="thread-title">Phase 5A — Live Push (WebSocket)</div>
+      <div class="thread-detail">Deferred in favor of 5B. Would replace polling with real-time push. Still unbuilt.</div>
+    </div>
+  </div>
+
+  <div class="thread-card">
+    <div class="thread-status started"></div>
+    <div>
+      <div class="thread-title">Hash Chain Fork Resolution</div>
+      <div class="thread-detail">10 fork points documented. Recommended: add file lock to deltas.json writes. No fix applied yet — "requires human review."</div>
+    </div>
+  </div>
+
+  <div class="thread-card">
+    <div class="thread-status stalled"></div>
+    <div>
+      <div class="thread-title">STALL_SIGNATURES.md</div>
+      <div class="thread-detail">File exists but contains only a header: "# STALL SIGNATURES (predictors of looping / burnout)". Never populated.</div>
+    </div>
+  </div>
+
+  <div class="thread-card">
+    <div class="thread-status stalled"></div>
+    <div>
+      <div class="thread-title">ACCELERATION_PHRASES.md</div>
+      <div class="thread-detail">File exists but contains only a header: "# ACCELERATION PHRASES (predictors of commitment)". Never populated. The system tracks what stalls you but hasn't mapped what accelerates you.</div>
+    </div>
+  </div>
+
+  <div class="sub-header">Biggest Open Loops (by score)</div>
+
+  <div class="thread-card">
+    <div class="thread-status stalled"></div>
+    <div>
+      <div class="thread-title">Extrinsic vs Intrinsic Rewards — Score: 60,406</div>
+      <div class="thread-detail">Highest-scoring open loop. Daily directive says: "Start with this one." Still open.</div>
+    </div>
+  </div>
+
+  <div class="thread-card">
+    <div class="thread-status stalled"></div>
+    <div>
+      <div class="thread-title">Irritation and Hunger Struggles — Score: 37,229</div>
+      <div class="thread-detail">Second highest. Emotional regulation topic. Unresolved.</div>
+    </div>
+  </div>
+
+  <div class="thread-card">
+    <div class="thread-status stalled"></div>
+    <div>
+      <div class="thread-title">Universal Programming Table Setup — Score: 34,490</div>
+      <div class="thread-detail">Technical project. Third highest loop score. Unresolved.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== CONNECTIONS ========== -->
+<div class="section" id="connections">
+  <div class="section-title">How Everything Connects</div>
+  <p style="margin-bottom:24px;">The five patterns aren't isolated — they feed each other in a self-reinforcing system.</p>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;margin-bottom:28px;font-size:13px;line-height:2.2;text-align:center;">
+    <div style="color:var(--red);font-weight:600;font-size:15px;">THE LOOP OF LOOPS</div>
+    <div style="margin-top:12px;color:var(--text-dim);">
+      <span style="color:var(--purple)">Core wound (powerlessness)</span> →
+      <span style="color:var(--purple)">Need for control</span> →
+      <span style="color:var(--cyan)">Build elaborate system</span> →
+      <span style="color:var(--amber)">Analyze instead of execute</span> →
+      <span style="color:var(--red)">Nothing ships</span> →
+      <span style="color:var(--purple)">Feel powerless</span> →
+      <span style="color:var(--cyan)">Build more system</span> → ...
+    </div>
+    <div style="margin-top:16px;color:var(--green);font-size:12px;">
+      Breaking point: <strong>Phase 5B (closure as law)</strong> inserts a checkpoint in the loop.<br>
+      The system now <em>prevents</em> new building until closure happens.
+    </div>
+  </div>
+
+  <div class="conn-grid">
+    <div class="conn-node">
+      <div class="conn-node-title"><span style="color:var(--red)">●</span> Completion Paradox</div>
+      <div class="conn-links">
+        → Feeds <strong>Self-Analysis</strong>: not finishing creates more to analyze<br>
+        → Feeds <strong>Scope Creep</strong>: starting new things avoids finishing old<br>
+        → Mitigated by <strong>Evolution</strong>: Phase 5B closure mechanics<br>
+        → Caused by <strong>Control Need</strong>: building feels safe, shipping feels vulnerable
+      </div>
+    </div>
+
+    <div class="conn-node">
+      <div class="conn-node-title"><span style="color:var(--amber)">●</span> Self-Analysis Mode</div>
+      <div class="conn-links">
+        → Feeds <strong>Completion Paradox</strong>: analysis replaces execution<br>
+        → Feeds <strong>Scope Creep</strong>: understanding breeds more projects<br>
+        → Enabled by <strong>Control Need</strong>: understanding = safe form of control<br>
+        → Tracked by <strong>Evolution</strong>: word frequency shift shows "feel" declining
+      </div>
+    </div>
+
+    <div class="conn-node">
+      <div class="conn-node-title"><span style="color:var(--purple)">●</span> Control as Architecture</div>
+      <div class="conn-links">
+        → Root cause of <strong>Scope Creep</strong>: more control = more modules<br>
+        → Root cause of <strong>Completion Paradox</strong>: shipping = loss of control<br>
+        → Enables <strong>Self-Analysis</strong>: the system that watches you is itself control<br>
+        → Challenged by <strong>Evolution</strong>: delegation (Phase 6A) loosens grip
+      </div>
+    </div>
+
+    <div class="conn-node">
+      <div class="conn-node-title"><span style="color:var(--cyan)">●</span> Ambition Exceeds Need</div>
+      <div class="conn-links">
+        → Feeds <strong>Completion Paradox</strong>: bigger scope = harder to finish<br>
+        → Fed by <strong>Control Need</strong>: must build everything yourself<br>
+        → Fed by <strong>Self-Analysis</strong>: deeper insight = grander vision<br>
+        → Constrained by <strong>Evolution</strong>: work admission control (Phase 6A)
+      </div>
+    </div>
+
+    <div class="conn-node" style="grid-column: 1 / -1;">
+      <div class="conn-node-title"><span style="color:var(--green)">●</span> Evolution (The Counter-Force)</div>
+      <div class="conn-links">
+        → Fights <strong>Completion Paradox</strong>: closure ratio enforcement, streak tracking, mode locks<br>
+        → Fights <strong>Self-Analysis</strong>: daily brief demands decisions, not processing; moratorium on new ideas<br>
+        → Fights <strong>Control Need</strong>: work admission control applies law to self + AI; delegation is formalized<br>
+        → Fights <strong>Scope Creep</strong>: max 2 active lanes; idea moratorium; park recommendations for off-lane work<br>
+        → <strong>Risk:</strong> Evolution itself can become another form of building-instead-of-shipping
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== BY THE NUMBERS ========== -->
+<div class="section" id="numbers">
+  <div class="section-title">By the Numbers</div>
+
+  <div class="sub-header">Conversation Data</div>
+  <div class="metric-bar">
+    <div class="metric-label">Total conversations</div>
+    <div class="metric-track"><div class="metric-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="metric-value">1,397</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Total messages</div>
+    <div class="metric-track"><div class="metric-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="metric-value">93,898</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Looping (no resolution)</div>
+    <div class="metric-track"><div class="metric-fill" style="width:51%;background:var(--red)"></div></div>
+    <div class="metric-value" style="color:var(--red)">51%</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Produced output</div>
+    <div class="metric-track"><div class="metric-fill" style="width:17%;background:var(--green)"></div></div>
+    <div class="metric-value" style="color:var(--green)">233</div>
+  </div>
+
+  <div class="sub-header">Idea Pipeline</div>
+  <div class="metric-bar">
+    <div class="metric-label">Total ideas tracked</div>
+    <div class="metric-track"><div class="metric-fill" style="width:100%;background:var(--cyan)"></div></div>
+    <div class="metric-value">527</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Execute Now</div>
+    <div class="metric-track"><div class="metric-fill" style="width:0.4%;background:var(--green)"></div></div>
+    <div class="metric-value">2</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Next Up</div>
+    <div class="metric-track"><div class="metric-fill" style="width:7.8%;background:var(--amber)"></div></div>
+    <div class="metric-value">41</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Backlog</div>
+    <div class="metric-track"><div class="metric-fill" style="width:52.5%;background:var(--text-dim)"></div></div>
+    <div class="metric-value">277</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Archived</div>
+    <div class="metric-track"><div class="metric-fill" style="width:39.3%;background:var(--border)"></div></div>
+    <div class="metric-value">207</div>
+  </div>
+
+  <div class="sub-header">The Cycle (Frequency)</div>
+  <div class="metric-bar">
+    <div class="metric-label">JUSTIFY</div>
+    <div class="metric-track"><div class="metric-fill" style="width:100%;background:var(--red)"></div></div>
+    <div class="metric-value" style="color:var(--red)">13,233</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">OBSTACLE</div>
+    <div class="metric-track"><div class="metric-fill" style="width:88%;background:var(--amber)"></div></div>
+    <div class="metric-value">11,711</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">INTEND</div>
+    <div class="metric-track"><div class="metric-fill" style="width:73%;background:var(--cyan)"></div></div>
+    <div class="metric-value">9,643</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">RESET</div>
+    <div class="metric-track"><div class="metric-fill" style="width:33%;background:var(--purple)"></div></div>
+    <div class="metric-value">4,324</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">DISMISS</div>
+    <div class="metric-track"><div class="metric-fill" style="width:19%;background:var(--text-dim)"></div></div>
+    <div class="metric-value">2,506</div>
+  </div>
+
+  <div class="sub-header">Language Patterns (Top Phrases)</div>
+  <div class="metric-bar">
+    <div class="metric-label">"i feel like"</div>
+    <div class="metric-track"><div class="metric-fill" style="width:100%;background:var(--amber)"></div></div>
+    <div class="metric-value">6,209</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">"and then i"</div>
+    <div class="metric-track"><div class="metric-fill" style="width:41%;background:var(--amber)"></div></div>
+    <div class="metric-value">2,518</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">"i dont know"</div>
+    <div class="metric-track"><div class="metric-fill" style="width:33%;background:var(--amber)"></div></div>
+    <div class="metric-value">2,042</div>
+  </div>
+
+  <div class="sub-header">Derailment Factors</div>
+  <div class="metric-bar">
+    <div class="metric-label">Phone</div>
+    <div class="metric-track"><div class="metric-fill" style="width:100%;background:var(--red)"></div></div>
+    <div class="metric-value" style="color:var(--red)">1,509</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">People</div>
+    <div class="metric-track"><div class="metric-fill" style="width:60%;background:var(--red)"></div></div>
+    <div class="metric-value">~900</div>
+  </div>
+
+  <div class="sub-header">System Stats</div>
+  <div class="metric-bar">
+    <div class="metric-label">Lines of code</div>
+    <div class="metric-track"><div class="metric-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="metric-value">~39,750</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Spec documents</div>
+    <div class="metric-track"><div class="metric-fill" style="width:48%;background:var(--accent)"></div></div>
+    <div class="metric-value">19</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Agent scripts</div>
+    <div class="metric-track"><div class="metric-fill" style="width:43%;background:var(--accent)"></div></div>
+    <div class="metric-value">17</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Phases completed</div>
+    <div class="metric-track"><div class="metric-fill" style="width:23%;background:var(--green)"></div></div>
+    <div class="metric-value">9</div>
+  </div>
+  <div class="metric-bar">
+    <div class="metric-label">Days to build (Phase 1→6C)</div>
+    <div class="metric-track"><div class="metric-fill" style="width:15%;background:var(--green)"></div></div>
+    <div class="metric-value">6</div>
+  </div>
+</div>
+
+<script>
+  // Tab navigation
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById(item.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Pattern card toggle
+  function toggleCard(header) {
+    header.closest('.pattern-card').classList.toggle('open');
+  }
+</script>
+
+</body>
+</html>

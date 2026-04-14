@@ -33,11 +33,24 @@ def get_closure_backlog():
     except:
         open_loops = 0
 
-    closed = query("SELECT COUNT(*) FROM loop_decisions WHERE decision IN ('CLOSE','ARCHIVE')")[0][0]
+    truly_closed = query("SELECT COUNT(*) FROM loop_decisions WHERE decision = 'CLOSE'")[0][0]
+    archived = query("SELECT COUNT(*) FROM loop_decisions WHERE decision = 'ARCHIVE'")[0][0]
+    decided = truly_closed + archived
+
+    # decision_ratio: how much of the backlog has been triaged (CLOSE + ARCHIVE vs open)
+    decision_ratio = round((decided / max(open_loops + decided, 1)) * 100, 2)
+
+    # closure_quality: of the ones you "finished," how many actually got CLOSED vs just ARCHIVED
+    # This is the honest metric — archiving is avoidance, not closure
+    closure_quality = round((truly_closed / max(decided, 1)) * 100, 2)
+
     return {
         "open": open_loops,
-        "closed": closed,
-        "ratio": round((closed / max(open_loops + closed, 1))*100, 2)
+        "closed": decided,              # total decisions (backward compat)
+        "truly_closed": truly_closed,   # real closures only
+        "archived": archived,           # parked, not done
+        "ratio": decision_ratio,        # backward compat: % of backlog triaged
+        "closure_quality": closure_quality,  # NEW: % of finished that are truly closed
     }
 
 def get_drift():

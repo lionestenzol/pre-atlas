@@ -2,6 +2,9 @@
 
 Starts the FastAPI server on port 3003.
 """
+from dotenv import load_dotenv
+load_dotenv()
+
 import structlog
 import uvicorn
 

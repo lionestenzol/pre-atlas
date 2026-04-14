@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ProjectGoal.v1",
+  "title": "Project Goal Hierarchy",
+  "description": "Goal-milestone-subtask hierarchy for project decomposition. Links to governance_state lanes.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "goals"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "goals": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/goal" }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "goal": {
+      "type": "object",
+      "required": ["goal_id", "lane_id", "title", "status", "milestones"],
+      "properties": {
+        "goal_id": { "type": "string" },
+        "lane_id": { "type": "string", "description": "Links to governance_state.active_lanes[].id" },
+        "title": { "type": "string" },
+        "ship_criteria": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "paused", "done"] },
+        "due_at": { "type": ["string", "null"], "format": "date-time" },
+        "milestones": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/milestone" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "milestone": {
+      "type": "object",
+      "required": ["milestone_id", "title", "order", "status", "subtasks"],
+      "properties": {
+        "milestone_id": { "type": "string" },
+        "title": { "type": "string" },
+        "order": { "type": "integer", "minimum": 1 },
+        "status": { "type": "string", "enum": ["pending", "active", "done"] },
+        "subtasks": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/subtask" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "subtask": {
+      "type": "object",
+      "required": ["subtask_id", "title", "status"],
+      "properties": {
+        "subtask_id": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "active", "done", "blocked"] },
+        "depends_on": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Sibling subtask IDs that must complete first"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Skill tags like python, writing, sales — feed into Loop 1"
+        },
+        "completed_at": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -19,6 +19,13 @@ import { fileURLToPath } from 'url';
 import { spawn as spawnChild } from 'child_process';
 import { emitEvent } from '../core/event-emitter.js';
 import { AegisClient } from '../clients/aegis-client.js';
+import { DirectiveEmitter, DirectiveValidationError } from '../atlas/directive.js';
+import {
+  ingestSignal,
+  listSignals,
+  resolveSignal,
+  SignalValidationError,
+} from '../atlas/signals-store.js';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -64,6 +71,7 @@ app.use(cors({
     'http://localhost:8888', 'http://127.0.0.1:8888', // Atlas Shell
     'http://localhost:8889', 'http://127.0.0.1:8889', // CycleBoard
     'http://localhost:3008', 'http://127.0.0.1:3008', // UASC Executor
+    'http://localhost:3006', 'http://127.0.0.1:3006', // inPACT
     'null', // file:// protocol
   ],
 }));
@@ -1779,6 +1787,75 @@ app.get('/api/work/metrics', (_req, res) => {
   });
 });
 
+// === SIGNALS (Phase 3C of doctrine/04_BUILD_PLAN.md) ===
+// Accepts Signal.v1 payloads from any layer, exposes them for InPACT.
+
+app.post('/api/signals/ingest', (req, res) => {
+  try {
+    const signal = ingestSignal(repoRoot, req.body);
+    res.status(202).json({ ok: true, signal_id: signal.id });
+  } catch (error: unknown) {
+    if (error instanceof SignalValidationError) {
+      res.status(400).json({ ok: false, error: error.message, details: error.details });
+      return;
+    }
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+app.get('/api/signals', (req, res) => {
+  const since = typeof req.query.since === 'string' ? req.query.since : undefined;
+  res.json({ ok: true, signals: listSignals(since) });
+});
+
+app.post('/api/signals/:id/resolve', (req, res) => {
+  const signalId = req.params.id;
+  const actionId = typeof req.body?.action_id === 'string' ? req.body.action_id : '';
+  if (!actionId) {
+    res.status(400).json({ ok: false, error: 'action_id required in body' });
+    return;
+  }
+  const resolution = resolveSignal(signalId, actionId);
+  if (!resolution) {
+    res.status(404).json({ ok: false, error: `Signal ${signalId} not found` });
+    return;
+  }
+  res.json({ ok: true, resolution });
+});
+
+// === ATLAS (Phase 3A of doctrine/04_BUILD_PLAN.md) ===
+
+/**
+ * GET /api/atlas/next-directive
+ * Emit the next Directive.v1 for Ghost Executor (Cortex).
+ * - 200 + { ok, directive } on success
+ * - 204 if no active/queued job
+ * - 500 + { ok:false, error, details } on schema validation failure
+ */
+app.get('/api/atlas/next-directive', (_req, res) => {
+  try {
+    const unifiedState = buildUnifiedState();
+    const snapshot = {
+      delta_state: (unifiedState.delta?.system_state ?? undefined) as Record<string, unknown> | undefined,
+      cognitive_state: (unifiedState.cognitive?.cognitive_state ?? undefined) as Record<string, unknown> | undefined,
+      work_ledger: workController.getLedger(),
+    };
+    const directive = new DirectiveEmitter(repoRoot).emit(snapshot);
+    if (!directive) {
+      res.status(204).end();
+      return;
+    }
+    res.json({ ok: true, directive });
+  } catch (error: unknown) {
+    if (error instanceof DirectiveValidationError) {
+      res.status(500).json({ ok: false, error: error.message, details: error.details });
+      return;
+    }
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
 // === TIMELINE (Phase 6C) ===
 
 /**

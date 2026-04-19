@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "OptogonSessionState.v1",
+  "title": "Optogon Session State",
+  "description": "Runtime state for an active Optogon session. Per 03_OPTOGON_SPEC.md Section 8.",
+  "type": "object",
+  "required": ["session_id", "path_id", "current_node", "node_states", "context", "schema_version"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "current_node": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "node_states": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["unqualified", "qualified", "blocked", "awaiting_approval", "closed"]
+          },
+          "entered_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "closed_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "qualification_data": { "type": "object" },
+          "action_results": { "type": "object" },
+          "errors": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["confirmed", "user", "inferred", "system"],
+      "properties": {
+        "confirmed": { "type": "object" },
+        "user": { "type": "object" },
+        "inferred": { "type": "object" },
+        "system": { "type": "object" }
+      }
+    },
+    "fork_stack": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["parent_path_id", "parent_node_id", "resume_node"],
+        "properties": {
+          "parent_path_id": { "type": "string" },
+          "parent_node_id": { "type": "string" },
+          "resume_node": { "type": "string" },
+          "forked_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "action_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action_id", "node_id", "status"],
+        "properties": {
+          "action_id": { "type": "string" },
+          "node_id": { "type": "string" },
+          "type": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "success", "failed", "rolled_back"]
+          },
+          "executed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "result": {},
+          "reversible": { "type": "boolean" },
+          "reversed": { "type": "boolean" }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "total_tokens": { "type": "integer", "minimum": 0 },
+        "total_questions_asked": { "type": "integer", "minimum": 0 },
+        "total_inferences_made": { "type": "integer", "minimum": 0 },
+        "total_actions_fired": { "type": "integer", "minimum": 0 },
+        "nodes_closed": { "type": "integer", "minimum": 0 },
+        "nodes_total": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

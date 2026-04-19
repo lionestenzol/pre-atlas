@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "id": "tp_01HN6GC4",
+  "directive_id": "dir_01HN6G9A",
+  "issued_at": "2026-04-18T15:35:30Z",
+  "instruction": {
+    "objective": "Ship inPACT Lesson 5: merge draft content into the lesson skeleton, verify UI rules, and commit.",
+    "context": "Lesson 5 is 'Impact Audit'. Draft is at drafts/lesson_5_impact_audit.md. Skeleton is at apps/inpact/content/lessons/5.md and uses shared ls-* classes from apps/inpact/css/shared.css.",
+    "constraints": [
+      "Reuse shared ls-* CSS only",
+      "No em dashes anywhere in lesson text",
+      "Light theme only",
+      "Do not modify shared.css"
+    ],
+    "success_criteria": [
+      "Merged lesson renders at :3006/lessons/5 without console errors",
+      "Em dash scan returns zero matches",
+      "Commit is on main with conventional feat(inpact) prefix"
+    ],
+    "failure_criteria": [
+      "Any em dash present in final output",
+      "Preview page 404s or errors",
+      "Commit rejected by pre-commit hook"
+    ]
+  },
+  "environment": {
+    "working_directory": "C:/Users/bruke/Pre Atlas",
+    "relevant_files": [
+      "apps/inpact/content/lessons/5.md",
+      "drafts/lesson_5_impact_audit.md",
+      "apps/inpact/css/shared.css"
+    ],
+    "available_tools": ["Read", "Edit", "Write", "Bash", "preview_start", "preview_inspect"],
+    "infrastructure_context": "apps/inpact runs on :3006 via launch.json; delta-kernel on :3001 is running"
+  },
+  "prior_attempts": [],
+  "output_spec": {
+    "expected_artifacts": ["apps/inpact/content/lessons/5.md", "git commit SHA"],
+    "format": "markdown + git commit",
+    "location": "apps/inpact/content/lessons/5.md"
+  },
+  "constraints": {
+    "max_tokens": 8000,
+    "timeout_seconds": 1800,
+    "do_not_modify": [
+      "apps/inpact/css/shared.css",
+      "contracts/schemas/**"
+    ],
+    "require_tests": false
+  }
+}

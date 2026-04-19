@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "id": "dir_01HN6G9A",
+  "issued_at": "2026-04-18T15:35:00Z",
+  "priority_tier": "high",
+  "leverage_score": 0.82,
+  "task": {
+    "id": "task_ship_lesson_5",
+    "label": "Ship inPACT Lesson 5",
+    "description": "Merge drafts/lesson_5_impact_audit.md into apps/inpact/content/lessons/5.md, verify UI rules, and commit.",
+    "type": "build",
+    "estimated_complexity": "simple",
+    "success_criteria": [
+      "Lesson 5 renders at :3006/lessons/5 without errors",
+      "No em dashes in final output",
+      "Commit lands on main with conventional message"
+    ],
+    "constraints": [
+      "Use shared ls-* CSS only (no bespoke styles)",
+      "Light theme only"
+    ]
+  },
+  "context_bundle": {
+    "project_id": "pre-atlas",
+    "relevant_files": [
+      "apps/inpact/content/lessons/5.md",
+      "drafts/lesson_5_impact_audit.md",
+      "apps/inpact/css/shared.css"
+    ],
+    "relevant_decisions": [
+      {
+        "key": "lesson_template",
+        "value": "ls-* shared skeleton",
+        "source": "feedback_one_lesson_template.md",
+        "made_at": "2026-04-10T00:00:00Z"
+      }
+    ],
+    "user_preferences": {
+      "em_dash_ban_enforced": true,
+      "preferred_commit_prefix": "feat(inpact)"
+    },
+    "prior_attempts": [],
+    "site_pull_context_id": "ctx_inpact_site_20260418"
+  },
+  "execution": {
+    "target_path_id": "ship_inpact_lesson",
+    "target_agent": "optogon",
+    "autonomy_level": "supervised",
+    "timeout_seconds": 1800,
+    "fallback": "escalate_to_human"
+  },
+  "interrupt_policy": {
+    "interruptible": true,
+    "interrupt_threshold": "high_and_above",
+    "resume_on_interrupt": true
+  }
+}

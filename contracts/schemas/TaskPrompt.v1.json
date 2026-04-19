@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "TaskPrompt.v1",
+  "title": "Task Prompt",
+  "description": "Ghost Executor → Claude Code. Per 02_ROSETTA_STONE.md Contract 4 (request side).",
+  "type": "object",
+  "required": ["id", "directive_id", "issued_at", "instruction", "environment", "output_spec", "constraints", "schema_version"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "directive_id": {
+      "type": "string"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "instruction": {
+      "type": "object",
+      "required": ["objective", "success_criteria", "failure_criteria"],
+      "properties": {
+        "objective": { "type": "string" },
+        "context": { "type": "string" },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "success_criteria": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "failure_criteria": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": ["working_directory"],
+      "properties": {
+        "working_directory": { "type": "string" },
+        "relevant_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "available_tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "infrastructure_context": { "type": ["string", "null"] }
+      }
+    },
+    "prior_attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["summary"],
+        "properties": {
+          "summary": { "type": "string" },
+          "what_failed": { "type": "string" },
+          "what_to_avoid": { "type": "string" }
+        }
+      }
+    },
+    "output_spec": {
+      "type": "object",
+      "required": ["expected_artifacts", "format", "location"],
+      "properties": {
+        "expected_artifacts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "format": { "type": "string" },
+        "location": { "type": "string" }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "do_not_modify": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "require_tests": { "type": "boolean" }
+      }
+    }
+  }
+}

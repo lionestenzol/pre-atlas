@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "id": "ship_inpact_lesson",
+  "name": "Ship an inPACT Lesson",
+  "version": "1.0",
+  "description": "Merges lesson content into the skeleton, validates UI rules, previews, approves, and commits.",
+  "entry": {
+    "node_id": "entry",
+    "match_conditions": [
+      {
+        "signal": "intent",
+        "operator": "contains",
+        "value": "ship lesson"
+      }
+    ],
+    "match_threshold": 0.6,
+    "tie_break": "priority"
+  },
+  "nodes": {
+    "entry": { "type": "qualify", "label": "Gather lesson_number + content_source" },
+    "load_skeleton": { "type": "execute", "label": "Read lesson skeleton" },
+    "validate_content": { "type": "gate", "label": "Check content non-empty" },
+    "merge": { "type": "execute", "label": "Merge content into skeleton" },
+    "preview": { "type": "execute", "label": "Render lesson in preview server" },
+    "em_dash_check": { "type": "gate", "label": "Scan for em dashes" },
+    "approve": { "type": "approval", "label": "Ask user to confirm commit" },
+    "commit": { "type": "execute", "label": "Git commit" },
+    "done": { "type": "close", "label": "Emit CloseSignal" }
+  },
+  "edges": [
+    { "from": "entry", "to": "load_skeleton", "condition": "qualified", "priority": 1 },
+    { "from": "load_skeleton", "to": "validate_content", "condition": "success", "priority": 1 },
+    { "from": "validate_content", "to": "merge", "condition": "content_ok", "priority": 1 },
+    { "from": "merge", "to": "preview", "condition": "success", "priority": 1 },
+    { "from": "preview", "to": "em_dash_check", "condition": "rendered", "priority": 1 },
+    { "from": "em_dash_check", "to": "approve", "condition": "clean", "priority": 1 },
+    { "from": "em_dash_check", "to": "merge", "condition": "em_dash_found", "priority": 2 },
+    { "from": "approve", "to": "commit", "condition": "approved", "priority": 1 },
+    { "from": "commit", "to": "done", "condition": "committed", "priority": 1 }
+  ],
+  "close_state": {
+    "description": "Lesson shipped and committed",
+    "deliverables": ["commit_sha", "lesson_url"],
+    "validation": "git log -1 --pretty=%H"
+  },
+  "defaults": {
+    "pacing": { "max_options_shown": 3, "bundle_confirmations": true },
+    "inference_confidence_floor": 0.7
+  }
+}

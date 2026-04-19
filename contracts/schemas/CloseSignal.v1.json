@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "CloseSignal.v1",
+  "title": "Close Signal",
+  "description": "Emitted by Optogon when a path closes; consumed by Atlas. Per 02_ROSETTA_STONE.md Contract 2.",
+  "type": "object",
+  "required": ["id", "session_id", "path_id", "closed_at", "status", "deliverables", "session_summary", "schema_version"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "closed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["completed", "abandoned", "failed", "forked"]
+    },
+    "deliverables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "label"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["file", "url", "confirmation", "data", "decision"]
+          },
+          "label": { "type": "string" },
+          "value": {},
+          "location": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "session_summary": {
+      "type": "object",
+      "required": [
+        "total_tokens",
+        "total_questions_asked",
+        "total_inferences_made",
+        "inference_accuracy",
+        "nodes_closed",
+        "nodes_total",
+        "time_to_close_seconds",
+        "path_completion_rate"
+      ],
+      "properties": {
+        "total_tokens": { "type": "integer", "minimum": 0 },
+        "total_questions_asked": { "type": "integer", "minimum": 0 },
+        "total_inferences_made": { "type": "integer", "minimum": 0 },
+        "inference_accuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "nodes_closed": { "type": "integer", "minimum": 0 },
+        "nodes_total": { "type": "integer", "minimum": 0 },
+        "time_to_close_seconds": { "type": "number", "minimum": 0 },
+        "path_completion_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "decisions_made": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "source"],
+        "properties": {
+          "key": { "type": "string" },
+          "value": {},
+          "source": {
+            "type": "string",
+            "enum": ["user", "inferred", "system"]
+          },
+          "node_id": { "type": "string" }
+        }
+      }
+    },
+    "unblocked": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "reason"],
+        "properties": {
+          "task_id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "context_residue": {
+      "type": "object",
+      "properties": {
+        "confirmed": { "type": "object", "additionalProperties": true },
+        "learned_preferences": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "interrupt_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["triggered_at", "reason", "resolution"],
+        "properties": {
+          "triggered_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": { "type": "string" },
+          "resolution": {
+            "type": "string",
+            "enum": ["resumed", "abandoned", "forked"]
+          }
+        }
+      }
+    }
+  }
+}

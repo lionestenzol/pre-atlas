@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "user_id": "bruke",
+  "last_updated": "2026-04-18T15:46:08Z",
+  "preferences": [
+    {
+      "key": "em_dash_ban_enforced",
+      "value": true,
+      "confidence": 0.98,
+      "source": "explicit",
+      "observed_count": 12,
+      "last_observed": "2026-04-18T15:45:58Z"
+    },
+    {
+      "key": "preferred_commit_prefix",
+      "value": "feat(inpact)",
+      "confidence": 0.9,
+      "source": "inferred",
+      "observed_count": 7,
+      "last_observed": "2026-04-18T15:46:00Z"
+    },
+    {
+      "key": "preferred_lesson_layout",
+      "value": "ls-*-shared-css",
+      "confidence": 0.92,
+      "source": "explicit",
+      "observed_count": 5,
+      "last_observed": "2026-04-10T00:00:00Z"
+    },
+    {
+      "key": "ui_theme",
+      "value": "light",
+      "confidence": 1.0,
+      "source": "explicit",
+      "observed_count": 1,
+      "last_observed": "2026-04-05T00:00:00Z"
+    }
+  ],
+  "behavioral_patterns": [
+    {
+      "pattern": "ships in single bundled PR rather than split commits for refactors in one area",
+      "frequency": "usually",
+      "context": "inpact lesson + product pivot work",
+      "first_observed": "2026-03-20T00:00:00Z"
+    },
+    {
+      "pattern": "diagnoses before building; compares to reference work before writing CSS",
+      "frequency": "always",
+      "context": "frontend work",
+      "first_observed": "2026-04-01T00:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "OptogonPath.v1",
+  "title": "Optogon Path",
+  "description": "A directed graph of OptogonNodes defining one complete workflow. Per 03_OPTOGON_SPEC.md Section 7.",
+  "type": "object",
+  "required": ["id", "name", "version", "entry", "nodes", "edges", "close_state", "schema_version"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "entry": {
+      "type": "object",
+      "required": ["node_id"],
+      "properties": {
+        "node_id": { "type": "string" },
+        "match_conditions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["signal", "operator", "value"],
+            "properties": {
+              "signal": { "type": "string" },
+              "operator": {
+                "type": "string",
+                "enum": ["contains", "equals", "regex", "intent"]
+              },
+              "value": { "type": "string" }
+            }
+          }
+        },
+        "match_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "tie_break": {
+          "type": "string",
+          "enum": ["priority", "specificity"]
+        }
+      }
+    },
+    "nodes": {
+      "type": "object",
+      "description": "Map of node_id -> OptogonNode definition",
+      "additionalProperties": { "type": "object" }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "condition"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "condition": { "type": "string" },
+          "priority": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "sub_routines": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["trigger", "path_id"],
+        "properties": {
+          "trigger": { "type": "string" },
+          "path_id": { "type": "string" },
+          "resume_node": { "type": "string" },
+          "inherit_context": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "close_state": {
+      "type": "object",
+      "required": ["description", "deliverables"],
+      "properties": {
+        "description": { "type": "string" },
+        "deliverables": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "validation": { "type": "string" }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "pacing": { "type": "object" },
+        "inference_confidence_floor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}

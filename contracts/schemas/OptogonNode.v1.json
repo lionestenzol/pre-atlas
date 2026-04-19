@@ -1,0 +1,198 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "OptogonNode.v1",
+  "title": "Optogon Node",
+  "description": "The atomic unit of work in an Optogon path. Per 03_OPTOGON_SPEC.md Section 6.",
+  "type": "object",
+  "required": ["id", "type", "label", "schema_version"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "enum": ["qualify", "execute", "gate", "fork", "approval", "close"]
+    },
+    "label": {
+      "type": "string"
+    },
+    "qualification": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "source"],
+            "properties": {
+              "key": { "type": "string" },
+              "description": { "type": "string" },
+              "source": {
+                "type": "string",
+                "enum": ["user", "inferred", "system", "prior_node"]
+              },
+              "fallback": {},
+              "confidence_floor": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        "question": {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "purpose": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "max_asks": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "max_missing_keys_before_split": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "inference_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "condition", "confidence"],
+        "properties": {
+          "key": { "type": "string" },
+          "condition": { "type": "string" },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "confidence_source": {
+            "type": "string",
+            "enum": ["static", "logprob", "learned"]
+          },
+          "reversible": { "type": "boolean" },
+          "risk_tier": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          }
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["tool_call", "code", "retrieval", "transform", "side_effect"]
+          },
+          "trigger": {
+            "type": "string",
+            "enum": ["on_entry", "on_qualified", "parallel"]
+          },
+          "spec": { "type": "object" },
+          "reversible": { "type": "boolean" },
+          "risk_tier": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "retry_strategy": {
+            "type": "string",
+            "enum": ["immediate", "exponential_backoff", "none"]
+          }
+        }
+      }
+    },
+    "contract": {
+      "type": "object",
+      "properties": {
+        "required_outputs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "validation": { "type": "string" },
+        "completion_criteria": { "type": "string" },
+        "max_retries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failure_mode": {
+          "type": "string",
+          "enum": ["retry", "fallback", "escalate", "abort"]
+        }
+      }
+    },
+    "pacing": {
+      "type": "object",
+      "properties": {
+        "surface": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "suppress": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "max_options_shown": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "explain": { "type": "boolean" },
+        "bundle_confirmations": { "type": "boolean" }
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["to", "condition"],
+        "properties": {
+          "to": { "type": "string" },
+          "condition": { "type": "string" },
+          "priority": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "token_budget": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "approval" } } },
+      "then": { "required": ["contract"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "close" } } },
+      "then": { "required": ["contract"] }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "task_prompt_id": "tp_01HN6GC4",
+  "completed_at": "2026-04-18T15:46:00Z",
+  "status": "success",
+  "artifacts": [
+    {
+      "type": "file",
+      "path": "apps/inpact/content/lessons/5.md",
+      "description": "Merged Lesson 5 content into shared ls-* skeleton."
+    },
+    {
+      "type": "diff",
+      "path": "apps/inpact/content/lessons/5.md",
+      "description": "+128 / -12 vs skeleton"
+    },
+    {
+      "type": "url",
+      "description": "http://localhost:3006/lessons/5"
+    }
+  ],
+  "summary": "Lesson 5 'Impact Audit' shipped. Em dash scan clean. Preview renders. Commit a9f3c21 on main.",
+  "issues_encountered": [
+    "Initial merge introduced two em dashes from the draft; replaced with colons before commit."
+  ],
+  "follow_on_tasks": [
+    "Fill Lesson 6 skeleton with content from drafts/lesson_6_*.md"
+  ],
+  "tokens_used": 4620
+}

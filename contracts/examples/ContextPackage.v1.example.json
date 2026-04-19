@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "id": "ctx_inpact_site_20260418",
+  "source": "localhost",
+  "captured_at": "2026-04-18T15:00:00Z",
+  "structure_map": {
+    "entry_points": ["apps/inpact/today.html", "apps/inpact/index.html"],
+    "routes": [
+      {
+        "path": "/api/signals",
+        "method": "GET",
+        "params": ["since"],
+        "inferred_purpose": "Aggregate signals across layers for today.html"
+      },
+      {
+        "path": "/session/start",
+        "method": "POST",
+        "params": ["path_id", "initial_context"],
+        "inferred_purpose": "Start an Optogon path session"
+      }
+    ],
+    "components": [
+      {
+        "name": "today.html",
+        "type": "page",
+        "dependencies": ["signals.js", "paths.js", "shared.css"],
+        "inferred_purpose": "User-facing command surface"
+      },
+      {
+        "name": "optogon",
+        "type": "service",
+        "dependencies": ["node_processor", "session_store"],
+        "inferred_purpose": "Run Optogon paths on :3010"
+      }
+    ]
+  },
+  "dependency_graph": {
+    "nodes": [
+      { "id": "inpact", "type": "internal", "name": "apps/inpact" },
+      { "id": "optogon", "type": "internal", "name": "services/optogon" },
+      { "id": "delta-kernel", "type": "internal", "name": "services/delta-kernel" }
+    ],
+    "edges": [
+      { "from": "inpact", "to": "optogon", "relationship": "calls" },
+      { "from": "inpact", "to": "delta-kernel", "relationship": "calls" },
+      { "from": "optogon", "to": "delta-kernel", "relationship": "calls" }
+    ]
+  },
+  "action_inventory": [
+    {
+      "id": "start_path",
+      "label": "Start an Optogon path",
+      "type": "api_call",
+      "inputs": ["path_id", "initial_context"],
+      "outputs": ["session_id"],
+      "risk_tier": "low",
+      "reversible": true
+    },
+    {
+      "id": "commit_lesson",
+      "label": "Git commit a shipped lesson",
+      "type": "function",
+      "inputs": ["lesson_path", "message"],
+      "outputs": ["commit_sha"],
+      "risk_tier": "medium",
+      "reversible": false
+    }
+  ],
+  "inferred_state": {
+    "auth_required": false,
+    "data_stores": ["sqlite:services/delta-kernel/data"],
+    "environment": "dev",
+    "tech_stack": ["fastapi", "typescript", "express", "vanilla_js"]
+  },
+  "token_count": 850,
+  "compression_ratio": 0.42
+}

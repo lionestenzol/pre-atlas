@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "Directive.v1",
+  "title": "Directive",
+  "description": "Emitted by Atlas, consumed by Ghost Executor. Per 02_ROSETTA_STONE.md Contract 3. Distinct from the legacy DirectiveProposed schema (CycleBoard mode routing).",
+  "type": "object",
+  "required": ["id", "issued_at", "priority_tier", "leverage_score", "task", "context_bundle", "execution", "interrupt_policy", "schema_version"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "priority_tier": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"]
+    },
+    "leverage_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "task": {
+      "type": "object",
+      "required": ["id", "label", "type", "success_criteria"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["build", "fix", "research", "review", "deploy", "configure"]
+        },
+        "estimated_complexity": {
+          "type": "string",
+          "enum": ["trivial", "simple", "moderate", "complex"]
+        },
+        "success_criteria": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "context_bundle": {
+      "type": "object",
+      "required": ["project_id"],
+      "properties": {
+        "project_id": { "type": "string" },
+        "relevant_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "relevant_decisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "source"],
+            "properties": {
+              "key": { "type": "string" },
+              "value": {},
+              "source": { "type": "string" },
+              "made_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "user_preferences": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "prior_attempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["attempt_id", "outcome"],
+            "properties": {
+              "attempt_id": { "type": "string" },
+              "outcome": { "type": "string" },
+              "lessons": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+        "site_pull_context_id": { "type": ["string", "null"] }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": ["target_agent", "autonomy_level"],
+      "properties": {
+        "target_path_id": { "type": ["string", "null"] },
+        "target_agent": {
+          "type": "string",
+          "enum": ["claude_code", "optogon", "human"]
+        },
+        "autonomy_level": {
+          "type": "string",
+          "enum": ["full", "supervised", "approval_required"]
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fallback": {
+          "type": "string",
+          "enum": ["escalate_to_human", "retry", "skip"]
+        }
+      }
+    },
+    "interrupt_policy": {
+      "type": "object",
+      "required": ["interruptible"],
+      "properties": {
+        "interruptible": { "type": "boolean" },
+        "interrupt_threshold": {
+          "type": "string",
+          "enum": ["critical_only", "high_and_above", "any"]
+        },
+        "resume_on_interrupt": { "type": "boolean" }
+      }
+    }
+  }
+}

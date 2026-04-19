@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "id": "sig_01HN6GE1",
+  "emitted_at": "2026-04-18T15:45:00Z",
+  "source_layer": "optogon",
+  "signal_type": "approval_required",
+  "priority": "urgent",
+  "payload": {
+    "task_id": "task_ship_lesson_5",
+    "label": "Approve commit",
+    "summary": "Lesson 5 ready. Preview at :3006/lessons/5. Commit with message: feat(inpact): ship lesson 5 impact audit?",
+    "data": {
+      "commit_message": "feat(inpact): ship lesson 5 impact audit",
+      "files_changed": 1,
+      "lines_added": 128,
+      "lines_removed": 12
+    },
+    "action_required": true,
+    "action_options": [
+      {
+        "id": "approve",
+        "label": "Commit",
+        "consequence": "Git commit with the proposed message on main",
+        "risk_tier": "medium"
+      },
+      {
+        "id": "revise",
+        "label": "Revise message",
+        "consequence": "Return to compose step with user-edited message",
+        "risk_tier": "low"
+      },
+      {
+        "id": "abandon",
+        "label": "Abandon",
+        "consequence": "Close path with status=abandoned; no commit",
+        "risk_tier": "low"
+      }
+    ]
+  }
+}

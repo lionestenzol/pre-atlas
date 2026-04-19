@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "id": "close_01HN6G5Z",
+  "session_id": "sess_01HN6G0N",
+  "path_id": "ship_inpact_lesson",
+  "closed_at": "2026-04-18T15:46:08Z",
+  "status": "completed",
+  "deliverables": [
+    {
+      "type": "file",
+      "label": "Shipped lesson 5",
+      "value": "apps/inpact/content/lessons/5.md",
+      "location": "apps/inpact/content/lessons/5.md"
+    },
+    {
+      "type": "confirmation",
+      "label": "Commit SHA",
+      "value": "a9f3c21",
+      "location": null
+    }
+  ],
+  "session_summary": {
+    "total_tokens": 1240,
+    "total_questions_asked": 2,
+    "total_inferences_made": 3,
+    "inference_accuracy": 0.9,
+    "nodes_closed": 9,
+    "nodes_total": 9,
+    "time_to_close_seconds": 368,
+    "path_completion_rate": 1.0
+  },
+  "decisions_made": [
+    { "key": "lesson_number", "value": 5, "source": "user", "node_id": "entry" },
+    { "key": "theme", "value": "light", "source": "inferred", "node_id": "merge" },
+    { "key": "commit_style", "value": "conventional", "source": "inferred", "node_id": "commit" }
+  ],
+  "unblocked": [
+    { "task_id": "lesson_6_skeleton_fill", "reason": "Lesson 5 shipped; pipeline can advance" }
+  ],
+  "context_residue": {
+    "confirmed": {
+      "preferred_commit_prefix": "feat(inpact)"
+    },
+    "learned_preferences": {
+      "em_dash_ban_enforced": true,
+      "preferred_lesson_layout": "ls-*-shared-css"
+    }
+  },
+  "interrupt_log": []
+}

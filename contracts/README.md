@@ -16,13 +16,40 @@ All data exports are validated against these schemas before writing. This ensure
 
 ## Schemas
 
+### Pre-existing (cognitive-sensor stack)
+
 | Schema | Purpose | Used By |
 |--------|---------|---------|
 | `CognitiveMetricsComputed.json` | Cognitive state metrics | `export_cognitive_state.py` |
 | `DailyPayload.v1.json` | CycleBoard UI payload | `export_daily_payload.py` |
 | `DailyProjection.v1.json` | Combined daily artifact | `build_projection.py` |
-| `DirectiveProposed.json` | Directive proposal format | `route_today.py` |
+| `DirectiveProposed.json` | CycleBoard mode routing directive (distinct from `Directive.v1.json` below) | `route_today.py` |
 | `Closures.v1.json` | Closure registry + streaks | Phase 5B `/api/law/close_loop` |
+
+### Optogon Stack (added 2026-04-18)
+
+Ten schemas defining the full Optogon stack contracts. Source of truth: `doctrine/02_ROSETTA_STONE.md` + `doctrine/03_OPTOGON_SPEC.md`. Validator: `contracts/validate.py`.
+
+| Schema | Contract / Spec | Producer | Consumer |
+|--------|-----------------|----------|----------|
+| `OptogonNode.v1.json` | Spec §6 | Path author | Optogon runtime |
+| `OptogonPath.v1.json` | Spec §7 | Path author | Optogon runtime |
+| `OptogonSessionState.v1.json` | Spec §8 | Optogon runtime | Optogon runtime / InPACT debug |
+| `ContextPackage.v1.json` | Rosetta Contract 1 | Site Pull | Optogon |
+| `CloseSignal.v1.json` | Rosetta Contract 2 | Optogon | Atlas |
+| `Directive.v1.json` | Rosetta Contract 3 | Atlas | Ghost Executor (Cortex) |
+| `TaskPrompt.v1.json` | Rosetta Contract 4 (request) | Ghost Executor | Claude Code |
+| `BuildOutput.v1.json` | Rosetta Contract 4 (response) | Claude Code | Ghost Executor |
+| `Signal.v1.json` | Rosetta Contract 5 | Any layer | InPACT |
+| `UserPreferenceStore.v1.json` | Rosetta Cross-Session Memory | Atlas (write) | All layers (read) |
+
+Run validator:
+```bash
+python contracts/validate.py           # terse
+python contracts/validate.py --verbose # list each schema/example pair
+```
+
+Exit 0 = all 10 schemas validate their matching examples. Exit 1 = one or more failed; details printed.
 
 ---
 
@@ -141,7 +168,8 @@ Schemas are loaded and validated using JSON Schema draft-07.
 
 See `examples/` for sample payloads:
 
-- `daily_payload_example.json` - Sample CycleBoard payload
+- `daily_payload_example.json` — Sample CycleBoard payload (pre-existing)
+- `OptogonNode.v1.example.json` through `UserPreferenceStore.v1.example.json` — One example per Optogon stack schema. All threaded through `ship_inpact_lesson` as the running scenario (per `doctrine/04_BUILD_PLAN.md` Section 5).
 
 ---
 

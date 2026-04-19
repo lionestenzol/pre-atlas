@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "id": "em_dash_check",
+  "type": "gate",
+  "label": "Em Dash Check",
+  "qualification": {
+    "required": [
+      {
+        "key": "merged_lesson_content",
+        "description": "The merged lesson markdown ready for scan",
+        "source": "prior_node",
+        "confidence_floor": 0.9
+      }
+    ],
+    "question": {
+      "text": "",
+      "purpose": ["verify em-dash ban"],
+      "max_asks": 0
+    },
+    "max_missing_keys_before_split": 1
+  },
+  "actions": [
+    {
+      "id": "scan_for_em_dash",
+      "type": "code",
+      "trigger": "on_entry",
+      "spec": {
+        "regex": "\\u2014",
+        "target": "merged_lesson_content"
+      },
+      "reversible": true,
+      "risk_tier": "low",
+      "retry_strategy": "none"
+    }
+  ],
+  "contract": {
+    "required_outputs": ["em_dash_count"],
+    "validation": "em_dash_count == 0",
+    "completion_criteria": "No em dashes found in content",
+    "max_retries": 0,
+    "failure_mode": "escalate"
+  },
+  "pacing": {
+    "surface": [],
+    "suppress": ["em_dash_count"],
+    "max_options_shown": 0,
+    "explain": false,
+    "bundle_confirmations": true
+  },
+  "transitions": [
+    {
+      "to": "approve",
+      "condition": "em_dash_count == 0",
+      "priority": 1
+    },
+    {
+      "to": "merge",
+      "condition": "em_dash_count > 0",
+      "priority": 2
+    }
+  ],
+  "metadata": {
+    "token_budget": 50,
+    "tags": ["ui_rules", "ship_inpact_lesson"]
+  }
+}

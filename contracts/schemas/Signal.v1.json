@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "Signal.v1",
+  "title": "Signal",
+  "description": "Universal signal emitted by every layer to InPACT. Per 02_ROSETTA_STONE.md Contract 5.",
+  "type": "object",
+  "required": ["id", "emitted_at", "source_layer", "signal_type", "priority", "payload", "schema_version"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_layer": {
+      "type": "string",
+      "enum": ["site_pull", "optogon", "atlas", "ghost_executor", "claude_code"]
+    },
+    "signal_type": {
+      "type": "string",
+      "enum": ["status", "completion", "blocked", "approval_required", "error", "insight"]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["urgent", "normal", "low"]
+    },
+    "payload": {
+      "type": "object",
+      "required": ["label", "summary"],
+      "properties": {
+        "task_id": { "type": ["string", "null"] },
+        "label": { "type": "string" },
+        "summary": { "type": "string" },
+        "data": { "type": "object" },
+        "action_required": { "type": "boolean" },
+        "action_options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "risk_tier"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "consequence": { "type": "string" },
+              "risk_tier": {
+                "type": "string",
+                "enum": ["low", "medium", "high"]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["payload"],
+        "properties": {
+          "payload": {
+            "required": ["action_required"],
+            "properties": {
+              "action_required": { "const": true }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["action_options"],
+            "properties": {
+              "action_options": { "minItems": 1 }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

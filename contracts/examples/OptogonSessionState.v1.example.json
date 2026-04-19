@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "session_id": "sess_01HN6G0N",
+  "path_id": "ship_inpact_lesson",
+  "current_node": "merge",
+  "started_at": "2026-04-18T15:40:00Z",
+  "node_states": {
+    "entry": {
+      "status": "closed",
+      "entered_at": "2026-04-18T15:40:00Z",
+      "closed_at": "2026-04-18T15:40:12Z",
+      "attempts": 1,
+      "qualification_data": {
+        "lesson_number": 5,
+        "content_source": "drafts/lesson_5_impact_audit.md"
+      },
+      "action_results": {},
+      "errors": []
+    },
+    "load_skeleton": {
+      "status": "closed",
+      "entered_at": "2026-04-18T15:40:12Z",
+      "closed_at": "2026-04-18T15:40:14Z",
+      "attempts": 1,
+      "qualification_data": {},
+      "action_results": { "skeleton_path": "apps/inpact/content/lessons/5.md" },
+      "errors": []
+    },
+    "validate_content": {
+      "status": "closed",
+      "entered_at": "2026-04-18T15:40:14Z",
+      "closed_at": "2026-04-18T15:40:14Z",
+      "attempts": 1,
+      "qualification_data": {},
+      "action_results": { "content_ok": true },
+      "errors": []
+    },
+    "merge": {
+      "status": "qualified",
+      "entered_at": "2026-04-18T15:40:14Z",
+      "closed_at": null,
+      "attempts": 1,
+      "qualification_data": {},
+      "action_results": {},
+      "errors": []
+    }
+  },
+  "context": {
+    "confirmed": {
+      "lesson_number": 5,
+      "content_source": "drafts/lesson_5_impact_audit.md"
+    },
+    "user": {},
+    "inferred": {
+      "theme": "light"
+    },
+    "system": {
+      "working_directory": "C:/Users/bruke/Pre Atlas",
+      "preview_port": 3006
+    }
+  },
+  "fork_stack": [],
+  "action_log": [
+    {
+      "action_id": "load_skeleton_read_file",
+      "node_id": "load_skeleton",
+      "type": "tool_call",
+      "status": "success",
+      "executed_at": "2026-04-18T15:40:14Z",
+      "result": { "bytes_read": 2450 },
+      "reversible": true,
+      "reversed": false
+    }
+  ],
+  "metrics": {
+    "total_tokens": 410,
+    "total_questions_asked": 1,
+    "total_inferences_made": 2,
+    "total_actions_fired": 2,
+    "nodes_closed": 3,
+    "nodes_total": 9
+  }
+}

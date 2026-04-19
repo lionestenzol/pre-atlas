@@ -14,6 +14,7 @@ from typing import Any, Optional
 from .config import DB_PATH, ensure_dirs
 from .contract_validator import validate
 from .context import empty_context
+from .preferences_client import fetch_preferences, inject_preferences_into_context
 
 
 _DDL = """
@@ -47,8 +48,15 @@ class SessionStore:
     def create(self, path_id: str, initial_context: Optional[dict[str, Any]] = None, entry_node_id: str = "entry") -> dict[str, Any]:
         session_id = f"sess_{uuid.uuid4().hex[:12]}"
         ctx = empty_context()
+        # Load cross-session preferences FIRST (low tiers)
+        try:
+            prefs = fetch_preferences()
+            inject_preferences_into_context(ctx, prefs)
+        except Exception:
+            # Never let preference loading fail session creation
+            pass
         if initial_context:
-            # Callers seed 'user' tier by default
+            # Callers seed 'user' tier; overrides inferred prefs
             for key, val in initial_context.items():
                 ctx["user"][key] = val
         state = {

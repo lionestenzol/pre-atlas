@@ -8,8 +8,9 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from .context import empty_context, missing_keys, resolve, set_tier
+from .context import empty_context, missing_keys, promote_to_confirmed, resolve, set_tier
 from .inference import apply_node_rules
+from .preferences_client import post_close_signal
 from .response_composer import compose
 from . import signals
 
@@ -109,6 +110,12 @@ def _handle_qualify(state, path, node, user_message, emitted):
         ns["status"] = "qualified"
         ns["closed_at"] = _now()
         state["metrics"]["nodes_closed"] += 1
+        # Promote all qualified keys to confirmed - the user supplied them
+        # (directly or via initial_context, which is user-authored) and the
+        # node's contract is satisfied. This is what makes them persistable
+        # as preferences on close.
+        for key in required_keys:
+            promote_to_confirmed(state["context"], key)
         next_id = _transition(state, path, node["id"], "qualified") or _transition(state, path, node["id"], "default")
         if next_id:
             state["current_node"] = next_id
@@ -250,6 +257,14 @@ def _handle_close(state, path, node, emitted):
     except Exception:
         pass
 
+    # Build learned_preferences: confirmed values that are re-usable across runs.
+    # Path-specific keys (those authors mark as non-shareable) should be excluded via
+    # metadata; for now, include everything confirmed except transient per-run inputs.
+    transient_keys = set((path.get("close_state", {}) or {}).get("transient_keys", []))
+    learned_preferences: dict = {
+        k: v for k, v in state["context"]["confirmed"].items() if k not in transient_keys
+    }
+
     close_signal = {
         "schema_version": "1.0",
         "id": f"close_{uuid.uuid4().hex[:12]}",
@@ -279,8 +294,8 @@ def _handle_close(state, path, node, emitted):
         ],
         "unblocked": [],
         "context_residue": {
-            "confirmed": dict(state["context"]["confirmed"]),
-            "learned_preferences": {},
+            "confirmed": {k: v for k, v in state["context"]["confirmed"].items() if k not in transient_keys},
+            "learned_preferences": learned_preferences,
         },
         "interrupt_log": [],
     }
@@ -288,6 +303,13 @@ def _handle_close(state, path, node, emitted):
     # Validate before emit
     from .contract_validator import validate
     validate(close_signal, "CloseSignal")
+
+    # Phase 4: POST to delta-kernel so Atlas can persist preferences.
+    # Fails silently if delta-kernel unreachable (dev mode).
+    try:
+        post_close_signal(close_signal)
+    except Exception:
+        pass
 
     sig = signals.emit(
         source_layer="optogon",

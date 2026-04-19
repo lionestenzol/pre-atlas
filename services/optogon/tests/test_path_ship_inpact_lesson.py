@@ -30,6 +30,7 @@ def test_ship_inpact_lesson_closes(client):
         "initial_context": {
             "lesson_number": 5,
             "content_source": "drafts/lesson_5.md",
+            "ui_theme": "light",
         },
     })
     assert r.status_code == 200, r.text

@@ -15,18 +15,19 @@
   "nodes": {
     "entry": {
       "type": "qualify",
-      "label": "Gather lesson_number and content_source",
+      "label": "Gather lesson_number, content_source, ui_theme",
       "qualification": {
         "required": [
           { "key": "lesson_number", "source": "user", "description": "Which lesson number to ship (1-20)" },
-          { "key": "content_source", "source": "user", "description": "Path to the draft markdown" }
+          { "key": "content_source", "source": "user", "description": "Path to the draft markdown" },
+          { "key": "ui_theme", "source": "user", "description": "Theme for preview render" }
         ],
         "question": {
-          "text": "Which lesson number are you shipping, and where is the draft?",
-          "purpose": ["identify target lesson", "locate draft content"],
+          "text": "Which lesson number are you shipping, where is the draft, and what theme?",
+          "purpose": ["identify target lesson", "locate draft content", "set render theme"],
           "max_asks": 1
         },
-        "max_missing_keys_before_split": 2
+        "max_missing_keys_before_split": 3
       },
       "metadata": { "token_budget": 120, "tags": ["ship_inpact_lesson"] }
     },
@@ -92,7 +93,8 @@
   ],
   "close_state": {
     "description": "Lesson shipped and committed",
-    "deliverables": ["commit_sha", "lesson_url"]
+    "deliverables": ["commit_sha", "lesson_url"],
+    "transient_keys": ["lesson_number", "content_source"]
   },
   "defaults": {
     "pacing": { "max_options_shown": 3, "bundle_confirmations": true },

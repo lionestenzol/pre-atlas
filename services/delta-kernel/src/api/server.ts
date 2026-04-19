@@ -26,6 +26,8 @@ import {
   resolveSignal,
   SignalValidationError,
 } from '../atlas/signals-store.js';
+import { PreferencesStore } from '../atlas/preferences-store.js';
+import { ingestCloseSignal, CloseSignalValidationError } from '../atlas/close-signal.js';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +39,8 @@ const PORT = 3001;
 // Storage
 const dataDir = process.env.DELTA_DATA_DIR || path.join(os.homedir(), '.delta-fabric');
 const storage = new Storage({ dataDir });
+const preferencesStore = new PreferencesStore(dataDir);
+const ATLAS_USER_ID = process.env.ATLAS_USER_ID || 'bruke';
 
 // Repo root (for daemon and cross-service file reads)
 // From compiled dist/api/server.js: go up 4 levels to reach Pre Atlas root
@@ -1836,10 +1840,16 @@ app.post('/api/signals/:id/resolve', (req, res) => {
 app.get('/api/atlas/next-directive', (_req, res) => {
   try {
     const unifiedState = buildUnifiedState();
+    const prefsStore = preferencesStore.read(ATLAS_USER_ID);
+    const userPreferences: Record<string, unknown> = {};
+    for (const p of prefsStore.preferences) {
+      userPreferences[p.key] = p.value;
+    }
     const snapshot = {
       delta_state: (unifiedState.delta?.system_state ?? undefined) as Record<string, unknown> | undefined,
       cognitive_state: (unifiedState.cognitive?.cognitive_state ?? undefined) as Record<string, unknown> | undefined,
       work_ledger: workController.getLedger(),
+      user_preferences: userPreferences,
     };
     const directive = new DirectiveEmitter(repoRoot).emit(snapshot);
     if (!directive) {
@@ -1852,6 +1862,62 @@ app.get('/api/atlas/next-directive', (_req, res) => {
       res.status(500).json({ ok: false, error: error.message, details: error.details });
       return;
     }
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+/**
+ * POST /api/atlas/close-signal - ingest CloseSignal.v1 from Optogon.
+ * Validates, persists learned_preferences + confirmed decisions, returns summary.
+ */
+app.post('/api/atlas/close-signal', (req, res) => {
+  try {
+    const result = ingestCloseSignal(repoRoot, req.body, preferencesStore, ATLAS_USER_ID);
+    res.status(202).json({ ok: true, ...result });
+  } catch (error: unknown) {
+    if (error instanceof CloseSignalValidationError) {
+      res.status(400).json({ ok: false, error: error.message, details: error.details });
+      return;
+    }
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+/**
+ * GET /api/atlas/preferences - read UserPreferenceStore.v1 for the atlas user.
+ * Used by Optogon on session start and Cortex when composing TaskPrompts.
+ */
+app.get('/api/atlas/preferences', (_req, res) => {
+  const store = preferencesStore.read(ATLAS_USER_ID);
+  res.json({ ok: true, store });
+});
+
+/**
+ * POST /api/atlas/preferences - write a single preference directly.
+ * Primarily for InPACT explicit settings; CloseSignal is the primary write path.
+ */
+app.post('/api/atlas/preferences', (req, res) => {
+  const body = (req.body || {}) as {
+    key?: string;
+    value?: unknown;
+    confidence?: number;
+    source?: 'explicit' | 'inferred';
+  };
+  if (!body.key || typeof body.key !== 'string') {
+    res.status(400).json({ ok: false, error: 'key is required' });
+    return;
+  }
+  try {
+    preferencesStore.upsert(ATLAS_USER_ID, {
+      key: body.key,
+      value: body.value,
+      confidence: typeof body.confidence === 'number' ? body.confidence : 0.9,
+      source: body.source === 'explicit' ? 'explicit' : 'inferred',
+    });
+    res.status(202).json({ ok: true });
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({ ok: false, error: message });
   }

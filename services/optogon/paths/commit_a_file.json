@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "id": "commit_a_file",
+  "name": "Commit a file",
+  "version": "1.0",
+  "description": "Reads a file, scans it for em dashes, asks for approval, commits with a user-supplied message. Real side effects.",
+  "entry": {
+    "node_id": "entry",
+    "match_conditions": [
+      { "signal": "intent", "operator": "contains", "value": "commit file" }
+    ],
+    "match_threshold": 0.6,
+    "tie_break": "priority"
+  },
+  "nodes": {
+    "entry": {
+      "type": "qualify",
+      "label": "Gather file_path and commit_message",
+      "qualification": {
+        "required": [
+          { "key": "file_path", "source": "user", "description": "Repo-relative path to the file" },
+          { "key": "commit_message", "source": "user", "description": "Conventional-commit message" }
+        ],
+        "question": {
+          "text": "Which file should I commit, and what is the commit message?",
+          "purpose": ["identify file", "identify message"],
+          "max_asks": 1
+        },
+        "max_missing_keys_before_split": 2
+      },
+      "metadata": { "token_budget": 120, "tags": ["commit_a_file"] }
+    },
+    "read_file": {
+      "type": "execute",
+      "label": "Read file content",
+      "actions": [
+        { "id": "read_content", "type": "retrieval", "trigger": "on_entry", "reversible": true, "risk_tier": "low", "retry_strategy": "none" }
+      ]
+    },
+    "validate_file": {
+      "type": "gate",
+      "label": "Ensure file exists and has content"
+    },
+    "em_dash_scan": {
+      "type": "execute",
+      "label": "Scan for em dashes",
+      "actions": [
+        { "id": "scan_em_dashes", "type": "transform", "trigger": "on_entry", "reversible": true, "risk_tier": "low", "retry_strategy": "none" }
+      ]
+    },
+    "em_dash_gate": {
+      "type": "gate",
+      "label": "Gate: no em dashes allowed in committed content"
+    },
+    "approve": {
+      "type": "approval",
+      "label": "Approve commit",
+      "contract": { "required_outputs": ["decision"], "completion_criteria": "user decision received", "failure_mode": "abort" }
+    },
+    "commit": {
+      "type": "execute",
+      "label": "Git commit the file",
+      "actions": [
+        { "id": "git_commit", "type": "side_effect", "trigger": "on_entry", "reversible": false, "risk_tier": "medium", "retry_strategy": "none", "spec": { "dry_run": false } }
+      ]
+    },
+    "done": {
+      "type": "close",
+      "label": "Emit CloseSignal with commit SHA",
+      "contract": { "required_outputs": ["commit_sha"], "completion_criteria": "commit landed", "failure_mode": "escalate" }
+    }
+  },
+  "edges": [
+    { "from": "entry", "to": "read_file", "condition": "qualified", "priority": 1 },
+    { "from": "read_file", "to": "validate_file", "condition": "success", "priority": 1 },
+    { "from": "validate_file", "to": "em_dash_scan", "condition": "system.get('file_exists') and system.get('file_size_ok')", "priority": 1 },
+    { "from": "validate_file", "to": "done", "condition": "default", "priority": 2 },
+    { "from": "em_dash_scan", "to": "em_dash_gate", "condition": "success", "priority": 1 },
+    { "from": "em_dash_gate", "to": "approve", "condition": "system.get('em_dash_clean')", "priority": 1 },
+    { "from": "em_dash_gate", "to": "done", "condition": "default", "priority": 2 },
+    { "from": "approve", "to": "commit", "condition": "approved", "priority": 1 },
+    { "from": "approve", "to": "done", "condition": "denied", "priority": 2 },
+    { "from": "commit", "to": "done", "condition": "success", "priority": 1 }
+  ],
+  "close_state": {
+    "description": "File committed (or abandoned cleanly)",
+    "deliverables": ["commit_sha"],
+    "transient_keys": ["file_path", "commit_message"]
+  },
+  "defaults": {
+    "pacing": { "max_options_shown": 3, "bundle_confirmations": true },
+    "inference_confidence_floor": 0.7
+  }
+}

@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+from .action_handlers import ActionError, run_action
 from .context import empty_context, missing_keys, promote_to_confirmed, resolve, set_tier
 from .inference import apply_node_rules
 from .preferences_client import post_close_signal
@@ -132,22 +133,70 @@ def _handle_qualify(state, path, node, user_message, emitted):
 def _handle_execute(state, path, node, emitted):
     ns = _ensure_node_state(state, node["id"])
     ns["attempts"] += 1
-    # Actions fire here. In Phase 2 we do NOT invoke real side effects - we
-    # log the intent and mark the node closed. Phase 3 wires real action handlers.
+
+    all_success = True
+    last_error: str | None = None
     for action in node.get("actions") or []:
         action_id = action.get("id") or f"act_{uuid.uuid4().hex[:8]}"
+        status = "success"
+        result: dict = {}
+        try:
+            result = run_action(state, action)
+        except ActionError as e:
+            status = "failed"
+            last_error = str(e)
+            result = {"error": str(e)}
+            all_success = False
+        except Exception as e:  # defensive: bad handler shouldn't kill session
+            status = "failed"
+            last_error = f"{type(e).__name__}: {e}"
+            result = {"error": last_error}
+            all_success = False
+
         state["action_log"].append({
             "action_id": action_id,
             "node_id": node["id"],
             "type": action.get("type", "unknown"),
-            "status": "success",
+            "status": status,
             "executed_at": _now(),
-            "result": {"stub": True},
+            "result": result,
             "reversible": action.get("reversible", True),
             "reversed": False,
         })
         state["metrics"]["total_actions_fired"] += 1
-        ns["action_results"][action_id] = {"stub": True}
+        ns["action_results"][action_id] = result
+
+        # Merge outputs into context.system tier so downstream gates can route on them.
+        # system tier is informational and never overrides user intent.
+        if isinstance(result, dict):
+            for k, v in result.items():
+                if k == "error":
+                    continue
+                set_tier(state["context"], "system", k, v)
+
+        # Respect retry_strategy: for now, we don't auto-retry. 'retry' sets retry_requested.
+        if not all_success and action.get("retry_strategy") == "none":
+            break
+
+    if not all_success:
+        # Emit an error signal; block transition; stay on node.
+        sig = signals.emit(
+            source_layer="optogon",
+            signal_type="error",
+            priority="urgent",
+            label=f"Execute failed at node {node.get('id')}",
+            summary=last_error or "Action failed",
+            data={"node_id": node["id"], "session_id": state["session_id"]},
+            action_required=True,
+            action_options=[
+                {"id": "retry", "label": "Retry", "consequence": "run actions again", "risk_tier": "low"},
+                {"id": "abandon", "label": "Abandon", "consequence": "close path as failed", "risk_tier": "low"},
+            ],
+        )
+        emitted.append(sig)
+        ns["status"] = "blocked"
+        ns["errors"].append(last_error or "action failed")
+        return state, "", emitted
 
     ns["status"] = "closed"
     ns["closed_at"] = _now()

@@ -67,9 +67,9 @@
     },
     "commit": {
       "type": "execute",
-      "label": "Git commit with conventional message",
+      "label": "Git commit with conventional message (stubbed)",
       "actions": [
-        { "id": "git_commit", "type": "side_effect", "trigger": "on_entry", "reversible": false, "risk_tier": "medium", "retry_strategy": "none" }
+        { "id": "ship_lesson_commit_stub", "type": "side_effect", "trigger": "on_entry", "reversible": false, "risk_tier": "medium", "retry_strategy": "none" }
       ]
     },
     "done": {

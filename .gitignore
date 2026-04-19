@@ -51,6 +51,7 @@ dist-ssr/
 services/cognitive-sensor/results.db
 services/cognitive-sensor/memory_db.json
 services/cognitive-sensor/conversations.json
+services/optogon/data/
 *.db-journal
 
 # === Generated state (recreated on run) ===
@@ -107,3 +108,20 @@ coverage/
 # These phantom files cause issues with git/zip/cross-platform tools
 # Ignore 'nul' files anywhere in the repo (Windows reserved name)
 **/nul
+
+# === Testing artifacts ===
+*.png
+
+# === Archives at root ===
+/*.zip
+/*.docx
+
+# === Tool artifacts ===
+**/.weapon/
+.playwright-mcp/
+.claude/plan.md
+.claude/scheduled_tasks.lock
+.mcp.json
+**/output/
+**/genesis_output/
+backups/

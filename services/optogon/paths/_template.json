@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "id": "_template",
+  "name": "Template Path",
+  "version": "1.0",
+  "description": "Minimal valid OptogonPath used as a starting point for new paths.",
+  "entry": {
+    "node_id": "entry",
+    "match_conditions": [],
+    "match_threshold": 0.6,
+    "tie_break": "priority"
+  },
+  "nodes": {
+    "entry": { "type": "qualify", "label": "Gather inputs" },
+    "done":  { "type": "close",   "label": "Close session" }
+  },
+  "edges": [
+    { "from": "entry", "to": "done", "condition": "qualified", "priority": 1 }
+  ],
+  "close_state": {
+    "description": "Template close",
+    "deliverables": ["confirmation"]
+  }
+}

@@ -69,10 +69,23 @@
       "port": 8891
     },
     {
-      "name": "inpact",
+      "name": "inpact-site-legacy",
       "runtimeExecutable": "node",
       "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "C:/Users/bruke/OneDrive/Desktop/inPACT-site", "-p", "8892", "-c-1", "--cors"],
       "port": 8892
+    },
+    {
+      "name": "inpact",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "apps/inpact", "-p", "3006", "-c-1", "--cors"],
+      "port": 3006
+    },
+    {
+      "name": "optogon",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "optogon.main:app", "--host", "0.0.0.0", "--port", "3010"],
+      "port": 3010,
+      "cwd": "services/optogon"
     }
   ]
 }

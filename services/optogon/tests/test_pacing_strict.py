@@ -116,6 +116,64 @@ def test_compose_returns_violations_list():
     assert tokens >= 0
 
 
+def test_user_contradiction_of_inferred_value_is_counted():
+    """Audit Fix 3a followup (Codex review): total_inferences_contradicted
+    must increment when the user provides a value that overrides an inferred
+    value. The previous logic only wrote the user tier for keys in
+    missing_before, so inferred values were never surfaced for contradiction.
+    """
+    from optogon.node_processor import process_turn
+
+    path = {
+        "schema_version": "1.0",
+        "id": "p",
+        "nodes": {
+            "entry": {
+                "id": "entry",
+                "type": "qualify",
+                "qualification": {
+                    "required": [{"key": "theme", "description": "light or dark"}],
+                    "question": {"text": "Which theme?"},
+                },
+            },
+        },
+        "edges": [],
+    }
+    # Seed an inferred theme so the user's reply is a direct contradiction.
+    state = {
+        "schema_version": "1.0",
+        "session_id": "sess_contradict",
+        "path_id": "p",
+        "current_node": "entry",
+        "started_at": "2026-04-20T00:00:00Z",
+        "node_states": {},
+        "context": {
+            "confirmed": {},
+            "user": {},
+            "inferred": {"theme": "light"},
+            "system": {},
+        },
+        "fork_stack": [],
+        "action_log": [],
+        "metrics": {
+            "total_tokens": 0,
+            "total_questions_asked": 0,
+            "total_inferences_made": 0,
+            "total_inferences_contradicted": 0,
+            "total_actions_fired": 0,
+            "pacing_violations": 0,
+            "nodes_closed": 0,
+            "nodes_total": 1,
+        },
+    }
+    state, _text, _sigs = process_turn(state, path, "dark")
+    assert state["metrics"]["total_inferences_contradicted"] == 1
+    # After qualification, theme is promoted from user -> confirmed and lower
+    # tiers are cleared. Final truth lives in confirmed with the user's value.
+    assert state["context"]["confirmed"].get("theme") == "dark"
+    assert state["context"]["inferred"].get("theme") is None
+
+
 def test_process_turn_increments_pacing_violations_metric():
     """End-to-end: a qualify node whose drafted question leaks a node_id
     should drive the pacing_violations counter up when process_turn runs."""

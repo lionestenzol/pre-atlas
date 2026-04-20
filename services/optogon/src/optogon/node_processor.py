@@ -104,13 +104,19 @@ def _handle_qualify(state, path, node, user_message, emitted):
         if not parsed and len(missing_before) == 1:
             parsed = {next(iter(missing_before)): user_message.strip()}
         for k, v in parsed.items():
-            if k not in missing_before:
+            # Process every required key the parser extracted, not just the
+            # ones that were missing. A key covered only by inferred/system is
+            # still fair game for a user override — and that's where
+            # contradiction tracking earns its keep.
+            if k not in required_keys:
                 continue
             prior_val, prior_tier = resolve(k, state["context"])
             if prior_tier == "inferred" and prior_val != v:
                 state["metrics"].setdefault("total_inferences_contradicted", 0)
                 state["metrics"]["total_inferences_contradicted"] += 1
-            set_tier(state["context"], "user", k, v)
+            # User tier overrides inferred/system/unknown, but never confirmed.
+            if prior_tier != "confirmed":
+                set_tier(state["context"], "user", k, v)
 
     # Run inference rules
     applied = apply_node_rules(node.get("inference_rules") or [], state["context"])

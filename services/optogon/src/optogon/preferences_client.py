@@ -92,7 +92,10 @@ def post_close_signal(close_signal: dict[str, Any]) -> bool:
         log.warning("close-signal POST returned %s: %s", r.status_code, r.text[:200])
         return False
     except Exception as e:
-        log.debug("close-signal POST failed: %s", e)
+        # Rosetta Contract 2 rule 1: close signal must emit on every terminal
+        # state. If delta-kernel is unreachable, raise the visibility — this is
+        # not a "silent swallow" case.
+        log.warning("close-signal POST failed: %s", e)
         return False
 
 

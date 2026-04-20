@@ -45,7 +45,7 @@ class SessionStore:
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
-    def create(self, path_id: str, initial_context: Optional[dict[str, Any]] = None, entry_node_id: str = "entry") -> dict[str, Any]:
+    def create(self, path_id: str, initial_context: Optional[dict[str, Any]] = None, entry_node_id: str = "entry", nodes_total: int = 0) -> dict[str, Any]:
         session_id = f"sess_{uuid.uuid4().hex[:12]}"
         ctx = empty_context()
         # Load cross-session preferences FIRST (low tiers)
@@ -73,9 +73,11 @@ class SessionStore:
                 "total_tokens": 0,
                 "total_questions_asked": 0,
                 "total_inferences_made": 0,
+                "total_inferences_contradicted": 0,
                 "total_actions_fired": 0,
+                "pacing_violations": 0,
                 "nodes_closed": 0,
-                "nodes_total": 0,
+                "nodes_total": nodes_total,
             },
         }
         validate(state, "OptogonSessionState")

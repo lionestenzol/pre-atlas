@@ -113,6 +113,40 @@ def test_missing_file_short_circuits(client, tmp_git_repo):
     assert "test: nope" not in log_out
 
 
+def test_multi_key_qualify_answers_in_one_message(client, tmp_git_repo):
+    """Audit Fix 2: user answers both file_path + commit_message in a single
+    comma-separated reply and qualify closes in one turn (no second prompt)."""
+    (tmp_git_repo / "multikey.md").write_text("Fresh clean content.\n", encoding="utf-8")
+
+    # Start with NO initial_context so the qualify node has 2 missing keys.
+    r = client.post("/session/start", json={"path_id": "commit_a_file"})
+    assert r.status_code == 200
+    body = r.json()
+    s_id = body["session_id"]
+
+    # First response should be a prompt asking for both keys.
+    state = body["state"]
+    assert state["current_node"] == "entry"
+    assert body["response"]  # composer asked a question
+
+    # Answer both keys in one message (spec 14 llm_parse path).
+    r = client.post(f"/session/{s_id}/turn", json={
+        "message": "multikey.md, test: multi-key answer",
+    })
+    assert r.status_code == 200
+    state = r.json()["state"]
+    # entry should now be qualified and the path advanced off it.
+    assert state["node_states"]["entry"]["status"] in ("qualified", "closed")
+    assert state["current_node"] != "entry"
+
+    final = _drive_to_close(client, s_id)
+    log_out = subprocess.run(
+        ["git", "log", "--oneline", "-5"],
+        cwd=str(tmp_git_repo), capture_output=True, text=True, check=True,
+    ).stdout
+    assert "test: multi-key answer" in log_out
+
+
 def test_denied_approval_skips_commit(client, tmp_git_repo):
     """User denies at approve node: routes to done without commit."""
     (tmp_git_repo / "doc2.md").write_text("Clean content here.\n", encoding="utf-8")

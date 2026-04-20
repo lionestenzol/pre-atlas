@@ -112,7 +112,12 @@ def session_start(req: StartRequest) -> dict[str, Any]:
     path = _load_path(req.path_id)
     entry_node_id = (path.get("entry") or {}).get("node_id") or "entry"
     store = get_store()
-    state = store.create(req.path_id, req.initial_context, entry_node_id=entry_node_id)
+    state = store.create(
+        req.path_id,
+        req.initial_context,
+        entry_node_id=entry_node_id,
+        nodes_total=len(path.get("nodes") or {}),
+    )
 
     # Kick off: process an initial turn with no message so execute/gate/qualify-with-inference can advance
     state, text, emitted = process_turn(state, path, None)

@@ -76,7 +76,9 @@
     "total_tokens": 410,
     "total_questions_asked": 1,
     "total_inferences_made": 2,
+    "total_inferences_contradicted": 0,
     "total_actions_fired": 2,
+    "pacing_violations": 0,
     "nodes_closed": 3,
     "nodes_total": 9
   }

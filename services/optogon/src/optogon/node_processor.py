@@ -12,7 +12,7 @@ from .action_handlers import ActionError, run_action
 from .context import empty_context, missing_keys, promote_to_confirmed, resolve, set_tier
 from .inference import apply_node_rules
 from .preferences_client import post_close_signal
-from .response_composer import compose
+from .response_composer import compose, llm_parse
 from . import signals
 
 
@@ -91,13 +91,26 @@ def _handle_qualify(state, path, node, user_message, emitted):
     ns = _ensure_node_state(state, node["id"])
     ns["attempts"] += 1
 
-    # Seed user tier from the message if provided
+    # Seed user tier from the message if provided.
+    # Spec 14: call llm_parse(message, required) to extract structured values.
+    # Tracks inference contradictions when a user value overrides an inferred value.
     if user_message:
-        # If there's exactly one missing key, attribute the message to it
-        required_keys = [r.get("key") for r in (node.get("qualification") or {}).get("required") or []]
-        missing = missing_keys(required_keys, state["context"])
-        if len(missing) == 1:
-            set_tier(state["context"], "user", missing[0], user_message.strip())
+        required_specs = (node.get("qualification") or {}).get("required") or []
+        required_keys = [r.get("key") for r in required_specs]
+        missing_before = set(missing_keys(required_keys, state["context"]))
+        parsed = llm_parse(user_message, required_specs)
+        # Fallback: if parser extracted nothing and exactly one key is missing,
+        # attribute the whole message to it (preserves Phase 2 single-key behavior).
+        if not parsed and len(missing_before) == 1:
+            parsed = {next(iter(missing_before)): user_message.strip()}
+        for k, v in parsed.items():
+            if k not in missing_before:
+                continue
+            prior_val, prior_tier = resolve(k, state["context"])
+            if prior_tier == "inferred" and prior_val != v:
+                state["metrics"].setdefault("total_inferences_contradicted", 0)
+                state["metrics"]["total_inferences_contradicted"] += 1
+            set_tier(state["context"], "user", k, v)
 
     # Run inference rules
     applied = apply_node_rules(node.get("inference_rules") or [], state["context"])
@@ -124,9 +137,12 @@ def _handle_qualify(state, path, node, user_message, emitted):
         return state, "", emitted
 
     # Still missing keys - compose a question
-    text, tokens = compose(node, state)
+    text, tokens, violations = compose(node, state, path)
     state["metrics"]["total_tokens"] += tokens
     state["metrics"]["total_questions_asked"] += 1 if "?" in text else 0
+    if violations:
+        state["metrics"].setdefault("pacing_violations", 0)
+        state["metrics"]["pacing_violations"] += len(violations)
     return state, text, emitted
 
 
@@ -282,8 +298,11 @@ def _handle_approval(state, path, node, user_message, emitted):
         ],
     )
     emitted.append(sig)
-    text, tokens = compose(node, state)
+    text, tokens, violations = compose(node, state, path)
     state["metrics"]["total_tokens"] += tokens
+    if violations:
+        state["metrics"].setdefault("pacing_violations", 0)
+        state["metrics"]["pacing_violations"] += len(violations)
     return state, text, emitted
 
 
@@ -293,12 +312,15 @@ def _handle_close(state, path, node, emitted):
     ns["status"] = "closed"
     ns["closed_at"] = _now()
     state["metrics"]["nodes_closed"] += 1
-    state["metrics"]["nodes_total"] = len(path.get("nodes", {}))
+    # nodes_total is set at session_store.create() — don't overwrite here.
 
     # Build CloseSignal
     total_q = state["metrics"]["total_questions_asked"]
     total_inf = state["metrics"]["total_inferences_made"]
-    accuracy = 1.0  # Phase 2 placeholder; Phase 4 measures actual
+    contradicted = state["metrics"].get("total_inferences_contradicted", 0)
+    accuracy = (
+        (total_inf - contradicted) / max(1, total_inf) if total_inf else 1.0
+    )
     time_to_close = 0.0
     try:
         started = datetime.fromisoformat(state.get("started_at", _now()).replace("Z", "+00:00"))
@@ -354,11 +376,9 @@ def _handle_close(state, path, node, emitted):
     validate(close_signal, "CloseSignal")
 
     # Phase 4: POST to delta-kernel so Atlas can persist preferences.
-    # Fails silently if delta-kernel unreachable (dev mode).
-    try:
-        post_close_signal(close_signal)
-    except Exception:
-        pass
+    # post_close_signal handles its own network errors with log.warning; we let
+    # the client's logging be the source of truth per Rosetta Contract 2 rule 1.
+    post_close_signal(close_signal)
 
     sig = signals.emit(
         source_layer="optogon",

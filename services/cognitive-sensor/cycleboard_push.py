@@ -104,16 +104,33 @@ def _http(
 # ---------------------------------------------------------------------------
 # CycleBoard endpoints (derived from services/delta-kernel/src/cli/atlas.ts)
 # ---------------------------------------------------------------------------
+def _unwrap_cycleboard_state(obj: Any) -> dict[str, Any]:
+    """Peel off any historical `{data: ...}` single-key wrappers.
+
+    The delta-kernel server wraps state once (`entity.state.data = newState`)
+    but prior callers have accidentally double-wrapped by re-sending their
+    whole response as the body. This recurses until the inner object has real
+    keys like `Journal`, `DayPlans`, etc. — or until the wrap stops being
+    single-key.
+    """
+    while isinstance(obj, dict) and set(obj.keys()) == {"data"}:
+        obj = obj["data"]
+    return obj if isinstance(obj, dict) else {}
+
+
 def get_cycleboard_state(api_key: Optional[str]) -> Optional[dict[str, Any]]:
+    """Fetch and fully unwrap CycleBoard state. Returns None on HTTP failure."""
     resp = _http("GET", "/api/cycleboard", api_key=api_key)
     if resp is None:
         return None
-    return resp.get("data") or {}
+    return _unwrap_cycleboard_state(resp.get("data"))
 
 
 def put_cycleboard_state(
     merged: dict[str, Any], api_key: Optional[str]
 ) -> bool:
+    """PUT the flat state. The server will wrap it once in entity.state.data
+    — callers must pass a flat dict, NOT a `{data: ...}` wrapped dict."""
     resp = _http("PUT", "/api/cycleboard", body=merged, api_key=api_key)
     return resp is not None
 

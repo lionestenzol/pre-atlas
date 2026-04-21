@@ -134,6 +134,40 @@ def test_loop_title_returns_untitled_when_missing():
 
 
 # ---------------------------------------------------------------------------
+# Cycleboard state unwrap (defense against double-wrapped history)
+# ---------------------------------------------------------------------------
+def test_unwrap_passes_flat_state_through():
+    flat = {"Journal": [], "DayPlans": {}, "MomentumWins": []}
+    assert cbp._unwrap_cycleboard_state(flat) == flat
+
+
+def test_unwrap_peels_single_data_wrapper():
+    wrapped = {"data": {"Journal": [{"id": "x"}]}}
+    out = cbp._unwrap_cycleboard_state(wrapped)
+    assert out == {"Journal": [{"id": "x"}]}
+
+
+def test_unwrap_peels_multiple_data_wrappers():
+    wrapped = {"data": {"data": {"data": {"Journal": [{"id": "x"}]}}}}
+    out = cbp._unwrap_cycleboard_state(wrapped)
+    assert out == {"Journal": [{"id": "x"}]}
+
+
+def test_unwrap_stops_when_siblings_present():
+    # Mixed: {data: ..., Journal: ...} — has siblings so NOT a single-key wrap
+    mixed = {"data": {"DayPlans": {}}, "Journal": [{"id": "x"}]}
+    out = cbp._unwrap_cycleboard_state(mixed)
+    assert "Journal" in out
+    assert "data" in out
+
+
+def test_unwrap_handles_none_and_non_dict():
+    assert cbp._unwrap_cycleboard_state(None) == {}
+    assert cbp._unwrap_cycleboard_state("nope") == {}
+    assert cbp._unwrap_cycleboard_state([]) == {}
+
+
+# ---------------------------------------------------------------------------
 # Archive append
 # ---------------------------------------------------------------------------
 def test_archive_log_appends_jsonl(sandbox):

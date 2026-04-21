@@ -487,9 +487,24 @@ async function runDashboard() {
 
 // ── CycleBoard state helpers ──
 
+// Peel off historical `{data: ...}` single-key wrappers.
+// Server wraps state once (entity.state.data = newState) but older callers
+// accidentally double-wrapped by re-sending their whole response as body.
+function unwrapCycleboardState(obj: any): any {
+  while (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+    const keys = Object.keys(obj);
+    if (keys.length === 1 && keys[0] === 'data') {
+      obj = obj.data;
+    } else {
+      break;
+    }
+  }
+  return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : {};
+}
+
 async function getCycleboardState(): Promise<any> {
   const data = await apiFetch('/api/cycleboard');
-  return data?.data || {};
+  return unwrapCycleboardState(data?.data);
 }
 
 async function updateCycleboardState(updates: Record<string, any>): Promise<void> {

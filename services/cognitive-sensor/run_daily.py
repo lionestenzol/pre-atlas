@@ -195,6 +195,13 @@ def main():
     print("\n>> Phase 4: Auto Actor (autonomous execution)")
     run("auto_actor.py", "Auto actor — close loops, execute directives, park violations", critical=False)
 
+    # ── CycleBoard visibility: translate auto_actor output into dashboard entries ──
+    # Auto-executed directives -> Journal. Needs-approval directives -> [REVIEW] task
+    # + proposals.json. Auto-closed loops -> Momentum win. Non-critical: bridge
+    # fails gracefully if delta-kernel isn't running.
+    print("\n>> Phase 4.5: CycleBoard push (auto_actor -> dashboard)")
+    run("cycleboard_push.py", "CycleBoard push — surface auto_actor decisions on the dashboard", critical=False)
+
     # ── AI-FOR-SYSTEM: Integration ──
     print("\n>> Phase 5: System Integration (non-critical)")
     run_stall_check()

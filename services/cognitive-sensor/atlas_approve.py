@@ -5,11 +5,19 @@ Proposals are written by cycleboard_push.py when auto_actor flags a directive
 as `needs_approval`. They land in proposals.json. This CLI lets the user:
 
     python atlas_approve.py list               # show pending proposals
-    python atlas_approve.py approve <id>       # approve + fire runner async
+    python atlas_approve.py approve <id>       # approve + fire subprocess runner
+    python atlas_approve.py approve <id> --no-fire  # approve only; run later
     python atlas_approve.py deny <id> [why]    # deny + journal it
 
-On approve, the runner is spawned as a background subprocess so the user's
-terminal returns immediately.
+Two ways to run an approved proposal:
+  1. Subprocess runner (default when `approve` fires): spawns proposal_runner.py
+     which calls `claude -p` headless. Fully detached. Reloads the Claude Code
+     system prompt (~30k cached tokens) every invocation.
+  2. In-session slash command: run `/run-proposal <id>` inside an active Claude
+     Code session. Cheaper (no system-prompt reload). See
+     .claude/commands/run-proposal.md.
+
+Both paths write to the same `auto/<id>` branch scheme and update proposals.json.
 """
 from __future__ import annotations
 
@@ -121,10 +129,13 @@ def cmd_approve(proposal_id: str, fire: bool = True) -> int:
     save_proposals(proposals)
     if fire:
         _spawn_runner(proposal_id)
-        print(f"Approved {proposal_id}. Runner started in background.")
+        print(f"Approved {proposal_id}. Subprocess runner started in background.")
         print(f"Watch progress: atlas journal   (or check CycleBoard)")
     else:
-        print(f"Approved {proposal_id}. Runner NOT fired (--no-fire).")
+        print(f"Approved {proposal_id}. No runner fired.")
+        print(f"Run later via one of:")
+        print(f"  python proposal_runner.py {proposal_id}    # subprocess (headless)")
+        print(f"  /run-proposal {proposal_id}                # slash command (in-session)")
     return 0
 
 

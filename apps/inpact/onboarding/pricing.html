@@ -1,60 +1,163 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>in-PACT – Proven Framework. Reimagined.</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-  </style>
+  <title>inPACT Pricing</title>
+  <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="../css/theme-mono.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="bg-white text-gray-900">
-
-  <!-- Hero Section -->
-  <!-- ...existing hero, modal, how it works, testimonials, and email capture sections... -->
-
-  <!-- Pricing Section -->
-  <section id="pricing" class="py-24 px-6 bg-gray-100 text-center">
-    <div class="max-w-5xl mx-auto">
-      <h2 class="text-3xl font-bold mb-12">Simple, transparent pricing</h2>
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="bg-white rounded-xl shadow p-8">
-          <h3 class="text-xl font-semibold mb-4">Starter</h3>
-          <p class="text-4xl font-bold mb-4">Free</p>
-          <ul class="text-gray-600 mb-6 space-y-2">
-            <li>✓ Core in-PACT assessment</li>
-            <li>✓ Weekly check-ins</li>
-            <li>✓ AI insights (limited)</li>
-          </ul>
-          <button class="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition">Get Started</button>
+<body class="bg-gray-900 text-white font-sans antialiased">
+  <main class="min-h-screen">
+    <section class="px-5 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <div class="mx-auto max-w-6xl">
+        <div class="max-w-3xl">
+          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">inPACT Pricing</p>
+          <h1 class="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+            Start with the lessons. Build the execution system when you are ready.
+          </h1>
+          <p class="mt-6 text-lg leading-8 text-gray-300">
+            The locked inPACT model separates learning, daily execution, and public accountability into three clear tiers.
+          </p>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-8 border-2 border-black">
-          <h3 class="text-xl font-semibold mb-4">Pro</h3>
-          <p class="text-4xl font-bold mb-4">$29/mo</p>
-          <ul class="text-gray-600 mb-6 space-y-2">
-            <li>✓ Full access to all in-PACT dimensions</li>
-            <li>✓ Unlimited AI coaching feedback</li>
-            <li>✓ Habit & goal tracking dashboard</li>
-            <li>✓ Weekly + monthly insight reports</li>
-          </ul>
-          <button class="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition">Upgrade Now</button>
+
+        <div class="mt-12 grid gap-6 lg:grid-cols-3">
+          <article class="flex h-full flex-col rounded-lg border border-gray-700 bg-gray-800/70 p-6 shadow-xl shadow-black/20">
+            <div class="flex-1">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <h2 class="text-2xl font-bold">Free Lessons</h2>
+                  <p class="mt-2 text-sm leading-6 text-gray-400">Learn the full inPACT curriculum before committing to the execution layer.</p>
+                </div>
+              </div>
+
+              <div class="mt-8">
+                <span class="text-4xl font-extrabold">Free</span>
+              </div>
+
+              <ul class="mt-8 space-y-4 text-sm leading-6 text-gray-300">
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>Access to all 20 curriculum lessons.</span>
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>Bullet journal app with 5 A-Z letters.</span>
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>Weekly reflection only.</span>
+                </li>
+              </ul>
+            </div>
+
+            <button type="button" class="mt-8 w-full rounded-lg border border-gray-600 px-5 py-3 text-sm font-semibold text-white transition hover:border-emerald-400 hover:text-emerald-300">
+              Coming soon
+            </button>
+          </article>
+
+          <article class="flex h-full flex-col rounded-lg border border-emerald-400 bg-gray-800 p-6 shadow-2xl shadow-emerald-950/40">
+            <div class="flex-1">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="mb-3 inline-flex rounded-md bg-emerald-400 px-3 py-1 text-xs font-bold uppercase tracking-wide text-gray-950">Core plan</p>
+                  <h2 class="text-2xl font-bold">Paid Execution</h2>
+                  <p class="mt-2 text-sm leading-6 text-gray-400">Unlock the complete self-sustaining bullet journal system.</p>
+                </div>
+              </div>
+
+              <div class="mt-8">
+                <span class="text-4xl font-extrabold">TBD</span>
+                <span class="ml-2 text-gray-400">per month</span>
+              </div>
+
+              <ul class="mt-8 space-y-4 text-sm leading-6 text-gray-300">
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>Everything in Free Lessons.</span>
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>Full A-Z access with all 26 letters.</span>
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>All day types: A, B, and C.</span>
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>All reflection periods: weekly, monthly, quarterly, and yearly.</span>
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>Routines, journal, and momentum wins.</span>
+                </li>
+              </ul>
+            </div>
+
+            <button type="button" class="mt-8 w-full rounded-lg bg-emerald-400 px-5 py-3 text-sm font-bold text-gray-950 transition hover:bg-emerald-300">
+              Get notified
+            </button>
+          </article>
+
+          <article class="flex h-full flex-col rounded-lg border border-gray-700 bg-gray-800/70 p-6 shadow-xl shadow-black/20">
+            <div class="flex-1">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <h2 class="text-2xl font-bold">Premium: Public Integrity</h2>
+                  <p class="mt-2 text-sm leading-6 text-gray-400">Add chosen accountability to the complete execution system.</p>
+                </div>
+              </div>
+
+              <div class="mt-8">
+                <span class="text-4xl font-extrabold">TBD</span>
+                <span class="ml-2 text-gray-400">per month</span>
+              </div>
+
+              <ul class="mt-8 space-y-4 text-sm leading-6 text-gray-300">
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>Everything in Paid Execution.</span>
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>Public Integrity Toggle.</span>
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>
+                  <span>Share your execution with chosen people for accountability.</span>
+                </li>
+              </ul>
+            </div>
+
+            <button type="button" class="mt-8 w-full rounded-lg border border-gray-600 px-5 py-3 text-sm font-semibold text-white transition hover:border-emerald-400 hover:text-emerald-300">
+              Get notified
+            </button>
+          </article>
         </div>
-        <div class="bg-white rounded-xl shadow p-8">
-          <h3 class="text-xl font-semibold mb-4">Teams</h3>
-          <p class="text-4xl font-bold mb-4">Custom</p>
-          <ul class="text-gray-600 mb-6 space-y-2">
-            <li>✓ Everything in Pro</li>
-            <li>✓ Admin dashboard & analytics</li>
-            <li>✓ Team assessments & rollups</li>
-            <li>✓ Dedicated support</li>
-          </ul>
-          <button class="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition">Contact Sales</button>
+
+        <div class="mt-10 rounded-lg border border-gray-700 bg-gray-800/50 p-6">
+          <p class="text-sm leading-6 text-gray-300">
+            No payment collection is active on this page. Pricing for paid tiers will be announced before launch.
+          </p>
         </div>
       </div>
-    </div>
-  </section>
-
+    </section>
+  </main>
 </body>
 </html>

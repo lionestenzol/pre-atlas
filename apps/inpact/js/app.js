@@ -16,10 +16,13 @@ Object.defineProperty(window, 'state', {
 
 // Initialize the app when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-  // Apply dark mode from settings
+  // Apply theme from settings
   if (state.Settings.darkMode) {
     document.documentElement.classList.add('dark');
     document.body.classList.add('bg-gray-900', 'text-white');
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.body.classList.remove('bg-gray-900', 'text-white');
   }
 
   // Initialize main app

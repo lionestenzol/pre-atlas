@@ -1869,7 +1869,20 @@ function deleteActivity(activityId) {
 
 
 
-function init() {
+async function init() {
+  // --- Atlas API bootstrap ---
+  try {
+    await AtlasAPI.init();
+    if (AtlasAPI.online) {
+      const synced = await stateManager.syncFromApi();
+      if (synced) {
+        // API had newer data, will re-render after setup
+      }
+    }
+  } catch (e) {
+    console.warn('[Atlas] bootstrap failed:', e.message);
+  }
+
   const menuToggle = document.getElementById('mobile-menu-toggle');
   if (menuToggle) {
     menuToggle.addEventListener('click', () => {
@@ -2474,6 +2487,444 @@ function showNewEventModal(dateStr) {
   UI.showModal(content);
 }
 
+// =========================================================================
+// WEEKLY PLAN FUNCTIONS
+// =========================================================================
+
+function getWeekMonday(dateStr) {
+  const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().slice(0, 10);
+}
+
+function getWeekSunday(mondayStr) {
+  const d = new Date(mondayStr + 'T00:00:00');
+  d.setDate(d.getDate() + 6);
+  return d.toISOString().slice(0, 10);
+}
+
+function getWeeklyRollup() {
+  const monday = getWeekMonday();
+  const sunday = getWeekSunday(monday);
+  const daily = state.Today?.daily || {};
+
+  const azCounts = {};  // taskId -> number of days linked
+  const areaCounts = {}; // areaId -> number of linked priorities
+
+  Object.entries(daily).forEach(function (entry) {
+    var date = entry[0];
+    var day = entry[1];
+    if (date < monday || date > sunday) return;
+
+    for (var i = 1; i <= 3; i++) {
+      var azId = day['p' + i + 'az'];
+      var areaId = day['p' + i + 'area'];
+      if (azId) {
+        if (!azCounts[azId]) azCounts[azId] = new Set();
+        azCounts[azId].add(date);
+      }
+      if (areaId) {
+        areaCounts[areaId] = (areaCounts[areaId] || 0) + 1;
+      }
+    }
+  });
+
+  // Convert Sets to counts
+  var azDays = {};
+  Object.keys(azCounts).forEach(function (id) {
+    azDays[id] = azCounts[id].size;
+  });
+
+  return { azDays: azDays, areaCounts: areaCounts, weekOf: monday };
+}
+
+function saveWeeklyPlan() {
+  var monday = getWeekMonday();
+  var primaryEl = document.getElementById('wp-primary');
+  var countsIfEl = document.getElementById('wp-counts-if');
+
+  state.WeeklyPlan.weekOf = monday;
+  state.WeeklyPlan.primaryLetter = primaryEl ? primaryEl.value : '';
+  state.WeeklyPlan.weekCountsIf = countsIfEl ? countsIfEl.value : '';
+  state.WeeklyPlan.closed = false;
+
+  // Save PIGPEN focus notes
+  if (!state.WeeklyPlan.pigpenFocus) state.WeeklyPlan.pigpenFocus = {};
+  (state.FocusArea || []).forEach(function (area) {
+    var el = document.getElementById('wp-pigpen-' + area.id);
+    if (el) state.WeeklyPlan.pigpenFocus[area.name] = el.value;
+  });
+
+  stateManager.update({ WeeklyPlan: state.WeeklyPlan });
+  UI.showToast('Saved', 'Weekly plan updated', 'success');
+  render();
+}
+
+// Weekly close state (tracks which step of the close flow we're on)
+var _closeStep = 1;
+
+function closeWeek() {
+  _closeStep = 1;
+  _renderCloseStep();
+}
+
+function _renderCloseStep() {
+  var rollup = getWeeklyRollup();
+  var wp = state.WeeklyPlan || {};
+  var primaryId = wp.primaryLetter;
+  var primaryTask = primaryId ? state.AZTask.find(function(t) { return t.id === primaryId; }) : null;
+  var movedTasks = state.AZTask.filter(function(t) { return rollup.azDays[t.id] && t.status !== 'Completed'; });
+
+  var content = '<div style="padding:1.5rem;max-width:32rem;">';
+
+  // Step indicator
+  content += '<div style="display:flex;gap:0.375rem;margin-bottom:1.25rem;">';
+  for (var s = 1; s <= 4; s++) {
+    content += '<div style="flex:1;height:3px;border-radius:2px;background:' + (s <= _closeStep ? 'var(--ip-black)' : 'var(--ip-gray-200)') + ';"></div>';
+  }
+  content += '</div>';
+
+  if (_closeStep === 1) {
+    // Step 1 — Review
+    var daysPlanned = Object.keys(state.DayPlans).filter(function(d) {
+      return d >= rollup.weekOf && d <= getWeekSunday(rollup.weekOf);
+    }).length;
+    var baselineMet = Object.keys(state.DayPlans).filter(function(d) {
+      if (d < rollup.weekOf || d > getWeekSunday(rollup.weekOf)) return false;
+      return state.DayPlans[d].baseline_goal && state.DayPlans[d].baseline_goal.completed;
+    }).length;
+
+    content += '<h2 style="font-size:1.25rem;font-weight:800;margin-bottom:0.25rem;">Week in Review</h2>';
+    content += '<div class="td-help" style="margin-bottom:1.25rem;">How the week played out.</div>';
+
+    content += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.25rem;">';
+    content += '<div style="padding:0.75rem;background:var(--ip-gray-50);border-radius:0.5rem;"><div style="font-size:1.25rem;font-weight:800;">' + daysPlanned + '</div><div style="font-size:0.6875rem;color:var(--ip-gray-600);text-transform:uppercase;letter-spacing:0.06em;">Days Planned</div></div>';
+    content += '<div style="padding:0.75rem;background:var(--ip-gray-50);border-radius:0.5rem;"><div style="font-size:1.25rem;font-weight:800;">' + baselineMet + '</div><div style="font-size:0.6875rem;color:var(--ip-gray-600);text-transform:uppercase;letter-spacing:0.06em;">Baseline Met</div></div>';
+    content += '<div style="padding:0.75rem;background:var(--ip-gray-50);border-radius:0.5rem;"><div style="font-size:1.25rem;font-weight:800;">' + movedTasks.length + '</div><div style="font-size:0.6875rem;color:var(--ip-gray-600);text-transform:uppercase;letter-spacing:0.06em;">Tasks Moved</div></div>';
+    content += '<div style="padding:0.75rem;background:var(--ip-gray-50);border-radius:0.5rem;"><div style="font-size:1.25rem;font-weight:800;">' + Object.keys(rollup.areaCounts).length + '</div><div style="font-size:0.6875rem;color:var(--ip-gray-600);text-transform:uppercase;letter-spacing:0.06em;">Areas Touched</div></div>';
+    content += '</div>';
+
+    if (primaryTask) {
+      var days = rollup.azDays[primaryId] || 0;
+      content += '<div style="padding:0.75rem;background:var(--ip-gray-50);border-radius:0.5rem;margin-bottom:1rem;">';
+      content += '<div style="font-size:0.6875rem;color:var(--ip-gray-600);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem;">Primary Letter</div>';
+      content += '<div style="font-weight:700;">' + primaryTask.letter + ': ' + UI.sanitize(primaryTask.task) + '</div>';
+      content += '<div style="font-size:0.8125rem;color:var(--ip-gray-600);">Worked ' + days + ' day' + (days !== 1 ? 's' : '') + '</div>';
+      content += '</div>';
+    }
+
+    if (wp.weekCountsIf) {
+      content += '<div class="td-help" style="margin-bottom:0.5rem;">Week counted if: <strong>' + UI.sanitize(wp.weekCountsIf) + '</strong></div>';
+    }
+
+  } else if (_closeStep === 2) {
+    // Step 2 — Complete + Rate
+    content += '<h2 style="font-size:1.25rem;font-weight:800;margin-bottom:0.25rem;">Mark Complete</h2>';
+    content += '<div class="td-help" style="margin-bottom:1rem;">Check off anything you finished. The rest carries forward.</div>';
+
+    if (primaryTask) {
+      content += '<label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;cursor:pointer;font-weight:600;">' +
+        '<input type="checkbox" id="close-complete-primary" style="accent-color:var(--ip-black);width:1rem;height:1rem;" />' +
+        '<span>' + primaryTask.letter + ': ' + UI.sanitize(primaryTask.task) + ' (primary)</span></label>';
+    }
+
+    movedTasks.forEach(function(t) {
+      if (t.id === primaryId) return;
+      content += '<label style="display:flex;align-items:center;gap:0.5rem;padding:0.375rem 0;cursor:pointer;">' +
+        '<input type="checkbox" class="close-complete-task" data-task-id="' + t.id + '" style="accent-color:var(--ip-black);width:1rem;height:1rem;" />' +
+        '<span style="font-size:0.875rem;">' + t.letter + ': ' + UI.sanitize(t.task) + ' (' + rollup.azDays[t.id] + ' days)</span></label>';
+    });
+
+    if (movedTasks.length === 0 && !primaryTask) {
+      content += '<div class="td-help">No tasks moved this week.</div>';
+    }
+
+    content += '<div class="td-label" style="margin-top:1.25rem;margin-bottom:0.5rem;">Rate This Week</div>';
+    content += '<div style="display:flex;gap:0.375rem;">';
+    var currentRating = (wp.reflection && wp.reflection.weekRating) || 0;
+    for (var r = 1; r <= 5; r++) {
+      content += '<button onclick="document.getElementById(\'cw-rating\').value=' + r + ';this.parentElement.querySelectorAll(\'button\').forEach(function(b){b.style.background=\'var(--ip-gray-100)\';b.style.color=\'var(--ip-gray-700)\'});this.style.background=\'var(--ip-black)\';this.style.color=\'var(--ip-white)\';" style="width:2.5rem;height:2.5rem;border-radius:0.375rem;border:none;cursor:pointer;font-weight:700;font-family:var(--ip-font);font-size:0.875rem;background:' + (currentRating === r ? 'var(--ip-black)' : 'var(--ip-gray-100)') + ';color:' + (currentRating === r ? 'var(--ip-white)' : 'var(--ip-gray-700)') + ';">' + r + '</button>';
+    }
+    content += '</div><input type="hidden" id="cw-rating" value="' + currentRating + '" />';
+
+  } else if (_closeStep === 3) {
+    // Step 3 — 8 Steps Reflection
+    var eightSteps = [
+      { id: 'positiveAttitude', name: 'Positive Attitude' },
+      { id: 'beOnTime', name: 'Be on Time' },
+      { id: 'bePrepared', name: 'Be Prepared' },
+      { id: 'workFullDay', name: 'Work a Full Day' },
+      { id: 'workTerritory', name: 'Work the Territory' },
+      { id: 'greatAttitude', name: 'Maintain Your Attitude' },
+      { id: 'knowWhy', name: 'Know Your Why' },
+      { id: 'takeControl', name: 'Take Control' }
+    ];
+    var lived = (wp.reflection && wp.reflection.stepsLived) || {};
+
+    content += '<h2 style="font-size:1.25rem;font-weight:800;margin-bottom:0.25rem;">8 Steps Reflection</h2>';
+    content += '<div class="td-help" style="margin-bottom:1rem;">Which steps did you live this week? Be honest.</div>';
+
+    eightSteps.forEach(function(step, i) {
+      var checked = lived[step.id] ? ' checked' : '';
+      content += '<label style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.375rem 0;cursor:pointer;">' +
+        '<input type="checkbox" class="cw-step" data-step-id="' + step.id + '"' + checked + ' style="accent-color:var(--ip-black);width:1rem;height:1rem;margin-top:0.125rem;" />' +
+        '<div><span style="font-size:0.875rem;font-weight:600;"><span style="color:var(--ip-gray-300);margin-right:0.25rem;">' + (i+1) + '</span>' + step.name + '</span></div></label>';
+    });
+
+  } else if (_closeStep === 4) {
+    // Step 4 — Next Week Setup
+    content += '<h2 style="font-size:1.25rem;font-weight:800;margin-bottom:0.25rem;">Next Week</h2>';
+    content += '<div class="td-help" style="margin-bottom:1rem;">Set your focus for the week ahead.</div>';
+
+    content += '<div class="td-label" style="margin-bottom:0.375rem;">Primary Letter</div>';
+    content += '<select id="cw-next-primary" class="td-input" style="width:100%;margin-bottom:1rem;">';
+    content += '<option value="">None selected</option>';
+    state.AZTask.filter(function(t) { return t.status !== 'Completed'; }).forEach(function(t) {
+      content += '<option value="' + t.id + '">' + t.letter + ': ' + UI.sanitize(t.task) + '</option>';
+    });
+    content += '</select>';
+
+    content += '<div class="td-label" style="margin-bottom:0.375rem;">Week Counts If</div>';
+    content += '<input type="text" id="cw-next-counts" class="td-input" placeholder="What makes next week a win?" style="margin-bottom:1rem;" />';
+
+    content += '<div class="td-label" style="margin-bottom:0.375rem;">PIGPEN Focus</div>';
+    (state.FocusArea || []).forEach(function(area) {
+      content += '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;">' +
+        '<span class="td-dot" style="background-color:' + area.color + ';"></span>' +
+        '<span style="font-size:0.8125rem;font-weight:600;width:5.5rem;">' + UI.sanitize(area.name) + '</span>' +
+        '<input type="text" id="cw-pigpen-' + area.id + '" class="td-input" placeholder="Focus note..." style="flex:1;font-size:0.8125rem;padding:0.375rem 0.625rem;" />' +
+        '</div>';
+    });
+  }
+
+  // Navigation buttons
+  content += '<div style="display:flex;gap:0.5rem;margin-top:1.5rem;">';
+  if (_closeStep > 1) {
+    content += '<button onclick="_closeStep--;_renderCloseStep();" class="td-btn-ghost">Back</button>';
+  }
+  if (_closeStep < 4) {
+    content += '<button onclick="_closeStepNext()" class="td-btn" style="margin-left:auto;">Next</button>';
+  } else {
+    content += '<button onclick="executeCloseWeek()" class="td-btn" style="margin-left:auto;">Close & Start Next Week</button>';
+  }
+  content += '<button onclick="UI.closeModal()" class="td-btn-ghost">Cancel</button>';
+  content += '</div></div>';
+
+  UI.showModal(content);
+}
+
+function _closeStepNext() {
+  // Save data from current step before advancing
+  if (_closeStep === 2) {
+    // Save completed tasks + rating
+    var primaryCheck = document.getElementById('close-complete-primary');
+    if (primaryCheck && primaryCheck.checked && state.WeeklyPlan.primaryLetter) {
+      completeTask(state.WeeklyPlan.primaryLetter);
+    }
+    document.querySelectorAll('.close-complete-task:checked').forEach(function(el) {
+      completeTask(el.dataset.taskId);
+    });
+    var rating = parseInt(document.getElementById('cw-rating').value) || 0;
+    if (!state.WeeklyPlan.reflection) state.WeeklyPlan.reflection = {};
+    state.WeeklyPlan.reflection.weekRating = rating;
+  }
+  if (_closeStep === 3) {
+    // Save 8 Steps lived
+    if (!state.WeeklyPlan.reflection) state.WeeklyPlan.reflection = {};
+    state.WeeklyPlan.reflection.stepsLived = {};
+    document.querySelectorAll('.cw-step').forEach(function(el) {
+      if (el.checked) {
+        state.WeeklyPlan.reflection.stepsLived[el.dataset.stepId] = true;
+      }
+    });
+  }
+  _closeStep++;
+  _renderCloseStep();
+}
+
+function executeCloseWeek() {
+  // Save next week setup from step 4
+  var nextPrimary = document.getElementById('cw-next-primary');
+  var nextCounts = document.getElementById('cw-next-counts');
+
+  var nextPigpen = {};
+  (state.FocusArea || []).forEach(function(area) {
+    var el = document.getElementById('cw-pigpen-' + area.id);
+    if (el && el.value) nextPigpen[area.name] = el.value;
+  });
+
+  // Close current week
+  state.WeeklyPlan.closed = true;
+  stateManager.update({ WeeklyPlan: state.WeeklyPlan });
+
+  // Create next week's plan
+  var nextMonday = new Date(getWeekMonday() + 'T00:00:00');
+  nextMonday.setDate(nextMonday.getDate() + 7);
+  var nextMondayStr = nextMonday.toISOString().slice(0, 10);
+
+  state.WeeklyPlan = {
+    weekOf: nextMondayStr,
+    primaryLetter: nextPrimary ? nextPrimary.value : '',
+    weekCountsIf: nextCounts ? nextCounts.value : '',
+    pigpenFocus: nextPigpen,
+    closed: false,
+    reflection: { weekRating: 0, stepsLived: {}, stepsNotes: {} }
+  };
+  stateManager.update({ WeeklyPlan: state.WeeklyPlan });
+
+  UI.closeModal();
+  UI.showToast('Week Closed', 'Nice work. Next week is set up.', 'success');
+  render();
+}
+
+// === Today Fields (Plan Your Day) ===
+
+function getTodayFields() {
+  var todayDate = stateManager.getTodayDate();
+  if (!state.Today) state.Today = { mission: '', motto: '', daily: {} };
+  if (!state.Today.daily[todayDate]) {
+    state.Today.daily[todayDate] = {
+      date: todayDate, winTarget: '',
+      p1: '', p1why: '', p2: '', p2why: '', p3: '', p3why: '',
+      p1az: '', p1area: '', p2az: '', p2area: '', p3az: '', p3area: '',
+      x1: '', y1: '', x2: '', y2: '', x3: '', y3: '',
+      lever: '', resetMove: '', reflection: '', updated_at: null
+    };
+  }
+  return state.Today.daily[todayDate];
+}
+
+function saveTodayField(field, value) {
+  var plan = getTodayFields();
+  plan[field] = value;
+  plan.updated_at = new Date().toISOString();
+  stateManager.update({ Today: state.Today });
+}
+
+function buildLinkSelect(type, prioNum) {
+  var plan = getTodayFields();
+  var field = type === 'az' ? 'p' + prioNum + 'az' : 'p' + prioNum + 'area';
+  var current = plan[field] || '';
+
+  var options = '<option value="">--</option>';
+  if (type === 'az') {
+    (state.AZTask || []).filter(function(t) { return t.status !== 'Completed'; }).forEach(function(t) {
+      var sel = current === t.id ? ' selected' : '';
+      options += '<option value="' + t.id + '"' + sel + '>' + t.letter + ': ' + UI.sanitize(t.task).slice(0, 30) + '</option>';
+    });
+  } else {
+    (state.FocusArea || []).forEach(function(a) {
+      var sel = current === a.id ? ' selected' : '';
+      options += '<option value="' + a.id + '"' + sel + '>' + UI.sanitize(a.name) + '</option>';
+    });
+  }
+
+  return '<select onchange="saveTodayField(\'' + field + '\', this.value)" style="font-family:var(--ip-font);font-size:0.6875rem;color:var(--ip-gray-600);background:var(--ip-gray-50);border:1px solid var(--ip-gray-100);border-radius:0.375rem;padding:0.25rem 0.375rem;cursor:pointer;">' + options + '</select>';
+}
+
+// === Rhythm Engine ===
+
+function getRhythmAction() {
+  var todayDate = stateManager.getTodayDate();
+  var todayData = (state.Today && state.Today.daily) ? state.Today.daily[todayDate] : null;
+  var dayOfWeek = new Date().getDay(); // 0=Sun
+  var hour = new Date().getHours();
+  var wp = state.WeeklyPlan || {};
+  var monday = getWeekMonday();
+  var dayOfMonth = new Date().getDate();
+
+  // 1. Sunday + week not closed
+  if (dayOfWeek === 0 && !wp.closed && wp.weekOf === monday) {
+    return { type: 'closeWeek', headline: 'This week ends today.', subtext: 'Review what moved, close it out, set up next week.', action: 'closeWeek()', buttonText: 'Close Week' };
+  }
+
+  // 2. First few days of month + no recent A-Z changes
+  if (dayOfMonth <= 3 && state.AZTask && state.AZTask.length <= 2) {
+    return { type: 'newMonth', headline: 'New month. Set your A-Z.', subtext: 'Each letter is one focused objective to cross off this month.', action: "navigate('Tasks')", buttonText: 'Set Tasks' };
+  }
+
+  // 3. Today not planned
+  if (!todayData || !todayData.winTarget) {
+    return { type: 'planDay', headline: 'You haven\'t planned today yet.', subtext: 'Set your win target and priorities before you start moving.', action: "navigate('Daily')", buttonText: 'Plan Your Day' };
+  }
+
+  // 4. End of day + no rating
+  var todayPlan = Helpers.getDayPlan();
+  if (hour >= 20 && todayPlan && !todayPlan.rating) {
+    return { type: 'reflect', headline: 'How\'d it go?', subtext: 'Rate your day and capture one thought before you close.', action: 'quickReflect()', buttonText: 'Quick Reflect' };
+  }
+
+  // 5. Default — continue
+  var progress = Helpers.calculateDailyProgress();
+  return { type: 'continue', headline: 'Keep going.', subtext: 'Day is ' + progress.overall + '% complete. Win target: ' + UI.sanitize(todayData.winTarget).slice(0, 40), action: "navigate('Daily')", buttonText: 'Continue' };
+}
+
+function quickReflect() {
+  var todayDate = stateManager.getTodayDate();
+  var todayPlan = Helpers.getDayPlan();
+  var currentRating = todayPlan.rating || 0;
+
+  var content = '<div style="padding:1.5rem;max-width:28rem;">' +
+    '<h2 style="font-size:1.25rem;font-weight:800;margin-bottom:0.25rem;">Quick Reflect</h2>' +
+    '<div class="td-help" style="margin-bottom:1.25rem;">How was today? Rate it and capture one thought.</div>' +
+    '<div class="td-label" style="margin-bottom:0.5rem;">Day Rating</div>' +
+    '<div style="display:flex;gap:0.375rem;margin-bottom:1.25rem;">' +
+    [1,2,3,4,5].map(function(n) {
+      return '<button onclick="document.getElementById(\'qr-rating\').value=' + n + ';this.parentElement.querySelectorAll(\'button\').forEach(function(b){b.style.background=\'var(--ip-gray-100)\';b.style.color=\'var(--ip-gray-700)\'});this.style.background=\'var(--ip-black)\';this.style.color=\'var(--ip-white)\';" style="width:2.5rem;height:2.5rem;border-radius:0.375rem;border:none;cursor:pointer;font-weight:700;font-family:var(--ip-font);font-size:0.875rem;background:' + (currentRating === n ? 'var(--ip-black)' : 'var(--ip-gray-100)') + ';color:' + (currentRating === n ? 'var(--ip-white)' : 'var(--ip-gray-700)') + ';">' + n + '</button>';
+    }).join('') +
+    '</div>' +
+    '<input type="hidden" id="qr-rating" value="' + currentRating + '" />' +
+    '<div class="td-label" style="margin-bottom:0.375rem;">One thought</div>' +
+    '<textarea id="qr-note" class="td-input" placeholder="What stood out today?" style="min-height:4rem;">' + UI.sanitize(todayPlan.notes || '') + '</textarea>' +
+    '<div style="display:flex;gap:0.5rem;margin-top:1rem;">' +
+    '<button onclick="saveQuickReflect()" class="td-btn">Save</button>' +
+    '<button onclick="UI.closeModal()" class="td-btn-ghost">Cancel</button>' +
+    '</div></div>';
+
+  UI.showModal(content);
+}
+
+function saveQuickReflect() {
+  var todayDate = stateManager.getTodayDate();
+  var rating = parseInt(document.getElementById('qr-rating').value) || 0;
+  var note = document.getElementById('qr-note').value.trim();
+
+  if (!state.DayPlans[todayDate]) {
+    state.DayPlans[todayDate] = stateManager.createDefaultDayPlan();
+  }
+  state.DayPlans[todayDate].rating = rating;
+  state.DayPlans[todayDate].notes = note;
+  stateManager.update({ DayPlans: state.DayPlans });
+
+  UI.closeModal();
+  UI.showToast('Saved', 'Day rated ' + rating + '/5', 'success');
+  render();
+}
+
+// --- Atlas Connection helpers ---
+
+async function testAtlasConnection() {
+  const online = await AtlasAPI.getHealth();
+  UI.showToast(online ? 'Connected' : 'Offline',
+    online ? 'Atlas API is reachable' : 'Could not reach Atlas API',
+    online ? 'success' : 'error');
+  render();
+}
+
+async function syncAtlasNow() {
+  if (!AtlasAPI.online) await AtlasAPI.init();
+  if (!AtlasAPI.online) {
+    UI.showToast('Offline', 'Cannot reach Atlas API', 'error');
+    return;
+  }
+  const synced = await stateManager.syncFromApi();
+  UI.showToast('Synced', synced ? 'Pulled newer data from Atlas' : 'Local data is current', 'success');
+  render();
+}
+
 // Export for module use
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -2492,7 +2943,9 @@ if (typeof module !== 'undefined' && module.exports) {
     calendarSetView, calendarSelectDate, calendarGoToday, calendarPrev, calendarNext,
     createDayPlanForDate, setDayTypeForDate, toggleTimeBlockCompletionForDate,
     toggleGoalCompletionForDate, addTimeBlockForDate, showCreatePlanModal, showNewEventModal,
-    submitEnergySignals, submitFinanceSignals, submitSkillsSignals, submitNetworkSignals
+    submitEnergySignals, submitFinanceSignals, submitSkillsSignals, submitNetworkSignals,
+    getTodayFields, saveTodayField, buildLinkSelect, getRhythmAction, quickReflect, saveQuickReflect,
+    _closeStep, _renderCloseStep, _closeStepNext
   };
 }
 

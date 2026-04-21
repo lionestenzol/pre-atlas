@@ -119,7 +119,7 @@ class CycleBoardState {
         }
       },
       Settings: {
-        darkMode: true,
+        darkMode: false,
         notifications: true,
         autoSave: true,
         defaultDayType: 'A'
@@ -145,6 +145,16 @@ class CycleBoardState {
         yearly: []
       },
       MomentumWins: [],
+      Today: { mission: '', motto: '', daily: {} },
+      WeeklyPlan: {
+        weekOf: '',
+        primaryLetter: '',
+        weekCountsIf: '',
+        pigpenFocus: {},
+        closed: false,
+        reflection: { weekRating: 0, stepsLived: {}, stepsNotes: {} }
+      },
+      onboardingDone: false,
       calendarView: 'month',
       calendarDate: new Date().toISOString().slice(0, 10)
     };
@@ -193,6 +203,9 @@ class CycleBoardState {
       const saved = localStorage.getItem('inpact-state');
       if (saved) {
         this.state = JSON.parse(saved);
+        if (this.state && !('Today' in this.state)) {
+          this.state.Today = { mission: '', motto: '', daily: {} };
+        }
         if (!this.state.version) {
           this.migrateFromV1();
         }
@@ -216,6 +229,16 @@ class CycleBoardState {
         }
         if (!this.state.MomentumWins) {
           this.state.MomentumWins = [];
+        }
+        if (!this.state.WeeklyPlan) {
+          this.state.WeeklyPlan = this.getDefaultState().WeeklyPlan;
+        }
+        if (this.state.WeeklyPlan && !this.state.WeeklyPlan.reflection) {
+          this.state.WeeklyPlan.reflection = { weekRating: 0, stepsLived: {}, stepsNotes: {} };
+        }
+        if (!('onboardingDone' in this.state)) {
+          // Existing users with data skip onboarding
+          this.state.onboardingDone = (this.state.AZTask && this.state.AZTask.length > 2) || !!(this.state.Today && this.state.Today.mission);
         }
         if (!this.state.calendarView) {
           this.state.calendarView = 'month';
@@ -254,7 +277,12 @@ class CycleBoardState {
 
   saveToStorage() {
     try {
+      this.state._localUpdatedAt = new Date().toISOString();
       localStorage.setItem('inpact-state', JSON.stringify(this.state));
+      // Async push to Atlas API (fire-and-forget)
+      if (typeof AtlasAPI !== 'undefined' && AtlasAPI.online) {
+        AtlasAPI.putCycleBoardState(this.state).catch(() => {});
+      }
     } catch (e) {
       console.error('Failed to save state:', e);
 
@@ -357,6 +385,42 @@ class CycleBoardState {
 
   getState() {
     return { ...this.state };
+  }
+
+  async syncFromApi() {
+    if (typeof AtlasAPI === 'undefined' || !AtlasAPI.online) return false;
+    const remote = await AtlasAPI.getCycleBoardState();
+    if (!remote) return false;
+
+    const localTs = this.state._localUpdatedAt || '';
+    const remoteTs = remote._localUpdatedAt || '';
+
+    if (remoteTs > localTs) {
+      // API has newer data - use it
+      this.state = remote;
+      this.saveToStorageLocal();
+      this.pushHistory();
+      return true;
+    } else if (localTs > remoteTs) {
+      // Local is newer - push to API
+      AtlasAPI.putCycleBoardState(this.state).catch(() => {});
+    }
+    return false;
+  }
+
+  async syncToApi() {
+    if (typeof AtlasAPI === 'undefined' || !AtlasAPI.online) return false;
+    this.state._localUpdatedAt = new Date().toISOString();
+    return await AtlasAPI.putCycleBoardState(this.state);
+  }
+
+  // Save to localStorage only (no API push, avoids recursion in syncFromApi)
+  saveToStorageLocal() {
+    try {
+      localStorage.setItem('inpact-state', JSON.stringify(this.state));
+    } catch (e) {
+      console.error('Failed to save state:', e);
+    }
   }
 }
 

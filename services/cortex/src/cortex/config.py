@@ -46,6 +46,17 @@ class CortexConfig:
     # Stale lock threshold multiplier (locked_at + timeout * this = stale)
     STALE_LOCK_MULTIPLIER: float = 2.0
 
+    # inPACT scheduler
+    INPACT_ENABLED: bool = os.getenv("INPACT_ENABLED", "true").lower() == "true"
+    INPACT_TICK_SECONDS: float = float(os.getenv("INPACT_TICK", "300"))
+    INPACT_MORNING_HOUR: int = int(os.getenv("INPACT_MORNING_HOUR", "5"))
+    INPACT_MIDDAY_HOUR: int = int(os.getenv("INPACT_MIDDAY_HOUR", "13"))
+    INPACT_EVENING_HOUR: int = int(os.getenv("INPACT_EVENING_HOUR", "19"))
+    GIT_WINS_REPO_PATH: str = os.getenv(
+        "GIT_WINS_REPO_PATH",
+        str(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))),
+    )
+
 
 config = CortexConfig()
 

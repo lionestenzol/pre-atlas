@@ -207,6 +207,109 @@ def git_commit(session_state: dict[str, Any], action: dict[str, Any]) -> Handler
 
 
 # ---------------------------------------------------------------------------
+# Filesystem triage handlers (triage_fs_loop path)
+# ---------------------------------------------------------------------------
+
+@register("inspect_fs_item")
+def inspect_fs_item(session_state: dict[str, Any], action: dict[str, Any]) -> HandlerResult:
+    """Stat the evidence path. Detects kind + whether it still exists."""
+    ctx = session_state["context"]
+    evidence = (
+        ctx["confirmed"].get("evidence")
+        or ctx["user"].get("evidence")
+        or ctx["system"].get("evidence")
+    )
+    if not evidence:
+        raise ActionError("inspect_fs_item: no evidence path in context")
+    p = Path(str(evidence)).expanduser()
+    exists = p.exists()
+    is_file = p.is_file() if exists else False
+    is_dir = p.is_dir() if exists else False
+    size_bytes = p.stat().st_size if is_file else 0
+    name_lower = p.name.lower()
+    if name_lower.endswith(".env") or name_lower == ".env":
+        detected_kind = "env"
+    elif is_dir and any((p / sentinel).exists() for sentinel in ("package.json", "pyproject.toml", ".git")):
+        detected_kind = "project"
+    elif size_bytes > 100 * 1024 * 1024:
+        detected_kind = "artifact"
+    else:
+        detected_kind = "other"
+    return {
+        "fs_exists": exists,
+        "fs_is_file": is_file,
+        "fs_is_dir": is_dir,
+        "fs_size_bytes": size_bytes,
+        "fs_detected_kind": detected_kind,
+    }
+
+
+@register("propose_fs_verdict")
+def propose_fs_verdict(session_state: dict[str, Any], action: dict[str, Any]) -> HandlerResult:
+    """Map (severity, fs_kind, age) to a proposed verdict and safe action.
+
+    Verdicts are suggestions only — the approval node (or learned pref)
+    decides whether to act. Safe action is always the least destructive
+    option that still closes the loop.
+    """
+    ctx = session_state["context"]
+
+    def pick(key: str, default=None):
+        for tier in ("confirmed", "user", "system", "inferred"):
+            if key in ctx.get(tier, {}):
+                return ctx[tier][key]
+        return default
+
+    severity = pick("severity", "medium")
+    fs_kind = pick("fs_kind", pick("fs_detected_kind", "other"))
+    age_days = pick("age_days", 0) or 0
+    exists = pick("fs_exists", True)
+
+    if not exists:
+        return {
+            "proposed_verdict": "CLOSE",
+            "proposed_action": "mark_closed",
+            "rationale": "evidence no longer on disk — nothing to do",
+            "confidence": 0.95,
+        }
+
+    if fs_kind == "env" and severity == "high" and age_days >= 365:
+        return {
+            "proposed_verdict": "ARCHIVE",
+            "proposed_action": "rotate_and_delete",
+            "rationale": f"stale leaked .env ({age_days}d): rotate keys, then delete",
+            "confidence": 0.85,
+        }
+    if fs_kind == "env" and severity == "high":
+        return {
+            "proposed_verdict": "REVIEW",
+            "proposed_action": "inspect_contents",
+            "rationale": "recent leaked .env: inspect before acting",
+            "confidence": 0.6,
+        }
+    if fs_kind == "project" and age_days >= 90:
+        return {
+            "proposed_verdict": "ARCHIVE",
+            "proposed_action": "move_to_archive",
+            "rationale": f"stalled project ({age_days}d): move to _archive",
+            "confidence": 0.75,
+        }
+    if fs_kind == "artifact":
+        return {
+            "proposed_verdict": "KEEP",
+            "proposed_action": "none",
+            "rationale": "large artifact: flag only, user decides",
+            "confidence": 0.5,
+        }
+    return {
+        "proposed_verdict": "REVIEW",
+        "proposed_action": "manual",
+        "rationale": "no rule matched: defer to human",
+        "confidence": 0.4,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Dispatch
 # ---------------------------------------------------------------------------
 

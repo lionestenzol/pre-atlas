@@ -67,6 +67,59 @@ Each arrow is a Python script that reads files/DB and writes files/DB. No shared
 
 ---
 
+## 3b. Filesystem Triage Pipeline (2026-04-22)
+
+A second pipeline runs alongside the conversation pipeline. Where `loops.py` finds loops in your conversations, `es_scan.py` finds them on your machine. Both converge on `thread_cards.json` as a universal triage inbox.
+
+```
+Filesystem (C:\Users\bruke\... whole machine)
+    |
+    v
+[es_scan.py] --> Everything CLI (es.exe) queries
+    |           --> leaked .env files outside node_modules
+    |           --> stalled project dirs (dm:<=lastmonth)
+    |           --> large artifacts (size:>100mb)
+    v
+machine_scan.json (cycleboard/brain/)
+    |
+    v
+[auto_triage.py] --> POST /session/start (Optogon :3010)
+    |                path_id = "triage_fs_loop"
+    |                inspect --> propose --> auto_gate --> approve --> close
+    v
+auto_triage_log.json  (per-loop proposals: verdict, action, confidence, rationale)
+    |
+    v
+[es_to_cards.py] --> merge fs items + proposals into thread_cards.json
+    |                tag source:"fs" so renderer branches
+    v
+thread_cards.html (UNIVERSAL TRIAGE INBOX)
+    |  (swipe in browser OR atl CLI)
+    v
+[triage_server.py :8765] --> POST /api/decide
+    |                    --> thread_decisions.json
+    |                    --> fires sync pipeline in background
+    v
+    +--- source=="convo" ---> auto_actor.py (extract + close + lifecycle)
+    +--- source=="fs"    ---> fs_actor.py   (mark-only, delta close_loop)
+    |                         cortex_bridge.py (Directive for proposal_runner)
+    v
+decisions_to_atlas.py --> prune open_loops in governance_state.json
+                          prune loops_latest.json
+                          state reflects closure across CycleBoard + Atlas
+```
+
+**Safety switches (default-off):** `AUTO_TRIAGE_APPLY`, `CORTEX_BRIDGE_APPLY`, `CORTEX_BRIDGE_RUN_PROPOSAL`. See PRE_ATLAS_MAP.md "Universal Triage Inbox" for the ladder.
+
+**Optogon integration points:**
+- Path: `services/optogon/paths/triage_fs_loop.json` (5 nodes, 7 edges)
+- Handlers: `inspect_fs_item`, `propose_fs_verdict` in `services/optogon/src/optogon/action_handlers.py`
+- Preferences: each close emits `CloseSignal.v1` — delta-kernel persists learned_preferences, auto-injects next session (proven: `ui_theme=light` carried across runs)
+
+**Emergency kill:** Optogon unreachable → `auto_triage.py` logs "optogon_unreachable=True" and continues gracefully. Every phase in `run_daily.py` for this pipeline is `critical=False`.
+
+---
+
 ## 4. The Cognitive Atlas (Deep Dive)
 
 This is the visual centerpiece. It takes 84,848 message embeddings and produces an interactive HTML dashboard.

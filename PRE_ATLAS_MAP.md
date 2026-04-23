@@ -388,6 +388,11 @@ python loops.py             # Detect open loops
 python route_today.py       # Generate daily directive
 python build_dashboard.py   # Rebuild dashboard
 python wire_cycleboard.py   # Wire cognitive state to UI
+python dump_conversation.py 487   # Full raw transcript of a ChatGPT thread
+                                  # Spec: docs/DUMP_CONVERSATION_SPEC.md
+python parse_conversation.py 487  # Concept checklist (technical/idea/decision)
+python verify_coverage.py 487 apps/ai-exec-pipeline  # Audit coverage vs built artifact
+                                  # Spec: docs/PARSE_VERIFY_SPEC.md
 ```
 
 **Output Files:**
@@ -580,6 +585,8 @@ npm install
 *Updated: 2026-01-09 (Phase 5B - closure mechanics, autonomous mode governance)*
 *Updated: 2026-03-11 (Stabilization: SQLite migration, unified routing, retries, types split, config API, schema versioning)*
 *Updated: 2026-03-26 (Mosaic Platform: orchestrator workflows, metering, Docker compose, installer — 19 schemas, 6 services)*
+*Updated: 2026-04-19 (Optogon Stack Phases 1-4 complete: contracts, Optogon service :3010, Cortex Ghost Executor wiring, close-loop + preference store)*
+*Updated: 2026-04-22 (Universal Triage Inbox: es filesystem eyes, thread_cards live sync, Optogon triage_fs_loop path, auto_triage daemon, cortex_bridge for real execution wire)*
 
 ---
 
@@ -590,12 +597,77 @@ npm install
 | 3000 | mosaic-dashboard | Next.js 16 | 5-panel web UI |
 | 3001 | delta-kernel | TypeScript/Express | State engine + governance daemon |
 | 3002 | aegis-fabric | TypeScript/Express | Policy engine + agent approval |
-| 3003 | mirofish | Python/FastAPI | 20-agent swarm simulation |
+| 3003 | mirofish | Python/FastAPI | 20-agent swarm simulation (pending merge) |
 | 3004 | openclaw | Python/FastAPI | Multi-channel messaging |
 | 3005 | mosaic-orchestrator | Python/FastAPI | Coordination, workflows, metering |
+| 3006 | inPACT | HTML/JS | today.html worker view + signals surface |
+| 3007 | code-converter | Python/FastAPI | Code-to-numeric-logic MVP |
+| 3008 | uasc-executor | Python/HTTP | Command execution engine (hands layer) |
+| 3009 | cortex | Python/FastAPI | Ghost Executor: consume_directive / emit_build_output |
+| 3010 | optogon | Python/FastAPI | Brain stem: path runtime + node processor |
+| 8765 | triage-server | Python/HTTP | Thread cards UI + /api/decide live sync |
 
 Infrastructure: PostgreSQL 15, Redis 7, Neo4j 5, Ollama.
 
-**Schemas** (19 total in `contracts/schemas/`): MeteringUsage.v1, WorkflowEvent.v1, ModeContract.v1, DailyPayload.v1, OrchestratorEvent.v1, TaskExecution.v1, SimulationReport.v1, IdeaRegistry.v1, ExcavatedIdeas.v1, 7x Aegis schemas, CognitiveMetricsComputed, DirectiveProposed.
+**Schemas** (44 total in `contracts/schemas/`, from Optogon `/health`): includes Mosaic, Aegis, Optogon stack (ContextPackage, CloseSignal, Directive, TaskPrompt, Signal, OptogonNode/Path/SessionState), BuildOutput, LifeSignals, and DirectiveProposed (legacy).
 
 **Docker**: `docker-compose.yml` (root) orchestrates 10 services. `installer.sh` for one-command setup.
+
+---
+
+## Universal Triage Inbox (2026-04-22)
+
+The whole system now converges on **one triage surface**: `thread_cards.html`. Every loop needing a decision (conversational or filesystem-discovered) lands there as a card. The swipe fires the full 5-layer stack.
+
+**Three layers, honored:**
+
+```
+  LAYER 1 · SURFACE
+    loops.py        (convo loops from results.db)
+    es_scan.py      (fs loops via Everything CLI: leaked .env,
+                     stalled projects, large artifacts)
+    es_to_cards.py  (merge fs items into thread_cards.json,
+                     attach Optogon proposal per card)
+                           │
+                           ▼
+  LAYER 2 · DECIDE
+    thread_cards.html  + triage_server.py (live POST /api/decide)
+    atl CLI             (offline alternative)
+                           │
+                           ▼  thread_decisions.json
+                           │
+  LAYER 3 · ACT
+    source=="convo" → auto_actor.py (extract + close + lifecycle)
+    source=="fs"    → fs_actor.py   (mark-only, delta close_loop)
+    both            → decisions_to_atlas.py (prune open_loops)
+```
+
+**Optogon reasoning loop** (tonight's addition): For HIGH severity fs findings, `auto_triage.py` starts an Optogon session against the `triage_fs_loop` path. The path drives `inspect_fs_item → propose_fs_verdict → auto_gate → approve → close`. Proposed verdicts with confidence >= 0.85 auto-apply when `AUTO_TRIAGE_APPLY=1`. ARCHIVE proposals emit a `Directive.v1` via `cortex_bridge.py`, which queues into `proposals.json` for `proposal_runner.py` when `CORTEX_BRIDGE_APPLY=1` and `CORTEX_BRIDGE_RUN_PROPOSAL=1`.
+
+**Three-switch safety ladder:**
+| Env var | Off (default) | On |
+|---|---|---|
+| `AUTO_TRIAGE_APPLY` | proposals logged | verdicts written to `thread_decisions.json` |
+| `CORTEX_BRIDGE_APPLY` | directives logged only | Directive appended to `proposals.json` (in-repo paths only) |
+| `CORTEX_BRIDGE_RUN_PROPOSAL` | queued, idle | spawn `proposal_runner.py` (`claude -p` on dedicated branch) |
+
+**New `run_daily.py` phases:**
+| Phase | Script | Role |
+|---|---|---|
+| 1.5 | `es_scan.py` | Filesystem eyes: scan for fs-loops |
+| 1.6 | `es_to_cards.py` | Merge fs items into `thread_cards.json` |
+| 1.7 | `auto_triage.py` | Optogon reasons about HIGH severity findings |
+| 4.6 | `fs_actor.py` | Close fs loops with terminal verdicts |
+| 4.7 | `decisions_to_atlas.py` | Prune closed loops from governance + `loops_latest.json` |
+
+**New files this session:**
+- `services/cognitive-sensor/es_scan.py` — Everything CLI wrapper
+- `services/cognitive-sensor/es_to_cards.py` — fs -> thread_cards merger
+- `services/cognitive-sensor/fs_actor.py` — fs verdict → delta-kernel closure
+- `services/cognitive-sensor/decisions_to_atlas.py` — verdict → state prune
+- `services/cognitive-sensor/auto_triage.py` — autonomous Optogon driver
+- `services/cognitive-sensor/cortex_bridge.py` — Directive emitter + proposal queue
+- `services/cognitive-sensor/triage_server.py` — HTTP server with `/api/decide` live sync
+- `services/cognitive-sensor/cycleboard/brain/machine_scan.json` — fs brain file
+- `services/optogon/paths/triage_fs_loop.json` — Optogon triage state machine
+- `services/optogon/src/optogon/action_handlers.py` — `inspect_fs_item` + `propose_fs_verdict` handlers

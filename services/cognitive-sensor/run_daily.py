@@ -27,6 +27,9 @@ import urllib.request
 import urllib.error
 
 BASE = Path(__file__).parent.resolve()
+if str(BASE) not in sys.path:
+    sys.path.insert(0, str(BASE))
+from aegis_client import log_action as _aegis_log
 
 # Service URLs (override via env if needed)
 ORCHESTRATOR_URL = "http://localhost:3005"
@@ -57,9 +60,23 @@ def run(script: str, description: str, critical: bool = True) -> bool:
         subprocess.check_call([sys.executable, str(script_path)], cwd=str(BASE))
         elapsed = time.time() - start
         print(f"  [{description}] completed in {elapsed:.1f}s")
+        _aegis_log("run_daily", "route_decision", {
+            "event": "phase_completed",
+            "script": script,
+            "description": description,
+            "duration_seconds": round(elapsed, 1),
+        })
         return True
     except subprocess.CalledProcessError as e:
         elapsed = time.time() - start
+        _aegis_log("run_daily", "route_decision", {
+            "event": "phase_failed",
+            "script": script,
+            "description": description,
+            "duration_seconds": round(elapsed, 1),
+            "critical": critical,
+            "returncode": getattr(e, "returncode", None),
+        })
         if critical:
             raise
         print(f"  [{description}] FAILED in {elapsed:.1f}s (non-critical, continuing)")
@@ -169,6 +186,7 @@ def main():
     print("ATLAS GOVERNOR — DAILY LOOP")
     print("=" * 60)
     total_start = time.time()
+    _aegis_log("run_daily", "route_decision", {"event": "daily_loop_started"})
 
     # ── AI-FOR-ITSELF: Ingest & Analyze ──
     print("\n>> Phase 1: Ingest & Analyze State")
@@ -177,6 +195,20 @@ def main():
     run("export_cognitive_state.py", "Export cognitive state")
     run("route_today.py", "Route today's mode")
     run("export_daily_payload.py", "Export daily payload")
+
+    # ── AI-FOR-ITSELF: Filesystem scan (machine-wide open loops) ──
+    print("\n>> Phase 1.5: Machine scan (es)")
+    run("es_scan.py", "Filesystem scan — stalled projects, leaked .env, large artifacts", critical=False)
+
+    # ── AI-FOR-ITSELF: Merge fs findings into thread cards (universal triage inbox) ──
+    print("\n>> Phase 1.6: ES -> thread cards")
+    run("es_to_cards.py", "Merge fs loops into thread_cards.json", critical=False)
+
+    # ── AI-FOR-ITSELF: Autonomous triage of HIGH severity findings via Optogon ──
+    # Dry-run by default. Set AUTO_TRIAGE_APPLY=1 to write verdicts, or
+    # CORTEX_BRIDGE_APPLY=1 to also emit Directives to Cortex for execution.
+    print("\n>> Phase 1.7: Auto triage (Optogon triage_fs_loop -> proposals)")
+    run("auto_triage.py", "Auto triage — Optogon reasons per HIGH fs finding", critical=False)
 
     # ── AI-FOR-ITSELF: Maintain Backlog ──
     print("\n>> Phase 2: Backlog Maintenance")
@@ -199,6 +231,14 @@ def main():
     # Auto-executed directives -> Journal. Needs-approval directives -> [REVIEW] task
     # + proposals.json. Auto-closed loops -> Momentum win. Non-critical: bridge
     # fails gracefully if delta-kernel isn't running.
+    # ── Filesystem verdict actor (fs cards with terminal verdicts) ──
+    print("\n>> Phase 4.6: FS actor (fs card verdicts -> delta-kernel)")
+    run("fs_actor.py", "FS actor — close fs loops marked CLOSE/ARCHIVE/DROP", critical=False)
+
+    # ── Mirror triage verdicts back into Atlas state ──
+    print("\n>> Phase 4.7: Decisions -> Atlas (prune closed loops from state)")
+    run("decisions_to_atlas.py", "Decisions -> Atlas — remove closed loops from governance/loops", critical=False)
+
     print("\n>> Phase 4.5: CycleBoard push (auto_actor -> dashboard)")
     run("cycleboard_push.py", "CycleBoard push — surface auto_actor decisions on the dashboard", critical=False)
 
@@ -209,6 +249,10 @@ def main():
 
     # ── Summary ──
     total_elapsed = time.time() - total_start
+    _aegis_log("run_daily", "route_decision", {
+        "event": "daily_loop_completed",
+        "duration_seconds": round(total_elapsed, 1),
+    })
     print(f"\n{'=' * 60}")
     print(f"DAILY LOOP COMPLETE — {total_elapsed:.1f}s")
     print(f"Outputs:")

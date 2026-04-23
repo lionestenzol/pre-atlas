@@ -25,10 +25,13 @@ DB = HERE / "results.db"
 AUTO_ACTOR = HERE / "auto_actor.py"
 BACKUP_KEEP = 10
 VALID_VERDICTS = {"MINE", "KEEP", "CLOSE", "ARCHIVE", "REVIEW", "DROP"}
+DELTA_CLOSE_URL = "http://localhost:3001/api/law/close_loop"
 
 # Ensure the folder is importable regardless of where `at` is invoked from.
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
+
+from aegis_client import log_action as _aegis_log
 
 
 def _now_iso() -> str:
@@ -157,6 +160,14 @@ def cmd_decide(args, extra):
 
     _save_decisions_atomic(data)
     _journal_append(line)
+    _aegis_log("atlas_triage", "route_decision", {
+        "event": "triage_decide",
+        "convo_id": convo_id,
+        "verdict": verdict,
+        "title": args.title or "",
+        "action": action,
+        "note": note,
+    })
     print(f"[decide] {action} {convo_id} -> {verdict}  "
           f"(total decisions: {data['total_cards']})")
     return 0
@@ -258,6 +269,12 @@ def cmd_apply(args, extra):
     skipped = len(rows) - len(new_rows)
     print(f"[apply] wrote {len(new_rows)} new rows to loop_decisions "
           f"(skipped {skipped} already present)")
+    _aegis_log("atlas_triage", "complete_task", {
+        "event": "triage_apply",
+        "rows_written": len(new_rows),
+        "rows_skipped": skipped,
+        "backup": backup.name,
+    })
 
     run_actor: bool | None = None
     if args.yes:
@@ -355,6 +372,357 @@ def cmd_status(args, extra):
     return 0
 
 
+# ------------------------------ lifecycle commands ------------------------------
+
+def _delta_api_key() -> str:
+    key_path = HERE.parent.parent / ".aegis-tenant-key"
+    if key_path.exists():
+        return key_path.read_text(encoding="utf-8").strip()
+    return ""
+
+
+def _post_close_loop(payload: dict) -> tuple[bool, str]:
+    """POST to delta-kernel close_loop endpoint. Returns (ok, message)."""
+    import urllib.request
+    import urllib.error
+    headers = {"Content-Type": "application/json"}
+    api_key = _delta_api_key()
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    try:
+        req = urllib.request.Request(
+            DELTA_CLOSE_URL,
+            data=json.dumps(payload).encode("utf-8"),
+            headers=headers,
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return True, f"HTTP {resp.status}"
+    except urllib.error.HTTPError as e:
+        body = ""
+        try:
+            body = e.read().decode("utf-8", errors="replace")[:200]
+        except Exception:
+            pass
+        return False, f"HTTP {e.code} {body}"
+    except Exception as e:
+        return False, f"{type(e).__name__}: {e}"
+
+
+def cmd_plan(args, extra):
+    import lifecycle
+    convo_id = str(args.convo_id)
+    ref = lifecycle.find_manifest(convo_id)
+    if ref is None:
+        print(f"[plan] no harvest for {convo_id}. Run `atl harvest --convo {convo_id}` first.",
+              file=sys.stderr)
+        return 2
+    concepts_path = ref.harvest_dir / "concepts.json"
+    if not concepts_path.exists():
+        print(f"[plan] missing {concepts_path}. Run parse_conversation.py first.",
+              file=sys.stderr)
+        return 2
+
+    data = json.loads(concepts_path.read_text(encoding="utf-8"))
+    concepts = data.get("concepts", [])
+
+    must: list[dict] = []
+    nice: list[dict] = []
+    skip: list[dict] = []
+
+    if args.auto_scope:
+        for c in concepts:
+            kind = c.get("kind")
+            hits = c.get("hit_count", 0) or 0
+            if kind == "technical" and hits >= 5:
+                must.append({"id": c["id"], "label": c.get("label", ""), "signal": c.get("signal", "")})
+            elif kind == "technical":
+                nice.append({"id": c["id"], "label": c.get("label", ""), "signal": c.get("signal", "")})
+            elif kind == "decision":
+                must.append({"id": c["id"], "label": c.get("label", ""), "signal": c.get("signal", "")})
+            else:
+                nice.append({"id": c["id"], "label": c.get("label", ""), "signal": c.get("signal", "")})
+        print(f"[plan --auto-scope] draft: {len(must)} MUST · {len(nice)} NICE · {len(skip)} SKIP")
+        if not args.yes:
+            try:
+                resp = input("Accept draft? [Y/n/edit]: ").strip().lower()
+            except EOFError:
+                resp = ""
+            if resp == "n":
+                print("[plan] aborted.")
+                return 1
+            if resp == "edit":
+                print("[plan] interactive edit not yet implemented; re-run with --yes to accept or omit --auto-scope for interactive mode.")
+                return 1
+    else:
+        print(f"[plan] {len(concepts)} concepts. For each: type m (MUST), n (NICE), s (SKIP), q (quit)")
+        for c in concepts:
+            print(f"\n[{c['id']}] ({c.get('kind')}) {c.get('label', '')}")
+            if c.get("evidence_quote"):
+                print(f"    {c['evidence_quote'][:160]}")
+            try:
+                choice = input("  > ").strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print("\n[plan] aborted.")
+                return 1
+            entry = {"id": c["id"], "label": c.get("label", ""), "signal": c.get("signal", "")}
+            if choice == "m":
+                must.append(entry)
+            elif choice == "n":
+                nice.append(entry)
+            elif choice == "s":
+                entry["reason"] = input("    skip reason: ").strip() or "(none)"
+                skip.append(entry)
+            elif choice == "q":
+                print("[plan] quit; nothing written.")
+                return 1
+            else:
+                nice.append(entry)
+
+    plan_doc = {
+        "convo_id": convo_id,
+        "planned_at": _now_iso(),
+        "must": must,
+        "nice": nice,
+        "skip": skip,
+    }
+    plan_path = ref.harvest_dir / "build_plan.json"
+    plan_path.write_text(json.dumps(plan_doc, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[plan] wrote {plan_path}")
+
+    try:
+        lifecycle.transition(convo_id, "PLANNED",
+                             updates={"planned_at": _now_iso(),
+                                      "plan_counts": {"must": len(must), "nice": len(nice), "skip": len(skip)}})
+    except lifecycle.LifecycleError as e:
+        print(f"[plan] status transition warning: {e}")
+    print(f"[plan] status -> PLANNED  (must={len(must)} nice={len(nice)} skip={len(skip)})")
+    return 0
+
+
+def _suggest_artifact(convo_id: str, decided_at: str | None) -> list[str]:
+    """Return up to 3 candidate artifact paths based on recent apps/ dirs."""
+    repo_root = HERE.parent.parent
+    apps = repo_root / "apps"
+    if not apps.exists():
+        return []
+    candidates = []
+    for sub in apps.iterdir():
+        if not sub.is_dir():
+            continue
+        try:
+            mtime = sub.stat().st_mtime
+        except OSError:
+            continue
+        candidates.append((mtime, sub))
+    candidates.sort(reverse=True)
+    rel = []
+    for _, sub in candidates[:5]:
+        try:
+            rel.append(str(sub.relative_to(repo_root)).replace("\\", "/"))
+        except ValueError:
+            rel.append(str(sub))
+    return rel[:3]
+
+
+def cmd_start(args, extra):
+    import lifecycle
+    convo_id = str(args.convo_id)
+    ref = lifecycle.find_manifest(convo_id)
+    if ref is None:
+        print(f"[start] no harvest for {convo_id}.", file=sys.stderr)
+        return 2
+
+    artifact = args.artifact_path
+    if not artifact or args.suggest:
+        suggestions = _suggest_artifact(convo_id, None)
+        if suggestions:
+            print("[start] artifact candidates (newest first):")
+            for i, s in enumerate(suggestions):
+                print(f"  [{i}] {s}")
+            try:
+                choice = input("Pick [0-N], or type a path: ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\n[start] aborted.")
+                return 1
+            if choice.isdigit() and 0 <= int(choice) < len(suggestions):
+                artifact = suggestions[int(choice)]
+            elif choice:
+                artifact = choice
+        if not artifact:
+            print("[start] no artifact path given.", file=sys.stderr)
+            return 2
+
+    try:
+        lifecycle.transition(convo_id, "BUILDING",
+                             updates={"artifact_path": artifact,
+                                      "building_started_at": _now_iso()},
+                             extra_journal=artifact)
+    except lifecycle.LifecycleError as e:
+        print(f"[start] {e}", file=sys.stderr)
+        return 2
+    print(f"[start] {convo_id} -> BUILDING  (artifact: {artifact})")
+    return 0
+
+
+def cmd_review(args, extra):
+    import lifecycle
+    convo_id = str(args.convo_id)
+    manifest = lifecycle.load_manifest(convo_id)
+    if manifest is None:
+        print(f"[review] no harvest for {convo_id}.", file=sys.stderr)
+        return 2
+    artifact = manifest.get("artifact_path")
+    if not artifact:
+        print(f"[review] no artifact_path on manifest. Run `atl start {convo_id} <path>` first.",
+              file=sys.stderr)
+        return 2
+
+    import verify_coverage
+    j, _m = verify_coverage.verify(
+        int(convo_id),
+        Path(artifact),
+        auto=args.auto,
+        use_plan=not args.no_plan,
+    )
+    coverage_doc = json.loads(Path(j).read_text(encoding="utf-8"))
+    ref = lifecycle.find_manifest(convo_id)
+    plan_path = ref.harvest_dir / "build_plan.json" if ref else None
+    plan_doc = json.loads(plan_path.read_text(encoding="utf-8")) if plan_path and plan_path.exists() else None
+
+    s = coverage_doc.get("summary", {})
+    good = s.get("covered", 0) + s.get("partial", 0)
+    total = max(1, good + s.get("missing", 0) + s.get("unverifiable", 0))
+    score = round(good / total, 3)
+
+    passed, reason = lifecycle.coverage_gate(coverage_doc, plan_doc)
+
+    try:
+        lifecycle.transition(convo_id, "REVIEWING",
+                             updates={"reviewed_at": _now_iso(),
+                                      "coverage_score": score,
+                                      "coverage_gate_passed": passed})
+    except lifecycle.LifecycleError as e:
+        print(f"[review] {e}", file=sys.stderr)
+        return 2
+
+    print(f"\n[review] coverage: covered={s.get('covered', 0)} "
+          f"partial={s.get('partial', 0)} missing={s.get('missing', 0)} "
+          f"unverifiable={s.get('unverifiable', 0)}")
+    print(f"[review] score: {score}  gate: {'PASS' if passed else 'BLOCKED'}  ({reason})")
+    return 0 if passed else 1
+
+
+def cmd_done(args, extra):
+    import lifecycle
+    convo_id = str(args.convo_id)
+    manifest = lifecycle.load_manifest(convo_id)
+    if manifest is None:
+        print(f"[done] no harvest for {convo_id}.", file=sys.stderr)
+        return 2
+    if manifest.get("status") != "REVIEWING":
+        print(f"[done] status must be REVIEWING; currently {manifest.get('status')}.",
+              file=sys.stderr)
+        return 2
+    if not manifest.get("coverage_gate_passed") and not args.force:
+        print(f"[done] coverage gate did not pass. Re-run `atl review {convo_id}` or use --force.",
+              file=sys.stderr)
+        return 1
+
+    updates = {"done_at": _now_iso()}
+    try:
+        lifecycle.transition(convo_id, "DONE", updates=updates, force=args.force)
+    except lifecycle.LifecycleError as e:
+        print(f"[done] {e}", file=sys.stderr)
+        return 2
+
+    payload = {
+        "loop_id": convo_id,
+        "title": manifest.get("title", ""),
+        "outcome": "closed",
+        "artifact_path": manifest.get("artifact_path"),
+        "coverage_score": manifest.get("coverage_score"),
+        "status": "DONE",
+    }
+    ok, msg = _post_close_loop(payload)
+    print(f"[done] {convo_id} -> DONE  delta-kernel: {msg}")
+    if not ok and not args.force:
+        print("[done] NOTE: delta-kernel POST failed. Manifest is DONE locally.")
+    return 0
+
+
+def _resolve_or_drop(convo_id: str, target: str, outcome: str) -> int:
+    import lifecycle
+    manifest = lifecycle.load_manifest(convo_id)
+    title = manifest.get("title", "") if manifest else ""
+    try:
+        if manifest is not None:
+            lifecycle.transition(convo_id, target, updates={"done_at": _now_iso()})
+        else:
+            print(f"[{target.lower()}] no harvest found; skipping manifest update (loop-only close).")
+    except lifecycle.LifecycleError as e:
+        print(f"[{target.lower()}] {e}", file=sys.stderr)
+        return 2
+    payload = {
+        "loop_id": convo_id,
+        "title": title,
+        "outcome": outcome,
+        "artifact_path": None,
+        "coverage_score": None,
+        "status": target,
+    }
+    ok, msg = _post_close_loop(payload)
+    print(f"[{target.lower()}] {convo_id} -> {target}  delta-kernel: {msg}")
+    return 0 if ok else 1
+
+
+def cmd_resolve(args, extra):
+    return _resolve_or_drop(str(args.convo_id), "RESOLVED", "closed")
+
+
+def cmd_drop(args, extra):
+    return _resolve_or_drop(str(args.convo_id), "DROPPED", "archived")
+
+
+def cmd_lifecycle_status(args, extra):
+    import lifecycle
+    convo_id = str(args.convo_id)
+    manifest = lifecycle.load_manifest(convo_id)
+    if manifest is None:
+        print(f"{convo_id}: no manifest")
+        print(f"  next: {lifecycle.next_command(None)}")
+        return 1
+    status = manifest.get("status", "HARVESTED")
+    print(f"{convo_id}: {status}")
+    print(f"  verdict:       {manifest.get('verdict')}")
+    print(f"  harvested_at:  {manifest.get('harvested_at')}")
+    if manifest.get("artifact_path"):
+        print(f"  artifact:      {manifest['artifact_path']}")
+    if manifest.get("coverage_score") is not None:
+        print(f"  coverage:      {manifest['coverage_score']}  "
+              f"gate: {'PASS' if manifest.get('coverage_gate_passed') else 'BLOCKED'}")
+    if manifest.get("done_at"):
+        print(f"  done_at:       {manifest['done_at']}")
+    print(f"  next:          {lifecycle.next_command(status)}")
+    return 0
+
+
+def cmd_in_progress(args, extra):
+    import lifecycle
+    rows = lifecycle.list_by_status({"PLANNED", "BUILDING", "REVIEWING"})
+    if not rows:
+        print("[in-progress] no threads in flight.")
+        return 0
+    print(f"[in-progress] {len(rows)} thread(s):")
+    print(f"  {'ID':>6}  {'STATUS':<10}  {'VERDICT':<8}  TITLE")
+    print(f"  {'-'*6}  {'-'*10}  {'-'*8}  {'-'*40}")
+    for r in rows:
+        title = (r.get("title") or "")[:50]
+        print(f"  {r.get('convo_id', '?'):>6}  {r.get('status', '?'):<10}  "
+              f"{r.get('verdict', '?'):<8}  {title}")
+    return 0
+
+
 HELP_TEXT = """\
 atl - Atlas Triage CLI
 
@@ -364,6 +732,12 @@ THE LOOP
   3. DECIDE  atl decide 81 MINE --note  record a verdict
   4. HARVEST atl harvest --from-decisions  extract code+quotes to harvest/<id>/
   5. APPLY   atl apply                  push verdicts into results.db
+  6. PLAN    atl plan 81 --auto-scope   scope concepts -> build_plan.json
+  7. START   atl start 81 apps/foo      link artifact, status -> BUILDING
+  8. REVIEW  atl review 81              verify coverage, status -> REVIEWING
+  9. DONE    atl done 81                gate + close, status -> DONE
+  - or -    atl resolve 81             CLOSE verdict terminal (no artifact)
+  - or -    atl drop 81                ARCHIVE verdict terminal (no artifact)
 
 VERDICTS
   MINE     extract code/ideas into a repo
@@ -389,6 +763,16 @@ WRITE (mutates files)
   atl harvest --convo <id> | --from-decisions
   atl apply  [--yes] [--no-actor] [--dry-run]
   atl rollback [--list] [--index N]      restore results.db from backup
+
+LIFECYCLE (per-thread status in harvest/<id>/manifest.json)
+  atl plan <id> [--auto-scope] [--yes]   concepts -> MUST/NICE/SKIP -> build_plan.json
+  atl start <id> [<path>] [--suggest]    set artifact_path; status BUILDING
+  atl review <id> [--auto] [--no-plan]   run verify_coverage; status REVIEWING
+  atl done <id> [--force]                gate check + POST close_loop; status DONE
+  atl resolve <id>                       CLOSE verdict -> RESOLVED
+  atl drop <id>                          ARCHIVE verdict -> DROPPED
+  atl lifecycle <id>                     show status + next command
+  atl in-progress                        list PLANNED/BUILDING/REVIEWING
 
 SERVE
   atl serve  [--port 8765]               boot http server + open thread_cards.html
@@ -430,11 +814,10 @@ def cmd_serve(args, extra):
         webbrowser.open(url)
     except Exception:
         pass
+    # Use triage_server — file serving + live /api/decide endpoint
     os.chdir(str(HERE))
-    # blocking
-    rc = subprocess.call(
-        [sys.executable, "-m", "http.server", str(port)], cwd=str(HERE))
-    return rc
+    from triage_server import serve as triage_serve
+    return triage_serve(port)
 
 
 # ------------------------------ parser ------------------------------
@@ -495,6 +878,51 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("serve", help="boot http server for thread_cards.html")
     sp.add_argument("--port", type=int, default=8765)
     sp.set_defaults(func=cmd_serve)
+
+    # Lifecycle commands
+    sp = sub.add_parser("plan", help="scope concepts into build_plan.json")
+    sp.add_argument("convo_id")
+    sp.add_argument("--auto-scope", action="store_true",
+                    help="auto-classify concepts (high hit -> MUST, rest -> NICE)")
+    sp.add_argument("--yes", action="store_true",
+                    help="accept draft without prompting (with --auto-scope)")
+    sp.set_defaults(func=cmd_plan)
+
+    sp = sub.add_parser("start", help="link artifact path; status -> BUILDING")
+    sp.add_argument("convo_id")
+    sp.add_argument("artifact_path", nargs="?", default="")
+    sp.add_argument("--suggest", action="store_true",
+                    help="show candidate paths from apps/ even if one was provided")
+    sp.set_defaults(func=cmd_start)
+
+    sp = sub.add_parser("review", help="run verify_coverage; status -> REVIEWING")
+    sp.add_argument("convo_id")
+    sp.add_argument("--auto", action="store_true",
+                    help="use claude -p for idea/decision concepts")
+    sp.add_argument("--no-plan", action="store_true",
+                    help="verify against all concepts, not just MUST+NICE")
+    sp.set_defaults(func=cmd_review)
+
+    sp = sub.add_parser("done", help="close loop with artifact link; status -> DONE")
+    sp.add_argument("convo_id")
+    sp.add_argument("--force", action="store_true",
+                    help="bypass coverage gate")
+    sp.set_defaults(func=cmd_done)
+
+    sp = sub.add_parser("resolve", help="CLOSE verdict terminal -> RESOLVED")
+    sp.add_argument("convo_id")
+    sp.set_defaults(func=cmd_resolve)
+
+    sp = sub.add_parser("drop", help="ARCHIVE verdict terminal -> DROPPED")
+    sp.add_argument("convo_id")
+    sp.set_defaults(func=cmd_drop)
+
+    sp = sub.add_parser("lifecycle", help="show current status + next command")
+    sp.add_argument("convo_id")
+    sp.set_defaults(func=cmd_lifecycle_status)
+
+    sp = sub.add_parser("in-progress", help="list threads in PLANNED/BUILDING/REVIEWING")
+    sp.set_defaults(func=cmd_in_progress)
 
     return p
 

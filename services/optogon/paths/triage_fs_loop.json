@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "id": "triage_fs_loop",
+  "name": "Triage a filesystem loop",
+  "version": "1.0",
+  "description": "Reasons about a single fs finding (leaked .env, stalled project, large artifact) and proposes a safe action. Close emits a verdict + learnable preference.",
+  "entry": {
+    "node_id": "entry",
+    "match_conditions": [
+      { "signal": "intent", "operator": "contains", "value": "triage fs" }
+    ],
+    "match_threshold": 0.6,
+    "tie_break": "priority"
+  },
+  "nodes": {
+    "entry": {
+      "type": "qualify",
+      "label": "Confirm finding context",
+      "qualification": {
+        "required": [
+          { "key": "loop_id", "source": "user", "description": "Unique id of the fs loop" },
+          { "key": "evidence", "source": "user", "description": "Path to the file/dir" },
+          { "key": "severity", "source": "user", "description": "high | medium | low" },
+          { "key": "fs_kind", "source": "user", "description": "env | project | artifact" }
+        ],
+        "question": {
+          "text": "What are we triaging?",
+          "purpose": ["identify finding"],
+          "max_asks": 1
+        },
+        "max_missing_keys_before_split": 4
+      },
+      "metadata": { "token_budget": 80, "tags": ["triage_fs_loop"] }
+    },
+    "inspect": {
+      "type": "execute",
+      "label": "Inspect the fs item",
+      "actions": [
+        { "id": "inspect_fs_item", "type": "retrieval", "trigger": "on_entry", "reversible": true, "risk_tier": "low", "retry_strategy": "none" }
+      ]
+    },
+    "propose": {
+      "type": "execute",
+      "label": "Propose a verdict",
+      "actions": [
+        { "id": "propose_fs_verdict", "type": "transform", "trigger": "on_entry", "reversible": true, "risk_tier": "low", "retry_strategy": "none" }
+      ]
+    },
+    "auto_gate": {
+      "type": "gate",
+      "label": "Auto-close if preference is confirmed"
+    },
+    "approve": {
+      "type": "approval",
+      "label": "Approve proposed verdict",
+      "contract": { "required_outputs": ["decision"], "completion_criteria": "user decision received", "failure_mode": "abort" }
+    },
+    "done": {
+      "type": "close",
+      "label": "Emit CloseSignal with verdict",
+      "contract": { "required_outputs": ["verdict"], "completion_criteria": "verdict recorded", "failure_mode": "escalate" }
+    }
+  },
+  "edges": [
+    { "from": "entry",    "to": "inspect",   "condition": "qualified", "priority": 1 },
+    { "from": "inspect",  "to": "propose",   "condition": "success",   "priority": 1 },
+    { "from": "propose",  "to": "auto_gate", "condition": "success",   "priority": 1 },
+    { "from": "auto_gate","to": "done",      "condition": "confirmed.get('auto_close_env_pattern') == True and system.get('fs_kind') == 'env'", "priority": 1 },
+    { "from": "auto_gate","to": "approve",   "condition": "default",   "priority": 2 },
+    { "from": "approve",  "to": "done",      "condition": "approved",  "priority": 1 },
+    { "from": "approve",  "to": "done",      "condition": "denied",    "priority": 2 }
+  ],
+  "close_state": {
+    "description": "Verdict recorded for this fs loop",
+    "deliverables": ["verdict"],
+    "transient_keys": ["loop_id", "evidence", "age_days"]
+  },
+  "defaults": {
+    "pacing": { "max_options_shown": 3, "bundle_confirmations": true },
+    "inference_confidence_floor": 0.7
+  }
+}

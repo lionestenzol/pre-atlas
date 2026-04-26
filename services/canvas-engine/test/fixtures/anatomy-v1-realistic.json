@@ -1,0 +1,110 @@
+{
+  "version": "anatomy-v1",
+  "metadata": {
+    "target": "https://shop.example.com/products",
+    "mode": "spa",
+    "source": "index.html",
+    "timestamp": "2026-04-26T14:30:00Z",
+    "tools": ["anatomy-extension@0.3.15", "web-audit@0.4.0"]
+  },
+  "regions": [
+    {
+      "id": "header-nav",
+      "n": 1,
+      "name": "Header",
+      "layer": "ui",
+      "selector": "header.site-header",
+      "file": "src/components/Header.tsx",
+      "line": 12,
+      "detection": "landmark",
+      "desc": "Primary site header with logo and nav",
+      "kind": "sem",
+      "bounds": { "x": 0, "y": 0, "w": 1280, "h": 80 },
+      "fetches": [
+        { "method": "GET", "url": "/api/me", "status": 200, "contentType": "application/json", "ts": 1761166212345 }
+      ]
+    },
+    {
+      "id": "search-bar",
+      "n": 2,
+      "name": "Search bar",
+      "layer": "ui",
+      "selector": "form.search",
+      "file": "src/components/SearchBar.tsx",
+      "line": 18,
+      "detection": "form",
+      "desc": "Product search form",
+      "bounds": { "x": 320, "y": 16, "w": 480, "h": 48 },
+      "fetches": [
+        { "method": "GET", "url": "/api/search?q=", "status": 200, "contentType": "application/json", "ts": 1761166212450 }
+      ]
+    },
+    {
+      "id": "hero",
+      "n": 3,
+      "name": "Hero",
+      "layer": "ui",
+      "selector": "section.hero",
+      "file": "src/components/Hero.tsx",
+      "line": 7,
+      "detection": "hero",
+      "desc": "Landing hero with CTA",
+      "bounds": { "x": 0, "y": 80, "w": 1280, "h": 540 }
+    },
+    {
+      "id": "product-grid",
+      "n": 4,
+      "name": "Product grid",
+      "layer": "ui",
+      "selector": "section.products > .grid",
+      "file": "src/components/ProductGrid.tsx",
+      "line": 22,
+      "detection": "button-cluster",
+      "desc": "Paginated product grid",
+      "bounds": { "x": 0, "y": 620, "w": 1280, "h": 1200 },
+      "fetches": [
+        { "method": "GET", "url": "/api/products?page=1", "status": 200, "contentType": "application/json", "ts": 1761166212600 }
+      ]
+    },
+    {
+      "id": "footer",
+      "n": 5,
+      "name": "Footer",
+      "layer": "ui",
+      "selector": "footer.site-footer",
+      "file": "src/components/Footer.tsx",
+      "line": 9,
+      "detection": "landmark",
+      "desc": "Site footer with links and copyright",
+      "bounds": { "x": 0, "y": 1820, "w": 1280, "h": 240 }
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain-search",
+      "nodes": [
+        { "n": 6, "layer": "ui", "label": "SearchBar.onSubmit", "detail": "form submit handler", "file": "src/components/SearchBar.tsx", "line": 34 },
+        { "n": 7, "layer": "api", "label": "GET /api/search", "detail": "200 · application/json", "file": "src/server/api/search.ts", "line": 12,
+          "probe": { "method": "GET", "status": 200, "contentType": "application/json" } },
+        { "n": 8, "layer": "lib", "label": "elasticClient.search()", "detail": "ES query builder", "file": "src/lib/elastic.ts", "line": 45 },
+        { "n": 9, "layer": "ext", "label": "elasticsearch.example.com", "detail": "external search index" }
+      ]
+    },
+    {
+      "id": "chain-products",
+      "nodes": [
+        { "n": 10, "layer": "ui", "label": "ProductGrid.fetchPage", "detail": "page fetcher", "file": "src/components/ProductGrid.tsx", "line": 48 },
+        { "n": 11, "layer": "api", "label": "GET /api/products", "detail": "200 · application/json", "file": "src/server/api/products.ts", "line": 8,
+          "probe": { "method": "GET", "status": 200, "contentType": "application/json" } },
+        { "n": 12, "layer": "state", "label": "products table", "detail": "Postgres", "file": "src/db/schema/products.sql", "line": 1 }
+      ]
+    }
+  ],
+  "layers": {
+    "ui":    { "color": "#c084fc" },
+    "api":   { "color": "#f59e0b" },
+    "ext":   { "color": "#818cf8" },
+    "lib":   { "color": "#22c55e" },
+    "state": { "color": "#a855f7" }
+  }
+}

@@ -435,8 +435,21 @@ export async function* runUrlToClone(
   let session: Awaited<ReturnType<VitePool['allocate']>>;
   try {
     session = await deps.pool.allocate();
+  } catch (error) {
+    yield {
+      type: 'error',
+      phase: 'sandbox-ready',
+      message: formatErrorMessage(error),
+    };
+    return;
+  }
+  // Allocation succeeded; if seeding fails we MUST release so the Vite
+  // server, port, and session dir don't leak. Without this nested catch,
+  // a writeFiles failure would orphan a live dev server until process exit.
+  try {
     await deps.pool.writeFiles(session.sessionId, files);
   } catch (error) {
+    try { await deps.pool.release(session.sessionId); } catch {}
     yield {
       type: 'error',
       phase: 'sandbox-ready',

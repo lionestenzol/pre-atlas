@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AnatomyV1.v1",
+  "title": "Anatomy V1 Envelope",
+  "description": "Canonical envelope for anatomy captures across extension and web-audit producers.",
+  "type": "object",
+  "required": ["version", "metadata", "regions", "chains", "layers"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "anatomy-v1"
+    },
+    "metadata": {
+      "$ref": "#/definitions/metadata"
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/region"
+      }
+    },
+    "chains": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/chain"
+      }
+    },
+    "layers": {
+      "type": "object",
+      "required": ["ui", "api", "ext", "lib", "state"],
+      "properties": {
+        "ui": { "$ref": "#/definitions/layerInfo" },
+        "api": { "$ref": "#/definitions/layerInfo" },
+        "ext": { "$ref": "#/definitions/layerInfo" },
+        "lib": { "$ref": "#/definitions/layerInfo" },
+        "state": { "$ref": "#/definitions/layerInfo" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "definitions": {
+    "layer": {
+      "type": "string",
+      "enum": ["ui", "api", "ext", "lib", "state"]
+    },
+    "bounds": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "w": { "type": "number" },
+        "h": { "type": "number" }
+      }
+    },
+    "fetch": {
+      "type": "object",
+      "required": ["method", "url"],
+      "properties": {
+        "method": { "type": "string" },
+        "url": { "type": "string" },
+        "status": { "type": "integer" },
+        "contentType": { "type": "string" },
+        "ts": { "type": "integer" }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["target", "mode", "timestamp", "tools"],
+      "properties": {
+        "target": { "type": "string" },
+        "mode": {
+          "type": "string",
+          "enum": ["spa", "mpa", "extension"]
+        },
+        "source": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "region": {
+      "type": "object",
+      "required": ["id", "n", "name", "layer"],
+      "properties": {
+        "id": { "type": "string" },
+        "n": { "type": "integer" },
+        "name": { "type": "string" },
+        "layer": { "$ref": "#/definitions/layer" },
+        "selector": { "type": "string" },
+        "file": { "type": "string" },
+        "line": { "type": "integer" },
+        "detection": { "type": "string" },
+        "desc": { "type": "string" },
+        "note": { "type": "string" },
+        "kind": { "type": "string" },
+        "bounds": { "$ref": "#/definitions/bounds" },
+        "fetches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/fetch"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "chainNode": {
+      "type": "object",
+      "required": ["n", "layer", "label"],
+      "properties": {
+        "n": { "type": "integer" },
+        "layer": { "$ref": "#/definitions/layer" },
+        "label": { "type": "string" },
+        "detail": { "type": "string" },
+        "probe": { "type": "object" },
+        "file": { "type": "string" },
+        "line": { "type": "integer" }
+      },
+      "additionalProperties": true
+    },
+    "chain": {
+      "type": "object",
+      "required": ["id", "nodes"],
+      "properties": {
+        "id": { "type": "string" },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/chainNode"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "layerInfo": {
+      "type": "object",
+      "required": ["color"],
+      "properties": {
+        "color": { "type": "string" }
+      }
+    }
+  }
+}

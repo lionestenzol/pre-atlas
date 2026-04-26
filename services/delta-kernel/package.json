@@ -18,7 +18,8 @@
     "build": "tsc",
     "cycleboard": "tsx ../cognitive-sensor/cycleboard/cli.ts",
     "atlas-ai": "tsx src/cli/atlas-ai.ts",
-    "agent": "tsx src/cli/atlas-ai.ts agent --daemon"
+    "agent": "tsx src/cli/atlas-ai.ts agent --daemon",
+    "validate:anatomy": "tsx src/tools/validate-anatomy-v1.ts"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.8",

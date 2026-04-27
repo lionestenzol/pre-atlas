@@ -21,7 +21,14 @@ declare global {
   }
 }
 
-const ADMIN_KEY = process.env.AEGIS_ADMIN_KEY || 'aegis-admin-default-key';
+const ADMIN_KEY = process.env.AEGIS_ADMIN_KEY;
+if (!ADMIN_KEY) {
+  throw new Error(
+    'AEGIS_ADMIN_KEY environment variable is required. ' +
+    'Set it before starting the service. See .env.example for the convention. ' +
+    'Refusing to start with a default fallback (security).'
+  );
+}
 
 /**
  * Assigns a unique request ID and start timestamp.

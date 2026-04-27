@@ -2,6 +2,10 @@
 
 JSON Schema contracts that define data formats exchanged between Pre Atlas services.
 
+**Total schemas:** 47 as of 2026-04-26 (45 versioned `.v1.json` + 2 legacy unversioned: `CognitiveMetricsComputed.json` and `DirectiveProposed.json`)
+**Python validator:** `contracts/validate.py` (jsonschema; walks `contracts/examples/` for example/schema pairs)
+**TypeScript gate (AnatomyV1):** Zod twin at `services/canvas-engine/src/adapter/v1-schema.ts` — in-process validation inside the canvas-engine producer-consumer pipeline. ajv 8.x is in delta-kernel deps but no `npm run validate:anatomy` script is wired today.
+
 ---
 
 ## Overview
@@ -12,11 +16,13 @@ All data exports are validated against these schemas before writing. This ensure
 2. **Contract enforcement** - Services agree on data formats
 3. **Validation** - Invalid writes are blocked
 
+For canvas-engine specifically, the Zod twin in `services/canvas-engine/src/adapter/v1-schema.ts` uses `.passthrough()` on root/regions/chains/chainNodes/metadata as a mandatory two-way contract with `AnatomyV1.v1.json`. Adding a field to one without the other = silent drop.
+
 ---
 
 ## Schemas
 
-### Pre-existing (cognitive-sensor stack)
+### Cognitive / governance core (cognitive-sensor stack)
 
 | Schema | Purpose | Used By |
 |--------|---------|---------|
@@ -25,6 +31,61 @@ All data exports are validated against these schemas before writing. This ensure
 | `DailyProjection.v1.json` | Combined daily artifact | `build_projection.py` |
 | `DirectiveProposed.json` | CycleBoard mode routing directive (distinct from `Directive.v1.json` below) | `route_today.py` |
 | `Closures.v1.json` | Closure registry + streaks | Phase 5B `/api/law/close_loop` |
+| `CloseSignal.v1.json` | Closure event payload | Optogon → Atlas |
+| `EnergyLog.v1.json` | Energy / sleep log entries | governance daemon |
+| `LifeSignals.v1.json` | Aggregated life-signal payload | cognitive-sensor exports |
+| `TimelineEvents.v1.json` | Timeline event stream | dashboard, atlas-cli |
+| `WorkLedger.v1.json` | Work ledger entries | atlas-cli, daemon |
+| `IdeaRegistry.v1.json` | Captured ideas registry | excavator, atlas-cli |
+| `ExcavatedIdeas.v1.json` | Excavator output | `excavator.py` |
+| `ModeContract.v1.json` | Python↔TS routing contract | `routing.ts` + `atlas_config.py` |
+
+### Aegis Fabric (7 schemas)
+
+Policy + approval engine. All Aegis schemas live in both `contracts/schemas/` and `services/aegis-fabric/contracts/schemas/`.
+
+| Schema | Role |
+|--------|------|
+| `AegisAgent.v1.json` | Registered agent identity |
+| `AegisAgentAction.v1.json` | Action attempt by an agent |
+| `AegisApproval.v1.json` | Human/auto approval verdict |
+| `AegisPolicy.v1.json` | Policy rule definition |
+| `AegisPolicyDecision.v1.json` | Policy engine decision |
+| `AegisTenant.v1.json` | Tenant scoping |
+| `AegisWebhook.v1.json` | Outbound webhook notification |
+
+### Cortex / governance extensions (added 2026-04-18)
+
+| Schema | Role |
+|--------|------|
+| `CortexTask.v1.json` | Cortex execution task |
+| `AnalystDecision.v1.json` | Analyst-layer decision |
+| `RiskMitigation.v1.json` | Mitigation plan |
+| `ProjectGoal.v1.json` | Project-level goal record |
+| `WorkflowEvent.v1.json` | Workflow state event |
+| `AutomationQueue.v1.json` | Automation backlog entry |
+| `OrchestratorEvent.v1.json` | mosaic-orchestrator event |
+| `TaskExecution.v1.json` | TaskPrompt → BuildOutput transcript |
+| `ExecutionResult.v1.json` | Generic execution result envelope |
+| `ExecutionSpec.v1.json` | Generic execution spec envelope |
+
+### Mosaic Platform
+
+| Schema | Role |
+|--------|------|
+| `CompoundState.v1.json` | Compound (rolled-up) system state |
+| `FinancialLedger.v1.json` | Financial ledger entries |
+| `MeteringUsage.v1.json` | Metering / usage records |
+| `NetworkRegistry.v1.json` | Network registry |
+| `SkillRegistry.v1.json` | Skill registry |
+| `ValidationVerdict.v1.json` | Validator verdict |
+| `SimulationReport.v1.json` | Simulation report |
+
+### Anatomy / canvas-engine (added 2026-04-26)
+
+| Schema | Role |
+|--------|------|
+| `AnatomyV1.v1.json` | Anatomy extension → canvas-engine producer-consumer contract. Validated 7/7 real captures (hn-v1, example-v1, ycombinator, linear, figma, apify, gmail). In-process gate: Zod twin at `services/canvas-engine/src/adapter/v1-schema.ts`. |
 
 ### Optogon Stack (added 2026-04-18)
 
@@ -45,11 +106,12 @@ Ten schemas defining the full Optogon stack contracts. Source of truth: `doctrin
 
 Run validator:
 ```bash
+# All schemas with examples (Python validator)
 python contracts/validate.py           # terse
 python contracts/validate.py --verbose # list each schema/example pair
 ```
 
-Exit 0 = all 10 schemas validate their matching examples. Exit 1 = one or more failed; details printed.
+Exit 0 = success. Exit 1 = at least one schema/example pair failed; details printed. Currently 10 of 47 schemas have example payloads in `contracts/examples/`; the rest validate at runtime when consumers write data. AnatomyV1 is gated in-process by the Zod twin (`services/canvas-engine/src/adapter/v1-schema.ts`) rather than a CLI validator — adding a no-network npm script for it is open work.
 
 ---
 
@@ -160,16 +222,27 @@ Schemas are loaded and validated using JSON Schema draft-07.
 1. Create `schemas/YourSchema.v1.json` with JSON Schema draft-07 format
 2. Add validation function in `services/cognitive-sensor/validate.py`
 3. Document schema in this README
-4. Update FILE_MAP.md
+4. Update `PRE_ATLAS_MAP.md` schemas tree
+5. If consumers need TypeScript zod validation (canvas-engine pattern), add a Zod twin **in lockstep** with the JSON Schema — adding a field to one without the other = silent drop
 
 ---
 
 ## Examples
 
-See `examples/` for sample payloads:
+See `examples/` for sample payloads. As of 2026-04-26, 10 of 47 schemas have example payloads:
 
-- `daily_payload_example.json` — Sample CycleBoard payload (pre-existing)
-- `OptogonNode.v1.example.json` through `UserPreferenceStore.v1.example.json` — One example per Optogon stack schema. All threaded through `ship_inpact_lesson` as the running scenario (per `doctrine/04_BUILD_PLAN.md` Section 5).
+- `BuildOutput.v1.example.json`
+- `CloseSignal.v1.example.json`
+- `ContextPackage.v1.example.json`
+- `Directive.v1.example.json`
+- `OptogonNode.v1.example.json`
+- `OptogonPath.v1.example.json`
+- `OptogonSessionState.v1.example.json`
+- `Signal.v1.example.json`
+- `TaskPrompt.v1.example.json`
+- `UserPreferenceStore.v1.example.json`
+
+All Optogon stack examples are threaded through `ship_inpact_lesson` as the running scenario (per `doctrine/04_BUILD_PLAN.md` Section 5). AnatomyV1 has no example payload under `contracts/examples/` yet — its 7 real captures live under `~/web-audit/.canvas/<host>/anatomy.json` (hn-v1, example-v1, ycombinator, linear, figma, apify, gmail) and are validated in-process by the canvas-engine Zod twin during `/clone` calls.
 
 ---
 

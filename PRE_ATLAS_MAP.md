@@ -1,15 +1,17 @@
 # Pre Atlas - System Map & Specification
 
-**Version:** 1.2
-**Date:** 2026-03-11
+**Version:** 1.3
+**Date:** 2026-04-27
 **Total Size:** ~306 MB (excluding node_modules)
 **Phase History:** See `PHASE_ROADMAP.md` for complete implementation timeline (Phase 1 → 5B)
+
+> **Diagram below describes the original 5-project core (delta-fabric / delta-kernel / cognitive-sensor / webos-333 / uasc-m2m).** As of 2026-04-27, the system has expanded into a **12-service platform** plus tooling. See **Mosaic Platform Services** further down for the current port table including canvas-engine (`:3050`), aegis-fabric (`:3002`), optogon (`:3010`), cortex (`:3009`), inPACT (`:3006`), code-converter (`:3007`), and the rest.
 
 ---
 
 ## Overview
 
-Pre Atlas is a personal operating system stack consisting of 5 interconnected projects that form a behavioral governance and productivity system. The architecture flows from low-level state synchronization up through cognitive analysis to interface enforcement.
+Pre Atlas is a personal operating system stack. The original core was 5 interconnected projects (state sync → OS engine → behavioral governance → interfaces, plus uasc-m2m research). It has since grown into a federated monorepo of ~12 services + tooling layers (sitepull, anatomy extension, canvas-engine). The original architecture below still describes the governance backbone; the **Mosaic Platform Services** section is the current authoritative port and service map.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -58,7 +60,7 @@ Pre Atlas/
 │   │   ├── tsconfig.json       # TypeScript config
 │   │   ├── ARCHITECTURE_MAP.md # System design doc
 │   │   ├── start.bat           # Windows launcher
-│   │   ├── specs/              # 19 specification documents
+│   │   ├── specs/              # 20 specification documents
 │   │   │   ├── module-1-daily-cockpit.md
 │   │   │   ├── module-2-preparation-engine.md
 │   │   │   ├── module-3-matryoshka-dictionary.md
@@ -168,18 +170,39 @@ Pre Atlas/
 │       └── spec/               # Specifications
 │
 ├── contracts/
-│   └── schemas/                # Shared JSON Schema definitions (17 schemas)
+│   └── schemas/                # Shared JSON Schema definitions (47 schemas as of 2026-04-26)
+│       ├── # Cognitive / governance core
 │       ├── DailyPayload.v1.json       # CycleBoard payload (+ schema_version, mode_source)
+│       ├── DailyProjection.v1.json
 │       ├── ModeContract.v1.json       # Python↔TypeScript routing contract
 │       ├── CognitiveMetricsComputed.json
 │       ├── DirectiveProposed.json
-│       ├── DailyProjection.v1.json
 │       ├── Closures.v1.json           # Phase 5B closure registry
-│       ├── Aegis*.v1.json             # 7 aegis-fabric schemas
+│       ├── CloseSignal.v1.json
 │       ├── ExcavatedIdeas.v1.json
 │       ├── IdeaRegistry.v1.json
 │       ├── TimelineEvents.v1.json
-│       └── WorkLedger.v1.json
+│       ├── WorkLedger.v1.json
+│       ├── EnergyLog.v1.json
+│       ├── LifeSignals.v1.json
+│       ├── # Aegis (7 schemas)
+│       ├── AegisAgent.v1.json / AegisAgentAction.v1.json / AegisApproval.v1.json
+│       ├── AegisPolicy.v1.json / AegisPolicyDecision.v1.json
+│       ├── AegisTenant.v1.json / AegisWebhook.v1.json
+│       ├── # Optogon stack
+│       ├── OptogonNode.v1.json / OptogonPath.v1.json / OptogonSessionState.v1.json
+│       ├── ContextPackage.v1.json / TaskPrompt.v1.json / TaskExecution.v1.json
+│       ├── Directive.v1.json / Signal.v1.json / OrchestratorEvent.v1.json
+│       ├── BuildOutput.v1.json / SimulationReport.v1.json / ValidationVerdict.v1.json
+│       ├── ExecutionResult.v1.json / ExecutionSpec.v1.json
+│       ├── # Cortex / governance extensions
+│       ├── CortexTask.v1.json / AnalystDecision.v1.json / RiskMitigation.v1.json
+│       ├── ProjectGoal.v1.json / WorkflowEvent.v1.json / AutomationQueue.v1.json
+│       ├── # Anatomy / canvas-engine (2026-04-26)
+│       ├── AnatomyV1.v1.json
+│       ├── # Mosaic platform
+│       ├── CompoundState.v1.json / FinancialLedger.v1.json / MeteringUsage.v1.json
+│       ├── NetworkRegistry.v1.json / SkillRegistry.v1.json / UserPreferenceStore.v1.json
 │
 ├── data/
 │   └── projections/            # Daily projection artifacts
@@ -485,24 +508,149 @@ python uasc_generic.py --server 8420  # Start HTTP server
 
 ---
 
+### 7. canvas-engine (URL → live React clone)
+
+**Location:** `services/canvas-engine/`
+**Purpose:** Convert an anatomy.json + URL into a live, editable React clone (replaces the original `claude -p` edit loop in web-audit)
+**Technology:** TypeScript + Express + Vite
+**Port:** 3050 (Vite sandbox pool 3060–3069)
+**Status:** 6 phases shipped 2026-04-26 · 84 vitest pass post trainer audit (2026-04-27)
+
+**Pipeline:**
+```
+anatomy.json + URL → zod validate (passthrough)
+                  → URL→live-Vite-clone pipeline
+                  → in-process Vite pool 3060-3069
+                  → edit loop (tint/rename/hide transforms via SSE)
+                  → HMR write-through
+                  → conversation history
+```
+
+**Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/clone` | POST | URL + anatomy → live React clone session |
+| `/edit` | POST | Edit transform via SSE |
+| `/sessions` | GET | List active sessions |
+| `/sessions/:id/edits` | GET | Edit history |
+| `/sessions/:id` | DELETE | Release Vite port back to pool |
+
+**Vendored:** Pinned `firecrawl/open-lovable@69bd93b` at `src/vendor/lovable/{parse-blocks,system-prompt}.ts`.
+
+**Producer-consumer contract:** Anatomy producer is the [Chrome anatomy extension](#tooling-anatomy-extension); zod twin uses `.passthrough()` on root/regions/chains/chainNodes/metadata (mandatory two-way contract with `contracts/schemas/AnatomyV1.v1.json` — adding a field to one without the other = silent drop). Same lockstep discipline as the closed detection vocabulary.
+
+**Pattern library trainer (2026-04-27):** Self-grading trainer at `test/trainer-vs-truth.mjs` uses leaf-tag truth from selector paths to audit the pattern picker. Group-level: 100% (532/532). Strict pattern: 100% (27/27). Heuristic pattern (labeled NOT-truth): 90.7% (458/505). Six-round Codex audit progression: 84→97 APPROVE.
+
+**Boot:** Via `.claude/launch.json` `canvas-engine` entry.
+
+---
+
+## Tooling Layer (2026-04-26 / 2026-04-27)
+
+These live alongside the service stack but are not Mosaic services — they are tools/extensions that produce or consume anatomy data.
+
+### Anatomy Extension (Chrome MV3)
+**Location:** `tools/anatomy-extension/`
+**Status:** v0.4.4 · `content.js` committed 2026-04-27 (`28caebf`)
+**Producer of:** `AnatomyV1.v1.json` payloads consumed by canvas-engine
+
+Chrome MV3 extension that labels DOM elements (alt+click + auto-label heuristic), exports anatomy.json + anatomy.html, and ships a "pull this page" command that hands off to the sitepull canvas daemon. v0.4.4 includes closed detection vocabulary, adaptive sibling-collapse, drop counters, and the `tag#id` selector producer fix that closes the canvas-engine round-trip contract.
+
+### sitepull (web-audit)
+**Location:** `C:\Users\bruke\web-audit\` (separate sibling git repo, not under `tools/`)
+**Status:** SHIPPED 2026-04-26
+**canvas-engine reads from here via `WEB_AUDIT_ROOT` (default `os.homedir()/web-audit`).**
+
+Server-side scraper + replica generator. Recent flags:
+- `--record` — Playwright video of the crawl phase
+- `--stealth` — `playwright-extra` + stealth plugin (defeats sannysoft tier 2 + most of tier 3)
+- `--humanize` — ghost-cursor + jittered timing (no observable delta on direct WAF probes)
+- `--via brightdata` — managed-fetch backend via BrightData Web Unlocker (cloned DataDome.co · 203 pages · 4,949 assets · ~$1)
+
+### codex-partner
+**Location:** `tools/codex-partner/`
+**Status:** ACTIVE since 2026-04-25
+**Dispatcher:** `~/.claude/skills/codex-delegate/SKILL.md`
+
+Bridge to OpenAI Codex CLI v0.118 for delegated work (deploys, gh-fix-ci, figma → code, sora videos, threat modeling, etc). 4 output-schema templates (review · decision · fact-extract · diff-summary) at `tools/codex-partner/schemas/`. CLI wrapper at `tools/codex-partner/delegate.py` is the one-line entry point. Optogon path at `services/optogon/paths/delegate_to_codex.json` (6 nodes) wraps the handoff as a state machine — see [project_optogon_delegate_to_codex.md](../../.claude/projects/C--Users-bruke-Pre-Atlas/memory/project_optogon_delegate_to_codex.md).
+
+### anatomy-research
+**Location:** `tools/anatomy-research/`
+**Status:** Reference material — never edit vendored upstream code
+
+Vendored research repos consulted during the v0.2 anatomy schema convergence + Plan D rewrite:
+- `browser-use/` — clickable_elements.py + cascade rules (ported to extension as r2–r12)
+- `firecrawl/` + `firecrawl-mcp-server/` — main scraper + MCP server reference
+- `json-render/` — FlatElement spec + renderer
+- `JSON-Alexander/`
+- `plan-d-signal/` — signal data for the Plan D rewrite
+- `vendor-singlefile/` — SingleFile-MV3 + single-file-cli + single-file-core + zotero-connectors (all AGPL-3, reference only)
+
+Plus `AUDIT_FINDINGS.md` (the 2026-04-22 5-repo / 11-agent audit deliverable).
+
+### anatomy-rewrite
+**Location:** `tools/anatomy-rewrite/`
+**Status:** SPEC-stage (the Plan D track)
+
+Clean-room rewrite of the SingleFile serialization engine using the Claude-reads-source / Codex-implements-blind firewall. Currently spec-only: `SPEC/` + `CODEX-PROTOCOL.md` + `DIFF-HARNESS.md` + `TEST-CORPUS.md` + `README.md`. No source code yet.
+
+---
+
+## Research / Sandbox Layer (`_research/`)
+
+Not in the production stack but boots via launch.json `tour-test` entry:
+
+- `_research/openscreen/` — full Electron + Vite app with playwright/vitest/biome/tailwind. Standalone project that paired with the OpenScreen Lifts (tour player + pan-zoom features shipped 2026-04-26).
+- `_research/openscreen-lift-test/` — render fixtures + Playwright recordings for the lift-test referenced in launch.json port 8895.
+
+---
+
 ## Inter-Project Dependencies
 
 ```
+GOVERNANCE BACKBONE
 .delta-fabric/
     │
-    └──▶ services/delta-kernel (reads/writes entities.json, deltas.json)
-              │
-              └──▶ services/cognitive-sensor (conceptual alignment, separate data)
-                        │
-                        └──▶ CycleBoard/Dashboard (reads cognitive_state.json)
-                        │
-                        └──▶ ~/Downloads/cycleboard/brain/ (daily_payload.json)
+    └──▶ services/delta-kernel  ──▶  services/cognitive-sensor
+              │                              │
+              ▼                              ▼
+         CycleBoard/Dashboard        ~/Downloads/cycleboard/brain/
+                                        (daily_payload.json)
 
-apps/webos-333 ──── Standalone (no dependencies)
+OPTOGON / CORTEX EXECUTION LAYER (2026-04-19+)
+services/optogon (:3010)  ──▶  services/cortex (:3009)  ──▶  proposals.json
+       │                                  │
+       └──▶ services/aegis-fabric (:3002 · policy gate)
+       │
+       └──▶ services/cognitive-sensor/auto_triage.py
+              (Optogon driven fs-loop verdicts via triage_fs_loop path)
 
-research/uasc-m2m ──── Standalone research (no dependencies)
+ANATOMY / CANVAS-ENGINE PIPELINE (2026-04-26+)
+tools/anatomy-extension (Chrome MV3)
+       │
+       │  AnatomyV1 payload (validated against contracts/schemas/AnatomyV1.v1.json)
+       ▼
+~/web-audit/.canvas/<host>/anatomy.json   (sitepull captures, separate sibling repo)
+       │
+       │  WEB_AUDIT_ROOT (default os.homedir()/web-audit)
+       ▼
+services/canvas-engine (:3050)  ──▶  Vite sandbox pool (:3060-3069)
+       │                                       │
+       └──▶ web-audit/lib/serve.js /canvas (proxies SSE to :3050)
 
-contracts/schemas/ ──── Shared data contracts (consumed by all services)
+MOSAIC PLATFORM (sister stack)
+services/mosaic-orchestrator (:3005)  ──▶  mirofish (:3003), openclaw (:3004),
+                                            code-converter (:3007), uasc-executor (:3008)
+apps/inpact (:3006)  ──── today.html worker view + signals surface
+
+STANDALONE
+apps/webos-333 ──── Web OS demo (no dependencies)
+research/uasc-m2m ──── Symbolic encoding research (no dependencies)
+
+SHARED CONTRACT SURFACE
+contracts/schemas/ (47 schemas: 45 .v1.json + 2 legacy CognitiveMetricsComputed/DirectiveProposed) ──── consumed by all services + canvas-engine + extension
+contracts/validate.py ──── jsonschema runtime validator (Python)
+services/canvas-engine/src/adapter/v1-schema.ts ──── Zod twin (.passthrough) for AnatomyV1, in-process gate
 ```
 
 ---
@@ -558,7 +706,7 @@ npm install
 | delta-kernel | `services/delta-kernel/` | ~70 | ~15,000 |
 | cognitive-sensor | `services/cognitive-sensor/` | ~80 | ~12,000 |
 | uasc-m2m | `research/uasc-m2m/` | ~60 | ~8,000 |
-| contracts | `contracts/` | 17 | ~400 |
+| contracts | `contracts/` | 47 | ~1,500 |
 | scripts | `scripts/` | 4 | ~150 |
 | **Total** | | **~223** | **~39,750** |
 
@@ -587,6 +735,9 @@ npm install
 *Updated: 2026-03-26 (Mosaic Platform: orchestrator workflows, metering, Docker compose, installer — 19 schemas, 6 services)*
 *Updated: 2026-04-19 (Optogon Stack Phases 1-4 complete: contracts, Optogon service :3010, Cortex Ghost Executor wiring, close-loop + preference store)*
 *Updated: 2026-04-22 (Universal Triage Inbox: es filesystem eyes, thread_cards live sync, Optogon triage_fs_loop path, auto_triage daemon, cortex_bridge for real execution wire)*
+*Updated: 2026-04-26 (canvas-engine :3050 shipped — TS/Express/Vite, anatomy.json → live React clone via in-process Vite pool 3060-3069. AnatomyV1.v1.json schema added (47 total). Sitepull `--humanize` + `--via brightdata` shipped. Anatomy extension v0.4.4 with vocab gate + adaptive collapse.)*
+*Updated: 2026-04-27 (Canvas-engine pattern-library trainer + 6-round Codex audit shipped — score 84→97, producer-side `tag#id` selector fix in extension content.js. PR #11 hardened canvas-engine producer-consumer contracts. MEMORY.md consolidated 26.7KB→11.6KB.)*
+*Updated: 2026-04-27 (Code-walk corrections: Mosaic table now lists blueprint-generator :3030 + ai-exec-pipeline :5000; portless services section added (ws-gateway, crucix-as-live, perception, triangulation); AnatomyV1 Zod twin re-described as STRICT z.object (NOT `.passthrough()` as earlier text claimed); tools/anatomy-research and tools/anatomy-rewrite documented; new `_research/` section covers openscreen Electron app + lift-test fixtures.)*
 
 ---
 
@@ -605,11 +756,21 @@ npm install
 | 3008 | uasc-executor | Python/HTTP | Command execution engine (hands layer) |
 | 3009 | cortex | Python/FastAPI | Ghost Executor: consume_directive / emit_build_output |
 | 3010 | optogon | Python/FastAPI | Brain stem: path runtime + node processor |
+| 3030 | blueprint-generator | Next.js | Project blueprint generation (apps/blueprint-generator/) |
+| 3050 | canvas-engine | TS/Express/Vite | URL → live React clone from anatomy.json (open-lovable pipeline) |
+| 3060–3069 | canvas-engine Vite pool | TS/Vite | In-process React sandbox pool, allocated per /clone call |
+| 5000 | ai-exec-pipeline | Python | Pipeline runner (apps/ai-exec-pipeline/, server.py + client.py) |
 | 8765 | triage-server | Python/HTTP | Thread cards UI + /api/decide live sync |
+
+**Portless services** (no fixed launch.json port — invoked directly or via env):
+- `services/ws-gateway/` (TS/Node) — NATS↔Socket.IO bridge, port from `WS_PORT` env
+- `services/crucix/` (Node.js) — full service with `server.mjs` + `apis/` + `dashboard/`. Bridge from cognitive-sensor at `crucix_bridge.py`
+- `services/perception/` (Python) — `src/perception/` + tests + BUILD_LOG.md
+- `services/triangulation/` (Python) — `src/triangulation/` + tests + BUILD_LOG.md
 
 Infrastructure: PostgreSQL 15, Redis 7, Neo4j 5, Ollama.
 
-**Schemas** (44 total in `contracts/schemas/`, from Optogon `/health`): includes Mosaic, Aegis, Optogon stack (ContextPackage, CloseSignal, Directive, TaskPrompt, Signal, OptogonNode/Path/SessionState), BuildOutput, LifeSignals, and DirectiveProposed (legacy).
+**Schemas** (47 total in `contracts/schemas/` as of 2026-04-26 = 45 `.v1.json` + 2 legacy `CognitiveMetricsComputed.json` / `DirectiveProposed.json`): includes Mosaic, Aegis (7), Optogon stack (ContextPackage, CloseSignal, Directive, TaskPrompt, Signal, OptogonNode/Path/SessionState), BuildOutput, LifeSignals, and AnatomyV1 (canvas-engine producer-consumer contract). Python validator at `contracts/validate.py` (jsonschema, walks `contracts/examples/`). For AnatomyV1, the in-process gate is the Zod twin in `services/canvas-engine/src/adapter/v1-schema.ts` — STRICT `z.object` with optional fields (NOT `.passthrough()`); only `layersTaxonomySchema` uses `.catchall()` for additional layer entries. Two-way contract with the JSON Schema still applies — adding non-optional fields to either side without matching the other is a hard parse rejection. ajv 8.x is in delta-kernel `package.json` deps but no anatomy-specific npm script is wired today.
 
 **Docker**: `docker-compose.yml` (root) orchestrates 10 services. `installer.sh` for one-command setup.
 

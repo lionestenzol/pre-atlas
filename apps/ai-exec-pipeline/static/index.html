@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Execution Pipeline</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: ui-monospace, Menlo, Consolas, monospace; background:#0e0f12; color:#e6e8ec; margin:0; padding:24px; }
+  h1 { font-size:18px; margin:0 0 4px; letter-spacing:.02em; }
+  .sub { color:#8a8f99; font-size:12px; margin-bottom:20px; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  .card { background:#15171c; border:1px solid #23262d; border-radius:8px; padding:14px; }
+  .card h2 { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:#8a8f99; margin:0 0 10px; }
+  input, button, textarea { font:inherit; background:#0e0f12; color:#e6e8ec; border:1px solid #2a2e36; border-radius:6px; padding:8px 10px; }
+  input, textarea { width:100%; box-sizing:border-box; }
+  button { cursor:pointer; background:#1f6feb; border-color:#1f6feb; color:#fff; }
+  button:hover { background:#2a7bf0; }
+  .row { display:flex; gap:8px; }
+  .log { max-height:420px; overflow-y:auto; font-size:12px; }
+  .msg { border-bottom:1px solid #23262d; padding:8px 0; }
+  .msg:last-child { border-bottom:none; }
+  .who { color:#8a8f99; font-size:11px; }
+  .you { color:#7bd389; }
+  .ai { color:#b39ddb; white-space:pre-wrap; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:10px; background:#23262d; font-size:11px; color:#8a8f99; margin-right:6px; }
+  .status { font-size:11px; color:#8a8f99; margin-top:6px; }
+  .step { border-bottom:1px solid #23262d; padding:6px 0; font-size:12px; }
+  .step:last-child { border-bottom:none; }
+  .completed { color:#7bd389; }
+  .in_progress { color:#e6c07b; }
+  .tutorial { background:#15171c; border:1px solid #2d5ca8; border-radius:8px; padding:16px; margin-bottom:16px; }
+  .tutorial h2 { margin:0 0 8px; font-size:14px; color:#7fb4ff; }
+  .tutorial .step-num { display:inline-block; width:22px; height:22px; border-radius:50%; background:#1f6feb; color:#fff; text-align:center; line-height:22px; font-size:12px; margin-right:8px; }
+  .tutorial ol { list-style:none; padding:0; margin:8px 0 0; }
+  .tutorial li { padding:6px 0; font-size:13px; color:#c9ccd2; border-bottom:1px solid #23262d; }
+  .tutorial li:last-child { border-bottom:none; }
+  .tutorial code { background:#0e0f12; padding:2px 6px; border-radius:4px; color:#b39ddb; font-size:12px; }
+  .tutorial .hide { color:#8a8f99; cursor:pointer; font-size:11px; float:right; text-decoration:underline; background:none; border:none; padding:0; }
+  .tutorial.hidden { display:none; }
+  .help-fab { position:fixed; top:20px; right:20px; width:40px; height:40px; border-radius:50%; background:#1f6feb; color:#fff; border:none; font-size:20px; font-weight:bold; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:100; transition:transform .15s, background .15s; }
+  .help-fab:hover { background:#2a7bf0; transform:scale(1.08); }
+  .help-fab.active { background:#7bd389; color:#0e0f12; }
+</style>
+</head>
+<body>
+<h1>AI Execution Pipeline</h1>
+<div class="sub">Flask spine - claude CLI backend - JSON persistence</div>
+
+<button id="helpFab" class="help-fab" title="Tutorial">?</button>
+
+<div id="tutorial" class="tutorial">
+  <button class="hide" id="hideTut">hide</button>
+  <h2>What is this?</h2>
+  <div style="font-size:13px; color:#c9ccd2;">A shared log where you talk to Claude and track workflow steps. Everything saves to JSON on disk and survives restarts.</div>
+  <ol>
+    <li><span class="step-num">1</span><b>Chat panel (left):</b> Type a question, hit Send. The Flask server shells out to <code>claude -p "your message"</code> and returns the CLI's reply. No API key needed - uses your logged-in Claude Code session.</li>
+    <li><span class="step-num">2</span><b>Pipeline panel (right):</b> Record workflow milestones. Type a step name (e.g. <code>Deploy backend</code>), pick a status, hit Record. Each entry is numbered and timestamped - like a to-do list that logs when things finish.</li>
+    <li><span class="step-num">3</span><b>Everything persists:</b> Chat saves to <code>data/chat_history.json</code>, steps save to <code>data/pipeline_state.json</code>. Kill the server and restart - your log is still here.</li>
+    <li><span class="step-num">4</span><b>Also an API:</b> <code>GET /chatlog</code>, <code>POST /update_chat</code>, <code>GET /pipeline</code>, <code>POST /pipeline/step</code>. Send <code>X-API-KEY: DEV_KEY</code> header. Other devices (phone, another laptop, a cron job) can hit the same endpoints.</li>
+    <li><span class="step-num">5</span><b>Try it now:</b> Type "hello" in the chat box and press Enter. You'll see Claude reply in a few seconds.</li>
+  </ol>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Chat</h2>
+    <div id="log" class="log"></div>
+    <div class="row" style="margin-top:10px">
+      <input id="msg" placeholder="Ask Claude..." autocomplete="off">
+      <button id="send">Send</button>
+    </div>
+    <div class="status" id="chatStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>Pipeline Steps</h2>
+    <div id="steps"></div>
+    <div class="row" style="margin-top:10px">
+      <input id="stepName" placeholder="Step name" autocomplete="off" style="flex:2">
+      <select id="stepStatus" style="flex:1; background:#0e0f12; color:#e6e8ec; border:1px solid #2a2e36; border-radius:6px; padding:8px">
+        <option>completed</option>
+        <option>in_progress</option>
+        <option>blocked</option>
+      </select>
+      <button id="stepBtn">Record</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = "DEV_KEY";
+const H = { "X-API-KEY": KEY, "Content-Type": "application/json" };
+
+async function refreshChat() {
+  const r = await fetch("/chatlog", { headers: H });
+  const data = await r.json();
+  const log = document.getElementById("log");
+  log.innerHTML = "";
+  for (const m of data.messages) {
+    const div = document.createElement("div");
+    div.className = "msg";
+    div.innerHTML = `<div class="who"><span class="pill">${m.device_id}</span>${m.timestamp}</div>
+      <div class="you">&gt; ${escapeHtml(m.user_input)}</div>
+      <div class="ai">${escapeHtml(m.gpt_response)}</div>`;
+    log.appendChild(div);
+  }
+  log.scrollTop = log.scrollHeight;
+}
+
+async function refreshSteps() {
+  const r = await fetch("/pipeline", { headers: H });
+  const data = await r.json();
+  const el = document.getElementById("steps");
+  el.innerHTML = "";
+  for (const s of data.conversation_flow) {
+    const div = document.createElement("div");
+    div.className = "step";
+    div.innerHTML = `<span class="pill">#${s.iteration}</span>
+      <span class="${s.workflow_status}">${s.workflow_status}</span>
+      - ${escapeHtml(s.step)}
+      <div class="who">${s.timestamp}${s.note ? " - " + escapeHtml(s.note) : ""}</div>`;
+    el.appendChild(div);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c]);
+}
+
+document.getElementById("send").onclick = async () => {
+  const input = document.getElementById("msg");
+  const text = input.value.trim();
+  if (!text) return;
+  const status = document.getElementById("chatStatus");
+  status.textContent = "calling claude...";
+  input.value = "";
+  try {
+    await fetch("/update_chat", {
+      method: "POST", headers: H,
+      body: JSON.stringify({ device_id: "Browser", user_input: text })
+    });
+    status.textContent = "";
+    refreshChat();
+  } catch (e) { status.textContent = "error: " + e; }
+};
+
+document.getElementById("stepBtn").onclick = async () => {
+  const step = document.getElementById("stepName").value.trim();
+  const status = document.getElementById("stepStatus").value;
+  if (!step) return;
+  await fetch("/pipeline/step", {
+    method: "POST", headers: H,
+    body: JSON.stringify({ step, status })
+  });
+  document.getElementById("stepName").value = "";
+  refreshSteps();
+};
+
+document.getElementById("msg").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("send").click();
+});
+
+const tut = document.getElementById("tutorial");
+const helpFab = document.getElementById("helpFab");
+const TUT_KEY = "aiexec_tut_hidden";
+
+function applyTutState(hidden) {
+  if (hidden) { tut.classList.add("hidden"); helpFab.classList.remove("active"); }
+  else { tut.classList.remove("hidden"); helpFab.classList.add("active"); }
+}
+applyTutState(localStorage.getItem(TUT_KEY) === "1");
+
+document.getElementById("hideTut").onclick = () => {
+  localStorage.setItem(TUT_KEY, "1");
+  applyTutState(true);
+};
+helpFab.onclick = () => {
+  const nowHidden = !tut.classList.contains("hidden");
+  localStorage.setItem(TUT_KEY, nowHidden ? "1" : "0");
+  applyTutState(nowHidden);
+};
+
+refreshChat();
+refreshSteps();
+setInterval(refreshChat, 10000);
+setInterval(refreshSteps, 10000);
+</script>
+</body>
+</html>

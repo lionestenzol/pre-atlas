@@ -8,7 +8,7 @@
 
 import type {
   UUID, Timestamp, SHA256, Mode, Author, EntityType,
-  SystemStateData, ThreadData, MessageData, TaskData,
+  SystemStateData, ThreadData, MessageData, TaskData, GoalData,
   NoteData, ProjectData, InboxData, DraftData, DraftType,
   PendingActionData, ActionType, TaskStatus,
   TokenData, PatternData, MotifData,
@@ -538,6 +538,7 @@ export type EntityDataMap = {
   thread: ThreadData;
   message: MessageData;
   task: TaskData;
+  goal: GoalData;
   note: NoteData;
   project: ProjectData;
   inbox: InboxData;

@@ -218,6 +218,7 @@ export const SYNC_PRIORITY_MAP: Record<EntityType, SyncPriority> = {
   design_proposal: 10,
   preparation_result: 9,
   cycle_board: 6,
+  goal: 8,
 };
 
 // === OFF-GRID NODES (Module 7) ===

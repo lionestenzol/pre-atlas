@@ -44,7 +44,8 @@ export type EntityType =
   | 'actuation_receipt'
   | 'audio_surface'
   | 'preparation_result'
-  | 'cycle_board';
+  | 'cycle_board'
+  | 'goal';
 
 export type Mode =
   | 'RECOVER'
@@ -54,7 +55,7 @@ export type Mode =
   | 'COMPOUND'
   | 'SCALE';
 
-export type Author = 'user' | 'system' | 'ai' | 'cognitive-sensor' | 'closure_engine' | 'preparation_engine' | 'governance_daemon' | 'cycleboard' | 'enforcement_system';
+export type Author = 'user' | 'system' | 'ai' | 'cognitive-sensor' | 'closure_engine' | 'preparation_engine' | 'governance_daemon' | 'cycleboard' | 'enforcement_system' | 'atlas-goal-cli';
 
 export type Priority = 'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
 
@@ -178,6 +179,26 @@ export interface TaskData {
   priority: Exclude<Priority, 'CRITICAL'>;
   due_at: Timestamp | null;
   linked_thread: UUID | null;
+}
+
+export interface GoalCriterion {
+  id: string;
+  text: string;
+  done: boolean;
+  done_at?: Timestamp | null;
+}
+
+export type GoalStatus = 'active' | 'done' | 'partial' | 'missed' | 'abandoned';
+
+export interface GoalData {
+  [key: string]: unknown;
+  goal_id: string;
+  title: string;
+  deadline: Timestamp;
+  projects: string[];
+  done_criteria: GoalCriterion[];
+  status: GoalStatus;
+  closed_at: Timestamp | null;
 }
 
 export interface NoteData {

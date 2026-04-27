@@ -2283,7 +2283,12 @@ function render() {
       CommandScreen.render();
     } else {
       const screenContainer = content.querySelector('.max-w-6xl') || content;
-      screenContainer.innerHTML = ScreenRenderers[state.screen]();
+      const renderer = ScreenRenderers[state.screen];
+      if (typeof renderer === 'function') {
+        screenContainer.innerHTML = renderer();
+      } else {
+        screenContainer.innerHTML = `<div class="p-8 text-center text-slate-400"><h1 class="text-2xl font-bold mb-2">${state.screen}</h1><p class="text-sm">Screen not yet implemented.</p></div>`;
+      }
     }
 
     if (state.screen === 'AtoZ') {

@@ -3,6 +3,12 @@
 const screens = [
   { id: 'Command', label: 'Command', icon: 'fa-terminal' },
   { id: 'Home', label: 'Home', icon: 'fa-home' },
+  { id: 'Daily', label: 'Daily', icon: 'fa-calendar-day' },
+  { id: 'AtoZ', label: 'A–Z', icon: 'fa-tasks' },
+  { id: 'WeeklyFocus', label: 'Weekly Focus', icon: 'fa-bullseye' },
+  { id: 'Routines', label: 'Routines', icon: 'fa-clock' },
+  { id: 'Journal', label: 'Journal', icon: 'fa-book' },
+  { id: 'Reflections', label: 'Reflections', icon: 'fa-lightbulb' },
   { id: 'Energy', label: 'Energy', icon: 'fa-battery-three-quarters' },
   { id: 'Finance', label: 'Finance', icon: 'fa-wallet' },
   { id: 'Skills', label: 'Skills', icon: 'fa-graduation-cap' },
@@ -302,6 +308,986 @@ const ScreenRenderers = {
   },
 
 
+
+  Daily() {
+    const todayPlan = Helpers.getDayPlan();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+    const yesterdayPlan = state.DayPlans[yesterdayStr];
+    const dailyProgress = Helpers.calculateDailyProgress();
+
+    return `
+      <div class="space-y-6 fade-in">
+        <div class="mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-bold tracking-tight dark:text-white">Daily Plan</h1>
+              <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">${Helpers.formatDate(todayPlan.date)}</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="text-right hidden md:block">
+                <div class="text-2xl font-bold ${
+                  dailyProgress.overall >= 80 ? 'text-green-600 dark:text-green-400' :
+                  dailyProgress.overall >= 50 ? 'text-blue-600 dark:text-blue-400' :
+                  'text-slate-400 dark:text-gray-500'
+                }">${dailyProgress.overall}%</div>
+                <p class="text-xs text-slate-500 dark:text-gray-400">Progress</p>
+              </div>
+              <button onclick="addTimeBlock()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <i class="fas fa-plus mr-2"></i>Add Block
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-xl border-2 ${
+          dailyProgress.overall >= 80 ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' :
+          dailyProgress.overall >= 50 ? 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20' :
+          'border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+        } p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold dark:text-white">Today's Completion</h3>
+            <span class="text-xl font-bold ${
+              dailyProgress.overall >= 80 ? 'text-green-600 dark:text-green-400' :
+              dailyProgress.overall >= 50 ? 'text-blue-600 dark:text-blue-400' :
+              'text-slate-500 dark:text-gray-400'
+            }">${dailyProgress.overall}%</span>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            ${dailyProgress.breakdown.map(item => `
+              <div class="flex items-center gap-2">
+                <i class="fas ${item.icon} ${UI.getColorClass(item.color, 'text')} ${UI.getColorClass(item.color, 'textDark')}"></i>
+                <span class="text-slate-700 dark:text-gray-300">${item.label}:</span>
+                <span class="font-semibold dark:text-white">${item.completed}/${item.total}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+          <h2 class="text-xl font-bold mb-4 dark:text-white">Day Mode</h2>
+          <div class="flex flex-wrap gap-2">
+            ${['A', 'B', 'C'].map(type => `
+              <button
+                onclick="setDayType('${type}')"
+                class="px-6 py-3 rounded-lg font-medium transition-all ${
+                  todayPlan.day_type === type 
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                }"
+              >
+                ${type} Day
+                ${type === 'A' ? ' (Deep Focus)' : type === 'B' ? ' (Balanced)' : ' (Recovery)'}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+          <div class="p-6 border-b dark:border-gray-700">
+            <h2 class="text-xl font-bold dark:text-white">Time Blocks</h2>
+            <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Schedule your day</p>
+          </div>
+          <div class="p-6">
+            <div class="space-y-3">
+              ${todayPlan.time_blocks.map((block, index) => `
+                <div class="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
+                  <input
+                    type="time"
+                    value="${convertTo24Hour(block.time)}"
+                    onchange="updateTimeBlock('${block.id}', 'time', this.value)"
+                    class="font-mono text-sm border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-2 py-1"
+                  />
+                  <input
+                    type="text"
+                    value="${UI.sanitize(block.title)}"
+                    onchange="updateTimeBlock('${block.id}', 'title', this.value)"
+                    class="flex-1 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-3 py-2"
+                    placeholder="What are you doing?"
+                  />
+                  <button 
+                    onclick="toggleTimeBlockCompletion('${block.id}')"
+                    class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      block.completed ? 'bg-green-500 border-green-500' : 'border-slate-300 dark:border-gray-500'
+                    }"
+                  >
+                    ${block.completed ? '<i class="fas fa-check text-white text-xs"></i>' : ''}
+                  </button>
+                  <button onclick="removeTimeBlock('${block.id}')" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+            <h2 class="text-xl font-bold mb-4 dark:text-white">Baseline Goal (X)</h2>
+            <p class="text-slate-600 dark:text-gray-300 mb-4">Minimum accomplishment for today</p>
+            <textarea
+              id="baseline-goal"
+              class="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg p-3 min-h-[100px]"
+              placeholder="What's the minimum you want to achieve today?"
+            >${todayPlan.baseline_goal.text}</textarea>
+            <div class="flex items-center justify-between mt-4">
+              <button onclick="toggleGoalCompletion('baseline')" class="flex items-center gap-2 dark:text-gray-300">
+                <div class="w-5 h-5 rounded border flex items-center justify-center ${
+                  todayPlan.baseline_goal.completed ? 'bg-green-500 border-green-500' : 'border-slate-300 dark:border-gray-500'
+                }">
+                  ${todayPlan.baseline_goal.completed ? '<i class="fas fa-check text-white text-xs"></i>' : ''}
+                </div>
+                <span>${todayPlan.baseline_goal.completed ? 'Completed' : 'Mark as done'}</span>
+              </button>
+              <button onclick="saveGoals()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Save
+              </button>
+            </div>
+          </div>
+
+          <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+            <h2 class="text-xl font-bold mb-4 dark:text-white">Stretch Goal (Y)</h2>
+            <p class="text-slate-600 dark:text-gray-300 mb-4">Ambitious target for today</p>
+            <textarea
+              id="stretch-goal"
+              class="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg p-3 min-h-[100px]"
+              placeholder="What would make today amazing?"
+            >${todayPlan.stretch_goal.text}</textarea>
+            <div class="flex items-center justify-between mt-4">
+              <button onclick="toggleGoalCompletion('stretch')" class="flex items-center gap-2 dark:text-gray-300">
+                <div class="w-5 h-5 rounded border flex items-center justify-center ${
+                  todayPlan.stretch_goal.completed ? 'bg-green-500 border-green-500' : 'border-slate-300 dark:border-gray-500'
+                }">
+                  ${todayPlan.stretch_goal.completed ? '<i class="fas fa-check text-white text-xs"></i>' : ''}
+                </div>
+                <span>${todayPlan.stretch_goal.completed ? 'Completed' : 'Mark as done'}</span>
+              </button>
+              <button onclick="saveGoals()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8 Steps to Success -->
+        ${(() => {
+          const todayDate = stateManager.getTodayDate();
+          const eightSteps = state.EightSteps[todayDate] || {};
+          const steps = [
+            { id: 'positiveAttitude', name: 'Positive Attitude', desc: 'Morning affirmation written', icon: 'fa-smile' },
+            { id: 'beOnTime', name: 'Be on Time', desc: 'Left 15 min early', icon: 'fa-clock' },
+            { id: 'bePrepared', name: 'Be Prepared', desc: 'Top 3 tasks listed', icon: 'fa-list-check' },
+            { id: 'workFullDay', name: 'Work Full Day', desc: '4x 90-min blocks planned', icon: 'fa-briefcase' },
+            { id: 'workTerritory', name: 'Work Territory', desc: 'High-impact tasks prioritized', icon: 'fa-bullseye' },
+            { id: 'greatAttitude', name: 'Great Attitude', desc: 'Gratitude entry written', icon: 'fa-heart' },
+            { id: 'knowWhy', name: 'Know Your Why', desc: 'Purpose for top task', icon: 'fa-lightbulb' },
+            { id: 'takeControl', name: 'Take Control', desc: '2-hour focus block scheduled', icon: 'fa-crown' }
+          ];
+          const completedCount = steps.filter(s => eightSteps[s.id]).length;
+
+          return `
+            <div class="rounded-xl border dark:border-gray-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 shadow-sm">
+              <div class="p-6 border-b border-amber-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h2 class="text-xl font-bold dark:text-white">8 Steps to Success</h2>
+                    <p class="text-sm text-amber-700 dark:text-gray-400 mt-1">SMART goal framework for daily excellence</p>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-2xl font-bold ${completedCount === 8 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}">${completedCount}/8</div>
+                    <p class="text-xs text-amber-700 dark:text-gray-400">Steps Done</p>
+                  </div>
+                </div>
+              </div>
+              <div class="p-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  ${steps.map((step, index) => `
+                    <button onclick="toggleEightStep('${step.id}')"
+                            class="p-3 rounded-lg border-2 transition-all text-left ${
+                              eightSteps[step.id]
+                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                : 'border-amber-200 dark:border-gray-600 hover:border-amber-400 dark:hover:border-gray-500'
+                            }">
+                      <div class="flex items-center gap-2 mb-1">
+                        <i class="fas ${step.icon} ${eightSteps[step.id] ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}"></i>
+                        <span class="text-xs font-bold ${eightSteps[step.id] ? 'text-green-700 dark:text-green-300' : 'text-amber-800 dark:text-gray-300'}">${index + 1}</span>
+                      </div>
+                      <p class="text-xs font-medium ${eightSteps[step.id] ? 'text-green-700 dark:text-green-300' : 'text-slate-700 dark:text-gray-300'}">${step.name}</p>
+                      <p class="text-xs ${eightSteps[step.id] ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-gray-400'}">${step.desc}</p>
+                      ${eightSteps[step.id] ? '<i class="fas fa-check-circle text-green-500 absolute top-2 right-2"></i>' : ''}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          `;
+        })()}
+
+        <!-- Contingency Quick Actions -->
+        <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+          <div class="p-6 border-b dark:border-gray-700">
+            <h2 class="text-xl font-bold dark:text-white">Contingency Actions</h2>
+            <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Quick adjustments when plans change</p>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <button onclick="activateContingency('runningLate')" class="p-4 rounded-lg border dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-center">
+                <i class="fas fa-running text-2xl text-red-500 mb-2"></i>
+                <p class="text-sm font-medium dark:text-gray-300">Running Late</p>
+                <p class="text-xs text-slate-500 dark:text-gray-400">Skip non-essentials</p>
+              </button>
+              <button onclick="activateContingency('lowEnergy')" class="p-4 rounded-lg border dark:border-gray-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-all text-center">
+                <i class="fas fa-battery-quarter text-2xl text-yellow-500 mb-2"></i>
+                <p class="text-sm font-medium dark:text-gray-300">Low Energy</p>
+                <p class="text-xs text-slate-500 dark:text-gray-400">Switch to B-Day</p>
+              </button>
+              <button onclick="activateContingency('freeTime')" class="p-4 rounded-lg border dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all text-center">
+                <i class="fas fa-gift text-2xl text-green-500 mb-2"></i>
+                <p class="text-sm font-medium dark:text-gray-300">Free Time</p>
+                <p class="text-xs text-slate-500 dark:text-gray-400">Quick wins</p>
+              </button>
+              <button onclick="activateContingency('disruption')" class="p-4 rounded-lg border dark:border-gray-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all text-center">
+                <i class="fas fa-bolt text-2xl text-purple-500 mb-2"></i>
+                <p class="text-sm font-medium dark:text-gray-300">Disruption</p>
+                <p class="text-xs text-slate-500 dark:text-gray-400">Reassess priorities</p>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        ${yesterdayPlan ? `
+          <div class="rounded-xl border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 p-6">
+            <h3 class="text-lg font-bold text-blue-800 dark:text-blue-300 mb-2">
+              <i class="fas fa-history mr-2"></i>Yesterday's Reflection
+            </h3>
+            <p class="text-blue-700 dark:text-blue-300">You set "${yesterdayPlan.baseline_goal.text}" as your baseline goal.</p>
+            ${yesterdayPlan.baseline_goal.completed ?
+              '<p class="text-green-700 dark:text-green-400 mt-2"><i class="fas fa-check mr-1"></i>Great job completing it!</p>' :
+              '<p class="text-orange-700 dark:text-orange-400 mt-2"><i class="fas fa-lightbulb mr-1"></i>Consider adjusting today\'s goals.</p>'
+            }
+          </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  AtoZ() {
+    const currentFilter = getAzFilter();
+    const currentSearch = getAzSearch();
+
+    const filteredTasks = state.AZTask.filter(task => {
+      const matchesStatus = currentFilter === 'all' ||
+        (currentFilter === 'completed' && task.status === TASK_STATUS.COMPLETED) ||
+        (currentFilter === 'in-progress' && task.status === TASK_STATUS.IN_PROGRESS) ||
+        (currentFilter === 'not-started' && task.status === TASK_STATUS.NOT_STARTED);
+
+      const searchLower = currentSearch.toLowerCase();
+      const matchesSearch = !currentSearch ||
+        task.task.toLowerCase().includes(searchLower) ||
+        task.letter.toLowerCase().includes(searchLower) ||
+        (task.notes && task.notes.toLowerCase().includes(searchLower));
+
+      return matchesStatus && matchesSearch;
+    });
+
+    const stats = {
+      total: state.AZTask.length,
+      completed: state.AZTask.filter(t => t.status === 'Completed').length,
+      inProgress: state.AZTask.filter(t => t.status === 'In Progress').length,
+      notStarted: state.AZTask.filter(t => t.status === 'Not Started').length
+    };
+    
+    return `
+      <div class="space-y-6 fade-in">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold tracking-tight dark:text-white">A–Z Tasks</h1>
+          <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Plan and track lettered monthly goals</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          ${[
+            { label: 'Total Tasks', value: stats.total, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+            { label: 'Completed', value: stats.completed, color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+            { label: 'In Progress', value: stats.inProgress, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
+            { label: 'Not Started', value: stats.notStarted, color: 'bg-slate-100 text-slate-700 dark:bg-gray-700 dark:text-gray-300' }
+          ].map(stat => `
+            <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+              <p class="text-sm text-slate-500 dark:text-gray-400">${stat.label}</p>
+              <p class="text-2xl font-bold mt-1 dark:text-white">${stat.value}</p>
+              <div class="mt-2 w-full bg-slate-200 dark:bg-gray-700 rounded-full h-2">
+                <div class="h-2 rounded-full ${stat.color.split(' ')[0]}" 
+                     style="width: ${stats.total ? (stat.value / stats.total) * 100 : 0}%">
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="flex flex-wrap gap-2 justify-between items-center">
+          <div class="flex gap-2">
+            <button onclick="openCreateModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <i class="fas fa-plus mr-2"></i>Add Task
+            </button>
+            <button onclick="sortTasks()" class="px-4 py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700">
+              <i class="fas fa-sort-alpha-down mr-2"></i>Sort
+            </button>
+          </div>
+          <div class="flex gap-2">
+            <select onchange="filterTasks(this.value)" class="border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2" aria-label="Filter tasks by status">
+              <option value="all" ${currentFilter === 'all' ? 'selected' : ''}>All Tasks</option>
+              <option value="completed" ${currentFilter === 'completed' ? 'selected' : ''}>Completed</option>
+              <option value="in-progress" ${currentFilter === 'in-progress' ? 'selected' : ''}>In Progress</option>
+              <option value="not-started" ${currentFilter === 'not-started' ? 'selected' : ''}>Not Started</option>
+            </select>
+            <input
+              type="text"
+              id="az-search-input"
+              value="${UI.sanitize(currentSearch)}"
+              placeholder="Search tasks..." 
+              onkeyup="searchTasks(this.value)"
+              class="border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2"
+            />
+          </div>
+        </div>
+
+        <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+          <div class="p-6">
+            ${filteredTasks.length === 0 ? `
+              <div class="text-center py-12">
+                <i class="fas fa-search text-5xl text-slate-300 dark:text-gray-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-slate-700 dark:text-gray-300 mb-2">No tasks found</h3>
+                <p class="text-slate-500 dark:text-gray-400 mb-6">Try adjusting your filters or search query</p>
+                ${state.AZTask.length === 0 ? `<button onclick="openCreateModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Create First Task</button>` : ''}
+              </div>
+            ` : `
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                ${filteredTasks.map(task => `
+                  <div class="border dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow ${
+                    task.status === 'Completed' ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' :
+                    task.status === 'In Progress' ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800' :
+                    'bg-white border-slate-200 dark:bg-gray-800 dark:border-gray-700'
+                  }">
+                    <div class="flex items-start justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                          task.status === 'Completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                          task.status === 'In Progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                          'bg-slate-100 text-slate-700 dark:bg-gray-700 dark:text-gray-300'
+                        }">
+                          ${task.letter}
+                        </div>
+                        <span class="font-medium dark:text-gray-300">${UI.sanitize(task.task)}</span>
+                      </div>
+                      <span class="text-xs px-2 py-1 rounded-full ${
+                        task.status === 'Completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                        task.status === 'In Progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                        'bg-slate-100 text-slate-700 dark:bg-gray-700 dark:text-gray-300'
+                      }">
+                        ${UI.sanitize(task.status)}
+                      </span>
+                    </div>
+
+                    ${task.notes ? `
+                      <p class="text-sm text-slate-600 dark:text-gray-400 mb-3">${UI.sanitize(task.notes)}</p>
+                    ` : ''}
+                    
+                    <div class="flex justify-between items-center mt-4">
+                      <div class="flex gap-1">
+                        <button onclick="completeTask('${task.id}')" class="p-2 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg text-green-600 dark:text-green-400">
+                          <i class="fas fa-check"></i>
+                        </button>
+                        <button onclick="openEditModal('${task.id}')" class="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteTask('${task.id}')" class="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                      <span class="text-xs text-slate-500 dark:text-gray-400">
+                        ${new Date(task.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+  
+  WeeklyFocus() {
+    return `
+      <div class="space-y-6 fade-in">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold tracking-tight dark:text-white">Weekly Focus Areas</h1>
+          <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Balance your efforts across these key areas</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          ${state.FocusArea.map(area => {
+            const areaTasks = area.tasks || [];
+            const completedTasks = areaTasks.filter(t => t.completed).length;
+            const progress = areaTasks.length ? Math.round((completedTasks / areaTasks.length) * 100) : 0;
+            
+            return `
+              <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-bold dark:text-white">${UI.sanitize(area.name)}</h3>
+                  <div class="w-3 h-3 rounded-full" style="background-color: ${area.color}"></div>
+                </div>
+                <p class="text-slate-600 dark:text-gray-300 mb-4">${UI.sanitize(area.definition)}</p>
+                
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-slate-500 dark:text-gray-400">This Week</span>
+                    <span class="font-medium dark:text-gray-300">${completedTasks}/${areaTasks.length} tasks</span>
+                  </div>
+                  <div class="w-full bg-slate-200 dark:bg-gray-700 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all" style="background-color: ${area.color}; width: ${progress}%"></div>
+                  </div>
+                </div>
+                
+                ${areaTasks.length > 0 ? `
+                  <div class="mt-4 space-y-2">
+                    ${areaTasks.map(task => `
+                      <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-gray-700">
+                        <button onclick="toggleFocusTask('${area.id}', '${task.id}')" class="w-5 h-5 rounded border-2 flex items-center justify-center ${
+                          task.completed ? 'bg-green-500 border-green-500' : 'border-slate-300 dark:border-gray-500'
+                        }">
+                          ${task.completed ? '<i class="fas fa-check text-white text-xs"></i>' : ''}
+                        </button>
+                        <span class="flex-1 text-sm dark:text-gray-300 ${task.completed ? 'line-through opacity-60' : ''}">${UI.sanitize(task.text)}</span>
+                        <button onclick="removeFocusTask('${area.id}', '${task.id}')" class="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600 dark:text-red-400">
+                          <i class="fas fa-times text-xs"></i>
+                        </button>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+                
+                <button onclick="addFocusTask('${area.id}')" class="mt-4 w-full text-center py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700">
+                  <i class="fas fa-plus mr-2"></i>Add Task
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+          <h3 class="text-xl font-bold mb-4 dark:text-white">Focus Distribution</h3>
+          <p class="text-slate-600 dark:text-gray-300 mb-6">Aim for balanced attention across all areas each week</p>
+          
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            ${state.FocusArea.map(area => {
+              const taskCount = (area.tasks || []).length;
+              return `
+                <div class="text-center">
+                  <div class="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold" 
+                       style="background-color: ${area.color}">
+                    ${taskCount}
+                  </div>
+                  <p class="text-sm font-medium dark:text-gray-300">${UI.sanitize(area.name)}</p>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+  
+  Routines() {
+    const routineTypes = Object.keys(state.Routine);
+    const todayPlan = Helpers.getDayPlan();
+    if (!todayPlan.routines_completed) todayPlan.routines_completed = {};
+
+    return `
+      <div class="space-y-6 fade-in">
+        <div class="mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-bold tracking-tight dark:text-white">Routines</h1>
+              <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Build consistency with daily routines</p>
+            </div>
+            <button onclick="addNewRoutineType()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <i class="fas fa-plus mr-2"></i>New Routine
+            </button>
+          </div>
+        </div>
+
+        <!-- Today's Routine Tracker -->
+        <div class="rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-sm">
+          <div class="p-6 border-b border-blue-200 dark:border-blue-800">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-xl font-bold text-blue-900 dark:text-blue-100">Today's Routine Log</h2>
+                <p class="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  ${Helpers.formatDate(todayPlan.date)} • Track your daily routine completion
+                </p>
+              </div>
+              <div class="text-right">
+                <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  ${Object.values(todayPlan.routines_completed).filter(r => r.completed).length}/${routineTypes.length}
+                </div>
+                <p class="text-xs text-blue-700 dark:text-blue-300">Routines Done</p>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            ${routineTypes.length === 0 ? `
+              <p class="text-center text-blue-700 dark:text-blue-300 py-8">
+                <i class="fas fa-info-circle mb-2"></i><br>
+                Create your first routine to start tracking
+              </p>
+            ` : `
+              <div class="grid md:grid-cols-2 gap-4">
+                ${routineTypes.map(routineName => {
+                  const routine = state.Routine[routineName];
+                  const completionData = todayPlan.routines_completed[routineName] || { completed: false, steps: {} };
+                  const completedSteps = Object.values(completionData.steps || {}).filter(Boolean).length;
+                  const isFullyComplete = completionData.completed;
+
+                  const colorSchemes = {
+                    'Morning': { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-300', icon: 'fa-sun' },
+                    'Commute': { bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-700 dark:text-cyan-300', icon: 'fa-car' },
+                    'Evening': { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-300', icon: 'fa-moon' },
+                    'Afternoon': { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-300', icon: 'fa-cloud-sun' },
+                    'Workout': { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', icon: 'fa-dumbbell' },
+                    'Work': { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-700 dark:text-indigo-300', icon: 'fa-briefcase' }
+                  };
+                  const colors = colorSchemes[routineName] || {
+                    bg: 'bg-slate-100 dark:bg-gray-700',
+                    text: 'text-slate-700 dark:text-gray-300',
+                    icon: 'fa-list-check'
+                  };
+
+                  return `
+                    <div class="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-4 ${isFullyComplete ? 'ring-2 ring-green-500' : ''}">
+                      <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                          <i class="fas ${colors.icon} ${colors.text}"></i>
+                          <h3 class="font-bold dark:text-white">${UI.sanitize(routineName)}</h3>
+                        </div>
+                        <button onclick="toggleRoutineComplete('${routineName}')"
+                                class="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
+                                  isFullyComplete
+                                    ? 'bg-green-500 border-green-500'
+                                    : 'border-slate-300 dark:border-gray-500 hover:border-green-500'
+                                }">
+                          ${isFullyComplete ? '<i class="fas fa-check text-white"></i>' : ''}
+                        </button>
+                      </div>
+                      <div class="space-y-1">
+                        ${routine.map((step, index) => {
+                          const stepCompleted = completionData.steps?.[index] || false;
+                          return `
+                            <label class="flex items-center gap-2 p-2 rounded hover:bg-slate-50 dark:hover:bg-gray-700 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                ${stepCompleted ? 'checked' : ''}
+                                onchange="toggleRoutineStep('${routineName}', ${index}, this.checked)"
+                                class="w-4 h-4 rounded border-slate-300 dark:border-gray-600 text-green-600 focus:ring-green-500"
+                              />
+                              <span class="text-sm dark:text-gray-300 flex-1 ${stepCompleted ? 'line-through opacity-60' : ''}">
+                                ${UI.sanitize(step)}
+                              </span>
+                            </label>
+                          `;
+                        }).join('')}
+                      </div>
+                      <div class="mt-3 pt-3 border-t dark:border-gray-700">
+                        <div class="flex items-center justify-between text-xs">
+                          <span class="text-slate-600 dark:text-gray-400">Progress</span>
+                          <span class="${completedSteps === routine.length ? 'text-green-600 dark:text-green-400 font-bold' : 'text-slate-600 dark:text-gray-400'}">
+                            ${completedSteps}/${routine.length} steps
+                          </span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                          <div class="bg-green-500 h-2 rounded-full transition-all"
+                               style="width: ${routine.length ? (completedSteps / routine.length) * 100 : 0}%"></div>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          ${routineTypes.map((routineType, typeIndex) => {
+            const colorSchemes = {
+              'Morning': { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-300', icon: 'fa-sun' },
+              'Commute': { bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-700 dark:text-cyan-300', icon: 'fa-car' },
+              'Evening': { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-300', icon: 'fa-moon' },
+              'Afternoon': { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-300', icon: 'fa-cloud-sun' },
+              'Workout': { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', icon: 'fa-dumbbell' },
+              'Work': { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-700 dark:text-indigo-300', icon: 'fa-briefcase' }
+            };
+            const colors = colorSchemes[routineType] || {
+              bg: 'bg-slate-100 dark:bg-gray-700',
+              text: 'text-slate-700 dark:text-gray-300',
+              icon: 'fa-list-check'
+            };
+
+            return `
+              <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                <div class="p-6 border-b dark:border-gray-700">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <i class="fas ${colors.icon} ${colors.text}"></i>
+                      <h2 class="text-xl font-bold dark:text-white">${UI.sanitize(routineType)} Routine</h2>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="px-3 py-1 ${colors.bg} ${colors.text} rounded-full text-sm">
+                        ${state.Routine[routineType].length} steps
+                      </span>
+                      <button onclick="deleteRoutineType('${routineType}')" class="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
+                        <i class="fas fa-trash text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-6">
+                  <div class="space-y-2">
+                    ${state.Routine[routineType].map((step, index) => `
+                      <div class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700 group">
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onclick="moveRoutineStep('${routineType}', ${index}, 'up')"
+                                  class="p-1 hover:bg-slate-200 dark:hover:bg-gray-600 rounded ${index === 0 ? 'invisible' : ''}"
+                                  title="Move up">
+                            <i class="fas fa-chevron-up text-xs text-slate-600 dark:text-gray-400"></i>
+                          </button>
+                          <button onclick="moveRoutineStep('${routineType}', ${index}, 'down')"
+                                  class="p-1 hover:bg-slate-200 dark:hover:bg-gray-600 rounded ${index === state.Routine[routineType].length - 1 ? 'invisible' : ''}"
+                                  title="Move down">
+                            <i class="fas fa-chevron-down text-xs text-slate-600 dark:text-gray-400"></i>
+                          </button>
+                        </div>
+                        <div class="w-7 h-7 rounded-full ${colors.bg} ${colors.text} flex items-center justify-center font-bold text-sm flex-shrink-0">
+                          ${index + 1}
+                        </div>
+                        <input
+                          type="text"
+                          value="${UI.sanitize(step)}"
+                          onchange="updateRoutineStep('${routineType}', ${index}, this.value)"
+                          class="flex-1 bg-transparent border-0 dark:text-gray-300 focus:outline-none focus:bg-white dark:focus:bg-gray-700 px-2 py-1 rounded"
+                          placeholder="Routine step..."
+                        />
+                        <button onclick="deleteRoutineStep('${routineType}', ${index})"
+                                class="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600 dark:text-red-400 transition-opacity">
+                          <i class="fas fa-times text-sm"></i>
+                        </button>
+                      </div>
+                    `).join('')}
+
+                    <button onclick="addRoutineStep('${routineType}')"
+                            class="w-full mt-3 p-3 border-2 border-dashed dark:border-gray-600 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700 ${colors.text} transition-colors">
+                      <i class="fas fa-plus mr-2"></i>Add Step
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+          <h3 class="text-xl font-bold mb-4 dark:text-white">Routine Overview</h3>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="text-center p-4">
+              <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                ${Object.values(state.Routine).reduce((sum, routine) => sum + routine.length, 0)}
+              </div>
+              <p class="text-slate-600 dark:text-gray-300">Total Steps</p>
+            </div>
+            <div class="text-center p-4">
+              <div class="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+                ${Object.keys(state.Routine).length}
+              </div>
+              <p class="text-slate-600 dark:text-gray-300">Routines</p>
+            </div>
+            <div class="text-center p-4">
+              <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+                ${Math.round(Object.values(state.Routine).reduce((sum, routine) => sum + routine.length, 0) / Object.keys(state.Routine).length) || 0}
+              </div>
+              <p class="text-slate-600 dark:text-gray-300">Avg Steps/Routine</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+  
+  Journal() {
+    const sortedEntries = [...state.Journal].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    return `
+      <div class="space-y-6 fade-in">
+        <div class="mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-bold tracking-tight dark:text-white">Journal</h1>
+              <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Log your thoughts, progress, and reflections</p>
+            </div>
+            <button onclick="openJournalModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <i class="fas fa-plus mr-2"></i>New Entry
+            </button>
+          </div>
+        </div>
+
+        ${sortedEntries.length === 0 ? `
+          <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center">
+            <i class="fas fa-book text-5xl text-slate-300 dark:text-gray-600 mb-4"></i>
+            <h3 class="text-xl font-semibold text-slate-700 dark:text-gray-300 mb-2">No Journal Entries Yet</h3>
+            <p class="text-slate-500 dark:text-gray-400 mb-6">Start documenting your journey, wins, and lessons learned</p>
+            <button onclick="openJournalModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              Create First Entry
+            </button>
+          </div>
+        ` : `
+          <div class="space-y-4">
+            ${sortedEntries.map(entry => `
+              <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                      <h3 class="text-lg font-bold dark:text-white">${entry.title || 'Untitled Entry'}</h3>
+                      ${entry.mood ? `<span class="text-2xl">${entry.mood}</span>` : ''}
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-gray-400">
+                      ${new Date(entry.timestamp).toLocaleString('en-US', { 
+                        weekday: 'short', 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button onclick="editJournalEntry('${entry.id}')" class="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteJournalEntry('${entry.id}')" class="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                ${entry.tags && entry.tags.length > 0 ? `
+                  <div class="flex flex-wrap gap-2 mb-3">
+                    ${entry.tags.map(tag => `
+                      <span class="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full text-xs">
+                        ${tag}
+                      </span>
+                    `).join('')}
+                  </div>
+                ` : ''}
+                
+                <div class="prose dark:prose-invert max-w-none">
+                  <p class="text-slate-700 dark:text-gray-300 whitespace-pre-wrap">${entry.content}</p>
+                </div>
+                
+                ${entry.linkedTasks && entry.linkedTasks.length > 0 ? `
+                  <div class="mt-4 pt-4 border-t dark:border-gray-700">
+                    <p class="text-sm font-medium text-slate-600 dark:text-gray-400 mb-2">Linked Tasks:</p>
+                    <div class="flex flex-wrap gap-2">
+                      ${entry.linkedTasks.map(taskId => {
+                        const task = state.AZTask.find(t => t.id === taskId);
+                        return task ? `
+                          <span class="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded text-xs">
+                            ${task.letter}: ${task.task}
+                          </span>
+                        ` : '';
+                      }).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  Reflections() {
+    const tabs = [
+      { id: 'weekly', label: 'Weekly', icon: 'fa-calendar-week', color: 'blue' },
+      { id: 'monthly', label: 'Monthly', icon: 'fa-calendar-alt', color: 'green' },
+      { id: 'quarterly', label: 'Quarterly', icon: 'fa-chart-bar', color: 'purple' },
+      { id: 'yearly', label: 'Yearly', icon: 'fa-star', color: 'amber' }
+    ];
+
+    const activeTab = state.reflectionTab || 'weekly';
+    const reflections = state.Reflections[activeTab] || [];
+    const sortedReflections = [...reflections].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    const promptLabels = {
+      weekly: { wins: '3 Biggest Wins', challenges: 'Challenges', lessons: 'Lessons Learned', priorities: 'Next Week Priorities' },
+      monthly: { accomplishments: 'Accomplishments', goals_progress: 'Goal Progress', improvements: 'Improvements', focus: 'Next Month Focus' },
+      quarterly: { milestones: 'Milestones', trends: 'Trends', growth: 'Growth Areas', strategy: 'Strategy' },
+      yearly: { top5: 'Top 5 Achievements', transformation: 'Transformation', gratitude: 'Gratitude', vision: 'Vision' }
+    };
+
+    return `
+      <div class="space-y-6 fade-in">
+        <div class="mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-bold tracking-tight dark:text-white">Reflections</h1>
+              <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Review your progress and plan ahead</p>
+            </div>
+            <button onclick="openReflectionModal('${activeTab}')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <i class="fas fa-plus mr-2"></i>New ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Review
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 border-b dark:border-gray-700 pb-2 overflow-x-auto">
+          ${tabs.map(tab => `
+            <button onclick="setReflectionTab('${tab.id}')"
+                    class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                      activeTab === tab.id
+                        ? `bg-${tab.color}-100 text-${tab.color}-700 dark:bg-${tab.color}-900/30 dark:text-${tab.color}-300 font-medium`
+                        : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-700'
+                    }">
+              <i class="fas ${tab.icon}"></i>
+              <span>${tab.label}</span>
+              <span class="ml-1 px-2 py-0.5 rounded-full text-xs ${
+                activeTab === tab.id
+                  ? `bg-${tab.color}-200 dark:bg-${tab.color}-800`
+                  : 'bg-slate-200 dark:bg-gray-600'
+              }">${(state.Reflections[tab.id] || []).length}</span>
+            </button>
+          `).join('')}
+        </div>
+
+        <!-- Reflection List -->
+        ${sortedReflections.length === 0 ? `
+          <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center">
+            <i class="fas fa-lightbulb text-5xl text-slate-300 dark:text-gray-600 mb-4"></i>
+            <h3 class="text-xl font-semibold text-slate-700 dark:text-gray-300 mb-2">No ${activeTab} reflections yet</h3>
+            <p class="text-slate-500 dark:text-gray-400 mb-6">Take time to review your progress and set intentions</p>
+            <button onclick="openReflectionModal('${activeTab}')" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              Start Your First ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Review
+            </button>
+          </div>
+        ` : `
+          <div class="space-y-4">
+            ${sortedReflections.map(reflection => `
+              <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                <div class="flex items-start justify-between mb-4">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg font-bold dark:text-white">
+                        ${new Date(reflection.timestamp).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
+                      ${reflection.mood ? `
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${
+                          reflection.mood === 'excellent' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                          reflection.mood === 'good' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                          reflection.mood === 'neutral' ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' :
+                          reflection.mood === 'challenging' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                        }">${reflection.mood}</span>
+                      ` : ''}
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-gray-400 mt-1">
+                      ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Reflection
+                    </p>
+                  </div>
+                  <button onclick="deleteReflection('${activeTab}', '${reflection.id}')"
+                          class="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+
+                <div class="space-y-4">
+                  ${Object.entries(reflection.responses).map(([key, value]) => `
+                    <div class="border-l-4 border-blue-500 pl-4">
+                      <h4 class="text-sm font-semibold text-slate-600 dark:text-gray-400 mb-1">
+                        ${promptLabels[activeTab][key] || key}
+                      </h4>
+                      <p class="text-slate-700 dark:text-gray-300 whitespace-pre-wrap">${UI.sanitize(value)}</p>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+
+        <!-- Reflection Summary -->
+        <div class="rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+          <h3 class="text-lg font-bold mb-4 dark:text-white">Reflection Summary</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            ${tabs.map(tab => `
+              <div class="text-center p-4 rounded-lg bg-${tab.color}-50 dark:bg-${tab.color}-900/20">
+                <div class="text-2xl font-bold text-${tab.color}-600 dark:text-${tab.color}-400 mb-1">
+                  ${(state.Reflections[tab.id] || []).length}
+                </div>
+                <p class="text-sm text-${tab.color}-700 dark:text-${tab.color}-300">${tab.label} Reviews</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  Statistics() {
+    const az = state.AZTask || [];
+    const azDone = az.filter(t => t.status === 'Completed').length;
+    const wins = state.MomentumWins || [];
+    const today = stateManager.getTodayDate();
+    const winsToday = wins.filter(w => w.date === today).length;
+    const dayPlans = state.DayPlans || {};
+    const plansCount = Object.keys(dayPlans).length;
+    const journal = state.Journal || [];
+    const reflectionsObj = state.Reflections || {};
+    const reflections = Array.isArray(reflectionsObj)
+      ? reflectionsObj
+      : Object.values(reflectionsObj).flat().filter(Boolean);
+    const timeline = (state.History && state.History.timeline) || [];
+
+    const stat = (label, value, color = 'text-blue-400') => `
+      <div class="rounded-xl border dark:border-gray-700 bg-gray-900 p-4 shadow-sm">
+        <div class="text-xs uppercase tracking-wider text-gray-400 mb-1">${label}</div>
+        <div class="text-3xl font-bold ${color}">${value}</div>
+      </div>`;
+
+    return `
+      <div class="space-y-6 fade-in">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold tracking-tight dark:text-white">Statistics</h1>
+          <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">System activity and usage metrics</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          ${stat('A-Z Tasks', az.length)}
+          ${stat('A-Z Completed', azDone, 'text-green-400')}
+          ${stat('Day Plans', plansCount)}
+          ${stat('Wins Today', winsToday, 'text-yellow-400')}
+          ${stat('Total Wins', wins.length)}
+          ${stat('Journal Entries', journal.length)}
+          ${stat('Reflections', reflections.length)}
+          ${stat('Timeline Events', timeline.length)}
+        </div>
+      </div>
+    `;
+  },
 
   Timeline() {
     const sortedActivities = (state.History.timeline || [])

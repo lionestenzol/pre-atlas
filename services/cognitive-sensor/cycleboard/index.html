@@ -110,9 +110,6 @@
       </div>
       <nav class="space-y-1" id="nav" aria-label="Page navigation"></nav>
 
-      
-      </div>
-
       <div class="mt-4 space-y-2">
         <button onclick="showCopyContextModal()" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg">
           <i class="fas fa-robot"></i>
@@ -134,6 +131,27 @@
     </aside>
 
     <main class="flex-1 p-4 md:p-8 overflow-auto pb-20 md:pb-8" id="main-content" role="main" aria-label="Main content">
+      <section id="lifecycle-panel" class="mx-auto bg-gray-800 rounded-lg border border-gray-700 p-4 mb-6" style="max-width: 72rem;" aria-label="Thread lifecycle">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-bold text-white">
+            <i class="fas fa-stream mr-2 text-blue-400"></i>Lifecycle
+          </h2>
+          <span id="lifecycle-generated" class="text-xs text-gray-400"></span>
+        </div>
+        <div id="lifecycle-in-progress" class="mb-4">
+          <div class="text-xs uppercase tracking-wider text-gray-400 mb-2">In progress</div>
+          <div id="lifecycle-in-progress-list" class="space-y-1 text-sm text-gray-200">
+            <div class="text-gray-500 italic">loading...</div>
+          </div>
+        </div>
+        <div id="lifecycle-terminal" class="mb-4">
+          <div class="text-xs uppercase tracking-wider text-gray-400 mb-2">Finished today</div>
+          <div id="lifecycle-terminal-list" class="space-y-1 text-sm text-gray-200">
+            <div class="text-gray-500 italic">loading...</div>
+          </div>
+        </div>
+        <div id="lifecycle-counts" class="text-xs text-gray-400 border-t border-gray-700 pt-2"></div>
+      </section>
       <div class="max-w-6xl mx-auto">
       </div>
     </main>
@@ -180,5 +198,75 @@
 
   <!-- Initialize app -->
   <script src="js/app.js?v=4"></script>
+
+  <!-- Lifecycle panel (fed by brain/lifecycle_board.json from wire_cycleboard.py) -->
+  <script>
+    (function renderLifecyclePanel() {
+      const STATUS_COLORS = {
+        PLANNED: 'bg-yellow-700', BUILDING: 'bg-blue-700', REVIEWING: 'bg-purple-700',
+        DONE: 'bg-green-700', RESOLVED: 'bg-cyan-700', DROPPED: 'bg-gray-600',
+      };
+      const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+      function renderItem(t, isTerminal) {
+        const tag = STATUS_COLORS[t.status] || 'bg-gray-600';
+        const id = esc(t.convo_id ?? t.loop_id ?? '?');
+        const title = esc(t.title ?? 'untitled');
+        const artifact = t.artifact_path ? `<span class="text-gray-400 ml-2">: ${esc(t.artifact_path)}</span>` : '';
+        const cov = (isTerminal && t.coverage_score != null) ? ` <span class="text-gray-400">cov ${Number(t.coverage_score).toFixed(2)}</span>` : '';
+        const statusLabel = isTerminal ? (t.status || '') : t.status;
+        return `<div class="flex items-center gap-2">
+          <span class="text-xs px-2 py-0.5 rounded ${tag} text-white font-mono w-24 text-center">${esc(statusLabel)}</span>
+          <span class="font-mono text-gray-400 w-12">#${id}</span>
+          <span class="flex-1 truncate">${title}${artifact}${cov}</span>
+        </div>`;
+      }
+
+      async function load() {
+        try {
+          const res = await fetch('brain/lifecycle_board.json', { cache: 'no-store' });
+          if (!res.ok) throw new Error('no data');
+          const board = await res.json();
+
+          document.getElementById('lifecycle-generated').textContent = board.generated_at || '';
+
+          const inProg = document.getElementById('lifecycle-in-progress-list');
+          inProg.innerHTML = (board.in_progress && board.in_progress.length)
+            ? board.in_progress.map((t) => renderItem(t, false)).join('')
+            : '<div class="text-gray-500 italic">(none)</div>';
+
+          const term = document.getElementById('lifecycle-terminal-list');
+          const flat = [];
+          for (const s of ['DONE', 'RESOLVED', 'DROPPED']) {
+            for (const c of (board.terminal_today && board.terminal_today[s]) || []) {
+              flat.push({ ...c, status: s });
+            }
+          }
+          term.innerHTML = flat.length
+            ? flat.map((t) => renderItem(t, true)).join('')
+            : '<div class="text-gray-500 italic">(none)</div>';
+
+          const counts = board.counts || {};
+          const fmt = (k) => `<span class="mr-3"><span class="text-gray-500">${k}:</span> ${counts[k] ?? 0}</span>`;
+          document.getElementById('lifecycle-counts').innerHTML =
+            ['HARVESTED', 'PLANNED', 'BUILDING', 'REVIEWING'].map(fmt).join('') +
+            '<span class="text-gray-600 mx-2">/</span>' +
+            ['DONE', 'RESOLVED', 'DROPPED'].map(fmt).join('');
+        } catch (e) {
+          const inProg = document.getElementById('lifecycle-in-progress-list');
+          const term = document.getElementById('lifecycle-terminal-list');
+          const msg = '<div class="text-gray-500 italic">Run <code class="bg-gray-700 px-1 rounded">python wire_cycleboard.py</code> to populate</div>';
+          if (inProg) inProg.innerHTML = msg;
+          if (term) term.innerHTML = '';
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', load);
+      } else {
+        load();
+      }
+    })();
+  </script>
 </body>
 </html>

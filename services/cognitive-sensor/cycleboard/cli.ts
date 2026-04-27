@@ -8,6 +8,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { spawnSync } from 'child_process';
 
 const API = 'http://localhost:3001';
 
@@ -490,6 +491,189 @@ async function cmdStatus() {
   console.log(box('SYSTEM STATUS', lines, 45));
 }
 
+// === dump: full ChatGPT transcript from memory_db.json ===
+function showDumpHelp(): void {
+  console.log(`
+${C.bold}${C.cyan}cycleboard dump${C.reset} — full ChatGPT transcript from memory_db.json
+
+${C.bold}Usage:${C.reset}
+  cycleboard dump <convo_id> [--out <path>]
+
+${C.bold}Arguments:${C.reset}
+  <convo_id>          ${C.dim}(required)${C.reset}  Index into memory_db.json. Integer 0..1396.
+  --out <path>        ${C.dim}(optional)${C.reset}  Write to this path instead of default.
+
+${C.bold}Default output:${C.reset}
+  If harvest/<id>_<slug>/ exists:   → harvest/<id>_<slug>/conversation.md
+  Otherwise:                         → services/cognitive-sensor/conversation_<id>.md
+
+${C.bold}Examples:${C.reset}
+  cycleboard dump 487
+      ${C.dim}→ harvest/487_marketing-for-beginners/conversation.md${C.reset}
+
+  cycleboard dump 81 --out /tmp/big.md
+      ${C.dim}→ /tmp/big.md${C.reset}
+
+  cycleboard dump 557
+      ${C.dim}→ harvest/557_phase-3-ai-system/conversation.md${C.reset}
+
+${C.bold}Notes:${C.reset}
+  · Index is the position in memory_db.json (1397 threads total).
+  · Empty / system messages are skipped.
+  · Full spec: services/cognitive-sensor/docs/DUMP_CONVERSATION_SPEC.md
+`);
+}
+
+function cmdDump(convoIdArg: string | undefined, outArg: string | undefined): void {
+  if (!convoIdArg || convoIdArg === '--help' || convoIdArg === '-h' || convoIdArg === 'help') {
+    showDumpHelp();
+    if (!convoIdArg) process.exit(1);
+    return;
+  }
+  const convoId = parseInt(convoIdArg, 10);
+  if (Number.isNaN(convoId) || convoId < 0) {
+    console.error(`${C.red}Invalid convo_id: ${convoIdArg}${C.reset}`);
+    console.error(`${C.dim}Run 'cycleboard dump --help' for usage.${C.reset}`);
+    process.exit(1);
+  }
+  const scriptPath = path.resolve(__cli_dirname, '..', 'dump_conversation.py');
+  const cwd = path.resolve(__cli_dirname, '..');
+  const scriptArgs = [scriptPath, String(convoId)];
+  if (outArg) scriptArgs.push('--out', outArg);
+
+  console.log(`${C.dim}running: python ${scriptArgs.join(' ')}${C.reset}`);
+  const result = spawnSync('python', scriptArgs, { cwd, stdio: 'inherit' });
+  if (result.error) {
+    console.error(`${C.red}Failed to run dump_conversation.py: ${result.error.message}${C.reset}`);
+    process.exit(1);
+  }
+  if (typeof result.status === 'number' && result.status !== 0) {
+    process.exit(result.status);
+  }
+}
+
+// === parse: extract concept checklist from a thread ===
+function showParseHelp(): void {
+  console.log(`
+${C.bold}${C.cyan}cycleboard parse${C.reset} — extract concept checklist from a ChatGPT thread
+
+${C.bold}Usage:${C.reset}
+  cycleboard parse <convo_id>
+
+${C.bold}What it does:${C.reset}
+  Reads memory_db.json[<id>] and extracts three kinds of concepts:
+    ${C.green}technical${C.reset}  - libraries, patterns, components (Flask, React Native, API-key auth...)
+    ${C.yellow}idea${C.reset}       - user aspirations, framings, intent statements
+    ${C.magenta}decision${C.reset}   - moments the user picked a direction
+
+${C.bold}Output:${C.reset}
+  harvest/<id>_<slug>/concepts.json   ${C.dim}(machine-readable)${C.reset}
+  harvest/<id>_<slug>/concepts.md     ${C.dim}(human checklist)${C.reset}
+
+${C.bold}Zero token cost.${C.reset} Pure local heuristics.
+
+${C.bold}Examples:${C.reset}
+  cycleboard parse 487
+  cycleboard parse 81
+`);
+}
+
+function cmdParse(convoIdArg: string | undefined): void {
+  if (!convoIdArg || convoIdArg === '--help' || convoIdArg === '-h' || convoIdArg === 'help') {
+    showParseHelp();
+    if (!convoIdArg) process.exit(1);
+    return;
+  }
+  const convoId = parseInt(convoIdArg, 10);
+  if (Number.isNaN(convoId) || convoId < 0) {
+    console.error(`${C.red}Invalid convo_id: ${convoIdArg}${C.reset}`);
+    console.error(`${C.dim}Run 'cycleboard parse --help' for usage.${C.reset}`);
+    process.exit(1);
+  }
+  const scriptPath = path.resolve(__cli_dirname, '..', 'parse_conversation.py');
+  const cwd = path.resolve(__cli_dirname, '..');
+  console.log(`${C.dim}running: python parse_conversation.py ${convoId}${C.reset}`);
+  const result = spawnSync('python', [scriptPath, String(convoId)], { cwd, stdio: 'inherit' });
+  if (result.error) {
+    console.error(`${C.red}Failed: ${result.error.message}${C.reset}`);
+    process.exit(1);
+  }
+  if (typeof result.status === 'number' && result.status !== 0) process.exit(result.status);
+}
+
+// === verify: coverage audit artifact vs concepts ===
+function showVerifyHelp(): void {
+  console.log(`
+${C.bold}${C.cyan}cycleboard verify${C.reset} — audit whether an artifact covers a thread's concepts
+
+${C.bold}Usage:${C.reset}
+  cycleboard verify <convo_id> <artifact_path> [--auto]
+
+${C.bold}What it does:${C.reset}
+  Loads concepts.json (run ${C.cyan}parse${C.reset} first if missing), greps the
+  artifact for evidence of each technical concept, marks each as:
+    ${C.green}✓ covered${C.reset}      content match in artifact
+    ${C.yellow}~ partial${C.reset}      filename match only
+    ${C.red}✗ missing${C.reset}      no match
+    ${C.dim}? unverifiable${C.reset} idea/decision - no auto check yet
+
+${C.bold}--auto flag:${C.reset}
+  Batches ALL idea/decision concepts into a single ${C.cyan}claude -p${C.reset} call.
+  Returns per-concept verdict (covered/partial/missing). ~3-5k tokens total
+  for the whole thread vs 150k for a raw transcript pass.
+
+${C.bold}Output:${C.reset}
+  harvest/<id>_<slug>/coverage.json
+  harvest/<id>_<slug>/coverage.md
+
+${C.bold}Arguments:${C.reset}
+  <convo_id>        Integer 0..1396 (same as dump/parse)
+  <artifact_path>   Directory or file, relative to repo root
+
+${C.bold}Examples:${C.reset}
+  cycleboard verify 487 apps/ai-exec-pipeline
+  cycleboard verify 487 apps/ai-exec-pipeline --auto
+  cycleboard verify 81  services/cognitive-sensor --auto
+
+${C.bold}Prerequisite:${C.reset}
+  Run ${C.cyan}cycleboard parse <id>${C.reset} first to generate concepts.json.
+`);
+}
+
+function cmdVerify(rawArgs: string[]): void {
+  const filtered = rawArgs.filter(a => a !== '--auto');
+  const auto = rawArgs.includes('--auto');
+  const convoIdArg = filtered[0];
+  const artifactArg = filtered[1];
+
+  if (!convoIdArg || convoIdArg === '--help' || convoIdArg === '-h' || convoIdArg === 'help') {
+    showVerifyHelp();
+    if (!convoIdArg) process.exit(1);
+    return;
+  }
+  if (!artifactArg) {
+    console.error(`${C.red}Missing <artifact_path>.${C.reset}`);
+    console.error(`${C.dim}Run 'cycleboard verify --help' for usage.${C.reset}`);
+    process.exit(1);
+  }
+  const convoId = parseInt(convoIdArg, 10);
+  if (Number.isNaN(convoId) || convoId < 0) {
+    console.error(`${C.red}Invalid convo_id: ${convoIdArg}${C.reset}`);
+    process.exit(1);
+  }
+  const scriptPath = path.resolve(__cli_dirname, '..', 'verify_coverage.py');
+  const cwd = path.resolve(__cli_dirname, '..');
+  const scriptArgs = [scriptPath, String(convoId), artifactArg];
+  if (auto) scriptArgs.push('--auto');
+  console.log(`${C.dim}running: python verify_coverage.py ${convoId} ${artifactArg}${auto ? ' --auto' : ''}${C.reset}`);
+  const result = spawnSync('python', scriptArgs, { cwd, stdio: 'inherit' });
+  if (result.error) {
+    console.error(`${C.red}Failed: ${result.error.message}${C.reset}`);
+    process.exit(1);
+  }
+  if (typeof result.status === 'number' && result.status !== 0) process.exit(result.status);
+}
+
 function getDefaultState(): any {
   return { version: '2.0', screen: 'Home', AZTask: [], DayPlans: {}, FocusArea: [], Routine: {}, DayTypeTemplates: {}, Settings: { darkMode: true, notifications: true, autoSave: true, defaultDayType: 'A' }, History: { completedTasks: [], productivityScore: 0, streak: 0, timeline: [] }, Journal: [], EightSteps: {}, Contingencies: {}, Reflections: { weekly: [], monthly: [], quarterly: [], yearly: [] }, MomentumWins: [], calendarView: 'month', calendarDate: todayISO() };
 }
@@ -508,7 +692,11 @@ ${C.bold}Commands:${C.reset}
   complete <n> [date]        Toggle time block N (defaults to today)
   add <date> <time> <title>  Add custom event
   status                     System overview
-  help                       Show this help
+  lifecycle                  Thread lifecycle: in-progress + finished today
+  dump <convo_id> [--out p]  Dump full ChatGPT transcript by index
+  parse <convo_id>           Extract concept checklist (technical/idea/decision)
+  verify <id> <path>         Audit whether an artifact covers a thread's concepts
+  help [command]             Show this help or per-command help
 
 ${C.bold}Date formats:${C.reset}
   today, tomorrow, YYYY-MM-DD
@@ -519,7 +707,62 @@ ${C.bold}Examples:${C.reset}
   cycleboard complete 3
   cycleboard add 2026-04-10 14:00 Team Meeting
   cycleboard calendar 2026-05-01
+  cycleboard dump 487
+  cycleboard parse 487
+  cycleboard verify 487 apps/ai-exec-pipeline
 `);
+}
+
+// === Lifecycle board (reads brain/lifecycle_board.json emitted by wire_cycleboard.py) ===
+
+function cmdLifecycle(): void {
+  const lifecyclePath = path.resolve(__cli_dirname, 'brain', 'lifecycle_board.json');
+  let board: any;
+  try { board = JSON.parse(fs.readFileSync(lifecyclePath, 'utf-8')); }
+  catch {
+    console.log(`${C.red}No lifecycle_board.json. Run: python wire_cycleboard.py${C.reset}`);
+    return;
+  }
+
+  const inProgress: any[] = board.in_progress ?? [];
+  const terminal = board.terminal_today ?? { DONE: [], RESOLVED: [], DROPPED: [] };
+  const counts = board.counts ?? {};
+
+  console.log(`${C.bold}LIFECYCLE${C.reset}  ${C.dim}(generated ${board.generated_at ?? '?'})${C.reset}`);
+  console.log('');
+  console.log(`${C.bold}In progress${C.reset}`);
+  if (inProgress.length === 0) {
+    console.log(`  ${C.dim}(none)${C.reset}`);
+  } else {
+    for (const t of inProgress) {
+      const tag = `[${C.yellow}${t.status}${C.reset}]`.padEnd(20);
+      const id = String(t.convo_id ?? '?').padEnd(6);
+      const title = (t.title ?? 'untitled').slice(0, 50);
+      console.log(`  ${tag} ${C.cyan}${id}${C.reset} ${title}`);
+      if (t.artifact_path) console.log(`  ${' '.repeat(20)} ${C.dim}-> ${t.artifact_path}${C.reset}`);
+    }
+  }
+
+  console.log('');
+  console.log(`${C.bold}Finished today${C.reset}`);
+  let anyTerminal = false;
+  for (const status of ['DONE', 'RESOLVED', 'DROPPED'] as const) {
+    for (const c of terminal[status] ?? []) {
+      anyTerminal = true;
+      const color = status === 'DONE' ? C.green : status === 'RESOLVED' ? C.cyan : C.dim;
+      const tag = `[${color}${status}${C.reset}]`.padEnd(20);
+      const id = String(c.loop_id ?? '?').padEnd(6);
+      const title = (c.title ?? 'untitled').slice(0, 40);
+      const cov = c.coverage_score != null ? ` ${C.dim}cov=${c.coverage_score.toFixed(2)}${C.reset}` : '';
+      const art = c.artifact_path ? ` ${C.dim}-> ${c.artifact_path}${C.reset}` : '';
+      console.log(`  ${tag} ${id} ${title}${cov}${art}`);
+    }
+  }
+  if (!anyTerminal) console.log(`  ${C.dim}(none)${C.reset}`);
+
+  console.log('');
+  const fmt = (k: string) => `${k}:${counts[k] ?? 0}`;
+  console.log(`${C.bold}Counts${C.reset}  ${['HARVESTED','PLANNED','BUILDING','REVIEWING'].map(fmt).join(' ')}  ${C.dim}/${C.reset}  ${['DONE','RESOLVED','DROPPED'].map(fmt).join(' ')}`);
 }
 
 // === Dispatch ===
@@ -535,7 +778,21 @@ switch (cmd) {
   case 'complete': case 'done': cmdComplete(args[1], args[2]); break;
   case 'add': cmdAdd(args[1], args[2], ...args.slice(3)); break;
   case 'status': cmdStatus(); break;
-  case 'help': case '--help': case '-h': showHelp(); break;
+  case 'lifecycle': cmdLifecycle(); break;
+  case 'dump': {
+    const outIdx = args.indexOf('--out');
+    const out = outIdx >= 0 ? args[outIdx + 1] : undefined;
+    cmdDump(args[1], out);
+    break;
+  }
+  case 'parse': cmdParse(args[1]); break;
+  case 'verify': cmdVerify(args.slice(1)); break;
+  case 'help': case '--help': case '-h':
+    if (args[1] === 'dump') { showDumpHelp(); break; }
+    if (args[1] === 'parse') { showParseHelp(); break; }
+    if (args[1] === 'verify') { showVerifyHelp(); break; }
+    showHelp();
+    break;
   default:
     console.error(`${C.red}Unknown command: ${cmd}${C.reset}`);
     showHelp();

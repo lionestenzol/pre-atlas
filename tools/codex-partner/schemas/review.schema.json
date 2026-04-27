@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CodexReview",
+  "description": "Structured code-review verdict for AI-to-AI handoff. Used with `codex exec --output-schema schemas/review.schema.json`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "score", "summary", "issues", "strengths"],
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["approve", "warn", "block"],
+      "description": "approve = ship it; warn = ship with caveats; block = must fix before merge"
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Overall quality 0-100"
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 600,
+      "description": "One-paragraph plain-English overview"
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "category", "location", "description"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "category": { "type": "string", "enum": ["security", "correctness", "performance", "style", "maintainability", "test-coverage"] },
+          "location": { "type": "string", "description": "file:line or file:line-range" },
+          "description": { "type": "string", "maxLength": 400 },
+          "suggested_fix": { "type": "string", "maxLength": 400 }
+        },
+        "required": ["severity", "category", "location", "description", "suggested_fix"]
+      }
+    },
+    "strengths": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 200 }
+    }
+  }
+}

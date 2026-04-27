@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "id": "delegate_to_codex",
+  "name": "Delegate to Codex",
+  "version": "1.0",
+  "description": "Wraps a Codex CLI handoff as an Optogon close. Classifies user intent against the 38 installed Codex skills, picks the right one, runs codex exec with safe defaults, and emits a signal with the result. Replaces Claude shelling out from instinct.",
+  "entry": {
+    "node_id": "entry",
+    "match_conditions": [
+      { "signal": "intent", "operator": "contains", "value": "delegate to codex" },
+      { "signal": "intent", "operator": "contains", "value": "ask codex" }
+    ],
+    "match_threshold": 0.5,
+    "tie_break": "priority"
+  },
+  "nodes": {
+    "entry": {
+      "type": "qualify",
+      "label": "Capture user_intent and optional cwd",
+      "qualification": {
+        "required": [
+          { "key": "user_intent", "source": "user", "description": "Natural-language description of the task in the user's words" }
+        ],
+        "question": {
+          "text": "What do you want Codex to do? (one line is fine)",
+          "purpose": ["identify intent"],
+          "max_asks": 1
+        },
+        "max_missing_keys_before_split": 1
+      },
+      "metadata": { "token_budget": 80, "tags": ["delegate_to_codex"] }
+    },
+    "classify": {
+      "type": "execute",
+      "label": "Classify intent to a Codex skill",
+      "actions": [
+        { "id": "classify_codex_intent", "type": "transform", "trigger": "on_entry", "reversible": true, "risk_tier": "low", "retry_strategy": "none" }
+      ]
+    },
+    "route_gate": {
+      "type": "gate",
+      "label": "Route: delegate to Codex, or hand back to Claude"
+    },
+    "run": {
+      "type": "execute",
+      "label": "Run codex exec with the chosen skill's framing",
+      "actions": [
+        { "id": "run_codex_exec", "type": "side_effect", "trigger": "on_entry", "reversible": false, "risk_tier": "medium", "retry_strategy": "none" }
+      ]
+    },
+    "output_gate": {
+      "type": "gate",
+      "label": "Did Codex succeed?"
+    },
+    "done": {
+      "type": "close",
+      "label": "Emit signal with Codex output",
+      "contract": {
+        "required_outputs": ["codex_output"],
+        "completion_criteria": "codex returned a final message",
+        "failure_mode": "escalate"
+      }
+    }
+  },
+  "edges": [
+    { "from": "entry", "to": "classify", "condition": "qualified", "priority": 1 },
+    { "from": "classify", "to": "route_gate", "condition": "success", "priority": 1 },
+    { "from": "route_gate", "to": "run", "condition": "system.get('should_delegate') == True", "priority": 1 },
+    { "from": "route_gate", "to": "done", "condition": "default", "priority": 2 },
+    { "from": "run", "to": "output_gate", "condition": "success", "priority": 1 },
+    { "from": "output_gate", "to": "done", "condition": "system.get('codex_success') == True", "priority": 1 },
+    { "from": "output_gate", "to": "done", "condition": "default", "priority": 2 }
+  ],
+  "close_state": {
+    "description": "Codex handoff complete (or routed back to Claude with a reason)",
+    "deliverables": ["codex_output", "parsed_output", "schema_valid", "exit_code", "skill"],
+    "transient_keys": ["user_intent"]
+  },
+  "defaults": {
+    "pacing": { "max_options_shown": 3, "bundle_confirmations": true },
+    "inference_confidence_floor": 0.7
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CodexDiffSummary",
+  "description": "Structured summary of uncommitted/PR changes. Pair with `codex review --uncommitted` or after a Claude edit run.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["files_changed", "intent", "risk", "test_coverage", "blockers"],
+  "properties": {
+    "intent": {
+      "type": "string",
+      "maxLength": 300,
+      "description": "Single sentence: what this change accomplishes"
+    },
+    "files_changed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "change_type", "summary"],
+        "properties": {
+          "path": { "type": "string" },
+          "change_type": { "type": "string", "enum": ["added", "modified", "deleted", "renamed"] },
+          "summary": { "type": "string", "maxLength": 200 }
+        }
+      }
+    },
+    "risk": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Probability of regression or unintended impact"
+    },
+    "test_coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tests_added", "tests_modified", "uncovered_paths"],
+      "properties": {
+        "tests_added": { "type": "integer", "minimum": 0 },
+        "tests_modified": { "type": "integer", "minimum": 0 },
+        "uncovered_paths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 200 }
+    }
+  }
+}

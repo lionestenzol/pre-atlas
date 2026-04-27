@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CodexFactExtract",
+  "description": "Structured fact extraction from a codebase or document. For pulling discrete claims out of prose so Claude can act on them programmatically.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["facts", "missing", "source"],
+  "properties": {
+    "source": {
+      "type": "string",
+      "description": "What was scanned (file path, URL, or identifier)"
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim", "evidence", "confidence"],
+        "properties": {
+          "claim": { "type": "string", "maxLength": 400 },
+          "evidence": { "type": "string", "maxLength": 400, "description": "file:line or quoted snippet" },
+          "confidence": { "type": "string", "enum": ["verified", "inferred", "speculative"] }
+        }
+      }
+    },
+    "missing": {
+      "type": "array",
+      "description": "Things the prompt asked about that Codex could not determine",
+      "items": { "type": "string", "maxLength": 200 }
+    }
+  }
+}

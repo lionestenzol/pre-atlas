@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Anatomy",
+  "version": "0.4.4",
+  "description": "Live-draw labels on any web app. Alt+click an element, type a label, it sticks. Export as JSON, self-contained map, or pull the whole page into a local sitepull canvas. v0.4.4 adds a text-prominence heatmap (fontSize²×WCAG-contrast, stamp-model) used as the auto-label tiebreaker. Calibration harness scores 93% (13/14).",
+  "permissions": ["storage", "activeTab", "scripting", "tabs", "alarms"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Anatomy"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/adopted-stylesheets.js", "lib/runtime-inline-styles.js", "lib/shadow-dom-recursion.js", "lib/canvas-precapture.js", "lib/detection-vocab.js", "lib/text-grid.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["page-world.js"],
+      "world": "MAIN",
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "icons": {}
+}

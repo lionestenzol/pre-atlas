@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Anatomy Text-Grid Calibration · pentest challenges</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0a0a0a; color: #e8e8e8;
+               font: 14px/1.5 -apple-system, system-ui, "Segoe UI", sans-serif; }
+  header { padding: 22px 32px 18px; border-bottom: 1px solid #1f1f1f; position: sticky; top: 0;
+           background: #0a0a0a; z-index: 100; }
+  header h1 { margin: 0 0 4px; font-size: 18px; letter-spacing: 0.5px; color: #c084fc; }
+  header p { margin: 0; color: #888; font-size: 12px; }
+  .controls { display: flex; gap: 8px; margin-top: 14px; align-items: center; flex-wrap: wrap; }
+  button { background: #1a1a1a; color: #c8c8c8; border: 1px solid #333; padding: 7px 14px;
+           border-radius: 4px; font: 11px/1 inherit; text-transform: uppercase; letter-spacing: 0.5px;
+           cursor: pointer; }
+  button.primary { background: rgba(192,132,252,0.2); border-color: #c084fc; color: #fff;
+                   font-weight: 700; }
+  button.primary:hover { background: rgba(192,132,252,0.35); }
+  button:hover { background: #232323; color: #fff; }
+  .scoreboard { margin-left: auto; display: flex; gap: 16px; font-size: 12px; }
+  .scoreboard span { color: #888; }
+  .scoreboard b { color: #fff; font-size: 14px; font-weight: 700; }
+  #scoreTotal.pass { color: #4ade80; }
+  #scoreTotal.warn { color: #fbbf24; }
+  #scoreTotal.fail { color: #f87171; }
+
+  main { padding: 24px 32px 80px; max-width: 1100px; margin: 0 auto; }
+  .ch { margin: 0 0 20px; padding: 18px; border: 1px solid #1f1f1f; border-radius: 6px;
+        background: #111; position: relative; }
+  .ch.pass { border-left: 4px solid #4ade80; }
+  .ch.warn { border-left: 4px solid #fbbf24; }
+  .ch.fail { border-left: 4px solid #f87171; }
+  .ch.idle { border-left: 4px solid #333; }
+  .ch h2 { margin: 0 0 6px; font-size: 14px; color: #fff; display: flex; align-items: center;
+           gap: 10px; }
+  .ch .num { color: #555; font-weight: 400; min-width: 28px; }
+  .ch .badge { font-size: 10px; padding: 2px 8px; border-radius: 3px; text-transform: uppercase;
+               letter-spacing: 0.5px; font-weight: 700; }
+  .ch .badge.idle { background: #1a1a1a; color: #666; }
+  .ch .badge.pass { background: rgba(74,222,128,0.15); color: #4ade80; }
+  .ch .badge.warn { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .ch .badge.fail { background: rgba(248,113,113,0.15); color: #f87171; }
+  .ch .desc { margin: 0 0 14px; color: #888; font-size: 12px; }
+  .ch .stage { background: #fff; color: #111; padding: 24px; border-radius: 4px; min-height: 140px;
+               position: relative; overflow: hidden; }
+  .ch .stage.dark { background: #18181b; color: #f4f4f5; }
+  .ch .result { margin-top: 10px; padding: 10px 12px; background: #0a0a0a; border-radius: 4px;
+                font: 11px/1.5 ui-monospace, "SF Mono", Menlo, monospace; color: #888; }
+  .ch .result .k { color: #c084fc; }
+  .ch .result .v { color: #e8e8e8; }
+  .ch .result .ok { color: #4ade80; }
+  .ch .result .bad { color: #f87171; }
+
+  /* Stage content styles · scoped to .stage so they don't bleed into the harness UI */
+  .stage h1 { font-size: 28px; margin: 0 0 8px; }
+  .stage h2 { font-size: 20px; margin: 0 0 6px; color: #111; }
+  .stage button { background: #2563eb; color: #fff; border: none; padding: 8px 16px;
+                  text-transform: none; letter-spacing: 0; font-size: 14px; cursor: default; }
+  .stage .gap { width: 100%; height: 80px; background: #f3f4f6; border-radius: 4px; }
+  .stage .hidden-display { display: none; }
+  .stage .hidden-vis { visibility: hidden; }
+  .stage .hidden-opacity { opacity: 0; }
+  .stage .offscreen { position: absolute; left: -9999px; top: 0; }
+  .stage .nav-overlay { position: absolute; top: 0; left: 0; right: 0; padding: 8px 24px;
+                        background: rgba(0,0,0,0.85); color: #fff; }
+  .stage .pseudo-text::before { content: "INVISIBLE TO TEXT-NODE WALKER"; font-weight: 700; }
+
+  .legend { display: flex; gap: 20px; margin: 20px 0 0; padding: 12px 16px; background: #111;
+            border-radius: 4px; font-size: 11px; color: #888; align-items: center; flex-wrap: wrap; }
+  .legend .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px;
+                vertical-align: middle; margin-right: 6px; }
+  .legend .sw.pass { background: #4ade80; }
+  .legend .sw.warn { background: #fbbf24; }
+  .legend .sw.fail { background: #f87171; }
+  .legend .sw.idle { background: #333; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Anatomy Text-Grid Calibration</h1>
+  <p>Pentest-style adversarial bench for the UI text-density heatmap.
+     Each challenge probes a known capability or limit. Run all → score per challenge → calibration total.</p>
+  <div class="controls">
+    <button class="primary" id="runAll">run all challenges</button>
+    <button id="clearAll">reset</button>
+    <button id="showOverlay">show grid overlay</button>
+    <button id="hideOverlay">hide overlay</button>
+    <div class="scoreboard">
+      <span>passed: <b id="scorePass">0</b></span>
+      <span>known limits: <b id="scoreWarn">0</b></span>
+      <span>failed: <b id="scoreFail">0</b></span>
+      <span>calibration: <b id="scoreTotal">—</b></span>
+    </div>
+  </div>
+  <div class="legend">
+    <span><i class="sw pass"></i> PASS · grid behaves correctly</span>
+    <span><i class="sw warn"></i> KNOWN LIMIT · documented gap, not a regression</span>
+    <span><i class="sw fail"></i> FAIL · grid should handle this and doesn't</span>
+    <span><i class="sw idle"></i> not yet run</span>
+  </div>
+</header>
+
+<main id="challenges"></main>
+
+<!-- Source under test -->
+<script src="../lib/text-grid.js"></script>
+
+<script>
+// ── Challenge definitions ────────────────────────────────────────────────
+// Each challenge:
+//   id          short slug
+//   title       human label
+//   tier        'baseline' | 'semantic' | 'filter' | 'edge' | 'limit'
+//   expect      'pass' | 'limit'   — limit = documented gap, scored as warn not fail
+//   render(stage)              builds the DOM under test inside `stage`
+//   verify(grid, stage, api)   returns { ok, msg, detail }
+//                              ok = true → pass, false → fail
+//                              For 'limit' tier, verify just confirms the gap exists
+//                              and reports it as warn.
+//
+// Verification helpers use scoreRegion against page-coordinate rects derived
+// from each stage element's getBoundingClientRect + scrollY.
+
+const CHALLENGES = [
+  {
+    id: 'baseline-paragraph',
+    title: 'Plain paragraph',
+    tier: 'baseline',
+    expect: 'pass',
+    render: (s) => { s.innerHTML = `<p data-target>This paragraph contains a moderate amount of body text that the heatmap should register as a hot zone within its bounding rectangle.</p>`; },
+    verify: (g, s, api) => {
+      const hot = scoreEl(g, s, '[data-target]', api);
+      const cold = scoreEmptyArea(g, s, api);
+      return { ok: hot > cold * 5, msg: 'paragraph hotter than empty', detail: `hot=${hot.toFixed(1)} · empty=${cold.toFixed(1)}` };
+    },
+  },
+  {
+    id: 'baseline-empty',
+    title: 'Empty whitespace',
+    tier: 'baseline',
+    expect: 'pass',
+    render: (s) => { s.innerHTML = `<div class="gap" data-target></div>`; },
+    verify: (g, s, api) => {
+      const empty = scoreEl(g, s, '[data-target]', api);
+      return { ok: empty === 0, msg: 'empty area scores zero', detail: `score=${empty}` };
+    },
+  },
+  {
+    id: 'semantic-button',
+    title: 'Text inside button',
+    tier: 'semantic',
+    expect: 'pass',
+    render: (s) => { s.innerHTML = `<p>before</p><button data-target>Click here to submit</button><p>after</p>`; },
+    verify: (g, s, api) => {
+      const hot = scoreEl(g, s, '[data-target]', api);
+      return { ok: hot > 0, msg: 'button text registers', detail: `score=${hot.toFixed(1)}` };
+    },
+  },
+  {
+    id: 'semantic-headline',
+    title: 'Big headline (low char count, high visual weight)',
+    tier: 'semantic',
+    expect: 'pass',
+    render: (s) => { s.innerHTML = `<h1 data-target>BIG TITLE</h1><p>some body text below the title that has more characters than the title itself</p>`; },
+    verify: (g, s, api) => {
+      const hot = scoreEl(g, s, '[data-target]', api);
+      return { ok: hot > 0, msg: 'headline registers (note: char-biased so smaller than body relative to visual)', detail: `score=${hot.toFixed(1)}` };
+    },
+  },
+  {
+    id: 'edge-multiline',
+    title: 'Multi-line wrapped paragraph',
+    tier: 'edge',
+    expect: 'pass',
+    render: (s) => { s.innerHTML = `<p data-target style="max-width:280px">This text intentionally wraps across multiple lines so the grid receives multiple line-rect bounds for the same TextNode and should distribute density across rows rather than dumping all chars into one cell.</p>`; },
+    verify: (g, s, api) => {
+      const el = s.querySelector('[data-target]');
+      const r = elRect(el);
+      // A multi-line para has height > 1 row of cells; check density spans multiple rows.
+      const top = api.scoreRegion(g, { x: r.x, y: r.y, w: r.w, h: 24 });
+      const bottom = api.scoreRegion(g, { x: r.x, y: r.y + r.h - 24, w: r.w, h: 24 });
+      const ok = top > 0 && bottom > 0;
+      return { ok, msg: 'density present in BOTH first and last line of wrap', detail: `top=${top.toFixed(1)} · bottom=${bottom.toFixed(1)}` };
+    },
+  },
+  {
+    id: 'filter-display-none',
+    title: 'display:none text excluded',
+    tier: 'filter',
+    expect: 'pass',
+    render: (s) => { s.innerHTML = `<p>visible</p><p class="hidden-display" data-target>This must NOT appear in the heatmap because display:none removes it from layout entirely.</p>`; },
+    verify: (g, s, api) => {
+      const hidden = scoreEl(g, s, '[data-target]', api);
+      // display:none has zero rect → score should be 0
+      return { ok: hidden === 0, msg: 'display:none not in heatmap', detail: `score=${hidden}` };
+    },
+  },
+  {
+    id: 'filter-visibility-hidden',
+    title: 'visibility:hidden text excluded',
+    tier: 'filter',
+    expect: 'pass',
+    render: (s) => { s.innerHTML = `<p>visible</p><p class="hidden-vis" data-target>This must NOT appear in the heatmap because visibility:hidden hides it but keeps the rect.</p>`; },
+    verify: (g, s, api) => {
+      const hidden = scoreEl(g, s, '[data-target]', api);
+      return { ok: hidden === 0, msg: 'visibility:hidden not in heatmap', detail: `score=${hidden}` };
+    },
+  },
+  {
+    id: 'filter-opacity-zero',
+    title: 'opacity:0 text excluded',
+    tier: 'filter',
+    expect: 'pass',
+    render: (s) => { s.innerHTML = `<p>visible</p><p class="hidden-opacity" data-target>This must NOT appear in the heatmap because opacity:0 makes it invisible.</p>`; },
+    verify: (g, s, api) => {
+      const hidden = scoreEl(g, s, '[data-target]', api);
+      return { ok: hidden === 0, msg: 'opacity:0 not in heatmap', detail: `score=${hidden}` };
+    },
+  },
+  {
+    id: 'edge-svg-text',
+    title: 'SVG <text> element',
+    tier: 'edge',
+    expect: 'pass',
+    render: (s) => {
+      s.innerHTML = `<p>before</p>
+        <svg width="200" height="60" data-target><text x="10" y="40" font-size="28" fill="#111">SVG TEXT</text></svg>
+        <p>after</p>`;
+    },
+    verify: (g, s, api) => {
+      const hot = scoreEl(g, s, '[data-target]', api);
+      return { ok: hot > 0, msg: 'SVG text node registers', detail: `score=${hot.toFixed(1)}` };
+    },
+  },
+  {
+    id: 'edge-overlap',
+    title: 'Fixed nav overlapping body text',
+    tier: 'edge',
+    expect: 'pass',
+    render: (s) => {
+      s.innerHTML = `<div class="nav-overlay">overlay nav text</div>
+        <p style="margin-top:50px" data-target>body content underneath the navigation overlay should sum density with the overlay so the cell value is HIGHER than either alone</p>`;
+    },
+    verify: (g, s, api) => {
+      const overlap = scoreEl(g, s, '[data-target]', api);
+      // We can't easily isolate "would-be alone" but we can verify overlap region is hot.
+      return { ok: overlap > 0, msg: 'overlap region accumulates from both layers', detail: `overlap_score=${overlap.toFixed(1)}` };
+    },
+  },
+  {
+    id: 'limit-shadow-dom',
+    title: 'Open shadow DOM text (KNOWN LIMIT · TextNode walker scoped to light DOM)',
+    tier: 'limit',
+    expect: 'limit',
+    render: (s) => {
+      s.innerHTML = `<p>before</p><div data-target id="shadowHost"></div><p>after</p>`;
+      const host = s.querySelector('#shadowHost');
+      const shadow = host.attachShadow({ mode: 'open' });
+      shadow.innerHTML = `<p style="color:#111">SHADOW TEXT not visible to TreeWalker scoped on document.body</p>`;
+    },
+    verify: (g, s, api) => {
+      const score = scoreEl(g, s, '[data-target]', api);
+      // Document scope misses shadow text → score should be 0 or very low.
+      return { ok: score < 5, msg: 'shadow text NOT in grid (documented limit)', detail: `score=${score.toFixed(1)} · upgrade path: walker must recurse into shadowRoot.children` };
+    },
+  },
+  {
+    id: 'limit-pseudo-content',
+    title: 'CSS ::before content (KNOWN LIMIT · pseudo-elements aren\'t TextNodes)',
+    tier: 'limit',
+    expect: 'limit',
+    render: (s) => { s.innerHTML = `<p>real text</p><div class="pseudo-text" data-target></div>`; },
+    verify: (g, s, api) => {
+      const score = scoreEl(g, s, '[data-target]', api);
+      return { ok: score === 0, msg: '::before content NOT in grid (documented limit)', detail: `score=${score} · upgrade path: getComputedStyle(el, "::before").content` };
+    },
+  },
+  {
+    id: 'limit-canvas',
+    title: 'Canvas-rendered text (KNOWN LIMIT · pixel data isn\'t a text node)',
+    tier: 'limit',
+    expect: 'limit',
+    render: (s) => {
+      s.innerHTML = `<p>before</p><canvas width="220" height="60" data-target></canvas><p>after</p>`;
+      const c = s.querySelector('canvas');
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#111';
+      ctx.font = '24px sans-serif';
+      ctx.fillText('CANVAS TEXT', 10, 40);
+    },
+    verify: (g, s, api) => {
+      const score = scoreEl(g, s, '[data-target]', api);
+      return { ok: score === 0, msg: 'canvas pixels NOT in grid (documented limit)', detail: `score=${score} · upgrade path: OCR or canvas-precapture coordination` };
+    },
+  },
+  {
+    id: 'limit-iframe',
+    title: 'iframe content (KNOWN LIMIT · separate document)',
+    tier: 'limit',
+    expect: 'limit',
+    render: (s) => {
+      s.innerHTML = `<p>before</p>
+        <iframe data-target srcdoc="<p>iframe text body</p>" style="width:100%;height:80px;border:1px solid #ccc"></iframe>
+        <p>after</p>`;
+    },
+    verify: (g, s, api) => {
+      const score = scoreEl(g, s, '[data-target]', api);
+      return { ok: score === 0, msg: 'iframe text NOT in grid (separate document scope)', detail: `score=${score.toFixed(1)} · upgrade path: walk iframe.contentDocument when same-origin` };
+    },
+  },
+  {
+    id: 'edge-sparse-vs-dense',
+    title: 'Sparse vs dense same area (sensitivity)',
+    tier: 'edge',
+    expect: 'pass',
+    render: (s) => {
+      s.innerHTML = `
+        <div data-sparse style="padding:20px;border:1px dashed #ccc">hi</div>
+        <div data-dense  style="padding:20px;border:1px dashed #ccc">${'word '.repeat(40)}</div>
+      `;
+    },
+    verify: (g, s, api) => {
+      const sparse = scoreEl(g, s, '[data-sparse]', api);
+      const dense = scoreEl(g, s, '[data-dense]', api);
+      return { ok: dense > sparse * 3, msg: 'dense region scores materially higher than sparse', detail: `sparse=${sparse.toFixed(1)} · dense=${dense.toFixed(1)} · ratio=${(dense / Math.max(0.01, sparse)).toFixed(1)}×` };
+    },
+  },
+];
+
+// ── Helpers ──────────────────────────────────────────────────────────────
+
+function elRect(el) {
+  const r = el.getBoundingClientRect();
+  return { x: r.left + window.scrollX, y: r.top + window.scrollY, w: r.width, h: r.height };
+}
+
+function scoreEl(grid, stage, sel, api) {
+  const el = stage.querySelector(sel);
+  if (!el) return 0;
+  return api.scoreRegion(grid, elRect(el));
+}
+
+function scoreEmptyArea(grid, stage, api) {
+  // Score the bottom strip of the stage where no content lives.
+  const r = stage.getBoundingClientRect();
+  return api.scoreRegion(grid, {
+    x: r.left + window.scrollX,
+    y: r.bottom + window.scrollY - 8,
+    w: r.width,
+    h: 8,
+  });
+}
+
+// ── Render harness ───────────────────────────────────────────────────────
+
+const main = document.getElementById('challenges');
+const cardEls = new Map();
+
+for (const ch of CHALLENGES) {
+  const card = document.createElement('section');
+  card.className = 'ch idle';
+  card.dataset.id = ch.id;
+  card.innerHTML = `
+    <h2><span class="num">#${String(CHALLENGES.indexOf(ch) + 1).padStart(2, '0')}</span>
+        <span class="title">${ch.title}</span>
+        <span class="badge idle" data-badge>idle</span></h2>
+    <p class="desc">tier: <b>${ch.tier}</b> · expects: <b>${ch.expect}</b></p>
+    <div class="stage" data-stage></div>
+    <div class="result" data-result>not yet run</div>
+  `;
+  main.appendChild(card);
+  cardEls.set(ch.id, card);
+  // Render stage content NOW so layout is stable when we run.
+  const stage = card.querySelector('[data-stage]');
+  try { ch.render(stage); }
+  catch (e) {
+    card.querySelector('[data-result]').textContent = 'render failed: ' + e.message;
+    card.classList.replace('idle', 'fail');
+  }
+}
+
+// ── Runner ───────────────────────────────────────────────────────────────
+
+function setBadge(card, kind, label) {
+  card.classList.remove('idle', 'pass', 'warn', 'fail');
+  card.classList.add(kind);
+  const b = card.querySelector('[data-badge]');
+  b.className = 'badge ' + kind;
+  b.textContent = label;
+}
+
+function runAll() {
+  const api = window.__anatomyTextGrid;
+  if (!api) {
+    alert('text-grid.js failed to load · check the <script src> path');
+    return;
+  }
+  // CRITICAL · two-phase run. Writing result HTML between verifies shifts the
+  // y-coordinates of later cards (because the result div grows from "not yet
+  // run" to multi-line text), and a verify run with stale rects scores zero.
+  // Phase 1: build grid + run every verify, holding outcomes in memory.
+  // Phase 2: write all the result UI in one go.
+  const grid = api.buildTextGrid({ cellPx: 24 });
+  const outcomes = [];
+  for (const ch of CHALLENGES) {
+    const card = cardEls.get(ch.id);
+    const stage = card.querySelector('[data-stage]');
+    let outcome;
+    try { outcome = ch.verify(grid, stage, api); }
+    catch (e) { outcome = { _threw: e.message }; }
+    outcomes.push({ ch, card, outcome });
+  }
+
+  let pass = 0, warn = 0, fail = 0;
+  for (const { ch, card, outcome } of outcomes) {
+    const result = card.querySelector('[data-result]');
+    if (outcome._threw) {
+      setBadge(card, 'fail', 'verify error');
+      result.innerHTML = `<span class="bad">verify threw: ${escapeHtml(outcome._threw)}</span>`;
+      fail++;
+      continue;
+    }
+    const { ok, detail } = outcome;
+    let msg = outcome.msg;
+    let kind;
+    if (ch.expect === 'limit') {
+      // For documented limits, "ok=true" means the gap is confirmed (still a
+      // gap), shown as WARN. "ok=false" means the limit unexpectedly closed
+      // (the grid now handles this) → upgrade to PASS.
+      if (ok) { kind = 'warn'; warn++; }
+      else { kind = 'pass'; pass++; msg = '⤴ limit closed · grid now handles this'; }
+    } else {
+      if (ok) { kind = 'pass'; pass++; }
+      else { kind = 'fail'; fail++; }
+    }
+    setBadge(card, kind, kind === 'pass' ? 'pass' : kind === 'warn' ? 'known limit' : 'fail');
+    result.innerHTML = `<span class="k">verdict</span> <span class="${kind === 'pass' ? 'ok' : kind === 'fail' ? 'bad' : 'v'}">${escapeHtml(msg)}</span><br>`
+                    + `<span class="k">detail</span>  <span class="v">${escapeHtml(detail)}</span>`;
+  }
+  document.getElementById('scorePass').textContent = pass;
+  document.getElementById('scoreWarn').textContent = warn;
+  document.getElementById('scoreFail').textContent = fail;
+  // Calibration score = passes / (passes + fails) · warns are documented and
+  // do not penalize.  Same logic as a CTF: solving an optional bonus doesn't
+  // count against you, but missing a required flag does.
+  const total = pass + fail;
+  const pct = total === 0 ? 0 : Math.round((pass / total) * 100);
+  const tot = document.getElementById('scoreTotal');
+  tot.textContent = `${pct}%  (${pass}/${total})`;
+  tot.className = pct === 100 ? 'pass' : pct >= 70 ? 'warn' : 'fail';
+}
+
+function clearAll() {
+  for (const ch of CHALLENGES) {
+    const card = cardEls.get(ch.id);
+    setBadge(card, 'idle', 'idle');
+    card.querySelector('[data-result]').textContent = 'not yet run';
+  }
+  document.getElementById('scorePass').textContent = '0';
+  document.getElementById('scoreWarn').textContent = '0';
+  document.getElementById('scoreFail').textContent = '0';
+  const tot = document.getElementById('scoreTotal');
+  tot.textContent = '—';
+  tot.className = '';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+document.getElementById('runAll').addEventListener('click', runAll);
+document.getElementById('clearAll').addEventListener('click', clearAll);
+document.getElementById('showOverlay').addEventListener('click', () => {
+  const api = window.__anatomyTextGrid;
+  if (!api) return;
+  const grid = api.buildTextGrid({ cellPx: 24 });
+  api.renderGridOverlay(grid);
+});
+document.getElementById('hideOverlay').addEventListener('click', () => {
+  const api = window.__anatomyTextGrid;
+  if (api) api.removeGridOverlay();
+});
+</script>
+</body>
+</html>

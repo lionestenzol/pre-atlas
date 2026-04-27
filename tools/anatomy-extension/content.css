@@ -1,0 +1,234 @@
+/* All Anatomy UI lives under .anatomy-root to avoid host-page collisions. */
+.anatomy-root, .anatomy-root * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+.anatomy-toggle {
+  position: fixed; bottom: 14px; right: 14px; z-index: 2147483646;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #0a0a0a; color: #c084fc; border: 1px solid rgba(192,132,252,0.5);
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+}
+.anatomy-toggle:hover { background: #1a1a1a; }
+.anatomy-toggle.on { background: #c084fc; color: #0a0a0a; border-color: #c084fc; }
+
+.anatomy-hud {
+  position: fixed; bottom: 60px; right: 14px; z-index: 2147483646;
+  width: clamp(220px, 30vw, 320px);
+  max-height: min(60vh, 640px);
+  background: rgba(10,10,10,0.95); color: #e0d0ff; border: 1px solid rgba(192,132,252,0.3);
+  border-radius: 8px; padding: 10px 12px; font-size: 12px;
+  display: none; backdrop-filter: blur(6px);
+  /* Flex column so the label list can scroll while header + buttons stay
+     pinned in view. min-height:0 is required for the inner ul to actually
+     shrink and scroll inside its flex parent. */
+  flex-direction: column; overflow: hidden;
+}
+.anatomy-hud.on { display: flex; }
+.anatomy-hud > h4,
+.anatomy-hud > .hint,
+.anatomy-hud > .help-panel,
+.anatomy-hud > .row { flex: 0 0 auto; }
+.anatomy-hud > ul {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  /* Match the dark purple aesthetic. Firefox uses scrollbar-*; Chrome /
+     Edge / Safari use ::-webkit-scrollbar-*. Both styled below. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(192,132,252,0.35) transparent;
+}
+.anatomy-hud > ul::-webkit-scrollbar {
+  width: 6px; height: 6px;
+}
+.anatomy-hud > ul::-webkit-scrollbar-track {
+  background: transparent;
+}
+.anatomy-hud > ul::-webkit-scrollbar-thumb {
+  background: rgba(192,132,252,0.3);
+  border-radius: 3px;
+}
+.anatomy-hud > ul::-webkit-scrollbar-thumb:hover {
+  background: rgba(192,132,252,0.55);
+}
+.anatomy-hud > ul::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.anatomy-hud h4 { margin: 0 0 8px 0; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #c084fc; display: flex; align-items: center; justify-content: space-between; }
+.anatomy-hud h4 .hud-help-btn {
+  background: transparent; color: #c084fc;
+  border: 1px solid rgba(192,132,252,0.4); border-radius: 50%;
+  width: 18px; height: 18px; padding: 0;
+  font-size: 11px; font-weight: 700; line-height: 1; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  text-transform: none; letter-spacing: 0;
+}
+.anatomy-hud h4 .hud-help-btn:hover { background: rgba(192,132,252,0.15); }
+.anatomy-hud .help-panel {
+  background: rgba(192,132,252,0.05);
+  border: 1px solid rgba(192,132,252,0.18);
+  border-radius: 4px;
+  padding: 8px 10px; margin-bottom: 8px;
+  font-size: 10px; color: #b0b0b0; line-height: 1.45;
+}
+.anatomy-hud .help-panel dl { margin: 0; padding: 0; }
+.anatomy-hud .help-panel dt {
+  font-weight: 700; color: #c084fc; text-transform: uppercase;
+  letter-spacing: 0.8px; font-size: 9px; margin-top: 6px;
+}
+.anatomy-hud .help-panel dt:first-child { margin-top: 0; }
+.anatomy-hud .help-panel dd { margin: 2px 0 0 0; padding-left: 4px; }
+.anatomy-hud .help-panel b { color: #e0d0ff; font-weight: 600; }
+.anatomy-hud .hint { font-size: 10px; color: #888; margin-bottom: 8px; }
+.anatomy-hud ul { list-style: none; padding: 0; margin: 0 0 8px 0; }
+.anatomy-hud li {
+  padding: 6px 8px; border-radius: 4px; cursor: pointer;
+  display: flex; justify-content: space-between; gap: 8px;
+  border: 1px solid transparent; margin-bottom: 3px;
+}
+.anatomy-hud li:hover { background: rgba(192,132,252,0.08); border-color: rgba(192,132,252,0.3); }
+.anatomy-hud li .lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anatomy-hud li .rm { color: #666; font-size: 10px; padding: 0 4px; }
+.anatomy-hud li .rm:hover { color: #f87171; }
+.anatomy-hud li .edit { color: #666; font-size: 10px; padding: 0 4px; }
+.anatomy-hud li .edit:hover { color: #c084fc; }
+.anatomy-hud li .layer-chip {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 1px 6px; border-radius: 8px;
+  border: 1px solid; line-height: 14px; cursor: pointer;
+  align-self: center;
+}
+.anatomy-hud li .note-peek {
+  font-size: 9px; color: #c084fc; font-style: normal; opacity: 0.7;
+  margin-left: 4px;
+}
+.anatomy-hud li .note-editor { flex-basis: 100%; margin-top: 4px; }
+.anatomy-hud li .note-editor textarea {
+  width: 100%; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(192,132,252,0.3); border-radius: 4px;
+  padding: 4px 6px; color: #e0d0ff; font-size: 11px;
+  font-family: inherit; resize: vertical;
+}
+.anatomy-hud li .note-editor textarea:focus { outline: none; border-color: #c084fc; }
+.anatomy-hud .anatomy-debug { margin-top: 4px; opacity: 0.7; }
+.anatomy-hud .row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.anatomy-hud .row button {
+  /* flex: 1 1 0  + min-width:0  → buttons can shrink below their content size
+     so the row never pushes beyond the HUD width. overflow-hidden + ellipsis
+     gracefully truncates long labels (e.g. "pull this page") instead of
+     spilling out of frame. */
+  flex: 1 1 0; min-width: 0; padding: 4px 6px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px; color: #c8c8c8; font-size: 10px; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.anatomy-hud .row button:hover { background: rgba(192,132,252,0.08); border-color: rgba(192,132,252,0.3); color: #e0d0ff; }
+.anatomy-hud .row button.anatomy-primary { background: rgba(192,132,252,0.2); border-color: #c084fc; color: #fff; font-weight: 700; }
+.anatomy-hud .row button.anatomy-primary:hover { background: rgba(192,132,252,0.35); }
+.anatomy-hud .row button.on { background: rgba(192,132,252,0.28); border-color: #c084fc; color: #fff; }
+
+.anatomy-flash {
+  position: fixed; bottom: 60px; left: 14px; z-index: 2147483647;
+  background: rgba(192,132,252,0.95); color: #0a0a0a;
+  padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  opacity: 0; transition: opacity 0.25s ease; pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Progress panel — replaces flash() during multi-second pulls.
+   Sticks until the operation completes or errors, shows phase + optional
+   fraction. anatomy-root scope avoids host-page CSS collisions. */
+.anatomy-progress {
+  position: fixed; bottom: 60px; left: 14px; z-index: 2147483647;
+  background: rgba(10,10,10,0.95); color: #e0d0ff;
+  border: 1px solid rgba(192,132,252,0.4); border-radius: 6px;
+  padding: 10px 14px; font-size: 11px; min-width: 260px; max-width: 340px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+.anatomy-progress.on {
+  opacity: 1; transform: translateY(0);
+}
+.anatomy-progress .ap-phase {
+  font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+  font-size: 10px; color: #c084fc; margin-bottom: 6px;
+}
+.anatomy-progress .ap-bar {
+  height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;
+  margin-bottom: 4px;
+}
+.anatomy-progress .ap-fill {
+  height: 100%; background: linear-gradient(90deg, #c084fc, #818cf8);
+  width: 0%; transition: width 0.2s ease;
+}
+.anatomy-progress.indeterminate .ap-fill {
+  width: 35%;
+  animation: anatomy-progress-roam 1.2s ease-in-out infinite alternate;
+}
+@keyframes anatomy-progress-roam {
+  from { margin-left: 0; }
+  to   { margin-left: 65%; }
+}
+.anatomy-progress .ap-detail {
+  font-size: 10px; color: #888; font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+.anatomy-progress.error { border-color: rgba(248,113,113,0.6); }
+.anatomy-progress.error .ap-phase { color: #f87171; }
+.anatomy-progress.done { border-color: rgba(134,239,172,0.5); }
+.anatomy-progress.done .ap-phase { color: #86efac; }
+
+.anatomy-hover-outline {
+  outline: 2px dashed #c084fc !important; outline-offset: 2px !important;
+}
+.anatomy-pinned-outline {
+  outline: 2px solid rgba(192,132,252,0.6) !important; outline-offset: 2px !important;
+  box-shadow: 0 0 18px rgba(192,132,252,0.3) !important;
+}
+.anatomy-lit {
+  outline: 3px solid #c084fc !important; outline-offset: 3px !important;
+  box-shadow: 0 0 24px rgba(192,132,252,0.6) !important;
+  transition: box-shadow 0.15s ease;
+}
+
+.anatomy-dot {
+  position: absolute; z-index: 2147483645;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(10,10,10,0.92); color: #c084fc;
+  border: 1px solid rgba(192,132,252,0.7);
+  font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  font-size: 10px; font-weight: 700; line-height: 16px; text-align: center;
+  cursor: help; user-select: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  transition: transform 0.1s ease;
+}
+.anatomy-dot:hover { transform: scale(1.4); background: #c084fc; color: #0a0a0a; z-index: 2147483646; }
+
+.anatomy-tooltip {
+  position: absolute; z-index: 2147483647;
+  background: rgba(10,10,10,0.96); color: #e0d0ff;
+  border: 1px solid rgba(192,132,252,0.5); border-radius: 4px;
+  padding: 4px 8px; font-size: 11px; font-weight: 600;
+  pointer-events: none; white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  opacity: 0; transition: opacity 0.1s ease;
+}
+
+.anatomy-prompt {
+  position: fixed; z-index: 2147483647;
+  background: rgba(10,10,10,0.98); color: #fff;
+  border: 1px solid rgba(192,132,252,0.5); border-radius: 6px;
+  padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  display: flex; gap: 6px; align-items: center;
+}
+.anatomy-prompt input {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px; padding: 6px 8px; color: #fff; font-size: 12px; width: 200px;
+}
+.anatomy-prompt input:focus { outline: none; border-color: #c084fc; }
+.anatomy-prompt button {
+  background: #c084fc; color: #0a0a0a; border: 0; border-radius: 4px;
+  padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+}
+.anatomy-prompt button.cancel { background: rgba(255,255,255,0.1); color: #c8c8c8; }

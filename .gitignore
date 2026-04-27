@@ -139,6 +139,7 @@ services/uasc-executor/storage/*.db
 
 # === Vendored binary distributions ===
 services/aegis-fabric/redis.zip
+services/aegis-fabric/tools/redis/
 
 # === pytest cache anywhere ===
 **/.pytest_cache/

@@ -1,0 +1,349 @@
+/* ============================================================
+   inPACT · Apple Premium Mono Theme
+   Overrides styles.css and inline Tailwind utilities.
+   Load AFTER styles.css so cascade wins.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Surfaces */
+  --ip-bg:            #000000;
+  --ip-bg-raised:     #0a0a0a;
+  --ip-bg-elevated:   #141414;
+  --ip-bg-hover:      #1c1c1e;
+
+  /* Borders */
+  --ip-border:        #1c1c1e;
+  --ip-border-strong: #2c2c2e;
+
+  /* Text (Apple exact values) */
+  --ip-fg:            #f5f5f7;
+  --ip-fg-secondary:  #a1a1a6;
+  --ip-fg-tertiary:   #6e6e73;
+  --ip-fg-quaternary: #48484a;
+
+  /* Single accent — SF blue. Use sparingly. */
+  --ip-accent:        #0a84ff;
+  --ip-accent-dim:    rgba(10, 132, 255, 0.14);
+  --ip-accent-ring:   rgba(10, 132, 255, 0.28);
+}
+
+/* ----- Typography ----- */
+html, body {
+  background-color: var(--ip-bg) !important;
+  color: var(--ip-fg) !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif !important;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+h1, h2, h3, h4, h5, h6,
+.text-3xl, .text-4xl, .text-5xl {
+  letter-spacing: -0.022em !important;
+  font-weight: 600 !important;
+}
+
+.text-xl, .text-2xl { letter-spacing: -0.018em !important; }
+
+/* Display weight for big hero numbers */
+.text-5xl, .text-6xl { font-weight: 300 !important; }
+
+/* ----- Surfaces: flatten all backgrounds to the mono scale ----- */
+.dark body,
+body {
+  background-color: var(--ip-bg) !important;
+}
+
+.dark .bg-white,
+.dark .bg-gray-800,
+.dark .bg-gray-900,
+.bg-white,
+.bg-gray-800,
+.bg-gray-900 {
+  background-color: var(--ip-bg-raised) !important;
+}
+
+.dark .bg-gray-700,
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-slate-200,
+.dark .bg-gray-600,
+.bg-gray-700,
+.bg-slate-50 {
+  background-color: var(--ip-bg-elevated) !important;
+}
+
+/* Kill all chromatic backgrounds — flatten to elevated gray */
+.dark .bg-blue-50,  .dark .bg-blue-100,  .dark .bg-blue-500,  .dark .bg-blue-600,  .dark .bg-blue-700,
+.dark .bg-green-50, .dark .bg-green-100, .dark .bg-green-500, .dark .bg-green-600,
+.dark .bg-red-50,   .dark .bg-red-100,   .dark .bg-red-500,   .dark .bg-red-600,
+.dark .bg-purple-50,.dark .bg-purple-100,.dark .bg-purple-500,.dark .bg-purple-600,
+.dark .bg-yellow-50,.dark .bg-yellow-100,.dark .bg-yellow-500,.dark .bg-yellow-600,
+.dark .bg-orange-50,.dark .bg-orange-100,.dark .bg-orange-500,.dark .bg-orange-600,
+.dark .bg-indigo-50,.dark .bg-indigo-100,.dark .bg-indigo-500,.dark .bg-indigo-600,
+.dark .bg-cyan-50,  .dark .bg-cyan-100,  .dark .bg-cyan-500,  .dark .bg-cyan-600,
+.dark .bg-pink-50,  .dark .bg-pink-100,  .dark .bg-pink-500,  .dark .bg-pink-600,
+.dark .bg-emerald-50,.dark .bg-emerald-100,.dark .bg-emerald-500,.dark .bg-emerald-600,
+.dark .bg-violet-50,.dark .bg-violet-100,.dark .bg-violet-500,.dark .bg-violet-600,
+.dark .bg-amber-50, .dark .bg-amber-100, .dark .bg-amber-500, .dark .bg-amber-600,
+.dark .bg-teal-50,  .dark .bg-teal-100,  .dark .bg-teal-500,  .dark .bg-teal-600 {
+  background-color: var(--ip-bg-elevated) !important;
+}
+
+/* Catch-all for colored bg-*-300/400 shades the main block missed */
+.dark .bg-blue-300, .dark .bg-blue-400,
+.dark .bg-green-300, .dark .bg-green-400,
+.dark .bg-red-300, .dark .bg-red-400,
+.dark .bg-purple-300, .dark .bg-purple-400,
+.dark .bg-yellow-300, .dark .bg-yellow-400,
+.dark .bg-orange-300, .dark .bg-orange-400,
+.dark .bg-indigo-300, .dark .bg-indigo-400,
+.dark .bg-cyan-300, .dark .bg-cyan-400,
+.dark .bg-pink-300, .dark .bg-pink-400,
+.dark .bg-emerald-300, .dark .bg-emerald-400,
+.dark .bg-violet-300, .dark .bg-violet-400,
+.dark .bg-amber-300, .dark .bg-amber-400,
+.dark .bg-teal-300, .dark .bg-teal-400,
+.bg-emerald-400, .bg-emerald-300,
+.hover\:bg-emerald-300:hover {
+  background-color: var(--ip-fg) !important;
+  color: var(--ip-bg) !important;
+}
+
+/* Text on colored buttons (e.g. text-gray-950 on emerald btn) */
+.dark .text-gray-950, .dark .text-black,
+.text-gray-950, .text-black {
+  color: var(--ip-bg) !important;
+}
+
+/* Bullet marker dots — make them white */
+li > span.rounded-full[class*="bg-emerald"],
+li > span.rounded-full[class*="bg-blue"],
+li > span.rounded-full[class*="bg-green"] {
+  background-color: var(--ip-fg) !important;
+}
+
+/* Emerald shadow glow — kill */
+[class*="shadow-emerald"], [class*="shadow-blue"], [class*="shadow-green"] {
+  box-shadow: 0 0 0 1px var(--ip-border), 0 1px 2px rgba(0,0,0,0.6) !important;
+}
+
+/* Semi-transparent dark shades — neutralize */
+[class*="bg-blue-900/"],   [class*="bg-green-900/"],
+[class*="bg-red-900/"],    [class*="bg-purple-900/"],
+[class*="bg-yellow-900/"], [class*="bg-orange-900/"],
+[class*="bg-indigo-900/"], [class*="bg-cyan-900/"],
+[class*="bg-gray-700/"],   [class*="bg-emerald-900/"] {
+  background-color: var(--ip-bg-elevated) !important;
+}
+
+/* ----- Text: collapse all chromatic text to mono scale ----- */
+.dark .text-white,
+.text-white {
+  color: var(--ip-fg) !important;
+}
+
+.dark .text-gray-300, .dark .text-gray-400,
+.dark .text-slate-300, .dark .text-slate-400,
+.text-gray-300, .text-gray-400, .text-slate-300, .text-slate-400 {
+  color: var(--ip-fg-secondary) !important;
+}
+
+.dark .text-gray-500, .dark .text-gray-600,
+.dark .text-slate-500, .dark .text-slate-600,
+.text-gray-500, .text-slate-500 {
+  color: var(--ip-fg-tertiary) !important;
+}
+
+/* All hued text → primary white (kill the rainbow) */
+.dark .text-blue-300,  .dark .text-blue-400,  .dark .text-blue-500,  .dark .text-blue-600,  .dark .text-blue-700,
+.dark .text-green-300, .dark .text-green-400, .dark .text-green-500, .dark .text-green-600,
+.dark .text-red-300,   .dark .text-red-400,   .dark .text-red-500,   .dark .text-red-600,
+.dark .text-purple-300,.dark .text-purple-400,.dark .text-purple-500,.dark .text-purple-600,
+.dark .text-yellow-300,.dark .text-yellow-400,.dark .text-yellow-500,.dark .text-yellow-600,
+.dark .text-orange-300,.dark .text-orange-400,.dark .text-orange-500,.dark .text-orange-600,
+.dark .text-indigo-300,.dark .text-indigo-400,.dark .text-indigo-500,.dark .text-indigo-600,
+.dark .text-cyan-300,  .dark .text-cyan-400,  .dark .text-cyan-500,  .dark .text-cyan-600,
+.dark .text-pink-300,  .dark .text-pink-400,  .dark .text-pink-500,  .dark .text-pink-600,
+.dark .text-emerald-300,.dark .text-emerald-400,.dark .text-emerald-500,.dark .text-emerald-600,
+.dark .text-violet-300,.dark .text-violet-400,.dark .text-violet-500,
+.dark .text-amber-300, .dark .text-amber-400, .dark .text-amber-500,
+.dark .text-teal-300,  .dark .text-teal-400,  .dark .text-teal-500,
+.text-emerald-300, .text-emerald-400 {
+  color: var(--ip-fg) !important;
+}
+
+/* ----- Borders: unified hairline ----- */
+.dark .border, .dark .border-t, .dark .border-b, .dark .border-l, .dark .border-r,
+.dark [class*="border-gray-"], .dark [class*="border-slate-"],
+.dark [class*="border-blue-"], .dark [class*="border-green-"],
+.dark [class*="border-red-"],  .dark [class*="border-purple-"],
+.dark [class*="border-yellow-"],.dark [class*="border-orange-"],
+.dark [class*="border-indigo-"],.dark [class*="border-cyan-"],
+.dark [class*="border-emerald-"],.dark [class*="border-pink-"],
+.dark [class*="border-violet-"],.dark [class*="border-amber-"],
+[class*="border-gray-"], [class*="border-emerald-"] {
+  border-color: var(--ip-border) !important;
+}
+
+.dark .border-2, .dark .border-4 {
+  border-width: 1px !important;
+  border-color: var(--ip-border-strong) !important;
+}
+
+/* ----- Rounded corners: Apple-preferred 12-14px ----- */
+.rounded-lg  { border-radius: 12px !important; }
+.rounded-xl  { border-radius: 14px !important; }
+.rounded-2xl { border-radius: 18px !important; }
+.rounded     { border-radius: 8px  !important; }
+.rounded-md  { border-radius: 10px !important; }
+
+/* ----- Shadows: flat with subtle inset-style hairline ----- */
+.dark .shadow, .dark .shadow-sm, .dark .shadow-md, .dark .shadow-lg, .dark .shadow-xl,
+.shadow, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl {
+  box-shadow:
+    0 0 0 1px var(--ip-border),
+    0 1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ----- Hover: subtle elevation shift, no hue change ----- */
+.dark .hover\:bg-gray-700:hover,
+.dark .hover\:bg-gray-600:hover,
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-200:hover,
+.dark .hover\:bg-blue-50:hover,
+.dark .hover\:bg-blue-700:hover,
+.dark .hover\:bg-red-900\/30:hover,
+.dark [class*="hover\:bg-blue-"]:hover,
+.dark [class*="hover\:bg-green-"]:hover,
+.dark [class*="hover\:bg-red-"]:hover,
+.dark [class*="hover\:bg-purple-"]:hover,
+.dark [class*="hover\:bg-orange-"]:hover,
+.hover\:border-emerald-400:hover {
+  background-color: var(--ip-bg-hover) !important;
+  border-color: var(--ip-border-strong) !important;
+  color: var(--ip-fg) !important;
+}
+
+/* ----- Accent: sparingly, for primary CTAs, active nav, focus ----- */
+.dark .bg-indigo-600,
+.dark .bg-indigo-700,
+button.primary-cta,
+a.primary-cta {
+  background-color: var(--ip-accent) !important;
+  color: #fff !important;
+  border-color: var(--ip-accent) !important;
+}
+
+/* Focus ring on inputs */
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--ip-accent) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px var(--ip-accent-ring) !important;
+}
+
+.dark input, .dark textarea, .dark select,
+input, textarea, select {
+  background-color: var(--ip-bg-raised) !important;
+  color: var(--ip-fg) !important;
+  border-color: var(--ip-border) !important;
+}
+
+/* Checkbox/radio accent */
+.dark input[type="checkbox"],
+.dark input[type="radio"],
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--ip-accent) !important;
+}
+
+/* ----- Progress bars: mono ----- */
+.dark .bg-green-500,
+.bg-green-500 {
+  background-color: var(--ip-fg) !important;
+}
+
+/* Progress track (handled above by bg-slate/gray overrides) */
+
+/* ----- Kill gradient backgrounds ----- */
+.gradient-bg,
+.glass-effect,
+.bg-gradient-to-r,
+.bg-gradient-to-br,
+.bg-gradient-to-bl,
+.bg-gradient-to-t,
+.bg-gradient-to-b,
+[class*="from-blue-"],
+[class*="from-purple-"],
+[class*="from-indigo-"],
+[class*="from-green-"],
+[class*="to-blue-"],
+[class*="to-purple-"],
+[class*="to-indigo-"],
+[class*="to-green-"] {
+  background: var(--ip-bg-raised) !important;
+  border: 1px solid var(--ip-border) !important;
+  backdrop-filter: none !important;
+}
+
+/* ----- Scrollbar: thinner, subtler ----- */
+::-webkit-scrollbar { width: 4px !important; height: 4px !important; }
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 245, 247, 0.10) !important;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 245, 247, 0.22) !important;
+}
+* { scrollbar-color: rgba(245, 245, 247, 0.10) transparent !important; }
+
+/* ----- Ring utilities ----- */
+.dark .ring-green-500,
+.dark .ring-blue-500,
+.dark .ring-red-500,
+.ring-green-500, .ring-blue-500, .ring-red-500 {
+  --tw-ring-color: var(--ip-fg) !important;
+}
+
+/* ----- Nav item active state (sidebar) ----- */
+.dark nav#nav a[aria-current="page"],
+.dark nav#nav button[aria-current="page"] {
+  background-color: var(--ip-accent-dim) !important;
+  color: var(--ip-accent) !important;
+  border-left: 2px solid var(--ip-accent) !important;
+}
+
+/* ----- Badges and pills: hollow, hairline ----- */
+.dark .bg-slate-400,
+.dark .bg-slate-500 {
+  background-color: transparent !important;
+  border: 1px solid var(--ip-border-strong) !important;
+  color: var(--ip-fg-secondary) !important;
+}
+
+/* ----- Modal backdrop ----- */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(20px) saturate(1.2) !important;
+}
+
+/* ----- Icon tint: fa-* icons inherit color from parent — already handled by text-* overrides ----- */
+
+/* ----- Animations: soften durations to Apple spec ----- */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ----- Day type A/B/C chips: encode with weight/opacity instead of hue ----- */
+[data-day-type="A"] { font-weight: 600; opacity: 1; }
+[data-day-type="B"] { font-weight: 500; opacity: 0.85; }
+[data-day-type="C"] { font-weight: 400; opacity: 0.65; }

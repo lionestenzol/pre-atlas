@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The 8 Steps · in-PACT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--ip-font); color: var(--ip-black); background: var(--ip-white); }
+
+    .mt-wrap { width: min(48rem, 100% - 3rem); margin: 0 auto; padding: 3rem 0 5rem; }
+
+    /* Header */
+    .mt-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }
+    .mt-brand { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; color: var(--ip-gray-600); text-decoration: none; }
+    .mt-back { font-size: 0.8125rem; font-weight: 600; color: var(--ip-gray-600); text-decoration: none; border-bottom: 1px dotted var(--ip-gray-300); }
+    .mt-back:hover { color: var(--ip-black); border-bottom-color: var(--ip-black); }
+
+    .mt-eyebrow { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ip-gray-600); margin-top: 1.25rem; margin-bottom: 0.5rem; }
+    .mt-title { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 1rem; }
+    .mt-subtitle { color: var(--ip-gray-600); font-size: 1rem; line-height: 1.6; margin-bottom: 2.5rem; max-width: 38rem; }
+
+    /* Intentionality banner: the headline principle */
+    .mt-principle { padding: 1.75rem 1.875rem; background: var(--ip-black); color: var(--ip-white); border-radius: 0.875rem; margin-bottom: 2rem; }
+    .mt-principle .mt-principle-eyebrow { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.55; margin-bottom: 0.625rem; }
+    .mt-principle h2 { font-size: 1.625rem; font-weight: 800; letter-spacing: -0.015em; line-height: 1.2; margin-bottom: 0.875rem; }
+    .mt-principle p { font-size: 0.9375rem; line-height: 1.65; opacity: 0.92; }
+    .mt-principle p + p { margin-top: 0.75rem; }
+    .mt-principle strong { font-weight: 700; color: var(--ip-white); }
+
+    /* Pull-up callout */
+    .mt-pullup { padding: 1.25rem 1.5rem; border: 2px solid var(--ip-black); border-radius: 0.875rem; margin-bottom: 3rem; display: flex; flex-direction: column; gap: 0.375rem; }
+    .mt-pullup-eyebrow { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ip-gray-600); }
+    .mt-pullup-quote { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.015em; line-height: 1.2; }
+    .mt-pullup-attr { font-size: 0.8125rem; color: var(--ip-gray-600); margin-top: 0.25rem; }
+
+    /* Step cards */
+    .mt-steps { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 3rem; }
+    .mt-step { display: grid; grid-template-columns: 3.25rem 1fr; gap: 1.25rem; padding: 1.5rem 1.5rem 1.5rem 1.25rem; border: 1.5px solid var(--ip-gray-200); border-radius: 0.875rem; transition: border-color 0.15s; }
+    .mt-step:hover { border-color: var(--ip-gray-300); }
+    .mt-step-num { font-size: 2.25rem; font-weight: 800; line-height: 1; color: var(--ip-gray-300); letter-spacing: -0.02em; }
+    .mt-step-body h2 { font-size: 1.0625rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.5rem; }
+    .mt-step-do { font-size: 0.875rem; line-height: 1.6; color: var(--ip-gray-700); margin-bottom: 0.625rem; }
+    .mt-step-quote { font-size: 0.875rem; line-height: 1.55; color: var(--ip-black); font-weight: 600; padding: 0.625rem 0.875rem; background: var(--ip-gray-50); border-left: 3px solid var(--ip-black); border-radius: 0.25rem; margin-bottom: 0.75rem; }
+    .mt-step-quote::before { content: '"'; opacity: 0.4; margin-right: 0.0625rem; }
+    .mt-step-quote::after { content: '"'; opacity: 0.4; margin-left: 0.0625rem; }
+    .mt-step-where { display: inline-flex; align-items: center; gap: 0.4375rem; font-size: 0.75rem; font-weight: 600; color: var(--ip-gray-600); padding: 0.3125rem 0.625rem; background: var(--ip-gray-50); border-radius: 999px; }
+    .mt-step-where::before { content: '↳'; opacity: 0.6; }
+    .mt-step-where strong { color: var(--ip-black); font-weight: 700; }
+
+    /* Crying callout (sits inside Step 6) */
+    .mt-step-soft { margin-top: 0.875rem; padding: 0.75rem 1rem; background: var(--ip-gray-50); border-radius: 0.5rem; font-size: 0.8125rem; line-height: 1.55; color: var(--ip-gray-700); border: 1px dashed var(--ip-gray-300); }
+    .mt-step-soft strong { color: var(--ip-black); font-weight: 700; }
+
+    /* Connector section */
+    .mt-connect { padding: 1.75rem 1.75rem 1.5rem; background: var(--ip-black); color: var(--ip-white); border-radius: 0.875rem; margin-bottom: 2.5rem; }
+    .mt-connect h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .mt-connect p { font-size: 0.9375rem; line-height: 1.6; opacity: 0.85; margin-bottom: 1.125rem; }
+    .mt-connect ul { list-style: none; }
+    .mt-connect li { font-size: 0.875rem; line-height: 1.7; padding-left: 1.125rem; position: relative; opacity: 0.9; }
+    .mt-connect li::before { content: '·'; position: absolute; left: 0.375rem; font-weight: 700; }
+    .mt-connect li strong { font-weight: 700; opacity: 1; }
+
+    /* Origin */
+    .mt-origin { padding: 1.5rem 1.625rem; border: 1px solid var(--ip-gray-200); border-radius: 0.75rem; margin-bottom: 2rem; }
+    .mt-origin .mt-eyebrow { margin-top: 0; }
+    .mt-origin p { font-size: 0.875rem; line-height: 1.6; color: var(--ip-gray-700); }
+    .mt-origin p + p { margin-top: 0.625rem; }
+    .mt-origin strong { color: var(--ip-black); font-weight: 600; }
+
+    /* CTA */
+    .mt-cta { display: flex; justify-content: center; margin-top: 2.5rem; }
+    .mt-cta a { display: inline-block; padding: 0.875rem 1.75rem; background: var(--ip-black); color: var(--ip-white); text-decoration: none; border-radius: 0.5rem; font-size: 0.9375rem; font-weight: 600; transition: opacity 0.15s; }
+    .mt-cta a:hover { opacity: 0.9; }
+
+    @media (max-width: 600px) {
+      .mt-title { font-size: 2rem; }
+      .mt-step { grid-template-columns: 2.5rem 1fr; padding: 1.25rem 1.125rem; gap: 0.875rem; }
+      .mt-step-num { font-size: 1.875rem; }
+      .mt-principle h2 { font-size: 1.375rem; }
+      .mt-pullup-quote { font-size: 1.125rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="mt-wrap">
+    <div class="mt-head">
+      <a href="index.html" class="mt-brand">in-PACT</a>
+      <a href="today.html" class="mt-back">Back to Today</a>
+    </div>
+
+    <div class="mt-eyebrow">The Method</div>
+    <h1 class="mt-title">The 8 Steps to Success</h1>
+    <p class="mt-subtitle">Eight rules from the binder. Drilled into door to door sales reps. Adapted by the founder while working four jobs and going to school. Tested in the worst conditions. Still works.</p>
+
+    <!-- Headline principle: intentionality -->
+    <div class="mt-principle">
+      <div class="mt-principle-eyebrow">The Headline Principle</div>
+      <h2>Intentionality, not discipline.</h2>
+      <p>The 8 Steps don't tell you to be disciplined. They tell you to be <strong>intentional</strong>. Doom scrolling can be Step 1 if you chose it on purpose. A long lunch can be Step 5 if it puts you where the results are. A smoke break can be Step 6 if it's your reset move and not your master.</p>
+      <p>Same action. Different intent. Completely different result. The system doesn't judge the move. It asks: <strong>did you choose it on purpose, and did it get the result?</strong></p>
+    </div>
+
+    <!-- Pull-up callout -->
+    <div class="mt-pullup">
+      <div class="mt-pullup-eyebrow">The frame for the whole thing</div>
+      <div class="mt-pullup-quote">Pull up. Don't bother them with a pitch.</div>
+      <div class="mt-pullup-attr">Bruke, on what he told his sales team before going into the field</div>
+    </div>
+
+    <div class="mt-steps">
+
+      <!-- STEP 1 -->
+      <div class="mt-step">
+        <div class="mt-step-num">1</div>
+        <div class="mt-step-body">
+          <h2>Have a Great Attitude</h2>
+          <p class="mt-step-do">Do whatever you actually need to get into the right state for your day. <strong>No judgment.</strong> Big breakfast. A snack. A workout. A smoke. Waking up an hour early to bed-rot. Doom scrolling. Two frappes from Starbucks. Music can stack: start calm, throw a party, switch to aggressive. Or just play one thing that puts you in the zone.</p>
+          <p class="mt-step-quote">The only test is: did it put you in the right state? Not what you should do. What works for you.</p>
+          <span class="mt-step-where">Where it lives in Today: <strong>Day Type selector</strong></span>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="mt-step">
+        <div class="mt-step-num">2</div>
+        <div class="mt-step-body">
+          <h2>Be on Time</h2>
+          <p class="mt-step-do">Self-explanatory, but it doesn't stand alone. On time is the <strong>output</strong> of being prepared. If you're prepared the night before, on time happens automatically. If you're not, on time is impossible. Step 2 and Step 3 are one move, not two.</p>
+          <span class="mt-step-where">Where it lives in Today: <strong>handled by Step 3 below</strong></span>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="mt-step">
+        <div class="mt-step-num">3</div>
+        <div class="mt-step-body">
+          <h2>Be Prepared</h2>
+          <p class="mt-step-do">The little things and the big things, both matter. Snacks, gum, charger, deodorant, gas in the car the night before, contingency plan, phone calls made in advance, notes and questions written down, clothes set out, week already planned, weekly goals already set.</p>
+          <p class="mt-step-quote">You aren't preparing for your best day. You're preparing for your worst day.</p>
+          <p class="mt-step-do">The hidden part: end of day reflection notes get <strong>converted into executables for tomorrow</strong>. Reflection isn't sentimental. It's the input to tomorrow's plan. Whatever the reflection surfaces (a follow up before a deadline, a stuck thing, a lesson) becomes a literal action item on the next day's page.</p>
+          <span class="mt-step-where">Where it lives in Today: <strong>Top 3 Priorities + Tonight's Reflection</strong></span>
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="mt-step">
+        <div class="mt-step-num">4</div>
+        <div class="mt-step-body">
+          <h2>Work the Full Day</h2>
+          <p class="mt-step-do">Not eight hours. Whatever blocks you have, fully focused. Even five minutes counts if it was a focused five minutes. The blocks aren't the point. <strong>Multiple opportunities to win is the point.</strong></p>
+          <p class="mt-step-do">Pick a target. Schedule four separate attempts at the same target during the day. The attempts have a progression: <strong>get familiar, lay groundwork, push it forward, ship or own it</strong>. By the fourth attempt there's no excuse left.</p>
+          <p class="mt-step-quote">It's not about crossing everything off perfectly. It's about getting the repetitions in.</p>
+          <p class="mt-step-do">You DO need structure. Routines. Predictable scaffolds. Same time, same place. The structure isn't there to enforce perfection. It's there to make sure the reps happen.</p>
+          <span class="mt-step-where">Where it lives in Today: <strong>Reps at the Win Target (4 of 4)</strong></span>
+        </div>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="mt-step">
+        <div class="mt-step-num">5</div>
+        <div class="mt-step-body">
+          <h2>Work the Territory Efficiently</h2>
+          <p class="mt-step-do">Every door, every break, has to count. The point isn't coverage. The point is <strong>knowing where the actual results live and going there</strong>. Start late if late is when people are home. Take long lunches if a better headspace beats perfect coverage. Have fun. Call other people who'd know what's working in their territory and trade intel with them.</p>
+          <p class="mt-step-quote">Do what gets results. Leave the rest alone.</p>
+          <p class="mt-step-do">Four pieces: <strong>timing</strong> (when is it actually worth showing up), <strong>headspace</strong> (are you in the right state to attack), <strong>intelligence</strong> (have you asked the people who'd know), <strong>environment plan</strong> (which context are you in and how do you behave there). This isn't "work harder." It's "work where the results actually are, even if it looks lazy from the outside."</p>
+          <span class="mt-step-where">Where it lives in Today: <strong>Win Target field</strong></span>
+        </div>
+      </div>
+
+      <!-- STEP 6 -->
+      <div class="mt-step">
+        <div class="mt-step-num">6</div>
+        <div class="mt-step-body">
+          <h2>Maintain Your Attitude</h2>
+          <p class="mt-step-do"><strong>Attitude determines your altitude.</strong> Attitude is performance fuel, and you have to be able to perform, so the rule is: <strong>protect the instrument</strong>. Mind, body, and energy are an instrument. Whatever it takes to keep the instrument tuned, do that, on purpose.</p>
+          <p class="mt-step-do">The offense: food that doesn't slow you down, exercise that clears your head, dress your best, smell good, music that puts you in attack mode. All scheduled. All chosen. All aimed at making "pull up, don't bother them" the actual frame you walk in with.</p>
+          <p class="mt-step-do">The defense: when something cracks the state, you have to bounce back. Bad customer doesn't equal bad you. Bad meeting doesn't equal bad day.</p>
+          <p class="mt-step-quote">Don't let the outer determine the inner. If it does, you have to bounce back.</p>
+          <p class="mt-step-do">Find your reset move. The thing that puts you back in the untouchable state. A walk. Music. A call. A smoke. Whatever works for you. The medium doesn't matter. The untouchable state is the goal. And it has to be <strong>intentional</strong>, not autopilot. Same rule as Step 1.</p>
+          <div class="mt-step-soft">
+            <strong>Crying is part of the system.</strong> Not suppressed. Not running you. Given time, on purpose, on your own terms. Then back to the foot down. The bounce back works because you're allowed to be human first.
+          </div>
+          <span class="mt-step-where" style="margin-top:0.75rem;">Where it lives in Today: <strong>Reset Move field</strong></span>
+        </div>
+      </div>
+
+      <!-- STEP 7 -->
+      <div class="mt-step">
+        <div class="mt-step-num">7</div>
+        <div class="mt-step-body">
+          <h2>Know Your Why</h2>
+          <p class="mt-step-do">The why isn't abstract. It's not "find your purpose." It's three things working together:</p>
+          <p class="mt-step-do"><strong>The mission.</strong> Concrete and personal. Not "financial freedom." A literal car note. The concrete one is the one that survives.</p>
+          <p class="mt-step-do"><strong>The vision.</strong> What nothing is coming between you and. The plan you don't let anyone derail.</p>
+          <p class="mt-step-do"><strong>The motto.</strong> The phrase you say to yourself when shit cracks and the day starts going sideways. Short. Yours. Doesn't matter what it sounds like to anyone else as long as it works on you.</p>
+          <p class="mt-step-quote">When BS happens, you have a mission and nothing is going to derail you.</p>
+          <p class="mt-step-do">The mission is the foundation. The motto is the operational tool. In the moment when something cracks the day, you don't recite a mission statement. You hit the motto and go.</p>
+          <span class="mt-step-where">Where it lives in Today: <strong>Your Why pin (Mission + Motto, set once, visible every day)</strong></span>
+        </div>
+      </div>
+
+      <!-- STEP 8 -->
+      <div class="mt-step">
+        <div class="mt-step-num">8</div>
+        <div class="mt-step-body">
+          <h2>Take Control</h2>
+          <p class="mt-step-do">Literal. Put your foot down. When something or someone is in your way, you move them out. When the day is fucking up, you take control. When teammates are drifting, you redirect them.</p>
+          <p class="mt-step-do"><strong>It's not always loud.</strong> Sometimes it's quiet. The customer says no, you stand strong. The day cracks, you stand strong. Quiet authority counts as taking control. The form is whatever the situation needs. The substance is the same:</p>
+          <p class="mt-step-quote">Make a decision and don't waver.</p>
+          <p class="mt-step-do">Indecision is the failure mode. Wavering is what kills the day. Step 8 is the act of <strong>refusing to be pulled</strong>. It's rooted in Step 6: standing strong in your state and having faith that all your preparation and execution is going to land.</p>
+          <p class="mt-step-do">Without Step 8, you can do Steps 1 to 7 perfectly and still let one bad moment unravel the whole day. With Step 8, the rest of the system finally counts.</p>
+          <span class="mt-step-where">Where it lives in Today: <strong>The whole page. Filling it out is the act of taking control before the day takes control of you.</strong></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Connector -->
+    <div class="mt-connect">
+      <h3>How Today maps to the Steps</h3>
+      <p>today.html is not a tracker. It is a daily execution of the 8 Steps. Every field is one of them.</p>
+      <ul>
+        <li><strong>Your Why pin</strong> = Step 7. Mission + motto. Set once, lives on every day.</li>
+        <li><strong>Day Type</strong> = Step 1. Choose the state you're walking into.</li>
+        <li><strong>Win Target</strong> = Step 5. Pick where the result actually lives.</li>
+        <li><strong>Top 3 Priorities + Why</strong> = Steps 3 + 7. Be prepared and connect each one to the mission.</li>
+        <li><strong>X / Y Goals</strong> = baseline plus stretch. Minimum and bonus.</li>
+        <li><strong>Reps at the Win Target</strong> = Step 4. Four attempts. By the 4th there's no excuse.</li>
+        <li><strong>Reset Move</strong> = Step 6. Capture what brought you back today.</li>
+        <li><strong>Tonight's Reflection</strong> = Step 3. Tomorrow's executables.</li>
+        <li><strong>Filling the whole page out</strong> = Step 8. Take control before the day takes control of you.</li>
+      </ul>
+    </div>
+
+    <!-- Origin -->
+    <div class="mt-origin">
+      <div class="mt-eyebrow">Where the 8 Steps come from</div>
+      <p>The 8 Steps are part of the <strong>Impacts curriculum</strong>, a 20 lesson methodology used to train field sales reps. Reps weren't graduated until they could not only recite the lessons, but teach them to a new hire. The system produced top performers in a brutal performance environment where most people wash out in 90 days. It produced the number one rep in the country.</p>
+      <p>in-PACT is the personal version. The founder adapted these steps while working four jobs and going to school at the same time. No manager, no protected time, no salary cushion. The version on this page is the one that survived those conditions, not the one that lived on the sales floor. The principles are the same. The shape is yours.</p>
+    </div>
+
+    <div class="mt-cta" style="gap:0.75rem;flex-wrap:wrap;">
+      <a href="today.html">Open Today</a>
+      <a href="followup.html" style="background:var(--ip-white);color:var(--ip-black);border:1.5px solid var(--ip-black);">Lesson 2 · Life of an App</a>
+    </div>
+  </div>
+</body>
+</html>

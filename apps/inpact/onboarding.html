@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set Up · in-PACT</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--ip-font); color: var(--ip-black); background: var(--ip-white); }
+
+    .ob-wrap { width: min(42rem, 100% - 3rem); margin: 0 auto; padding: 3rem 0 5rem; }
+    .ob-brand { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; color: var(--ip-gray-600); margin-bottom: 2rem; display: block; }
+
+    .ob-step { display: none; }
+    .ob-step.active { display: block; }
+
+    .ob-progress { display: flex; gap: 0.375rem; margin-bottom: 2.5rem; }
+    .ob-dot { width: 2.5rem; height: 0.25rem; border-radius: 999px; background: var(--ip-gray-200); transition: background 0.3s; }
+    .ob-dot.done { background: var(--ip-black); }
+
+    .ob-title { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 0.375rem; }
+    .ob-sub { font-size: 0.9375rem; color: var(--ip-gray-600); margin-bottom: 2rem; line-height: 1.5; }
+
+    .ob-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--ip-gray-200); }
+
+    .ob-task-row { display: flex; gap: 0.625rem; align-items: center; margin-bottom: 0.75rem; }
+    .ob-task-letter { flex-shrink: 0; width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; background: var(--ip-gray-100); color: var(--ip-gray-700); }
+
+    .ob-pigpen-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .ob-pigpen-name { font-size: 0.8125rem; font-weight: 600; width: 6rem; }
+
+    .ob-prio-row { display: flex; gap: 0.625rem; margin-bottom: 0.875rem; align-items: flex-start; }
+    .ob-prio-num { flex-shrink: 0; width: 1.75rem; height: 2.625rem; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--ip-gray-300); font-size: 1rem; }
+    .ob-prio-fields { flex: 1; display: flex; flex-direction: column; gap: 0.375rem; }
+    .ob-link-row { display: flex; gap: 0.375rem; align-items: center; margin-top: 0.25rem; }
+    .ob-link-label { font-size: 0.625rem; color: var(--ip-gray-300); text-transform: uppercase; letter-spacing: 0.06em; }
+    .ob-link-select { font-family: var(--ip-font); font-size: 0.6875rem; color: var(--ip-gray-600); background: var(--ip-gray-50); border: 1px solid var(--ip-gray-100); border-radius: 0.375rem; padding: 0.25rem 0.375rem; }
+  </style>
+</head>
+<body>
+  <div class="ob-wrap">
+    <span class="ob-brand">in-PACT</span>
+
+    <div class="ob-progress">
+      <div class="ob-dot done" id="dot-0"></div>
+      <div class="ob-dot" id="dot-1"></div>
+      <div class="ob-dot" id="dot-2"></div>
+      <div class="ob-dot" id="dot-3"></div>
+    </div>
+
+    <!-- Step 0: Your Why -->
+    <div class="ob-step active" id="step-0">
+      <div class="ob-title">Welcome. Let's set you up.</div>
+      <div class="ob-sub">in-PACT is a planning system built from a real sales training binder. It connects what you do today to what you're trying to accomplish this month. This setup takes about 5 minutes.</div>
+
+      <div class="td-chapter" style="margin-top:1.5rem;">
+        <span class="td-chapter-title">Step 1 of 4: Your Why</span>
+      </div>
+
+      <div style="background:var(--ip-gray-50);padding:1rem 1.125rem;border-radius:0.5rem;margin-bottom:1.5rem;line-height:1.6;font-size:0.875rem;color:var(--ip-gray-700);">
+        Before you plan anything, you need to know why you're doing it. In the original system this was Step 7: Know Your Why. Your mission is the concrete thing you're working toward. Your motto is the sentence that snaps you back when the day falls apart. These live at the top of your daily plan as a reminder.
+      </div>
+
+      <div class="td-section">
+        <div class="td-label">Mission</div>
+        <div class="td-help">The concrete thing. Not a vibe. The car note. The degree. The launch date. What are you actually chasing?</div>
+        <input type="text" class="td-input" id="ob-mission" placeholder="e.g. Clear the debt by December. Ship inPACT. Graduate.">
+      </div>
+
+      <div class="td-section">
+        <div class="td-label">Motto</div>
+        <div class="td-help">When the day cracks and you want to quit, what do you say to yourself? One line. Yours.</div>
+        <input type="text" class="td-input" id="ob-motto" placeholder="e.g. Foot down, every day. Not today. One more hour.">
+      </div>
+
+      <div class="ob-nav">
+        <div></div>
+        <button class="td-btn" onclick="goStep(1)">Next: Monthly Tasks</button>
+      </div>
+    </div>
+
+    <!-- Step 1: A-Z Tasks -->
+    <div class="ob-step" id="step-1">
+      <div class="ob-title">A-Z Tasks</div>
+
+      <div class="td-chapter" style="margin-top:0;">
+        <span class="td-chapter-title">Step 2 of 4: Monthly Milestones</span>
+      </div>
+
+      <div style="background:var(--ip-gray-50);padding:1rem 1.125rem;border-radius:0.5rem;margin-bottom:1.5rem;line-height:1.6;font-size:0.875rem;color:var(--ip-gray-700);">
+        In the original binder, new hires got an A-Z sheet. Each letter was a concrete milestone to cross off over 4 weeks: "Z: Background check", "Y: Learn impulse curve", all the way up to "A: 10 reasons." Your version works the same way. Each letter is one focused objective for this month. Not a category. Not a project. A specific thing you can cross off. Start with 3-5 real ones. You can always add more.
+      </div>
+
+      <div id="ob-tasks-list"></div>
+
+      <button class="td-btn-ghost" onclick="addTaskRow()" style="width:100%;text-align:center;margin-top:0.5rem;">
+        <i class="fas fa-plus" style="margin-right:0.375rem;font-size:0.625rem;"></i>Add another
+      </button>
+
+      <div class="ob-nav">
+        <button class="td-btn-ghost" onclick="goStep(0)">Back</button>
+        <button class="td-btn" onclick="goStep(2)">Next: This Week</button>
+      </div>
+    </div>
+
+    <!-- Step 2: This Week -->
+    <div class="ob-step" id="step-2">
+      <div class="ob-title">This Week</div>
+
+      <div class="td-chapter" style="margin-top:0;">
+        <span class="td-chapter-title">Step 3 of 4: Weekly Focus</span>
+      </div>
+
+      <div style="background:var(--ip-gray-50);padding:1rem 1.125rem;border-radius:0.5rem;margin-bottom:1.5rem;line-height:1.6;font-size:0.875rem;color:var(--ip-gray-700);">
+        Monthly milestones don't happen by accident. Each week, you pick one A-Z letter as your primary target and decide what counts as a win. You also set focus across 6 life areas called PIGPEN: Production, Image, Growth, Personal, Errands, Network. This keeps you from pouring everything into one area while the rest starves. Monday you set the week. Friday you close it and see what moved.
+      </div>
+
+      <div class="td-section">
+        <div class="td-label">Primary Letter <span class="td-label-step">Which A-Z task are you attacking this week?</span></div>
+        <div class="td-help">Pick the one letter that gets the most daily attention this week.</div>
+        <select class="td-input" id="ob-primary" style="width:auto;max-width:20rem;"></select>
+      </div>
+
+      <div class="td-section">
+        <div class="td-label">Week Counts If</div>
+        <div class="td-help">One sentence. If this is true by Friday, the week was a win. Be specific.</div>
+        <input type="text" class="td-input" id="ob-counts-if" placeholder="e.g. Landing page is live and collecting emails.">
+      </div>
+
+      <div class="td-section">
+        <div class="td-label">PIGPEN Focus</div>
+        <div class="td-help">For each area, write what you're doing this week. Leave blank if you're skipping it. Not every area needs attention every week, but none should be ignored for long.</div>
+        <div id="ob-pigpen-list"></div>
+      </div>
+
+      <div class="ob-nav">
+        <button class="td-btn-ghost" onclick="goStep(1)">Back</button>
+        <button class="td-btn" onclick="goStep(3)">Next: Plan Today</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Today -->
+    <div class="ob-step" id="step-3">
+      <div class="ob-title">Today</div>
+
+      <div class="td-chapter" style="margin-top:0;">
+        <span class="td-chapter-title">Step 4 of 4: Your First Daily Plan</span>
+      </div>
+
+      <div style="background:var(--ip-gray-50);padding:1rem 1.125rem;border-radius:0.5rem;margin-bottom:1.5rem;line-height:1.6;font-size:0.875rem;color:var(--ip-gray-700);">
+        This is the daily ritual. In the original system it was called "Plan Your Attack / Attack Your Plan." Every morning you write one win target, three priorities, and name the lever that turns a minimum day into a maximum one. Your priorities should link to an A-Z task or a PIGPEN area. That's how daily work becomes monthly progress. You'll fill this out every morning on the Today page.
+      </div>
+
+      <div class="td-section">
+        <div class="td-label">Win Target <span class="td-label-step">Step 5: Work the Territory</span></div>
+        <div class="td-help">If only one thing happens today, what is it? The single result that makes today count.</div>
+        <input type="text" class="td-input" id="ob-win" placeholder="e.g. Finish the onboarding wizard. Ship one PR. Study 2 chapters." style="font-size:1rem;font-weight:600;padding:0.875rem 1rem;">
+      </div>
+
+      <div class="td-section">
+        <div class="td-label">Top 3 Priorities <span class="td-label-step">Steps 3 + 7: Be Prepared + Know Your Why</span></div>
+        <div class="td-help">Three things you're doing today. Use the Link dropdowns to connect each one to the A-Z task or PIGPEN area it serves. This is how the system knows your daily work is moving the monthly needle.</div>
+        <div id="ob-priorities"></div>
+      </div>
+
+      <div class="td-section">
+        <div class="td-label">The Lever</div>
+        <div class="td-help">Min happens if you show up. Max happens if you pull a lever. What's the one thing that turns today from baseline to stretch? Name it before the day starts.</div>
+        <input type="text" class="td-input" id="ob-lever" placeholder="e.g. Full day, no phone, one sitting, skip the meeting.">
+      </div>
+
+      <div class="ob-nav">
+        <button class="td-btn-ghost" onclick="goStep(2)">Back</button>
+        <button class="td-btn" onclick="finish()" style="padding:0.75rem 1.5rem;">Start using in-PACT</button>
+      </div>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="js/state.js"></script>
+
+  <script>
+    // Init state
+    var stateManager = new CycleBoardState();
+    var st = stateManager.state;
+    if (!st.Today) st.Today = { mission: '', motto: '', daily: {} };
+
+    var letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    var taskRows = 5; // Start with 5 rows
+    var focusAreas = [
+      { name: 'Production', color: '#3B82F6' },
+      { name: 'Image', color: '#10B981' },
+      { name: 'Growth', color: '#8B5CF6' },
+      { name: 'Personal', color: '#F59E0B' },
+      { name: 'Errands', color: '#EF4444' },
+      { name: 'Network', color: '#EC4899' }
+    ];
+
+    // -- Render task rows --
+    function renderTaskRows() {
+      var html = '';
+      for (var i = 0; i < taskRows; i++) {
+        html += '<div class="ob-task-row">' +
+          '<div class="ob-task-letter">' + letters[i] + '</div>' +
+          '<input type="text" class="td-input" id="ob-task-' + i + '" placeholder="What are you crossing off this month?" style="flex:1;">' +
+          '</div>';
+      }
+      document.getElementById('ob-tasks-list').innerHTML = html;
+    }
+
+    function addTaskRow() {
+      if (taskRows < 26) {
+        taskRows++;
+        renderTaskRows();
+      }
+    }
+
+    // -- Render PIGPEN rows --
+    function renderPigpen() {
+      var html = '';
+      focusAreas.forEach(function(a) {
+        html += '<div class="ob-pigpen-row">' +
+          '<span class="td-dot" style="background-color:' + a.color + ';"></span>' +
+          '<span class="ob-pigpen-name">' + a.name + '</span>' +
+          '<input type="text" class="td-input" id="ob-pigpen-' + a.name + '" placeholder="Focus note..." style="flex:1;font-size:0.8125rem;padding:0.375rem 0.625rem;">' +
+          '</div>';
+      });
+      document.getElementById('ob-pigpen-list').innerHTML = html;
+    }
+
+    // -- Render primary letter dropdown --
+    function renderPrimaryDropdown() {
+      var tasks = getEnteredTasks();
+      var html = '<option value="">None selected</option>';
+      tasks.forEach(function(t) {
+        html += '<option value="' + t.letter + '">' + t.letter + ': ' + t.task.substring(0, 40) + '</option>';
+      });
+      document.getElementById('ob-primary').innerHTML = html;
+    }
+
+    // -- Render priority rows with link dropdowns --
+    function renderPriorities() {
+      var tasks = getEnteredTasks();
+      var html = '';
+      for (var i = 1; i <= 3; i++) {
+        var azOptions = '<option value="">--</option>';
+        tasks.forEach(function(t) {
+          azOptions += '<option value="' + t.letter + '">' + t.letter + ': ' + t.task.substring(0, 25) + '</option>';
+        });
+        var areaOptions = '<option value="">--</option>';
+        focusAreas.forEach(function(a) {
+          areaOptions += '<option value="' + a.name + '">' + a.name + '</option>';
+        });
+
+        html += '<div class="ob-prio-row">' +
+          '<div class="ob-prio-num">' + i + '</div>' +
+          '<div class="ob-prio-fields">' +
+          '<input type="text" class="td-input" id="ob-p' + i + '" placeholder="Priority ' + i + '">' +
+          '<div class="ob-link-row">' +
+          '<span class="ob-link-label">Link:</span>' +
+          '<select class="ob-link-select" id="ob-p' + i + 'az">' + azOptions + '</select>' +
+          '<select class="ob-link-select" id="ob-p' + i + 'area">' + areaOptions + '</select>' +
+          '</div></div></div>';
+      }
+      document.getElementById('ob-priorities').innerHTML = html;
+    }
+
+    // -- Get entered tasks from step 1 --
+    function getEnteredTasks() {
+      var tasks = [];
+      for (var i = 0; i < taskRows; i++) {
+        var el = document.getElementById('ob-task-' + i);
+        if (el && el.value.trim()) {
+          tasks.push({ letter: letters[i], task: el.value.trim() });
+        }
+      }
+      return tasks;
+    }
+
+    // -- Step navigation --
+    function goStep(n) {
+      // Before leaving step 1, update downstream
+      if (n >= 2) {
+        renderPrimaryDropdown();
+        renderPriorities();
+      }
+
+      document.querySelectorAll('.ob-step').forEach(function(el) { el.classList.remove('active'); });
+      document.getElementById('step-' + n).classList.add('active');
+
+      // Update progress dots
+      for (var i = 0; i < 4; i++) {
+        document.getElementById('dot-' + i).classList.toggle('done', i <= n);
+      }
+
+      window.scrollTo(0, 0);
+    }
+
+    // -- Finish: save everything and redirect --
+    function finish() {
+      // Step 0: Mission + Motto
+      st.Today.mission = (document.getElementById('ob-mission').value || '').trim();
+      st.Today.motto = (document.getElementById('ob-motto').value || '').trim();
+
+      // Step 1: A-Z Tasks
+      var tasks = getEnteredTasks();
+      st.AZTask = tasks.map(function(t, idx) {
+        return {
+          id: 'ob-' + t.letter.toLowerCase() + '-' + Date.now(),
+          letter: t.letter,
+          task: t.task,
+          status: 'Not Started',
+          notes: '',
+          createdAt: new Date().toISOString()
+        };
+      });
+
+      // Step 2: Weekly Plan
+      var primaryEl = document.getElementById('ob-primary');
+      var countsIfEl = document.getElementById('ob-counts-if');
+
+      // Find the task ID for the selected primary letter
+      var primaryLetter = primaryEl ? primaryEl.value : '';
+      var primaryTaskId = '';
+      if (primaryLetter) {
+        var match = st.AZTask.find(function(t) { return t.letter === primaryLetter; });
+        if (match) primaryTaskId = match.id;
+      }
+
+      var monday = new Date();
+      var day = monday.getDay();
+      var diff = monday.getDate() - day + (day === 0 ? -6 : 1);
+      monday.setDate(diff);
+
+      st.WeeklyPlan = {
+        weekOf: monday.toISOString().slice(0, 10),
+        primaryLetter: primaryTaskId,
+        weekCountsIf: countsIfEl ? countsIfEl.value.trim() : '',
+        pigpenFocus: {},
+        closed: false
+      };
+      focusAreas.forEach(function(a) {
+        var el = document.getElementById('ob-pigpen-' + a.name);
+        st.WeeklyPlan.pigpenFocus[a.name] = el ? el.value.trim() : '';
+      });
+
+      // Step 3: Today
+      var todayISO = new Date().toISOString().slice(0, 10);
+      if (!st.Today.daily) st.Today.daily = {};
+      var todayPlan = st.Today.daily[todayISO] || {};
+
+      todayPlan.date = todayISO;
+      todayPlan.winTarget = (document.getElementById('ob-win').value || '').trim();
+      todayPlan.lever = (document.getElementById('ob-lever').value || '').trim();
+
+      for (var i = 1; i <= 3; i++) {
+        var pEl = document.getElementById('ob-p' + i);
+        var azEl = document.getElementById('ob-p' + i + 'az');
+        var areaEl = document.getElementById('ob-p' + i + 'area');
+        todayPlan['p' + i] = pEl ? pEl.value.trim() : '';
+        todayPlan['p' + i + 'why'] = '';
+
+        // Map letter back to task ID for linkage
+        var azLetter = azEl ? azEl.value : '';
+        var linkedTask = azLetter ? st.AZTask.find(function(t) { return t.letter === azLetter; }) : null;
+        todayPlan['p' + i + 'az'] = linkedTask ? linkedTask.id : '';
+
+        // Map area name to area ID
+        var areaName = areaEl ? areaEl.value : '';
+        var linkedArea = areaName ? (st.FocusArea || []).find(function(a) { return a.name === areaName; }) : null;
+        todayPlan['p' + i + 'area'] = linkedArea ? linkedArea.id : '';
+      }
+
+      todayPlan.updated_at = new Date().toISOString();
+      st.Today.daily[todayISO] = todayPlan;
+
+      // Mark onboarding done
+      st.onboardingDone = true;
+      st.screen = 'Home';
+
+      // Save
+      stateManager.update(st);
+      stateManager.saveToStorage();
+
+      // Redirect to SPA
+      window.location.href = 'index.html';
+    }
+
+    // -- Init --
+    renderTaskRows();
+    renderPigpen();
+    renderPriorities();
+  </script>
+</body>
+</html>

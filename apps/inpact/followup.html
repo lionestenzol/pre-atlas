@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life of an App · in-PACT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--ip-font); color: var(--ip-black); background: var(--ip-white); }
+
+    .fu-wrap { width: min(48rem, 100% - 3rem); margin: 0 auto; padding: 3rem 0 5rem; }
+
+    /* Header */
+    .fu-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }
+    .fu-brand { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; color: var(--ip-gray-600); text-decoration: none; }
+    .fu-back { font-size: 0.8125rem; font-weight: 600; color: var(--ip-gray-600); text-decoration: none; border-bottom: 1px dotted var(--ip-gray-300); }
+    .fu-back:hover { color: var(--ip-black); border-bottom-color: var(--ip-black); }
+
+    .fu-eyebrow { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ip-gray-600); margin-top: 1.25rem; margin-bottom: 0.5rem; }
+    .fu-title { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 1rem; }
+    .fu-subtitle { color: var(--ip-gray-600); font-size: 1rem; line-height: 1.6; margin-bottom: 2.5rem; max-width: 38rem; }
+
+    /* Principle banner */
+    .fu-principle { padding: 1.75rem 1.875rem; background: var(--ip-black); color: var(--ip-white); border-radius: 0.875rem; margin-bottom: 2rem; }
+    .fu-principle .fu-principle-eyebrow { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.55; margin-bottom: 0.625rem; }
+    .fu-principle h2 { font-size: 1.625rem; font-weight: 800; letter-spacing: -0.015em; line-height: 1.2; margin-bottom: 0.875rem; }
+    .fu-principle p { font-size: 0.9375rem; line-height: 1.65; opacity: 0.92; }
+    .fu-principle p + p { margin-top: 0.75rem; }
+    .fu-principle strong { font-weight: 700; color: var(--ip-white); }
+
+    /* Pull-up callout */
+    .fu-pullup { padding: 1.25rem 1.5rem; border: 2px solid var(--ip-black); border-radius: 0.875rem; margin-bottom: 3rem; display: flex; flex-direction: column; gap: 0.375rem; }
+    .fu-pullup-eyebrow { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ip-gray-600); }
+    .fu-pullup-quote { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.015em; line-height: 1.2; }
+    .fu-pullup-attr { font-size: 0.8125rem; color: var(--ip-gray-600); margin-top: 0.25rem; }
+
+    /* Stage cards */
+    .fu-stages { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 3rem; }
+    .fu-stage { display: grid; grid-template-columns: 3.25rem 1fr; gap: 1.25rem; padding: 1.5rem 1.5rem 1.5rem 1.25rem; border: 1.5px solid var(--ip-gray-200); border-radius: 0.875rem; transition: border-color 0.15s; }
+    .fu-stage:hover { border-color: var(--ip-gray-300); }
+    .fu-stage-num { font-size: 2.25rem; font-weight: 800; line-height: 1; color: var(--ip-gray-300); letter-spacing: -0.02em; }
+    .fu-stage-body h2 { font-size: 1.0625rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.5rem; }
+    .fu-stage-do { font-size: 0.875rem; line-height: 1.6; color: var(--ip-gray-700); margin-bottom: 0.625rem; }
+    .fu-stage-quote { font-size: 0.875rem; line-height: 1.55; color: var(--ip-black); font-weight: 600; padding: 0.625rem 0.875rem; background: var(--ip-gray-50); border-left: 3px solid var(--ip-black); border-radius: 0.25rem; margin-bottom: 0.75rem; }
+    .fu-stage-quote::before { content: '"'; opacity: 0.4; margin-right: 0.0625rem; }
+    .fu-stage-quote::after { content: '"'; opacity: 0.4; margin-left: 0.0625rem; }
+    .fu-stage-binder { display: inline-flex; align-items: center; gap: 0.4375rem; font-size: 0.75rem; font-weight: 600; color: var(--ip-gray-600); padding: 0.3125rem 0.625rem; background: var(--ip-gray-50); border-radius: 999px; }
+    .fu-stage-binder::before { content: '↳'; opacity: 0.6; }
+    .fu-stage-binder strong { color: var(--ip-black); font-weight: 700; }
+
+    /* Three channels sub-callout */
+    .fu-channels { margin-top: 0.875rem; padding: 0.875rem 1rem; background: var(--ip-gray-50); border: 1px dashed var(--ip-gray-300); border-radius: 0.5rem; font-size: 0.8125rem; line-height: 1.6; color: var(--ip-gray-700); }
+    .fu-channels strong { color: var(--ip-black); font-weight: 700; display: block; margin-bottom: 0.375rem; }
+    .fu-channels ul { list-style: none; margin-top: 0.375rem; }
+    .fu-channels li { padding-left: 0.875rem; position: relative; }
+    .fu-channels li::before { content: '·'; position: absolute; left: 0.25rem; font-weight: 700; }
+
+    /* Examples block */
+    .fu-examples { padding: 1.75rem 1.75rem 1.5rem; background: var(--ip-black); color: var(--ip-white); border-radius: 0.875rem; margin-bottom: 2.5rem; }
+    .fu-examples h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .fu-examples p { font-size: 0.9375rem; line-height: 1.6; opacity: 0.85; margin-bottom: 1.125rem; }
+    .fu-examples ul { list-style: none; }
+    .fu-examples li { font-size: 0.875rem; line-height: 1.7; padding-left: 1.125rem; position: relative; opacity: 0.9; margin-bottom: 0.5rem; }
+    .fu-examples li::before { content: '·'; position: absolute; left: 0.375rem; font-weight: 700; }
+    .fu-examples li strong { font-weight: 700; opacity: 1; }
+
+    /* Origin */
+    .fu-origin { padding: 1.5rem 1.625rem; border: 1px solid var(--ip-gray-200); border-radius: 0.75rem; margin-bottom: 2rem; }
+    .fu-origin .fu-eyebrow { margin-top: 0; }
+    .fu-origin p { font-size: 0.875rem; line-height: 1.6; color: var(--ip-gray-700); }
+    .fu-origin p + p { margin-top: 0.625rem; }
+    .fu-origin strong { color: var(--ip-black); font-weight: 600; }
+
+    /* CTA */
+    .fu-cta { display: flex; justify-content: center; gap: 0.75rem; margin-top: 2.5rem; flex-wrap: wrap; }
+    .fu-cta a { display: inline-block; padding: 0.875rem 1.75rem; background: var(--ip-black); color: var(--ip-white); text-decoration: none; border-radius: 0.5rem; font-size: 0.9375rem; font-weight: 600; transition: opacity 0.15s; }
+    .fu-cta a.fu-cta-alt { background: var(--ip-white); color: var(--ip-black); border: 1.5px solid var(--ip-black); }
+    .fu-cta a:hover { opacity: 0.9; }
+
+    @media (max-width: 600px) {
+      .fu-title { font-size: 2rem; }
+      .fu-stage { grid-template-columns: 2.5rem 1fr; padding: 1.25rem 1.125rem; gap: 0.875rem; }
+      .fu-stage-num { font-size: 1.875rem; }
+      .fu-principle h2 { font-size: 1.375rem; }
+      .fu-pullup-quote { font-size: 1.125rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="fu-wrap">
+    <div class="fu-head">
+      <a href="index.html" class="fu-brand">in-PACT</a>
+      <a href="today.html" class="fu-back">Back to Today</a>
+    </div>
+
+    <div class="fu-eyebrow">The Method · Lesson 2</div>
+    <h1 class="fu-title">Life of an App</h1>
+    <p class="fu-subtitle">The binder lesson on how to follow up. A meta flow for staying organized in the space between "yes" and "done". Adapted from the sales floor to any commitment that lives longer than a day.</p>
+
+    <!-- Principle -->
+    <div class="fu-principle">
+      <div class="fu-principle-eyebrow">The Headline Principle</div>
+      <h2>Set up follow-up at the moment of yes.</h2>
+      <p>The distance between "yes" and "done" is where commitments die. People think follow-up is what you do when you remember to chase. It isn't. Real follow-up is <strong>architected at the moment the commitment is made</strong>, while you still have access to everything future-you is going to need.</p>
+      <p>You don't chase the ball after it rolls. You set it up so it can't roll in the first place.</p>
+    </div>
+
+    <!-- Pullup -->
+    <div class="fu-pullup">
+      <div class="fu-pullup-eyebrow">The sales floor version</div>
+      <div class="fu-pullup-quote">Three channels. Phone, email, alt phone. Every time.</div>
+      <div class="fu-pullup-attr">Bruke, on the binder rule for capturing contact at sign up</div>
+    </div>
+
+    <div class="fu-stages">
+
+      <!-- STAGE 1 -->
+      <div class="fu-stage">
+        <div class="fu-stage-num">1</div>
+        <div class="fu-stage-body">
+          <h2>Name the package</h2>
+          <p class="fu-stage-do">What exactly are you committing to? Scoped, named, written down. Not "help with the move." A date, an address, a start time, how long you're committing for, what the other person actually needs from you. <strong>If the commitment is vague, future-you can't deliver it.</strong></p>
+          <p class="fu-stage-quote">Vague commitments die first. Specific commitments can be followed up on.</p>
+          <span class="fu-stage-binder">In the binder: <strong>Products Page</strong></span>
+        </div>
+      </div>
+
+      <!-- STAGE 2 -->
+      <div class="fu-stage">
+        <div class="fu-stage-num">2</div>
+        <div class="fu-stage-body">
+          <h2>Run the reality check</h2>
+          <p class="fu-stage-do">Can this actually happen with what you know right now? Do you have the time, the resources, the information, the access? If no, the yes is premature. Pull it back or renegotiate before you leave the room.</p>
+          <p class="fu-stage-do">On the sales floor this was the credit check. For you it's the question: <strong>can I actually deliver this, or did I just agree because it felt good to say yes?</strong></p>
+          <span class="fu-stage-binder">In the binder: <strong>Credit Verification</strong></span>
+        </div>
+      </div>
+
+      <!-- STAGE 3 -->
+      <div class="fu-stage">
+        <div class="fu-stage-num">3</div>
+        <div class="fu-stage-body">
+          <h2>Capture three channels</h2>
+          <p class="fu-stage-do">Capture everything future-you is going to need, while you still have access. Multiple channels. Redundant on purpose. The binder rule was three points of contact for every customer: phone, email, alt phone. Redundancy exists because <strong>one channel always dies.</strong> One number changes. One email goes to spam. One link breaks.</p>
+          <div class="fu-channels">
+            <strong>For a personal commitment, your three channels might be:</strong>
+            <ul>
+              <li>The person (phone, email, address)</li>
+              <li>The place (link, portal login, door code, room number)</li>
+              <li>The artifact (the doc, the spec, the receipt, the thing in writing)</li>
+            </ul>
+          </div>
+          <span class="fu-stage-binder" style="margin-top:0.75rem;">In the binder: <strong>3 Points of Contact</strong></span>
+        </div>
+      </div>
+
+      <!-- STAGE 4 -->
+      <div class="fu-stage">
+        <div class="fu-stage-num">4</div>
+        <div class="fu-stage-body">
+          <h2>Lock the delivery window</h2>
+          <p class="fu-stage-do">Pin a concrete date and time for the delivery. Not "sometime next week." <strong>Wednesday at 2.</strong> In the calendar. Reminder set. Both sides know when it's happening and both sides treat it as real.</p>
+          <p class="fu-stage-quote">If the delivery isn't on a calendar with a time, it isn't going to happen.</p>
+          <span class="fu-stage-binder">In the binder: <strong>Due Date · Appointment Confirmation</strong></span>
+        </div>
+      </div>
+
+      <!-- STAGE 5 -->
+      <div class="fu-stage">
+        <div class="fu-stage-num">5</div>
+        <div class="fu-stage-body">
+          <h2>Close the loop at delivery</h2>
+          <p class="fu-stage-do">At delivery, confirm what actually got delivered. Review it against what you named in stage 1. If there's a gap, name it. If it's clean, close it. <strong>If you skip this, it isn't done, even if the work is done.</strong> The ritual of closing the loop is what makes it real in both heads.</p>
+          <p class="fu-stage-do">The binder version was reviewing the perks after the sale. For you it's: confirm, acknowledge, and move the commitment off the open list on purpose.</p>
+          <span class="fu-stage-binder">In the binder: <strong>Review Page · P.S. back to Review</strong></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Examples block -->
+    <div class="fu-examples">
+      <h3>Where this applies outside the sales floor</h3>
+      <p>The five stages run under any commitment with a future delivery date. It's the same flow every time:</p>
+      <ul>
+        <li><strong>A friend asks you to help them move.</strong> Name the package (date, address, how many hours). Reality check (do you actually have Saturday?). Capture channels (their number, the address, the list of what's going). Lock the window (9 am, written in the calendar). Close the loop (text them the day after, "everything land okay?").</li>
+        <li><strong>A boss drops a task on you.</strong> Name the package (what exactly is "done"?). Reality check (do you have capacity this week?). Capture channels (the ticket, the email thread, the stakeholders). Lock the window (due date in writing, not in your head). Close the loop (delivery message when it ships).</li>
+        <li><strong>You enroll in a course.</strong> Name the package (the actual outcome you want, not "learn stuff"). Reality check (the time it will take each week). Capture channels (portal, instructor, schedule link). Lock the window (study blocks on the calendar). Close the loop (the final review or project).</li>
+        <li><strong>You promise yourself something.</strong> Same five stages. The version of you that makes the promise and the version that has to deliver it are two different people. Stage 3 exists to protect the second one from the first one's amnesia.</li>
+      </ul>
+    </div>
+
+    <!-- Origin -->
+    <div class="fu-origin">
+      <div class="fu-eyebrow">Where Life of an App comes from</div>
+      <p>Life of an App is lesson 2 of the <strong>Impacts curriculum</strong>, the 20 lesson binder used to train Verizon door to door sales reps. On the sales floor it was the literal walkthrough of the tablet software: create the order, pick the package, run credit verification, capture three points of contact, set the install date, review the perks, handle the post sale follow up. Every order created a ticket with a due date, and the rep's job wasn't done until the install actually happened.</p>
+      <p>The software made the flow visible. The underlying discipline is <strong>follow-up architecture</strong>. You don't chase follow-up after the fact. You build it in at the moment of yes, so future-you already has everything needed to close the loop. <strong>That's the whole lesson.</strong> The personal version drops the tablet and keeps the discipline.</p>
+    </div>
+
+    <div class="fu-cta">
+      <a href="today.html">Open Today</a>
+      <a href="method.html" class="fu-cta-alt">Read the 8 Steps</a>
+    </div>
+  </div>
+</body>
+</html>

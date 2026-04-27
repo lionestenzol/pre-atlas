@@ -257,8 +257,12 @@ def session_run(req: StartRequest) -> dict[str, Any]:
             break
         turns += 1
 
-    # Pull deliverables from the closed run node's action_results so they
-    # survive the close-state trim. Also expose parsed_output if present.
+    # Pull deliverables from action_results so they survive the close-state
+    # trim. Last-write-wins by node iteration order: node_states is dict-ordered
+    # by insertion (Python 3.7+), and nodes are inserted as they're entered, so
+    # later nodes (e.g. retries, multi-execute paths) overwrite earlier values.
+    # This is intentional: if the run node fires twice, the terminal result
+    # should reflect the latest run, not the first.
     final_outputs: dict[str, Any] = {}
     for node_id, ns in (state.get("node_states") or {}).items():
         for action_id, result in (ns.get("action_results") or {}).items():
@@ -266,7 +270,7 @@ def session_run(req: StartRequest) -> dict[str, Any]:
                 for key in ("codex_output", "parsed_output", "schema_valid",
                             "schema_errors", "exit_code", "codex_success",
                             "skill", "sandbox", "codex_stderr"):
-                    if key in result and key not in final_outputs:
+                    if key in result:
                         final_outputs[key] = result[key]
 
     return {

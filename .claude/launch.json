@@ -86,6 +86,44 @@
       "runtimeArgs": ["-m", "uvicorn", "optogon.main:app", "--host", "0.0.0.0", "--port", "3010"],
       "port": 3010,
       "cwd": "services/optogon"
+    },
+    {
+      "name": "canvas-engine",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3050,
+      "cwd": "services/canvas-engine"
+    },
+    {
+      "name": "ai-exec-pipeline",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["server.py"],
+      "port": 5000,
+      "cwd": "apps/ai-exec-pipeline"
+    },
+    {
+      "name": "anatomy",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "anatomy", "-p", "8894", "-c-1", "--cors"],
+      "port": 8894
+    },
+    {
+      "name": "thread-cards",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/cognitive-sensor", "-p", "8893", "-c-1", "--cors"],
+      "port": 8893
+    },
+    {
+      "name": "tour-test",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "_research/openscreen-lift-test", "-p", "8895", "-c-1", "--cors"],
+      "port": 8895
+    },
+    {
+      "name": "anatomy-calibration",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "tools/anatomy-extension", "-p", "8896", "-c-1", "--cors"],
+      "port": 8896
     }
   ]
 }

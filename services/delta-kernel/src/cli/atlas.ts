@@ -130,7 +130,7 @@ async function showStatus() {
   const [unified, health, signals] = await Promise.all([
     apiFetch('/api/state/unified').catch(() => null),
     apiFetch('/api/services/health').catch(() => null),
-    apiFetch('/api/signals').catch(() => null),
+    apiFetch('/api/life-signals').catch(() => null),
   ]);
 
   const mode = unified?.derived?.mode || '--';
@@ -183,7 +183,7 @@ async function showHealth() {
 }
 
 async function getSignals(): Promise<any> {
-  return apiFetch('/api/signals').catch(() => {
+  return apiFetch('/api/life-signals').catch(() => {
     // Fallback to brain files
     return {
       energy: readBrainJson('energy_metrics.json'),
@@ -225,7 +225,7 @@ async function energyCmd(args: string[]) {
   if (load) body.mental_load = parseInt(load);
   const sleep = parseFlag(args, 'sleep');
   if (sleep) body.sleep_quality = parseInt(sleep);
-  const data = await apiFetch('/api/signals/energy', { method: 'POST', body: JSON.stringify(body) });
+  const data = await apiFetch('/api/life-signals/energy', { method: 'POST', body: JSON.stringify(body) });
   console.log(green('Energy updated:'), `level=${data.energy?.energy_level} load=${data.energy?.mental_load} sleep=${data.energy?.sleep_quality}`);
 }
 
@@ -256,7 +256,7 @@ async function financeCmd(args: string[]) {
   if (income) body.monthly_income = parseFloat(income);
   const expenses = parseFlag(args, 'expenses');
   if (expenses) body.monthly_expenses = parseFloat(expenses);
-  const data = await apiFetch('/api/signals/finance', { method: 'POST', body: JSON.stringify(body) });
+  const data = await apiFetch('/api/life-signals/finance', { method: 'POST', body: JSON.stringify(body) });
   console.log(green('Finance updated:'), `runway=${data.finance?.runway_months}mo income=${data.finance?.monthly_income} expenses=${data.finance?.monthly_expenses} delta=${data.finance?.money_delta}`);
 }
 
@@ -286,7 +286,7 @@ async function skillsCmd(args: string[]) {
   if (mastery) body.mastery_count = parseInt(mastery);
   const growth = parseFlag(args, 'growth');
   if (growth) body.growth_count = parseInt(growth);
-  const data = await apiFetch('/api/signals/skills', { method: 'POST', body: JSON.stringify(body) });
+  const data = await apiFetch('/api/life-signals/skills', { method: 'POST', body: JSON.stringify(body) });
   console.log(green('Skills updated:'), `util=${data.skills?.utilization_pct}% learning=${data.skills?.active_learning}`);
 }
 
@@ -314,7 +314,7 @@ async function networkCmd(args: string[]) {
   if (rels) body.active_relationships = parseInt(rels);
   const outreach = parseFlag(args, 'outreach');
   if (outreach) body.outreach_this_week = parseInt(outreach);
-  const data = await apiFetch('/api/signals/network', { method: 'POST', body: JSON.stringify(body) });
+  const data = await apiFetch('/api/life-signals/network', { method: 'POST', body: JSON.stringify(body) });
   console.log(green('Network updated:'), `collab=${data.network?.collaboration_score} relationships=${data.network?.active_relationships}`);
 }
 
@@ -324,16 +324,65 @@ async function showLoops() {
   if (loops.length === 0) { console.log('No open loops.'); return; }
   console.log(bold('Open Loops:'));
   for (const loop of loops.slice(0, 10)) {
-    console.log(`  ${dim(String(loop.convo_id).padEnd(6))} ${loop.title?.padEnd(40) || 'Untitled'} ${yellow('score=' + loop.score)}`);
+    const status = loop.status ? ` ${yellow('[' + loop.status + ']')}` : '';
+    const artifact = loop.artifact_path ? ` ${dim('-> ' + loop.artifact_path)}` : '';
+    console.log(`  ${dim(String(loop.convo_id).padEnd(6))} ${loop.title?.padEnd(40) || 'Untitled'} ${yellow('score=' + loop.score)}${status}${artifact}`);
   }
+}
+
+async function showLifecycle() {
+  const boardPath = path.resolve(REPO_ROOT, 'services', 'cognitive-sensor', 'cycleboard', 'brain', 'lifecycle_board.json');
+  let board: any;
+  try { board = JSON.parse(fs.readFileSync(boardPath, 'utf-8')); }
+  catch {
+    console.log(red('No lifecycle_board.json. Run: python wire_cycleboard.py'));
+    return;
+  }
+  const inProgress: any[] = board.in_progress ?? [];
+  const terminal = board.terminal_today ?? { DONE: [], RESOLVED: [], DROPPED: [] };
+  const counts = board.counts ?? {};
+
+  console.log(bold('LIFECYCLE') + '  ' + dim(`(generated ${board.generated_at ?? '?'})`));
+  console.log('');
+  console.log(bold('In progress'));
+  if (inProgress.length === 0) { console.log(`  ${dim('(none)')}`); }
+  else for (const t of inProgress) {
+    const tag = `[${yellow(t.status)}]`;
+    const id = String(t.convo_id ?? '?').padEnd(6);
+    const title = (t.title ?? 'untitled').slice(0, 50);
+    console.log(`  ${tag.padEnd(20)} ${cyan(id)} ${title}`);
+    if (t.artifact_path) console.log(`  ${' '.repeat(20)} ${dim('-> ' + t.artifact_path)}`);
+  }
+
+  console.log('');
+  console.log(bold('Finished today'));
+  let anyTerminal = false;
+  for (const status of ['DONE', 'RESOLVED', 'DROPPED']) {
+    for (const c of terminal[status] ?? []) {
+      anyTerminal = true;
+      const color = status === 'DONE' ? green : status === 'RESOLVED' ? cyan : dim;
+      const tag = `[${color(status)}]`;
+      const id = String(c.loop_id ?? '?').padEnd(6);
+      const title = (c.title ?? 'untitled').slice(0, 40);
+      const cov = c.coverage_score != null ? ` ${dim('cov=' + Number(c.coverage_score).toFixed(2))}` : '';
+      const art = c.artifact_path ? ` ${dim('-> ' + c.artifact_path)}` : '';
+      console.log(`  ${tag.padEnd(20)} ${id} ${title}${cov}${art}`);
+    }
+  }
+  if (!anyTerminal) console.log(`  ${dim('(none)')}`);
+
+  console.log('');
+  const fmt = (k: string) => `${k}:${counts[k] ?? 0}`;
+  console.log(bold('Counts') + '  ' + ['HARVESTED','PLANNED','BUILDING','REVIEWING'].map(fmt).join(' ') + '  ' + dim('/') + '  ' + ['DONE','RESOLVED','DROPPED'].map(fmt).join(' '));
 }
 
 async function closeLoop(args: string[], outcome: string) {
   const loopId = args[0];
   if (!loopId) { console.log(red('Usage: atlas close <loop_id>')); return; }
+  const status = outcome === 'archived' ? 'DROPPED' : 'RESOLVED';
   const data = await apiFetch('/api/law/close_loop', {
     method: 'POST',
-    body: JSON.stringify({ loop_id: loopId, outcome, title: `CLI ${outcome}` }),
+    body: JSON.stringify({ loop_id: loopId, outcome, title: `CLI ${outcome}`, status, artifact_path: null, coverage_score: null }),
   });
   if (data?.success) {
     console.log(green(`Loop ${loopId} ${outcome}. Mode: ${data.mode}`));
@@ -822,7 +871,7 @@ async function showTimeline(args: string[]) {
 async function showStats() {
   const [unified, signals, stats] = await Promise.all([
     apiFetch('/api/state/unified').catch(() => null),
-    apiFetch('/api/signals').catch(() => null),
+    apiFetch('/api/life-signals').catch(() => null),
     apiFetch('/api/stats').catch(() => null),
   ]);
   const state = await getCycleboardState();
@@ -1276,7 +1325,15 @@ async function showHome() {
   const mode = unified?.derived?.mode || '--';
   const risk = unified?.derived?.open_loops > 10 ? 'HIGH' : unified?.derived?.open_loops > 5 ? 'MEDIUM' : 'LOW';
   const loops = unified?.derived?.open_loops ?? '--';
-  const directive = unified?.cognitive?.today?.directive || unified?.derived?.primary_order || '--';
+  const directiveRaw = unified?.cognitive?.today?.directive || unified?.derived?.primary_order || '--';
+  const directive = (() => {
+    if (Array.isArray(directiveRaw)) return String(directiveRaw[0] ?? '--');
+    if (directiveRaw && typeof directiveRaw === 'object') {
+      const o: any = directiveRaw;
+      return String(o.text ?? o.title ?? o.directive ?? o.order ?? o.description ?? '--');
+    }
+    return String(directiveRaw);
+  })();
   const streak = unified?.derived?.streak_days ?? 0;
 
   // Today's plan
@@ -1460,6 +1517,7 @@ async function main() {
     case 'calendar': case 'cal': return showCalendar(rest);
     case 'home': return showHome();
     case 'loops': return showLoops();
+    case 'lifecycle': return showLifecycle();
     case 'close': return closeLoop(rest, 'closed');
     case 'archive': return closeLoop(rest, 'archived');
     case 'tasks': return showTasks();

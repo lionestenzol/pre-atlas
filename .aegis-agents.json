@@ -1,0 +1,9 @@
+{
+  "_comment": "Agent IDs for Aegis observe-mode logging. Tenant key in .aegis-tenant-key.",
+  "auto_actor": "dbf727b8-b919-4ef5-89ca-1490bcfcb9e8",
+  "governor_daily": "a2bdc32e-2e3a-403f-aadd-fbbf41336c94",
+  "run_daily": "bbfb236d-cca3-4b2e-89b7-63f294198486",
+  "atlas_triage": "f6241f25-91ee-45a2-8bff-ccc20288d350",
+  "atlas_approve": "bfe5ad54-c2e6-4b57-9fa0-2b4af8b5cc51",
+  "cognitive-sensor": "a63a9133-fc73-4113-be09-a20d17366021"
+}

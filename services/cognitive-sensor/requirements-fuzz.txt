@@ -1,0 +1,5 @@
+# atl fuzz runner — opt-in dependency.
+# Install with:
+#   pip install -r requirements-fuzz.txt
+#   playwright install chromium
+playwright>=1.40,<2

@@ -141,6 +141,9 @@ services/uasc-executor/storage/*.db
 services/aegis-fabric/redis.zip
 services/aegis-fabric/tools/redis/
 
+# === Remotion render output ===
+apps/canvas-demo/out/
+
 # === pytest cache anywhere ===
 **/.pytest_cache/
 

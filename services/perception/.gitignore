@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.coverage
+htmlcov/
+.venv/
+debug/
+build/
+dist/
+# corrections.jsonl is APPEND-ONLY but committed empty as a sentinel — do NOT ignore

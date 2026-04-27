@@ -1,0 +1,25 @@
+[project]
+name = "perception"
+version = "0.1.0"
+description = "Deterministic webpage perception pipeline. Fuses geometric + textual evidence streams into a canonical Element graph."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+perception = ["lexicon.json", "priors.json", "corrections.jsonl"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

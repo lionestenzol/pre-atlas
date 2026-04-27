@@ -17,6 +17,7 @@ from atlas_config import (
     NORTH_STAR, TARGETS, ACTIVE_LANES, KERNEL,
     WEEKLY_PACKET_TEMPLATE, AutonomyLevel
 )
+from lifecycle_summary import summarize as _lifecycle_summarize
 
 BASE = Path(__file__).parent.resolve()
 
@@ -89,6 +90,47 @@ def compute_reality_check(classifications, idea_registry, completion_stats):
     lines.append(f"- Next up: {tier.get('next_up', 0)}")
     lines.append(f"- Backlog: {tier.get('backlog', 0)}")
     lines.append(f"- Archive: {tier.get('archive', 0)}")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def compute_lifecycle_shipped(window_days: int = 7):
+    """Weekly artifacts shipped — pulls from closures.json via lifecycle_summary."""
+    lines = []
+    lines.append("### Section 1b — Thread Lifecycle (last 7 days)\n")
+    try:
+        lc = _lifecycle_summarize(window_days=window_days)
+    except Exception as e:
+        lines.append(f"*(lifecycle_summary unavailable: {e})*\n")
+        return "\n".join(lines)
+
+    terminal = lc.get("terminal_window", {})
+    done = terminal.get("DONE", [])
+    resolved = terminal.get("RESOLVED", [])
+    dropped = terminal.get("DROPPED", [])
+    artifacts = lc.get("artifacts_shipped", [])
+    counts = lc.get("counts", {})
+    in_progress = lc.get("in_progress", [])
+
+    lines.append(f"**Closed this week:** DONE:{len(done)} · RESOLVED:{len(resolved)} · DROPPED:{len(dropped)}")
+    lines.append(f"**In progress:** {len(in_progress)} "
+                 f"(PLANNED:{counts.get('PLANNED',0)} BUILDING:{counts.get('BUILDING',0)} REVIEWING:{counts.get('REVIEWING',0)})")
+    lines.append("")
+
+    if artifacts:
+        covs = [a.get("coverage_score") for a in artifacts if isinstance(a.get("coverage_score"), (int, float))]
+        avg_cov = (sum(covs) / len(covs)) if covs else None
+        lines.append(f"**Artifacts shipped:** {len(artifacts)}" + (f" (avg coverage {avg_cov:.2f})" if avg_cov is not None else ""))
+        lines.append("")
+        lines.append("| Loop | Title | Artifact | Coverage |")
+        lines.append("|------|-------|----------|----------|")
+        for a in artifacts:
+            cov = a.get("coverage_score")
+            cov_str = f"{cov:.2f}" if isinstance(cov, (int, float)) else "-"
+            lines.append(f"| #{a.get('loop_id','?')} | {a.get('title','?')} | `{a.get('artifact_path','?')}` | {cov_str} |")
+    else:
+        lines.append("**Artifacts shipped:** 0")
     lines.append("")
 
     return "\n".join(lines)
@@ -255,6 +297,8 @@ def main():
 
     # Sections
     packet.append(compute_reality_check(classifications, idea_registry, completion_stats))
+    packet.append("---\n")
+    packet.append(compute_lifecycle_shipped(window_days=7))
     packet.append("---\n")
     packet.append(compute_lane_progress(gov_state))
     packet.append("---\n")

@@ -1,5 +1,6 @@
 import json, sqlite3, html
 from pathlib import Path
+from lifecycle_summary import summarize as _lifecycle_summarize, manifest_statuses
 
 STATE_FILE = Path("STATE_HISTORY.md")
 LOOPS_FILE = Path("loops_latest.json")
@@ -70,13 +71,53 @@ def pre(s):  # preserve formatting
     return f"<pre>{html.escape(s)}</pre>"
 
 loops_lines = []
+manifests = manifest_statuses()
 if loops:
     for i, item in enumerate(loops[:10], 1):
         title = item.get("title", "(untitled)")
         score = item.get("score", 0)
-        loops_lines.append(f'{i:>2}. {title:<45}  score={score}')
+        cid = str(item.get("convo_id", ""))
+        m = manifests.get(cid, {})
+        status = m.get("status", "")
+        artifact = m.get("artifact_path") or ""
+        badge = f"[{status}]" if status else ""
+        art_str = f"  -> {artifact}" if artifact else ""
+        loops_lines.append(f'{i:>2}. {title:<45}  score={score}  {badge}{art_str}')
 else:
     loops_lines.append("No loops_latest.json found. Run: python loops.py")
+
+# Lifecycle block
+try:
+    lc = _lifecycle_summarize(window_days=1)
+except Exception:
+    lc = None
+lifecycle_lines = []
+if lc:
+    counts = lc.get("counts", {})
+    terminal = lc.get("terminal_window", {})
+    done = terminal.get("DONE", [])
+    resolved = terminal.get("RESOLVED", [])
+    dropped = terminal.get("DROPPED", [])
+    in_prog = lc.get("in_progress", [])
+    lifecycle_lines.append(
+        f"Counts: HARVESTED:{counts.get('HARVESTED',0)} PLANNED:{counts.get('PLANNED',0)} "
+        f"BUILDING:{counts.get('BUILDING',0)} REVIEWING:{counts.get('REVIEWING',0)} "
+        f"/ DONE:{counts.get('DONE',0)} RESOLVED:{counts.get('RESOLVED',0)} DROPPED:{counts.get('DROPPED',0)}"
+    )
+    lifecycle_lines.append("")
+    lifecycle_lines.append(f"In progress: {len(in_prog)}")
+    for t in in_prog:
+        ap = t.get("artifact_path") or "(no artifact yet)"
+        lifecycle_lines.append(f"  [{t.get('status')}] #{t.get('convo_id')} {t.get('title')} -> {ap}")
+    lifecycle_lines.append("")
+    lifecycle_lines.append(f"Closed today: DONE:{len(done)} RESOLVED:{len(resolved)} DROPPED:{len(dropped)}")
+    for d in done:
+        cov = d.get("coverage_score")
+        cov_str = f" cov={cov:.2f}" if isinstance(cov, (int, float)) else ""
+        ap = d.get("artifact_path") or ""
+        lifecycle_lines.append(f"  [DONE] #{d.get('loop_id')} {d.get('title')} -> {ap}{cov_str}")
+else:
+    lifecycle_lines.append("lifecycle_summary unavailable")
 
 stats_lines = []
 if stats:
@@ -115,6 +156,9 @@ page = f"""<!doctype html>
 
   <h2>Open Loops (Top 10)</h2>
   <div class="box">{pre("\\n".join(loops_lines))}</div>
+
+  <h2>Thread Lifecycle</h2>
+  <div class="box">{pre("\\n".join(lifecycle_lines))}</div>
 
   <h2>Completion Analytics</h2>
   <div class="box">{pre("\\n".join(stats_lines))}</div>

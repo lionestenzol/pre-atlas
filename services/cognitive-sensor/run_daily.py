@@ -210,6 +210,14 @@ def main():
     print("\n>> Phase 1.7: Auto triage (Optogon triage_fs_loop -> proposals)")
     run("auto_triage.py", "Auto triage — Optogon reasons per HIGH fs finding", critical=False)
 
+    # ── AI-FOR-ITSELF: Merge fest tasks into thread cards (planned work surface) ──
+    # Walks the WSL fest tree (active + ready lifecycles) and emits one
+    # source:"fest" card per open task so the inbox surfaces things the
+    # user planned alongside things the system noticed (fs) and things
+    # said in conversation (conv).
+    print("\n>> Phase 1.8: FEST -> thread cards")
+    run("fest_to_cards.py", "Merge fest tasks into thread_cards.json", critical=False)
+
     # ── AI-FOR-ITSELF: Maintain Backlog ──
     print("\n>> Phase 2: Backlog Maintenance")
     run("wire_cycleboard.py", "Wire cycleboard")
@@ -238,6 +246,13 @@ def main():
     # ── Mirror triage verdicts back into Atlas state ──
     print("\n>> Phase 4.7: Decisions -> Atlas (prune closed loops from state)")
     run("decisions_to_atlas.py", "Decisions -> Atlas — remove closed loops from governance/loops", critical=False)
+
+    # ── Close fest task loops from DONE card verdicts (dry-run by default) ──
+    # FEST_ACTOR_APPLY=1 calls `fest task completed` in WSL and also POSTs
+    # the goal criterion done when a festival with .atlas-link.json finishes
+    # a phase. Without the env switch it just logs intended actions.
+    print("\n>> Phase 4.8: FEST actor (DONE cards -> fest task completed + Atlas criteria)")
+    run("fest_actor.py", "FEST actor — close fest tasks and mirror to Atlas goals", critical=False)
 
     print("\n>> Phase 4.5: CycleBoard push (auto_actor -> dashboard)")
     run("cycleboard_push.py", "CycleBoard push — surface auto_actor decisions on the dashboard", critical=False)

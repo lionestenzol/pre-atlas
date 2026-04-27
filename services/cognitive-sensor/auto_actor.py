@@ -35,6 +35,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from aegis_client import log_action as _aegis_log
+
 BASE = Path(__file__).parent.resolve()
 DB_PATH = BASE / "results.db"
 MEMORY_PATH = BASE / "memory_db.json"
@@ -149,6 +151,17 @@ def get_already_decided() -> set[str]:
     return decided
 
 
+def get_mid_lifecycle() -> set[str]:
+    """Threads whose harvest manifest has status in {PLANNED, BUILDING, REVIEWING}
+    or a terminal lifecycle status. Never auto-close these."""
+    try:
+        import lifecycle
+    except ImportError:
+        return set()
+    statuses = {"PLANNED", "BUILDING", "REVIEWING", "DONE", "RESOLVED", "DROPPED"}
+    return {str(m.get("convo_id")) for m in lifecycle.list_by_status(statuses) if m.get("convo_id") is not None}
+
+
 def record_decision(convo_id: str, decision: str, title: str) -> bool:
     con = get_db()
     cur = con.cursor()
@@ -176,6 +189,9 @@ def record_decision(convo_id: str, decision: str, title: str) -> bool:
                 "title": title,
                 "outcome": "closed" if decision == "CLOSE" else "archived",
                 "actor": "auto_actor",
+                "artifact_path": None,
+                "coverage_score": None,
+                "status": "RESOLVED" if decision == "CLOSE" else "DROPPED",
             }).encode(),
             headers={"Content-Type": "application/json"},
             method="POST"
@@ -425,7 +441,11 @@ def analyze_loops(mode: str) -> list[dict[str, Any]]:
         return []
 
     decided = get_already_decided()
-    open_loops = [l for l in loops if str(l.get("convo_id", "")) not in decided]
+    mid_lifecycle = get_mid_lifecycle()
+    protected = decided | mid_lifecycle
+    if mid_lifecycle:
+        print(f"  Protected from auto-close (mid-lifecycle manifests): {len(mid_lifecycle)}")
+    open_loops = [l for l in loops if str(l.get("convo_id", "")) not in protected]
 
     recommendations: list[dict[str, Any]] = []
     for loop in open_loops:
@@ -848,6 +868,18 @@ def main():
     directives = len(log["directives_executed"])
     parked = len(log["violations_parked"])
 
+    _aegis_log("auto_actor", "route_decision", {
+        "event": "auto_actor_run",
+        "mode": mode,
+        "loops_analyzed": analyzed,
+        "loops_auto_closed": auto_closed,
+        "directives_executed": directives,
+        "violations_parked": parked,
+        "energy_gated": bool(log.get("energy_gated")),
+        "duration_seconds": log["duration_seconds"],
+        "run_at": log["run_at"],
+    })
+
     print(f"\n{'=' * 60}")
     print(f"  AUTO ACTOR COMPLETE — {total_elapsed:.1f}s")
     print(f"  Loops analyzed:           {analyzed}")
@@ -857,5 +889,36 @@ def main():
     print(f"{'=' * 60}")
 
 
+HELP_TEXT = """\
+auto_actor.py — Autonomous closer + directive executor.
+
+Usage:
+  python auto_actor.py                # one full run (loops + directives + violations)
+  python auto_actor.py --help         # this screen
+
+What it does (in order):
+  1. Analyze open loops -> produce loop_recommendations.json.
+     Auto-fires CLOSE/ARCHIVE at confidence >= threshold (adaptive, floor 0.7).
+     Max 5 per run. SKIPS any thread whose manifest.status is in
+     {PLANNED, BUILDING, REVIEWING, DONE, RESOLVED, DROPPED}.
+  2. Park lane violations from governance_state.json -> parked_violations.json.
+  3. Execute ghost directives (EXECUTE / INVEST / RESURRECT) above confidence 0.8.
+     Energy-gated: skipped if life_signals.energy < 30 or burnout_risk=True.
+
+Outputs:
+  - auto_actor_log.json       (what ran this invocation)
+  - loop_recommendations.json (pending review + auto-closed summary)
+  - auto_close_ledger.json    (feedback ledger for adaptive threshold)
+  - parked_violations.json    (idea parking)
+  - Tasks submitted to delta-kernel /api/work/request
+
+Writes to delta-kernel /api/law/close_loop with the full 6-field payload
+(loop_id, title, outcome, artifact_path:null, coverage_score:null, status).
+"""
+
 if __name__ == "__main__":
+    import sys as _sys
+    if len(_sys.argv) >= 2 and _sys.argv[1] in ("--help", "-h", "help"):
+        print(HELP_TEXT)
+        _sys.exit(0)
     main()

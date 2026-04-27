@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from atomic_write import atomic_write_json
+from aegis_client import log_action as _aegis_log
 
 BASE = Path(__file__).parent.resolve()
 PROPOSALS_PATH = BASE / "proposals.json"
@@ -127,6 +128,12 @@ def cmd_approve(proposal_id: str, fire: bool = True) -> int:
     p["status"] = "approved"
     p["approved_at"] = _now_iso()
     save_proposals(proposals)
+    _aegis_log("atlas_approve", "route_decision", {
+        "event": "proposal_approved",
+        "proposal_id": proposal_id,
+        "title": p.get("title", ""),
+        "fired_runner": fire,
+    })
     if fire:
         _spawn_runner(proposal_id)
         print(f"Approved {proposal_id}. Subprocess runner started in background.")
@@ -154,6 +161,12 @@ def cmd_deny(proposal_id: str, reason: str | None = None) -> int:
     if reason:
         p["deny_reason"] = reason
     save_proposals(proposals)
+    _aegis_log("atlas_approve", "route_decision", {
+        "event": "proposal_denied",
+        "proposal_id": proposal_id,
+        "title": p.get("title", ""),
+        "reason": reason or "",
+    })
     print(f"Denied {proposal_id}.")
     return 0
 

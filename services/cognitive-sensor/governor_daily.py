@@ -22,6 +22,8 @@ from atlas_config import (
     IDEAS_RESERVOIR_RULES, ROUTING, DAILY_BRIEF_TEMPLATE,
     AutonomyLevel, compute_mode as _compute_mode
 )
+from lifecycle_summary import summarize as _lifecycle_summarize
+from aegis_client import log_action as _aegis_log
 
 BASE = Path(__file__).parent.resolve()
 
@@ -332,6 +334,39 @@ def generate_brief(mode, risk, build_allowed, world_changed, leverage_moves, aut
         lines.append(f"- **{lane['name']}** — {lane['status']}")
     lines.append("")
 
+    # Thread lifecycle (in-progress threads + today's terminals)
+    try:
+        lc = _lifecycle_summarize(window_days=1)
+    except Exception:
+        lc = None
+    if lc:
+        counts = lc.get("counts", {})
+        in_prog = lc.get("in_progress", [])
+        terminal = lc.get("terminal_window", {})
+        done_today = terminal.get("DONE", [])
+        resolved_today = terminal.get("RESOLVED", [])
+        dropped_today = terminal.get("DROPPED", [])
+        lines.append("## Thread Lifecycle")
+        lines.append(
+            f"- In progress: {len(in_prog)} "
+            f"(PLANNED:{counts.get('PLANNED',0)} BUILDING:{counts.get('BUILDING',0)} REVIEWING:{counts.get('REVIEWING',0)})"
+        )
+        lines.append(
+            f"- Closed today: DONE:{len(done_today)} · RESOLVED:{len(resolved_today)} · DROPPED:{len(dropped_today)}"
+        )
+        if done_today:
+            covs = [d.get("coverage_score") for d in done_today if isinstance(d.get("coverage_score"), (int, float))]
+            avg_cov = (sum(covs) / len(covs)) if covs else None
+            if avg_cov is not None:
+                lines.append(f"- Avg coverage on DONE: {avg_cov:.2f}")
+            for d in done_today:
+                ap = d.get("artifact_path") or "(no artifact)"
+                lines.append(f"  - #{d.get('loop_id')} {d.get('title')} -> {ap}")
+        for t in in_prog:
+            ap = t.get("artifact_path") or "(no artifact yet)"
+            lines.append(f"- [{t.get('status')}] #{t.get('convo_id')} {t.get('title')} -> {ap}")
+        lines.append("")
+
     # Leverage moves
     lines.append("## Top Moves Today")
     for i, move in enumerate(leverage_moves, 1):
@@ -563,6 +598,18 @@ def main():
 
     # Write headline for atlas_boot.html
     write_headline(mode, risk, build_allowed, leverage_moves, decisions, cognitive_state)
+
+    _aegis_log("governor_daily", "route_decision", {
+        "event": "daily_brief_generated",
+        "mode": mode,
+        "risk": risk,
+        "build_allowed": bool(build_allowed),
+        "world_changed": bool(world_changed),
+        "lane_violations": len(violations),
+        "leverage_moves": len(leverage_moves) if leverage_moves else 0,
+        "decisions": len(decisions) if decisions else 0,
+        "generated_at": datetime.now().isoformat(),
+    })
 
     # Print brief to console
     print(f"\n{'=' * 60}")

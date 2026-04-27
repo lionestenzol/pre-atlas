@@ -235,7 +235,10 @@ def record_decision(convo_id, decision):
             data=json.dumps({
                 "loop_id": convo_id,
                 "title": title,
-                "outcome": "closed" if decision == "CLOSE" else "archived"
+                "outcome": "closed" if decision == "CLOSE" else "archived",
+                "status": "RESOLVED" if decision == "CLOSE" else "DROPPED",
+                "artifact_path": None,
+                "coverage_score": None,
             }).encode(),
             headers={"Content-Type": "application/json"},
             method="POST"
@@ -372,7 +375,27 @@ def analyze_single(convo_id):
 
 # ── Entry Point ──
 
+HELP_TEXT = """\
+close_loop.py — Manual loop close / archive with pipeline refresh.
+
+Usage:
+  python close_loop.py                # triage all open loops interactively
+  python close_loop.py --list         # show open loops, no action
+  python close_loop.py <ID>           # analyze a single loop, recommend action
+  python close_loop.py <ID> CLOSE     # close a loop now
+  python close_loop.py <ID> ARCHIVE   # archive a loop now
+  python close_loop.py --help         # this screen
+
+Side effects on close/archive:
+  - INSERT into results.db loop_decisions
+  - POST /api/law/close_loop (payload: loop_id, title, outcome, status, artifact_path:null, coverage_score:null)
+  - Run refresh_pipeline(): loops.py -> completion_stats.py -> export_cognitive_state.py -> route_today.py -> governor_daily.py
+"""
+
 if __name__ == "__main__":
+    if len(sys.argv) >= 2 and sys.argv[1] in ("--help", "-h", "help"):
+        print(HELP_TEXT)
+        sys.exit(0)
     if len(sys.argv) == 1:
         # No args: full triage mode
         triage_all()

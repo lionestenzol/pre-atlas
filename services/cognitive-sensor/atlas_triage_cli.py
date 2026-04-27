@@ -924,6 +924,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("in-progress", help="list threads in PLANNED/BUILDING/REVIEWING")
     sp.set_defaults(func=cmd_in_progress)
 
+    # fuzz — anatomy extension corpus generator (Part A of the training harness)
+    from fuzz.cli import register as register_fuzz
+    register_fuzz(sub)
+
     return p
 
 

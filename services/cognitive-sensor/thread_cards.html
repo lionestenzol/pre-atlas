@@ -46,10 +46,16 @@
   .card.verdict-ARCHIVE  { border-left: 3px solid var(--red); }
   .card.verdict-REVIEW   { border-left: 3px solid var(--blue); }
   .card.source-fs        { border-top: 1px dashed var(--border-bright); }
+  .card.source-fest      { border-top: 1px dashed rgba(68,255,136,0.25); }
+  .card.verdict-DONE     { border-left: 3px solid var(--green); }
+  .card.verdict-SKIP     { border-left: 3px solid var(--dim); }
 
   .src-badge { font-size: 9px; letter-spacing: 0.1em; padding: 1px 6px; border: 1px solid var(--border-bright); color: var(--mid); margin-right: 8px; text-transform: uppercase; }
   .src-badge.fs   { color: var(--blue); border-color: rgba(68,136,255,0.3); }
   .src-badge.convo { color: var(--accent); border-color: rgba(200,255,0,0.3); }
+  .src-badge.fest { color: var(--green); border-color: rgba(68,255,136,0.3); }
+  .fest-path { font-size: 10px; color: var(--dim); letter-spacing: 0.04em; }
+  .fest-fid { color: var(--green); opacity: 0.8; }
   .sev-high   { color: var(--red); }
   .sev-medium { color: var(--amber); }
   .sev-low    { color: var(--mid); }
@@ -306,6 +312,7 @@ function sparkline(density) {
 
 function renderCard(c, i) {
   if (c.source === 'fs') return renderFsCard(c, i);
+  if (c.source === 'fest') return renderFestCard(c, i);
   const el = document.createElement('div');
   el.className = 'card source-convo' + (decisions[c.convo_id] ? ' verdict-' + decisions[c.convo_id].verdict : '');
   el.id = 'card-' + i;
@@ -390,6 +397,34 @@ function renderFsCard(c, i) {
     </div>
     <div class="evidence">${escapeHtml(c.evidence || '')}</div>
     ${propBlock}
+    <div class="actions">
+      ${verdicts.map(v =>
+        `<button class="vbtn ${decisions[c.convo_id]?.verdict===v?'chosen':''}" onclick="setVerdict('${c.convo_id}','${v}')">${v}</button>`
+      ).join('')}
+      <input class="note" placeholder="note (optional)" value="${escapeHtml(decisions[c.convo_id]?.note||'')}" onchange="setNote('${c.convo_id}', this.value)">
+    </div>
+  `;
+  return el;
+}
+
+function renderFestCard(c, i) {
+  const el = document.createElement('div');
+  el.className = 'card source-fest' + (decisions[c.convo_id] ? ' verdict-' + decisions[c.convo_id].verdict : '');
+  el.id = 'card-' + i;
+  if (i === activeIdx) el.style.boxShadow = '0 0 0 1px rgba(200,255,0,0.25)';
+  const verdicts = ['DONE', 'SKIP', 'REVIEW'];
+  const pathLabel = `${c.phase || ''} / ${c.sequence || ''} / ${c.task_num || ''}`;
+  el.innerHTML = `
+    <div class="card-top">
+      <div class="card-title">
+        <span class="src-badge fest">FEST</span>
+        <span class="fest-fid">${escapeHtml(c.festival_id || '')}</span>
+        &nbsp;${escapeHtml(c.title || '?')}
+      </div>
+      <div class="card-date">${escapeHtml(c.lifecycle || '')} \u00b7 ${escapeHtml(c.festival_name || '')}</div>
+    </div>
+    <div class="fest-path">${escapeHtml(pathLabel)}</div>
+    <div class="evidence">${escapeHtml(c.evidence || '')}</div>
     <div class="actions">
       ${verdicts.map(v =>
         `<button class="vbtn ${decisions[c.convo_id]?.verdict===v?'chosen':''}" onclick="setVerdict('${c.convo_id}','${v}')">${v}</button>`

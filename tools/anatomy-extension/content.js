@@ -44,7 +44,10 @@
   // -------------------------------------------------------------
   function buildSelector(el) {
     if (!(el instanceof Element)) return null;
-    if (el.id && /^[a-zA-Z_][\w-]*$/.test(el.id)) return '#' + el.id;
+    // Include tag prefix on the id fast-path so downstream consumers can read
+    // the leaf tag (a#docs, input#search, button#save). Bare `#id` would lose
+    // the tag info that canvas-engine's pattern-library uses as ground truth.
+    if (el.id && /^[a-zA-Z_][\w-]*$/.test(el.id)) return el.tagName.toLowerCase() + '#' + el.id;
     const parts = [];
     let cur = el;
     while (cur && cur.nodeType === 1 && cur !== document.body) {
@@ -255,7 +258,7 @@
         <dl>
           <dt>how to label</dt>
           <dd><b>Alt+click</b> any element · prompt pops up for a name</dd>
-          <dd><b>auto-label</b> · heuristic scans the whole page, adds up to 200 labels (buttons, links, headings, cards)</dd>
+          <dd><b>auto-label</b> · heuristic scans the whole page, adds up to 1000 labels (buttons, links, headings, cards)</dd>
           <dt>per-label row</dt>
           <dd><b>click text</b> · scroll page to that element + pulse it</dd>
           <dd><b>[ui]/[api]/[ext]/[lib]/[state] chip</b> · click to cycle layer color</dd>
@@ -277,6 +280,7 @@
       <div class="row">
         <button data-act="auto" class="anatomy-primary">auto-label</button>
         <button data-act="watch" title="record where your cursor lingers · auto-create labels at those spots (lifted from openscreen zoomSuggestionUtils)">watch me</button>
+        <button data-act="grid" title="toggle a UI text-density heatmap · ranks auto-label candidates by visible-text content">grid</button>
       </div>
       <div class="row">
         <button data-act="map" class="anatomy-primary">make map</button>
@@ -337,6 +341,7 @@
       }
       if (a === 'auto')   doAutoLabel().catch(err => { console.error('[anatomy] auto-label failed:', err); flash('auto-label failed · check console'); });
       if (a === 'watch')  toggleWatchMe(act).catch(err => { console.error('[anatomy] watch-me failed:', err); flash('watch failed · check console'); });
+      if (a === 'grid')   toggleTextGrid(act);
       if (a === 'map')    doExportMap().catch(err => { console.error('[anatomy] export map failed:', err); flash('export failed · check console'); });
       if (a === 'export') doExport();
       if (a === 'import') doImport();
@@ -535,7 +540,7 @@
         mode: 'extension',
         source: scopeKey(),
         timestamp: new Date().toISOString(),
-        tools: ['anatomy-extension@0.4.0'],
+        tools: ['anatomy-extension@0.4.1'],
       },
       regions,
       chains: buildChains(regions),
@@ -1617,7 +1622,7 @@
   const DIALOG_TAGS = ['dialog'];
   const INTERACTIVE_TAGS = ['button', 'a', 'input', 'select', 'textarea'];
   const HEADING_TAGS = ['h1', 'h2', 'h3'];
-  const MAX_LABELS = 200;
+  const MAX_LABELS = 1000;
   const MIN_AREA = 220; // px²
   // REPEAT_KEEP: cap on how many "same-label, same-parent-pattern" candidates
   // survive dedupe. 3 was too aggressive for content-heavy sites (HN had 100+
@@ -2078,8 +2083,21 @@
         // Require ≥5 matches AND dominant fraction ≥60% of visible kids.
         if (dominant.length < 5) return;
         if (dominant.length < kids.length * 0.6) return;
-        const exemplarSet = new Set(dominant.slice(0, 2)); // keep first 2 as exemplars
-        const skipSet = new Set(dominant.slice(2));
+        // Adaptive exemplar cap (v0.4.3 · fix C). Small groups label everything;
+        // medium groups keep 5; large groups keep 2 (original behavior).
+        // <10  → label all individually, no summary container (return early)
+        // 10-30 → keep 5 exemplars + summary
+        // >30  → keep 2 exemplars + summary
+        let keepCount;
+        if (dominant.length < 10) {
+          return; // small enough · let every sibling get its own label, no collapse
+        } else if (dominant.length <= 30) {
+          keepCount = 5;
+        } else {
+          keepCount = 2;
+        }
+        const exemplarSet = new Set(dominant.slice(0, keepCount));
+        const skipSet = new Set(dominant.slice(keepCount));
         result.set(parent, { count: dominant.length, exemplarSet, skipSet, sig: structSig(dominant[0]) });
       } catch (_) { /* skip unhealthy nodes */ }
     });
@@ -2108,14 +2126,23 @@
       }
     }
 
+    // Per-stage dropout counters · diagnoses where labelable elements vanish.
+    // Logged once at end of scrolled-scan via state._dropCounters.
+    const drop = state._dropCounters = state._dropCounters || {
+      total: 0, anatomyRoot: 0, patternRepeat: 0, noReason: 0,
+      notVisible: 0, isCovered: 0, noSelector: 0, dupSelector: 0,
+      junkLabel: 0, kept: 0,
+    };
+
     const existing = new Set(scopeLabels().map(e => e.selector));
     const out = [];
     const all = document.querySelectorAll('*');
     all.forEach(el => {
       try {
-        if (el.closest('.anatomy-root')) return;
+        drop.total++;
+        if (el.closest('.anatomy-root')) { drop.anatomyRoot++; return; }
         // Pattern skip — element is inside a repeat container, beyond the first 2 exemplars.
-        if (skipBecauseOfPattern.has(el)) return;
+        if (skipBecauseOfPattern.has(el)) { drop.patternRepeat++; return; }
         const tag = el.tagName.toLowerCase();
 
         // Semantic tags still get labeled regardless of cascade (landmarks, headings, dialogs).
@@ -2134,14 +2161,16 @@
           else if (isCustom) { reason = 'custom-element'; kind = 'custom'; }
           else if (isCardy) { reason = 'card-heuristic'; kind = 'card'; }
         }
-        if (!reason) return;
-        if (!isVisible(el)) return;
-        if (isCovered(el)) return;
+        if (!reason) { drop.noReason++; return; }
+        if (!isVisible(el)) { drop.notVisible++; return; }
+        if (isCovered(el)) { drop.isCovered++; return; }
 
         const sel = buildSelector(el);
-        if (!sel || existing.has(sel)) return;
+        if (!sel) { drop.noSelector++; return; }
+        if (existing.has(sel)) { drop.dupSelector++; return; }
         const label = deriveLabel(el);
-        if (isJunkLabel(label)) return;
+        if (isJunkLabel(label)) { drop.junkLabel++; return; }
+        drop.kept++;
         out.push({ el, sel, label, kind, reason });
       } catch (err) {
         // skip unhealthy nodes (shadow hosts, broken refs)
@@ -2191,13 +2220,27 @@
     const totalSteps = Math.max(1, Math.ceil(docH / step));
     const seen = new Map(); // selector -> candidate (first wins, preserves order)
 
+    // Reset per-stage drop counters at run start so each scrolled-scan reports
+    // fresh numbers. Counters accumulate across all gatherCandidatesV2 calls
+    // (one per scroll stop) and get logged at end of the scan.
+    state._dropCounters = {
+      total: 0, anatomyRoot: 0, patternRepeat: 0, noReason: 0,
+      notVisible: 0, isCovered: 0, noSelector: 0, dupSelector: 0,
+      junkLabel: 0, kept: 0,
+    };
+
     let stops = 0;
     try {
       for (let y = 0; y < docH; y += step) {
         window.scrollTo({ top: y, left: 0, behavior: 'instant' });
         // Give layout + lazy-loaded content a beat to settle. Double-rAF +
-        // a small timeout handles sites that swap content on scroll (IntersectionObserver-driven lazy mount).
-        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        // a small timeout handles sites that swap content on scroll (lazy
+        // mount triggered by IntersectionObserver). Hidden tabs throttle rAF
+        // to ~1Hz, so skip the rAF wait when not visible — setTimeout still
+        // works (clamped to ~1s in background but doesn't deadlock).
+        if (document.visibilityState === 'visible') {
+          await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        }
         await new Promise(r => setTimeout(r, 40));
         // Occluder positions (esp. sticky headers) change per scroll — rebuild.
         occluderCache = null;
@@ -2217,6 +2260,9 @@
       window.scrollTo({ top: original.y, left: original.x, behavior: 'instant' });
     }
     console.log(`[anatomy] scrolled-scan · docH=${docH} innerH=${window.innerHeight} step=${step} stops=${stops} seen=${seen.size}`);
+    if (state._dropCounters) {
+      console.log('[anatomy] dropout-by-stage:', JSON.stringify(state._dropCounters));
+    }
 
     return Array.from(seen.values());
   }
@@ -2376,8 +2422,73 @@
     document.addEventListener('mousemove', _watchSampleHandler, true);
   }
 
+  // ── UI text-density grid · NEW (auto-label heatmap signal) ──────────
+  // Toggles the grid overlay AND ensures a fresh grid is built so the next
+  // doAutoLabel uses up-to-date density. Stored on `state` so it survives
+  // toggle/scan ordering. The grid itself is rebuilt at the start of every
+  // doAutoLabel anyway — the toggle just controls visibility.
+  state.textGrid = state.textGrid || null;
+  state.gridShown = state.gridShown || false;
+
+  function toggleTextGrid(btn) {
+    const tg = (typeof window !== 'undefined') ? window.__anatomyTextGrid : null;
+    if (!tg) {
+      flash('text-grid module not loaded · reload extension');
+      return;
+    }
+    if (state.gridShown) {
+      tg.removeGridOverlay();
+      state.gridShown = false;
+      if (btn) btn.classList.remove('on');
+      flash('grid · off');
+      return;
+    }
+    showProgress('grid · scanning text', { detail: 'walking text nodes' });
+    try {
+      state.textGrid = tg.buildTextGrid({ cellPx: 24 });
+      tg.renderGridOverlay(state.textGrid);
+      state.gridShown = true;
+      if (btn) btn.classList.add('on');
+      const g = state.textGrid;
+      showProgress('grid · on', { state: 'done', detail: `${g.textNodes} text nodes · ${g.cols}×${g.rows} cells · max ${g.max}` });
+    } catch (e) {
+      console.error('[anatomy] grid build failed:', e);
+      showProgress('grid failed', { state: 'error', detail: 'see console' });
+    }
+  }
+
   async function doAutoLabel() {
     showProgress('auto-labeling', { detail: 'scanning page…' });
+
+    // Build the text-density grid first so onStep can rank candidates by
+    // visible-text content. Falls back to bucket-only sort if the module
+    // didn't load (extension partial reload, etc).
+    const tg = (typeof window !== 'undefined') ? window.__anatomyTextGrid : null;
+    let textGrid = null;
+    if (tg) {
+      try {
+        textGrid = tg.buildTextGrid({ cellPx: 24 });
+        state.textGrid = textGrid;
+        // If the overlay is already on, refresh it against the new grid.
+        if (state.gridShown) tg.renderGridOverlay(textGrid);
+      } catch (e) {
+        console.warn('[anatomy] text-grid build failed, falling back to bucket-only sort:', e);
+        textGrid = null;
+      }
+    }
+    const scoreCandidate = textGrid
+      ? (c) => {
+          if (!c.el || !c.el.isConnected) return 0;
+          const r = c.el.getBoundingClientRect();
+          return tg.scoreRegion(textGrid, {
+            x: r.left + window.scrollX,
+            y: r.top + window.scrollY,
+            w: r.width,
+            h: r.height,
+          });
+        }
+      : () => 0;
+
     const bucket = (c) => {
       const t = c.el.tagName.toLowerCase();
       if (LANDMARK_TAGS.includes(t)) return 0;
@@ -2395,11 +2506,15 @@
     // immediately so the HUD list and page dots populate live. End-of-scan
     // pass handles dedupe suffix renaming across the full accumulated set.
     const onStep = async (freshCandidates, stepIdx, totalSteps) => {
-      // Sort this batch by the same bucket priority as the final sort — stable
-      // within a step since the global order is anchored by document position.
+      // Sort this batch by bucket priority first (semantic importance:
+      // landmark > heading > dialog > click > card > other), then by
+      // text-density score (text-rich regions win the MAX_LABELS cap on
+      // dense pages), then by document position for stable ordering.
       freshCandidates.sort((a, b) => {
         const ba = bucket(a), bb = bucket(b);
         if (ba !== bb) return ba - bb;
+        const sa = scoreCandidate(a), sb = scoreCandidate(b);
+        if (sa !== sb) return sb - sa;
         const pos = a.el.compareDocumentPosition(b.el);
         return pos & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
       });

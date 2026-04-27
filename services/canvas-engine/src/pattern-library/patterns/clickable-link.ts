@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { isAnchorSelector, jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'clickable/link',
@@ -11,10 +11,12 @@ const pattern: Pattern = {
     if (det === 'r9-aria-role') s += 10;
     // smaller bounds = more link-like
     if (region.bounds && region.bounds.h < 36) s += 10;
+    // selector-path anchor signal · overrides the lossy r7-native-interactive flattening
+    if (isAnchorSelector(region.selector)) s += 35;
     return s;
   },
   render({ componentName, region }) {
-    const label = jsxText(regionTitle(region, 60));
+    const label = jsxText(regionLabel(region, 'Read more', 60));
     return [
       `export default function ${componentName}() {`,
       `  return (`,

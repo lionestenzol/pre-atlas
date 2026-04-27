@@ -1,31 +1,56 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, leafTag, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'clickable/pill',
   group: 'clickable',
   score(region) {
-    const nameLength = region.name.length;
+    const name = region.name.trim();
+    const nameLength = name.length;
     if (nameLength > 30) return 0;
 
+    // Two signal classes for "pill text":
+    //   strong badge · all-caps (BETA, AI) or numeric/symbolic (+5, 99%)
+    //                · always counts when compact bounds present
+    //   short alpha  · ≤6 chars · counts only with TIGHT pill geometry
+    //                · prevents short nav labels (Search, People, About)
+    //                · from winning when their bounds are normal nav size
+    const isStrongBadgeText =
+      /^[A-Z][A-Z0-9]*$/.test(name) ||
+      /^[\d+\-*#%]+$/.test(name);
+    const isShortAlpha = nameLength <= 6;
+
     if (!region.bounds) {
-      return nameLength <= 18 ? 35 : 20;
+      return isStrongBadgeText ? 35 : 15;
     }
 
     const { w, h } = region.bounds;
-    // perfect match wins over generic clickable/button (90) and clickable/link (95)
-    if (nameLength <= 18 && w >= 40 && w <= 150 && h < 40) {
-      return 100;
-    }
+    const compact = w >= 30 && w <= 150 && h < 36;
+    const tightPillGeometry = w >= 28 && w <= 80 && h <= 28;
 
-    if (w >= 40 && w <= 150 && h < 40) {
-      return 50;
-    }
+    let s: number;
+    // Strong pill · earns the perfect-match score that beats link (95) and
+    // button (90): badge text + compact bounds, OR short alpha + tight geometry.
+    if ((isStrongBadgeText && compact) || (isShortAlpha && tightPillGeometry)) s = 100;
+    // Borderline · stay below button/link
+    else if (isShortAlpha || isStrongBadgeText) s = 25;
+    else if (compact) s = 40;
+    else s = 10;
 
-    return nameLength <= 18 ? 25 : 10;
+    // Real `<button>` elements (and ARIA button-likes such as
+    // `<div role="button">`) should render as button, not pill — cap pill
+    // score so compact short-label action buttons (Save, Back, Login) don't
+    // outrank clickable/button when leaf or ARIA truth says it's a button.
+    // (Note: r9-aria-role is currently a single literal · once the producer
+    // distinguishes role=button from role=link/tab, this can be tightened.)
+    const isButtonLike =
+      leafTag(region.selector) === 'button' ||
+      region.detection === 'r9-aria-role';
+    if (isButtonLike) s = Math.min(s, 40);
+    return s;
   },
   render({ componentName, region }) {
-    const label = jsxText(regionTitle(region, 24));
+    const label = jsxText(regionLabel(region, 'Tag', 24));
     return [
       `export default function ${componentName}() {`,
       `  return (`,

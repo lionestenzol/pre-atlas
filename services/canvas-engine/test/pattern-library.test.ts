@@ -66,6 +66,19 @@ describe('normalizeDetection', () => {
       'default',
     );
   });
+  it('routes v0.4 extension manual + observation detections to clickable', () => {
+    for (const d of ['auto-label', 'alt-click', 'manual', 'legacy', 'custom-element', 'cursor-dwell']) {
+      expect(normalizeDetection(region({ id: 'a', n: 1, detection: d }))).toBe('clickable');
+    }
+  });
+  it('routes sem-form to form (treated like form for picker)', () => {
+    expect(normalizeDetection(region({ id: 'a', n: 1, detection: 'sem-form' }))).toBe('form');
+  });
+  it('routes r2/r3/r4 cascade rules to clickable', () => {
+    for (const d of ['r2-large-iframe', 'r3-label-with-control', 'r4-span-with-control']) {
+      expect(normalizeDetection(region({ id: 'a', n: 1, detection: d }))).toBe('clickable');
+    }
+  });
 });
 
 describe('pickPattern', () => {
@@ -231,6 +244,56 @@ describe('pickPattern', () => {
     });
     const { pattern } = pickPattern(r, registry);
     expect(pattern.name).toBe('clickable/pill');
+  });
+
+  it('compact short-label <button> picks clickable/button, not clickable/pill', () => {
+    // Regression for Codex round-3 finding: "Save"/"Back"/"Login" at pill-like
+    // dimensions used to win pill at 100, beating button at 90. Pill must be
+    // capped on button-leaf selectors so the picker respects DOM truth.
+    for (const name of ['Save', 'Back', 'Next', 'Login']) {
+      const r = region({
+        id: 'a',
+        n: 1,
+        detection: 'r7-native-interactive',
+        selector: 'div > div > button',
+        name,
+        bounds: { x: 0, y: 0, w: 60, h: 28 },
+      });
+      const { pattern } = pickPattern(r, registry);
+      expect(pattern.name, `expected button for "${name}"`).toBe('clickable/button');
+    }
+  });
+
+  it('aria-role button-like compact controls route to clickable/button', () => {
+    // Regression for Codex round-4+5 findings: <div role="button"> with
+    // detection=r9-aria-role used to fall through to pill (round 4) and
+    // then to link (round 5) before being properly routed to button.
+    const r = region({
+      id: 'a',
+      n: 1,
+      detection: 'r9-aria-role',
+      selector: 'div > div > div',
+      name: 'Save',
+      bounds: { x: 0, y: 0, w: 60, h: 28 },
+    });
+    const { pattern } = pickPattern(r, registry);
+    expect(pattern.name).toBe('clickable/button');
+  });
+
+  it('long single-token nav labels do not win as pill', () => {
+    // Regression for Codex round-2 finding: "Pricing"/"Support"/"Marketplace"
+    // shouldn't earn the perfect-match pill score at typical nav heights.
+    for (const name of ['Pricing', 'Support', 'Security', 'Documentation', 'Marketplace']) {
+      const r = region({
+        id: 'a',
+        n: 1,
+        detection: 'r12-cursor-pointer',
+        name,
+        bounds: { x: 0, y: 0, w: 90, h: 32 },
+      });
+      const { pattern } = pickPattern(r, registry);
+      expect(pattern.name, `expected non-pill for "${name}"`).not.toBe('clickable/pill');
+    }
   });
 
   it('h1 region picks heading/hero', () => {

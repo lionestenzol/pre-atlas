@@ -17,7 +17,10 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from pathlib import Path
+
 from . import signals as signal_module
+from .adapters.sitepull_adapter import build_context_package
 from .config import PATHS_DIR, SCHEMAS_DIR
 from .contract_validator import ContractError, validate
 from .node_processor import process_turn
@@ -42,6 +45,48 @@ _BOOT_TS = time.time()
 class StartRequest(BaseModel):
     path_id: str
     initial_context: Optional[dict[str, Any]] = None
+    context_package: Optional[dict[str, Any]] = None
+    sitepull_audit_dir: Optional[str] = None
+
+
+_SITEPULL_KEYS = (
+    "structure_map",
+    "action_inventory",
+    "inferred_state",
+    "coverage_score",
+    "partial",
+    "source",
+    "captured_at",
+    "id",
+)
+
+
+def _flatten_context_package(pkg: dict[str, Any]) -> dict[str, Any]:
+    """Flatten a ContextPackage into namespaced system-tier keys."""
+    flat: dict[str, Any] = {}
+    for key in _SITEPULL_KEYS:
+        if key in pkg:
+            flat[f"sitepull.{key}"] = pkg[key]
+    entry_points = (pkg.get("structure_map") or {}).get("entry_points")
+    if entry_points:
+        flat["sitepull.entry_points"] = entry_points
+    return flat
+
+
+def _resolve_context_package(req: StartRequest) -> Optional[dict[str, Any]]:
+    """Build a ContextPackage from whichever input the caller supplied."""
+    if req.context_package is not None:
+        validate(req.context_package, "ContextPackage")
+        return req.context_package
+    if req.sitepull_audit_dir:
+        audit_dir = Path(req.sitepull_audit_dir)
+        if not audit_dir.exists():
+            raise HTTPException(
+                status_code=400,
+                detail=f"sitepull_audit_dir does not exist: {audit_dir}",
+            )
+        return build_context_package(audit_dir)
+    return None
 
 
 class TurnRequest(BaseModel):
@@ -111,12 +156,15 @@ def paths() -> list[dict[str, str]]:
 def session_start(req: StartRequest) -> dict[str, Any]:
     path = _load_path(req.path_id)
     entry_node_id = (path.get("entry") or {}).get("node_id") or "entry"
+    pkg = _resolve_context_package(req)
+    system_context = _flatten_context_package(pkg) if pkg else None
     store = get_store()
     state = store.create(
         req.path_id,
         req.initial_context,
         entry_node_id=entry_node_id,
         nodes_total=len(path.get("nodes") or {}),
+        system_context=system_context,
     )
 
     # Kick off: process an initial turn with no message so execute/gate/qualify-with-inference can advance
@@ -145,6 +193,90 @@ def session_turn(session_id: str, req: TurnRequest) -> dict[str, Any]:
         "state": state,
         "response": text,
         "signals": emitted,
+    }
+
+
+@app.post("/session/run")
+def session_run(req: StartRequest) -> dict[str, Any]:
+    """One-shot drive: create + walk turns until closed or stuck on user-input.
+
+    For autonomous callers (Claude Code via codex-delegate skill, scripts,
+    automation) that can't sit in a turn-by-turn loop. Caps at 30 internal
+    turns to prevent infinite advancement.
+    """
+    path = _load_path(req.path_id)
+    entry_node_id = (path.get("entry") or {}).get("node_id") or "entry"
+    pkg = _resolve_context_package(req)
+    system_context = _flatten_context_package(pkg) if pkg else None
+    store = get_store()
+    state = store.create(
+        req.path_id,
+        req.initial_context,
+        entry_node_id=entry_node_id,
+        nodes_total=len(path.get("nodes") or {}),
+        system_context=system_context,
+    )
+
+    # Initial turn (kicks off entry/qualify/execute)
+    state, text, emitted_all = process_turn(state, path, None)
+    state = store.update(state)
+
+    # Walk forward until closed, asking for user-input, awaiting approval, or hit max turns
+    # NOTE: _handle_close sets state["_close_signal"] but does NOT set state["closed_at"]
+    # (latent core bug). We detect close via the signal instead.
+    def _is_closed(s: dict[str, Any]) -> bool:
+        if s.get("_close_signal") or s.get("closed_at"):
+            return True
+        cur = s.get("current_node")
+        ns = (s.get("node_states") or {}).get(cur, {}) if cur else {}
+        node_def = (path.get("nodes") or {}).get(cur, {}) if cur else {}
+        return node_def.get("type") == "close" and ns.get("status") == "closed"
+
+    MAX_TURNS = 30
+    BLOCKING_STATUSES = ("blocked", "unqualified", "awaiting_approval")
+    turns = 1
+    while turns < MAX_TURNS and not _is_closed(state):
+        prev_node = state.get("current_node")
+        prev_status = (state.get("node_states") or {}).get(prev_node, {}).get("status")
+
+        # Stop if a qualify node is asking for user input or an approval node
+        # is awaiting a human decision - autonomous caller can't answer.
+        if prev_status == "awaiting_approval":
+            break
+        if prev_status == "unqualified" and text:
+            break
+
+        state, text, emitted = process_turn(state, path, None)
+        state = store.update(state)
+        emitted_all = emitted_all + emitted
+
+        new_node = state.get("current_node")
+        new_status = (state.get("node_states") or {}).get(new_node, {}).get("status")
+        # If we didn't advance and the node is blocked / waiting for input, bail
+        if new_node == prev_node and new_status in BLOCKING_STATUSES:
+            break
+        turns += 1
+
+    # Pull deliverables from the closed run node's action_results so they
+    # survive the close-state trim. Also expose parsed_output if present.
+    final_outputs: dict[str, Any] = {}
+    for node_id, ns in (state.get("node_states") or {}).items():
+        for action_id, result in (ns.get("action_results") or {}).items():
+            if isinstance(result, dict):
+                for key in ("codex_output", "parsed_output", "schema_valid",
+                            "schema_errors", "exit_code", "codex_success",
+                            "skill", "sandbox", "codex_stderr"):
+                    if key in result and key not in final_outputs:
+                        final_outputs[key] = result[key]
+
+    return {
+        "session_id": state["session_id"],
+        "state": state,
+        "response": text,
+        "signals": emitted_all,
+        "outputs": final_outputs,
+        "turns_walked": turns,
+        "closed": _is_closed(state),
     }
 
 

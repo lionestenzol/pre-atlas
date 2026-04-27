@@ -313,6 +313,270 @@ def propose_fs_verdict(session_state: dict[str, Any], action: dict[str, Any]) ->
 # Dispatch
 # ---------------------------------------------------------------------------
 
+# --- Codex delegation handlers (path: delegate_to_codex) -------------------
+
+# Intent vocabulary: regex patterns -> (skill, sandbox_mode, prompt_framing_hint)
+# Keep aligned with ~/.claude/skills/codex-delegate/SKILL.md Step 0 table.
+# Lowercase, matches against user_intent.lower(). Order matters: first match wins.
+_CODEX_INTENT_RULES: list[tuple[str, str, str, str]] = [
+    # (regex, skill, sandbox, framing_hint)
+    (r"\b(yeet|open (a )?pr|make (a )?pr|push (it|the change)|merge (this|it)|ship the diff)\b",
+     "yeet", "workspace-write", "Stage all changes, commit, push, and open a draft PR. Use the description provided."),
+    (r"\bci\b.{0,15}\b(broke|broken|failing|red|bad|busted|down|hosed)\b|\b(tests? (are )?(red|failing|broken)|actions failing|checks (are )?(red|bad|failing)|pr won.?t merge|what.?s failing|workflow failing)\b",
+     "gh-fix-ci", "read-only", "Use gh to inspect failing checks and logs, summarize failure context, and draft a fix plan. Do NOT implement without approval."),
+    (r"\b(address the comments?|fix the review|handle (the )?feedback|review comments)\b",
+     "gh-address-comments", "workspace-write", "Address review/issue comments on the open GitHub PR for the current branch using gh."),
+    (r"\b(deploy|ship it|throw (it|this) up|put (it|this) (online|live)|go live|host this|publish (it|this))\b.*\b(vercel|netlify|render|cloudflare)?\b",
+     "vercel-deploy", "workspace-write", "Deploy this app to the named platform and report the production URL. If platform unspecified, prefer Vercel."),
+    (r"\b(transcrib|what.?s in this audio|who said what|recording|diariz)\w*",
+     "transcribe", "read-only", "Transcribe the audio file referenced. Output a markdown file with named speakers if diarization is requested."),
+    (r"\b(narrate|tts|text.to.speech|voice ?over|read this aloud|make it speak)\w*",
+     "speech", "workspace-write", "Generate narrated audio from the supplied text using the OpenAI Audio API."),
+    (r"\b(sora|generate (a )?(video|short|clip)|make (a )?(video|clip)|i want a video)\b",
+     "sora", "workspace-write", "Generate or edit a Sora video per the user's description."),
+    (r"\bfigma\b|\b(implement (the )?(design|mock)|translate (the )?design|build this from figma)\b",
+     "figma-implement-design", "workspace-write", "Pull the Figma design context and translate node(s) into production code with 1:1 visual fidelity."),
+    (r"\b(threat model|any vulns|where (are )?we exposed|attacker|abuse path|is this safe)\b",
+     "security-threat-model", "read-only", "Run a repo-grounded threat model: enumerate trust boundaries, assets, attacker capabilities, abuse paths, mitigations. Write a concise Markdown threat model."),
+    (r"\b(bus factor|who owns (this|the)|sensitive code ownership|single point of failure)\b",
+     "security-ownership-map", "read-only", "Build a security ownership topology from git history. Compute bus factor and sensitive-code ownership."),
+    (r"\b(security review|secure(.by.default)?|look for security|is this secure)\b",
+     "security-best-practices", "read-only", "Perform a language-specific security best-practices review (py/ts/go) and suggest improvements."),
+    (r"\b(wrap (this|the) api|build (a |me a )?cli|cli from (this )?spec|make a tool for)\b",
+     "cli-creator", "workspace-write", "Build a composable CLI from the supplied API/OpenAPI spec or examples."),
+    (r"\b(qa this|test the ui|click through|drive (this )?with playwright|electron qa)\b",
+     "playwright-interactive", "workspace-write", "Drive the app in a persistent Playwright browser/Electron session for iterative UI debugging."),
+    (r"\b(second opinion|fresh eyes|sanity check|what does codex think|have codex review)\b",
+     "__review__", "read-only", "Provide a fresh-frame second opinion. Do not modify files."),
+    (r"\b(sentry|production errors?|crash reports?)\b",
+     "sentry", "read-only", "Pull recent Sentry events / health data for the named project (read-only)."),
+    (r"\blinear\b",
+     "linear", "workspace-write", "Read or update the named Linear issue/project per the user's instruction."),
+    (r"\bnotion\b",
+     "notion-knowledge-capture", "workspace-write", "Capture or update the named Notion page per the user's instruction."),
+    (r"\b(winui|wpf|windows app sdk|asp\.?net core|aspnet)\b",
+     "aspnet-core", "workspace-write", "Bootstrap or extend the named Windows app framework project per the user's instruction."),
+]
+
+# Domains where anthropic-skills:* should win - never delegate these to Codex
+_ANTHROPIC_OVERLAP = re.compile(
+    r"\b(docx|word doc|word document|pdf( report| file)?|pptx|powerpoint|deck|presentation|"
+    r"xlsx|\.csv|spreadsheet|"
+    r"touchdesigner|\.tox|\.toe|"
+    r"mcp server|fastmcp)\b",
+    re.IGNORECASE,
+)
+
+
+@register("classify_codex_intent")
+def classify_codex_intent(session_state: dict[str, Any], action: dict[str, Any]) -> HandlerResult:
+    """Map user_intent to a Codex skill + sandbox + framing.
+
+    Outputs (merged into context.system):
+        target_skill: str | None
+        sandbox: 'read-only' | 'workspace-write'
+        framing: str
+        should_delegate: bool
+        delegate_reason: str (when should_delegate is False)
+    """
+    ctx = session_state["context"]
+    intent_raw = (
+        ctx["confirmed"].get("user_intent")
+        or ctx["user"].get("user_intent")
+        or ctx["system"].get("user_intent")
+        or ""
+    )
+    intent_original = str(intent_raw).strip()
+    intent = intent_original.lower()  # for matching only, NOT for downstream prompting
+    if not intent:
+        raise ActionError("classify_codex_intent: no user_intent in context")
+
+    # Anthropic overlap: stay with Claude
+    if _ANTHROPIC_OVERLAP.search(intent):
+        return {
+            "target_skill": None,
+            "sandbox": "read-only",
+            "framing": "",
+            "should_delegate": False,
+            "delegate_reason": "anthropic_overlap",
+            "user_intent_normalized": intent,
+            "user_intent_raw": intent_original,
+        }
+
+    # Match against intent rules
+    for pattern, skill, sandbox, framing in _CODEX_INTENT_RULES:
+        if re.search(pattern, intent):
+            return {
+                "target_skill": skill,
+                "sandbox": sandbox,
+                "framing": framing,
+                "should_delegate": True,
+                "delegate_reason": "matched_intent",
+                "user_intent_normalized": intent,
+                "user_intent_raw": intent_original,
+            }
+
+    # No match: don't delegate; let Claude handle
+    return {
+        "target_skill": None,
+        "sandbox": "read-only",
+        "framing": "",
+        "should_delegate": False,
+        "delegate_reason": "no_match",
+        "user_intent_normalized": intent,
+        "user_intent_raw": intent_original,
+    }
+
+
+def _resolve_codex_executable() -> str:
+    """Return the executable string for `codex`. Handles Windows .cmd shims."""
+    import shutil
+    # Windows: `codex` is a .cmd shim in npm global. shutil.which finds it if .cmd is in PATHEXT.
+    p = shutil.which("codex.cmd") or shutil.which("codex")
+    return p or "codex"
+
+
+@register("run_codex_exec")
+def run_codex_exec(session_state: dict[str, Any], action: dict[str, Any]) -> HandlerResult:
+    """Invoke `codex exec` with the framing chosen by classify_codex_intent.
+
+    Sandbox safety:
+    - Honors system.sandbox ('read-only' | 'workspace-write')
+    - Always passes --ephemeral and --skip-git-repo-check
+    - cwd defaults to system.cwd or REPO_ROOT
+    - 5 min timeout; non-zero exit returns codex_success=False with stderr
+
+    Optional structured handoff:
+    - If context.output_schema_path is set, passes --output-schema and -o
+      and parses the result file into 'parsed_output'.
+    """
+    ctx = session_state["context"]
+    framing = ctx["system"].get("framing") or ""
+    sandbox = ctx["system"].get("sandbox") or "read-only"
+    skill = ctx["system"].get("target_skill") or ""
+    cwd_raw = ctx["confirmed"].get("cwd") or ctx["user"].get("cwd") or ctx["system"].get("cwd")
+    # Use ORIGINAL casing for the actual prompt; lowercased version is for classifier debug only
+    user_intent = (
+        ctx["system"].get("user_intent_raw")
+        or ctx["confirmed"].get("user_intent")
+        or ctx["user"].get("user_intent")
+        or ctx["system"].get("user_intent_normalized")
+        or ""
+    )
+    schema_path_raw = (
+        ctx["confirmed"].get("output_schema_path")
+        or ctx["user"].get("output_schema_path")
+        or ctx["system"].get("output_schema_path")
+    )
+
+    if not framing:
+        raise ActionError("run_codex_exec: no framing in context (classify must run first)")
+
+    cwd = str(_resolve_path(str(cwd_raw))) if cwd_raw else str(REPO_ROOT)
+
+    # Build the prompt: framing first, then user's words for trigger-matching
+    prompt_lines = [framing]
+    if skill and skill != "__review__":
+        prompt_lines.append(f"(Use the {skill} skill.)")
+    prompt_lines.append(f"User request: {user_intent}")
+    if schema_path_raw:
+        prompt_lines.append("Reply ONLY with JSON matching the supplied output schema.")
+    prompt = "\n".join(prompt_lines)
+
+    codex_bin = _resolve_codex_executable()
+    cmd: list[str] = [
+        codex_bin, "exec",
+        "-s", sandbox,
+        "--skip-git-repo-check",
+        "--ephemeral",
+        "-C", cwd,
+    ]
+    if sandbox == "workspace-write":
+        # add --full-auto's other half (-a on-request); never combine with -s read-only
+        cmd += ["-a", "on-request"]
+
+    # Optional structured-output mode
+    output_file: Path | None = None
+    schema_path: Path | None = None
+    if schema_path_raw:
+        schema_path = _resolve_path(str(schema_path_raw))
+        if not schema_path.exists():
+            raise ActionError(f"run_codex_exec: schema not found: {schema_path}")
+        # write -o file alongside session data (cleanup is the caller's problem)
+        import tempfile
+        output_file = Path(tempfile.gettempdir()) / f"optogon_codex_{os.getpid()}_{id(action)}.json"
+        cmd += ["--output-schema", str(schema_path), "-o", str(output_file)]
+
+    cmd.append(prompt)
+
+    log.info("run_codex_exec: skill=%s sandbox=%s cwd=%s schema=%s",
+             skill, sandbox, cwd, schema_path)
+
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,
+            shell=False,
+        )
+    except FileNotFoundError as e:
+        return {
+            "codex_success": False,
+            "codex_output": "",
+            "codex_stderr": f"codex executable not found: {e}",
+            "exit_code": None,
+            "skill": skill,
+            "sandbox": sandbox,
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "codex_success": False,
+            "codex_output": "",
+            "codex_stderr": "timeout after 300s",
+            "exit_code": None,
+            "skill": skill,
+            "sandbox": sandbox,
+        }
+
+    result: HandlerResult = {
+        "codex_success": proc.returncode == 0,
+        "codex_output": proc.stdout,
+        "codex_stderr": proc.stderr,
+        "exit_code": proc.returncode,
+        "skill": skill,
+        "sandbox": sandbox,
+    }
+
+    # If structured output requested, parse the -o file (written at exec exit)
+    if output_file is not None:
+        try:
+            if output_file.exists():
+                import json as _json
+                parsed = _json.loads(output_file.read_text(encoding="utf-8"))
+                result["parsed_output"] = parsed
+                result["output_file"] = str(output_file)
+                # Validate against schema
+                if schema_path is not None:
+                    import json as _json2
+                    from jsonschema import Draft7Validator
+                    schema_obj = _json2.loads(schema_path.read_text(encoding="utf-8"))
+                    errs = list(Draft7Validator(schema_obj).iter_errors(parsed))
+                    result["schema_valid"] = len(errs) == 0
+                    if errs:
+                        result["schema_errors"] = [str(e.message)[:200] for e in errs[:5]]
+            else:
+                result["parsed_output"] = None
+                result["schema_valid"] = False
+                result["schema_errors"] = ["output file not written by codex"]
+        except Exception as e:  # noqa: BLE001
+            result["parsed_output"] = None
+            result["schema_valid"] = False
+            result["schema_errors"] = [f"parse error: {e}"]
+
+    return result
+
+
 def run_action(session_state: dict[str, Any], action: dict[str, Any]) -> HandlerResult:
     """Look up and invoke the handler for action.id. Returns result dict."""
     action_id = action.get("id")

@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const SIZE: Record<string, string> = {
   h1: 'text-4xl font-bold tracking-tight',
@@ -18,7 +18,7 @@ const pattern: Pattern = {
     const det = region.detection || 'sem-h3';
     const tag = det.replace('sem-', '');
     const sizeClass = SIZE[tag] || SIZE.h3;
-    const label = jsxText(regionTitle(region, 120));
+    const label = jsxText(regionLabel(region, 'Overview', 120));
     return [
       `export default function ${componentName}() {`,
       `  return (`,

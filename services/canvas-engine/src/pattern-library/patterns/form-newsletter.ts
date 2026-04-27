@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'form/newsletter',
@@ -8,7 +8,7 @@ const pattern: Pattern = {
     return /(subscribe|newsletter|email|signup|sign up)/.test(region.name.toLowerCase()) ? 150 : 0;
   },
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60) || 'Stay in the loop');
+    const title = jsxText(regionLabel(region, 'Subscribe', 60));
     return [
       `export default function ${componentName}() {`,
       `  return (`,

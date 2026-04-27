@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'landmark/aside',
@@ -8,7 +8,7 @@ const pattern: Pattern = {
     return region.detection === 'sem-aside' ? 150 : 0;
   },
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60));
+    const title = jsxText(regionLabel(region, 'Sidebar', 60));
     const desc = jsxText(region.desc || 'Sidebar content placeholder.');
 
     return [

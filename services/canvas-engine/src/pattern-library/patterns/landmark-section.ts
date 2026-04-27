@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'landmark/section',
@@ -10,7 +10,12 @@ const pattern: Pattern = {
     return 30; // fallback for any landmark we don't have a dedicated pattern for
   },
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60));
+    const fallback = region.detection === 'sem-nav'
+      ? 'Menu'
+      : region.detection === 'sem-aside'
+        ? 'Sidebar'
+        : 'Section';
+    const title = jsxText(regionLabel(region, fallback, 60));
     const desc = region.desc ? `      <p className="mt-2 text-sm text-slate-600">{${jsxText(region.desc)}}</p>` : '';
     return [
       `export default function ${componentName}() {`,

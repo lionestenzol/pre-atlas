@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'card/stat',
@@ -8,7 +8,7 @@ const pattern: Pattern = {
     return /^[\d.,\-+%$]/.test(region.name) || region.name.length <= 12 ? 150 : 0;
   },
   render({ componentName, region }) {
-    const value = jsxText(region.name);
+    const value = jsxText(regionLabel(region, '—'));
     const label = jsxText(region.desc || 'metric');
     return [
       `export default function ${componentName}() {`,

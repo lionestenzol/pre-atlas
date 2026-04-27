@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const ctaPattern =
   /\b(subscribe|sign up|signup|get started|start now|try (it )?free|join|buy now|download|install|get the app|book a demo)\b/;
@@ -20,7 +20,7 @@ const pattern: Pattern = {
     return s;
   },
   render({ componentName, region }) {
-    const label = jsxText(regionTitle(region, 30));
+    const label = jsxText(regionLabel(region, 'Get started', 30));
     return [
       `export default function ${componentName}() {`,
       `  return (`,

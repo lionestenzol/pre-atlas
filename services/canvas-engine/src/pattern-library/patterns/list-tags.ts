@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'list/tags',
@@ -10,7 +10,7 @@ const pattern: Pattern = {
     return shortName && compactHeight ? 130 : 0;
   },
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60));
+    const title = jsxText(regionLabel(region, 'Items', 60));
     return [
       `export default function ${componentName}() {`,
       `  const tags = ['Tag-1', 'Tag-2', 'Tag-3', 'Tag-4', 'Tag-5'];`,

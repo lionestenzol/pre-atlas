@@ -1,12 +1,12 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'card/content',
   group: 'card',
   score: () => 100,
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60));
+    const title = jsxText(regionLabel(region, 'Card title', 60));
     const desc = region.desc ? jsxText(region.desc) : '"Card content placeholder."';
     return [
       `export default function ${componentName}() {`,

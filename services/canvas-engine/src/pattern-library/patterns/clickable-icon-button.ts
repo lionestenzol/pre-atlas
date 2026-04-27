@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'clickable/icon-button',
@@ -12,7 +12,7 @@ const pattern: Pattern = {
     return s;
   },
   render({ componentName, region }) {
-    const label = jsxText(regionTitle(region, 24));
+    const label = jsxText(regionLabel(region, 'Open', 24));
     return [
       `export default function ${componentName}() {`,
       `  return (`,

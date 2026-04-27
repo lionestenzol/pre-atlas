@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'heading/eyebrow',
@@ -11,7 +11,7 @@ const pattern: Pattern = {
   render({ componentName, region }) {
     const tag = region.detection === 'sem-h2' ? 'h2' : 'h3';
     const sizeClass = tag === 'h2' ? 'text-3xl font-semibold' : 'text-xl font-semibold';
-    const title = jsxText(regionTitle(region, 120));
+    const title = jsxText(regionLabel(region, 'Featured', 120));
     const eyebrow = jsxText(region.desc || '');
 
     return [

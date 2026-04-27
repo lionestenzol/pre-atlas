@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'heading/hero',
@@ -8,7 +8,7 @@ const pattern: Pattern = {
     return region.detection === 'sem-h1' ? 200 : 0;
   },
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 120));
+    const title = jsxText(regionLabel(region, 'Welcome', 120));
     const eyebrow = region.desc
       ? `      <p className="text-xs uppercase tracking-[0.3em] text-purple-700">{${jsxText(region.desc)}}</p>`
       : '';

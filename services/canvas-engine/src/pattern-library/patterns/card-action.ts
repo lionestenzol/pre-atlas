@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'card/action',
@@ -8,7 +8,7 @@ const pattern: Pattern = {
     return region.fetches && region.fetches.length > 0 ? 130 : 0;
   },
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60));
+    const title = jsxText(regionLabel(region, 'Action', 60));
     const desc = jsxText(region.desc || 'Action card');
     return [
       `export default function ${componentName}() {`,

@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'list/grid',
@@ -10,7 +10,7 @@ const pattern: Pattern = {
     return 0;
   },
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60));
+    const title = jsxText(regionLabel(region, 'Items', 60));
     return [
       `export default function ${componentName}() {`,
       `  const items = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5', 'Item 6'];`,

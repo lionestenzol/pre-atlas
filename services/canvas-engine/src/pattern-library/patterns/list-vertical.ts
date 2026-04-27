@@ -1,12 +1,12 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'list/vertical',
   group: 'list',
   score: () => 100,
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60));
+    const title = jsxText(regionLabel(region, 'Items', 60));
     return [
       `export default function ${componentName}() {`,
       `  const items = [${region.n}, ${region.n + 1}, ${region.n + 2}, ${region.n + 3}];`,

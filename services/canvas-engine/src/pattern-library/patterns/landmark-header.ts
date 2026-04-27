@@ -1,5 +1,5 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'landmark/header',
@@ -8,7 +8,7 @@ const pattern: Pattern = {
     return region.detection === 'sem-header' ? 100 : 0;
   },
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60));
+    const title = jsxText(regionLabel(region, 'Home', 60));
     return [
       `export default function ${componentName}() {`,
       `  return (`,

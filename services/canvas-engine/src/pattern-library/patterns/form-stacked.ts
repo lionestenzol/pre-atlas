@@ -1,12 +1,12 @@
 import type { Pattern } from '../types.js';
-import { jsxText, regionTitle } from '../util.js';
+import { jsxText, regionLabel } from '../util.js';
 
 const pattern: Pattern = {
   name: 'form/stacked',
   group: 'form',
   score: () => 100,
   render({ componentName, region }) {
-    const title = jsxText(regionTitle(region, 60));
+    const title = jsxText(regionLabel(region, 'Form', 60));
     return [
       `export default function ${componentName}() {`,
       `  return (`,

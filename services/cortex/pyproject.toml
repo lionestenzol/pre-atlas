@@ -27,4 +27,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+# Both top-level tests/ and per-module tests under src/cortex/<module>/tests/.
+# The per-module pattern is established by ghost_executor and dispatcher.
+testpaths = ["tests", "src/cortex"]
+python_files = ["test_*.py"]

@@ -2,25 +2,25 @@
 
 A shared-state coordination layer for agent fleets. Agents reference a Merkle-addressed graph instead of re-sending context.
 
-## The problem
+## The problem (when it applies)
 
-Two agents working on the same task pass context back and forth as natural language. Each handoff re-describes entities the other side already knows about. A 200-token coordination decision arrives wrapped in 4,000 tokens of preamble: who the client is, what the document says, what was decided last turn.
+Some multi-agent systems have agents pass context back and forth as natural language. Each handoff re-describes entities the other side already knows about. A short coordination decision arrives wrapped in a long preamble: who the client is, what the document says, what was decided last turn. With more agents or longer-running tasks the restatement compounds, and subtle drift creeps in when "the agreement" means slightly different things to the researcher and the verifier.
 
-This gets worse with more agents and longer-running tasks. Context windows fill with restated facts. Costs scale with the square of the team size. Subtle drift creeps in when "the agreement" means slightly different things to the researcher and the verifier.
+This problem doesn't exist in every multi-agent system. Many are built around typed JSON envelopes that already pin entities by ID — those don't need shardstate. shardstate is for the systems that aren't.
 
 ## What this does
 
 A content-addressed graph store that all agents read and write through. Instead of sending facts, agents send references into the graph. The graph is Merkle-hashed end-to-end, so any reference also implicitly commits to the state it was made against.
 
 ```python
-# Before: 3,200 tokens of context + 80 tokens of decision
+# Where the bloat lives — natural-language handoffs that re-state shared context:
 researcher.send(verifier, full_context_dump + "evidence is ready for task 18")
 
-# After: a reference
+# What shardstate replaces it with — a coordinate, not a copy:
 verifier.receive(Ref(state="b3f2...", node="tasks/18", op="mark_evidence_ready"))
 ```
 
-The verifier already has the state at `b3f2...` cached. The reference is ~60 bytes. The shared graph is the medium; messages are coordinates into it.
+The verifier already has the state at `b3f2...` cached. The reference is roughly 80 bytes regardless of how large the underlying entity is. The shared graph is the medium; messages are coordinates into it.
 
 ## What's in the box
 
@@ -65,20 +65,13 @@ view = store.resolve(ref)
 # view = {"type": "agreement", "version": 2, "payment_terms": {...}, ...}
 ```
 
-## Benchmark
+## What's been measured
 
-Two-agent handoff on a real Atlas synthesis → ghost-executor task. Same task, same outcome.
-
-|                          | Tokens | Latency | Re-explanation errors (10 runs) |
-|--------------------------|--------|---------|---------------------------------|
-| Natural-language handoff | 3,847  | 4.2s    | 2                               |
-| shardstate references    | 312    | 1.1s    | 0                               |
-
-The errors in the baseline were both cases where the second agent inferred a slightly different version of an entity than the first agent meant. With references, this is structurally impossible — the hash either matches or the resolve fails loudly.
+Nothing yet, honestly. The library works (26 passing tests, the quickstart above runs verbatim), but the agent-pair benchmark this README originally claimed hasn't been run on a real workload. The first codebase considered for it (the `pre-atlas` Atlas → ghost-executor pair) turned out to use typed JSON envelopes between services, not the natural-language handoffs shardstate is designed to compress — so there was nothing to measure on that pair. An honest benchmark needs an actual multi-agent pipeline where one LLM's prose output gets bundled into another LLM's prompt, run on ten or more real inputs with token counts logged before and after. If you have such a pipeline and want to try it, the test plan is straightforward and I'd like to see the numbers.
 
 ## Status
 
-Working library, used in one production agent pair (Atlas → ghost executor). API may change. No version commitments. If you want to use it for something else, expect to read the code.
+Pre-1.0. The mechanism works; the value claim is unproven. API may change. No version commitments. If you want to use it, expect to read the code, and be the first person to measure whether it actually pays.
 
 ## Why not [X]
 

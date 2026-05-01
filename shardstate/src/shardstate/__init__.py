@@ -5,6 +5,16 @@ context. The graph is Merkle-hashed end-to-end; every reference also commits
 to the state it was made against.
 """
 
+from .ops import (
+    NonDeterministicOp,
+    OpError,
+    OpNotRegistered,
+    OpStateMismatch,
+    op,
+    op_ref_pack,
+    op_ref_unpack,
+    run_op,
+)
 from .store import (
     Conflict,
     NotFound,
@@ -17,10 +27,18 @@ from .store import (
 
 __all__ = [
     "Conflict",
+    "NonDeterministicOp",
     "NotFound",
     "Node",
+    "OpError",
+    "OpNotRegistered",
+    "OpStateMismatch",
     "Ref",
     "State",
     "Store",
     "StoreError",
+    "op",
+    "op_ref_pack",
+    "op_ref_unpack",
+    "run_op",
 ]

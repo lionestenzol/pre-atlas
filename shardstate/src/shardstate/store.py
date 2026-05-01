@@ -509,6 +509,111 @@ class Store:
     def close(self) -> None:
         self._conn.close()
 
+    # -- sync helpers ---------------------------------------------------------
+    # These are intentionally minimal hooks for the sync protocol in `sync.py`.
+    # They live on Store (rather than reaching into _conn from outside) so the
+    # SQL surface remains contained and the sync module stays transport-shaped.
+
+    def has_node(self, content_hash: str) -> bool:
+        """Return True iff a node with this content hash is already stored."""
+        row = self._conn.execute(
+            "SELECT 1 FROM nodes WHERE content_hash=?", (content_hash,)
+        ).fetchone()
+        return row is not None
+
+    def has_state(self, state_hash: str) -> bool:
+        """Return True iff this state root is already stored."""
+        row = self._conn.execute(
+            "SELECT 1 FROM states WHERE state_hash=?", (state_hash,)
+        ).fetchone()
+        return row is not None
+
+    def get_node_value(self, content_hash: str) -> Any:
+        """Public read of a node by content hash (sync needs this when serving)."""
+        return self._load_node(content_hash)
+
+    def export_state_index(
+        self, state_hash: str
+    ) -> List[Tuple[str, str, vc.VClock]]:
+        """Return the full (stable_id, content_hash, vclock) index for a state."""
+        import json
+        row = self._conn.execute(
+            "SELECT index_json FROM states WHERE state_hash=?", (state_hash,)
+        ).fetchone()
+        if row is None:
+            raise NotFound(f"state {state_hash} not in store")
+        return [(sid, ch, dict(vclock)) for sid, ch, vclock in json.loads(row[0])]
+
+    def apply_remote_node(self, value: Any) -> str:
+        """Insert a node received from a peer; returns its content hash.
+
+        Mirrors `_store_node` but is part of the public sync surface.
+        """
+        with self._lock, self._conn:
+            return self._store_node(value)
+
+    def _install_remote_state(
+        self,
+        state_hash: str,
+        index: List[Tuple[str, str, vc.VClock]],
+    ) -> State:
+        """Install a peer's state directly (entities + state row + history).
+
+        All node blobs referenced by `index` must already be present locally
+        (via `apply_remote_node`). We verify that the supplied `state_hash`
+        actually matches the canonical hash of the index, refusing the install
+        on mismatch — the caller will have computed it the same way we do.
+        """
+        import json
+        computed = self._compute_state_hash(index)
+        if computed != state_hash:
+            raise StoreError(
+                f"remote state hash mismatch: claimed={state_hash} computed={computed}"
+            )
+        with self._lock, self._conn:
+            for sid, ch, _vclock in index:
+                if not self.has_node(ch):
+                    raise StoreError(
+                        f"cannot install remote state: missing node {ch} for {sid}"
+                    )
+            existing = self._conn.execute(
+                "SELECT seq FROM states WHERE state_hash=?", (state_hash,)
+            ).fetchone()
+            if existing is not None:
+                # Already installed (idempotent). Still rewrite entities so the
+                # caller's view at HEAD matches the remote state.
+                seq = existing[0]
+            else:
+                seq_row = self._conn.execute(
+                    "SELECT COALESCE(MAX(seq), -1) FROM states"
+                ).fetchone()
+                seq = (seq_row[0] if seq_row else -1) + 1
+                index_json = json.dumps(
+                    [[sid, ch, sorted(vclock.items())] for sid, ch, vclock in index],
+                    separators=(",", ":"),
+                )
+                parent = self._current_state_hash()
+                self._conn.execute(
+                    "INSERT INTO states(state_hash, parent_hash, index_json, "
+                    "created_at, created_by, seq) VALUES(?, ?, ?, ?, ?, ?)",
+                    (state_hash, parent, index_json, time.time(), self.agent_id, seq),
+                )
+                for sid, ch, vclock in index:
+                    self._conn.execute(
+                        "INSERT OR REPLACE INTO entity_history(stable_id, "
+                        "state_hash, content_hash, vclock_json) VALUES(?, ?, ?, ?)",
+                        (sid, state_hash, ch, json.dumps(vclock)),
+                    )
+            now = time.time()
+            self._conn.execute("DELETE FROM entities")
+            for sid, ch, vclock in index:
+                self._conn.execute(
+                    "INSERT INTO entities(stable_id, current_hash, vclock_json, "
+                    "updated_at) VALUES(?, ?, ?, ?)",
+                    (sid, ch, json.dumps(vclock), now),
+                )
+            return State(hash=state_hash, parent=None, seq=seq)
+
 
 # --- helpers -----------------------------------------------------------------
 

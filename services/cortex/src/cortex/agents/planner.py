@@ -202,6 +202,23 @@ def _plan_archive(task: CortexTask) -> list[ExecutionStep]:
     ]
 
 
+@template(TaskIntent.RUN_PATH)
+def _plan_run_path(task: CortexTask) -> list[ExecutionStep]:
+    return [
+        ExecutionStep(
+            step_index=0,
+            action_type=ActionType.OPTOGON_SESSION,
+            params={
+                "path_id": task.params["path_id"],
+                "initial_context": task.params.get("initial_context"),
+                "context_package": task.params.get("context_package"),
+                "sitepull_audit_dir": task.params.get("sitepull_audit_dir"),
+            },
+            expected_output=ExpectedOutput(type=OutputType.JSON),
+        ),
+    ]
+
+
 def _port_for(service: str) -> int:
     return {
         "cognitive": 8100,

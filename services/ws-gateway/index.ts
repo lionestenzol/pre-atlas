@@ -4,13 +4,13 @@
  * Subscribes to NATS topics, forwards events to connected Socket.IO clients.
  * Clients receive real-time updates without polling.
  *
- * Port: 3006 (configurable via WS_PORT env var)
+ * Port: 3011 (configurable via WS_PORT env var)
  */
 
 import { Server } from 'socket.io';
 import { connect, StringCodec, NatsConnection, Subscription } from 'nats';
 
-const WS_PORT = parseInt(process.env.WS_PORT || '3006', 10);
+const WS_PORT = parseInt(process.env.WS_PORT || '3011', 10);
 const NATS_URL = process.env.NATS_URL || 'nats://localhost:4222';
 
 // All topics this gateway forwards to clients

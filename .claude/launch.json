@@ -130,6 +130,13 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "apps/c110-trace", "-p", "8897", "-c-1", "--cors"],
       "port": 8897
+    },
+    {
+      "name": "ws-gateway",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "index.ts"],
+      "port": 3011,
+      "cwd": "services/ws-gateway"
     }
   ]
 }

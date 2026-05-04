@@ -1,15 +1,17 @@
 """Optogon FastAPI server on :3010.
 
 Endpoints per doctrine/04_BUILD_PLAN.md Phase 2:
-- POST /session/start       -> create session, return first response
-- POST /session/{id}/turn   -> process user turn
-- GET  /session/{id}        -> full session state
-- GET  /paths               -> list available paths
-- GET  /health              -> service health
-- GET  /signals             -> emitted signals (debug)
+- POST /session/start          -> create session, return first response
+- POST /session/from_sitepull  -> create session pre-loaded from anatomy.json
+- POST /session/{id}/turn      -> process user turn
+- GET  /session/{id}           -> full session state
+- GET  /paths                  -> list available paths
+- GET  /health                 -> service health
+- GET  /signals                -> emitted signals (debug)
 """
 from __future__ import annotations
 import json
+import os
 import time
 from typing import Any, Optional
 
@@ -20,7 +22,7 @@ from pydantic import BaseModel
 from pathlib import Path
 
 from . import signals as signal_module
-from .adapters.sitepull_adapter import build_context_package
+from .adapters.sitepull_adapter import build_context_package, load_context_package
 from .config import PATHS_DIR, SCHEMAS_DIR
 from .contract_validator import ContractError, validate
 from .node_processor import process_turn
@@ -47,6 +49,11 @@ class StartRequest(BaseModel):
     initial_context: Optional[dict[str, Any]] = None
     context_package: Optional[dict[str, Any]] = None
     sitepull_audit_dir: Optional[str] = None
+
+
+class SitepullSessionRequest(BaseModel):
+    host: Optional[str] = None
+    anatomy_path: Optional[str] = None
 
 
 _SITEPULL_KEYS = (
@@ -177,6 +184,48 @@ def session_start(req: StartRequest) -> dict[str, Any]:
         "response": text,
         "signals": emitted,
     }
+
+
+@app.post("/session/from_sitepull")
+def session_from_sitepull(req: SitepullSessionRequest) -> dict[str, Any]:
+    """Create an Optogon session pre-loaded from an anatomy.json capture.
+
+    Body: {"host": "example.com"} resolves via WEB_AUDIT_ROOT.
+    Body: {"anatomy_path": "/abs/path/anatomy.json"} uses the path directly.
+    """
+    if req.anatomy_path:
+        anatomy_path = Path(req.anatomy_path)
+    elif req.host:
+        if "/" in req.host or "\\" in req.host or ".." in req.host or req.host.startswith("."):
+            raise HTTPException(status_code=400, detail="Invalid host")
+        web_audit_root = os.environ.get("WEB_AUDIT_ROOT", str(Path.home() / "web-audit"))
+        anatomy_path = Path(web_audit_root) / ".canvas" / req.host / "anatomy.json"
+    else:
+        raise HTTPException(status_code=400, detail="Provide 'host' or 'anatomy_path'.")
+
+    if not anatomy_path.exists():
+        target = req.host or str(anatomy_path)
+        raise HTTPException(
+            status_code=404,
+            detail=f"anatomy.json not found: {anatomy_path}. Run sitepull capture for {target} first.",
+        )
+
+    try:
+        pkg = load_context_package(anatomy_path)
+    except ContractError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    system_context = _flatten_context_package(pkg)
+    store = get_store()
+    state = store.create(
+        "__sitepull__",
+        entry_node_id="entry",
+        nodes_total=0,
+        system_context=system_context,
+    )
+    state = store.update(state)
+
+    return {"session_id": state["session_id"]}
 
 
 @app.post("/session/{session_id}/turn")

@@ -1,0 +1,219 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Extension Tour Smoke</title>
+<style>
+  :root { --bg:#080808; --border:rgba(255,255,255,0.06); --text:#c8c8c8; --dim:#666;
+    --ui:#c084fc; --api:#f59e0b; --lib:#22c55e; --ext:#818cf8; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 32px 40px; background:var(--bg); color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:12px; }
+  .mono { font-family:'JetBrains Mono', monospace; }
+  h1 { margin:0 0 4px; font-size:16px; color:#fff; letter-spacing:2px; }
+  .sub { font-size:10px; color:var(--dim); letter-spacing:1.5px; text-transform:uppercase; }
+  .head { display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:16px; margin-bottom:24px; border-bottom:1px solid var(--border); }
+  .toolbar { display:flex; gap:6px; align-items:center; }
+  .toolbar .lf { padding:4px 10px; background:transparent; border:1px solid; border-radius:4px; font-size:10px; text-transform:uppercase; letter-spacing:1px; cursor:pointer; opacity:0.35; }
+  .toolbar .lf.on { opacity:1; }
+  .toolbar .tb { padding:4px 10px; background:transparent; border:1px solid rgba(255,255,255,0.18); color:#888; border-radius:4px; font-size:10px; text-transform:uppercase; letter-spacing:1px; cursor:pointer; }
+  .toolbar .tb.on { border-color:#c084fc; color:#c084fc; }
+  .tb-sep { width:1px; height:18px; background:rgba(255,255,255,0.12); margin:0 4px; }
+  .stage { position:relative; display:grid; grid-template-columns: 240px minmax(1100px, 1fr) 240px; gap:32px; align-items:start; }
+  .leader-lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:0.5; z-index:20; overflow:visible; }
+  .leader-lines path { fill:none; stroke:#888; stroke-width:1; stroke-dasharray:3 3; }
+  .col { display:flex; flex-direction:column; gap:10px; padding-top:24px; }
+  .callout { position:relative; padding:10px 12px 8px; border:1px solid; border-radius:6px; font-size:11px; transition:all .15s ease; cursor:pointer; }
+  .callout .no { position:absolute; top:-8px; left:-8px; width:18px; height:18px; border-radius:50%; background:var(--bg); border:1px solid; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
+  .callout .hd { font-weight:700; letter-spacing:0.5px; text-transform:uppercase; font-size:10px; margin-bottom:3px; }
+  .callout .pth { font-family:'JetBrains Mono', monospace; font-size:9px; color:#888; }
+  .callout .dsc { font-size:10px; color:#888; margin-top:3px; }
+  .callout.lit { transform:translateY(-1px); box-shadow:0 0 0 1px currentColor, 0 6px 20px rgba(0,0,0,0.4); }
+  .callout.dim { opacity:0.15; }
+  .mockup-wrap { position:relative; }
+  .mockup { position:relative; width:1100px; height:1700px; background:#0c0c0c;
+    border:1px solid rgba(255,255,255,0.08); border-radius:6px; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+  .mk-box { position:absolute; border:1px dashed; border-radius:2px; opacity:0.75; transition:all .15s ease; cursor:pointer; z-index:1; }
+  .mk-box:hover, .mk-box.lit { opacity:1; transform:scale(1.02); box-shadow:0 0 18px currentColor; z-index:10; }
+  .mk-box.dim { opacity:0.1; }
+  .mk-n { position:absolute; top:2px; left:2px; font-size:8px; font-weight:700; padding:1px 4px; background:rgba(0,0,0,0.7); border-radius:2px; color:#fff; font-family:'JetBrains Mono', monospace; }
+  .mk-lbl { position:absolute; left:22px; top:2px; right:4px; font-size:11px; font-weight:600; text-shadow:0 1px 2px rgba(0,0,0,0.6); }
+  .foot { margin-top:40px; padding-top:16px; border-top:1px solid var(--border); font-size:10px; color:var(--dim); letter-spacing:1px; text-transform:uppercase; text-align:center; }
+  /* Tour player ── lifted from openscreen mathUtils.ts (Screen-Studio easing) */
+  body.touring { cursor:progress; }
+  body.touring .toolbar > *:not([data-toggle="tour"]) { opacity:0.4; pointer-events:none; }
+  .toolbar .tb[data-toggle="tour"].on { border-color:#f59e0b; color:#fde68a; background:rgba(245,158,11,0.18); }
+  .callout.touring-active { transform:translateY(-2px) scale(1.04);
+    box-shadow:0 0 0 2px currentColor, 0 0 28px currentColor; z-index:30; }
+  .mk-box.touring-active { opacity:1 !important; outline:3px solid #c084fc; outline-offset:3px;
+    box-shadow:0 0 50px rgba(192,132,252,0.6); z-index:25 !important; }
+  body.touring .leader-lines { opacity:0; transition:opacity 0.18s ease; }
+</style></head>
+<body>
+  <div class="head">
+    <div>
+      <h1>extension fixture</h1>
+      <div class="sub">5 callouts · synthetic · screen-studio easing</div>
+    </div>
+    <div class="toolbar">
+      <button data-toggle="tour" class="tb">tour</button>
+      <button data-toggle="numbers" class="tb on">numbers</button>
+      <button data-toggle="labels" class="tb on">labels</button>
+      <button data-toggle="lines" class="tb">lines</button>
+      <span class="tb-sep"></span>
+      <button data-layer-filter="ui" class="lf on" style="border-color:#c084fc;color:#c084fc">ui</button>
+      <button data-layer-filter="api" class="lf on" style="border-color:#f59e0b;color:#f59e0b">api</button>
+    </div>
+  </div>
+  <div class="stage">
+    <svg class="leader-lines" aria-hidden="true"></svg>
+    <div class="col">
+      <div class="callout" data-n="1" data-layer="ui" style="border-color:#c084fc66;color:#e0d0ff;background:#c084fc14"><span class="no" style="border-color:#c084fc">1</span><div class="hd">Header</div><div class="pth">header.tsx</div><div class="dsc">page top nav</div></div>
+      <div class="callout" data-n="3" data-layer="ui" style="border-color:#c084fc66;color:#e0d0ff;background:#c084fc14"><span class="no" style="border-color:#c084fc">3</span><div class="hd">Main feed</div><div class="pth">feed/List.tsx</div><div class="dsc">primary content</div></div>
+      <div class="callout" data-n="5" data-layer="ui" style="border-color:#c084fc66;color:#e0d0ff;background:#c084fc14"><span class="no" style="border-color:#c084fc">5</span><div class="hd">Footer</div><div class="pth">layout/Footer.tsx</div><div class="dsc">site footer</div></div>
+    </div>
+    <div class="mockup-wrap">
+      <div class="mockup">
+        <div class="mockup-inner" style="position:absolute;inset:0;transform-origin:0 0;will-change:transform">
+          <div class="mk-box" data-n="1" data-layer="ui" style="left:24px;top:24px;width:1052px;height:80px;border-color:#c084fc;color:#c084fc;background:#c084fc11">
+            <span class="mk-n">1</span><span class="mk-lbl">Header</span>
+          </div>
+          <div class="mk-box" data-n="2" data-layer="api" style="left:24px;top:140px;width:240px;height:380px;border-color:#f59e0b;color:#f59e0b;background:#f59e0b11">
+            <span class="mk-n">2</span><span class="mk-lbl">Sidebar nav</span>
+          </div>
+          <div class="mk-box" data-n="3" data-layer="ui" style="left:296px;top:140px;width:780px;height:760px;border-color:#c084fc;color:#c084fc;background:#c084fc11">
+            <span class="mk-n">3</span><span class="mk-lbl">Main feed</span>
+          </div>
+          <div class="mk-box" data-n="4" data-layer="api" style="left:24px;top:560px;width:240px;height:340px;border-color:#f59e0b;color:#f59e0b;background:#f59e0b11">
+            <span class="mk-n">4</span><span class="mk-lbl">Composer</span>
+          </div>
+          <div class="mk-box" data-n="5" data-layer="ui" style="left:24px;top:1580px;width:1052px;height:100px;border-color:#c084fc;color:#c084fc;background:#c084fc11">
+            <span class="mk-n">5</span><span class="mk-lbl">Footer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="callout" data-n="2" data-layer="api" style="border-color:#f59e0b66;color:#fde68a;background:#f59e0b14"><span class="no" style="border-color:#f59e0b">2</span><div class="hd">Sidebar nav</div><div class="pth">nav/Sidebar.tsx</div><div class="dsc">left nav rail</div></div>
+      <div class="callout" data-n="4" data-layer="api" style="border-color:#f59e0b66;color:#fde68a;background:#f59e0b14"><span class="no" style="border-color:#f59e0b">4</span><div class="hd">Composer</div><div class="pth">compose/Editor.tsx</div><div class="dsc">post composer</div></div>
+    </div>
+  </div>
+  <div class="foot">extension-renderer fixture · tour smoke test</div>
+<script>
+  const callouts = Array.from(document.querySelectorAll('.callout'));
+  const boxes = Array.from(document.querySelectorAll('.mk-box'));
+  function lightN(n) { callouts.concat(boxes).forEach(e => e.classList.toggle('lit', e.dataset.n === n)); }
+  function clearLit() { callouts.concat(boxes).forEach(e => e.classList.remove('lit')); }
+
+  // ── Tour player (extension-renderer copy) ──────────────────────────
+  function _clamp01(v) { return Math.max(0, Math.min(1, v)); }
+  function _bz(a1, a2, t) { const m = 1 - t; return 3*a1*m*m*t + 3*a2*m*t*t + t*t*t; }
+  function _bzD(a1, a2, t) { const m = 1 - t; return 3*a1*m*m + 6*(a2-a1)*m*t + 3*(1-a2)*t*t; }
+  function _cubicBezier(x1, y1, x2, y2, t) {
+    const tx = _clamp01(t); let s = tx;
+    for (let i = 0; i < 8; i++) {
+      const cx = _bz(x1, x2, s) - tx; const cd = _bzD(x1, x2, s);
+      if (Math.abs(cx) < 1e-6 || Math.abs(cd) < 1e-6) break;
+      s -= cx / cd;
+    }
+    let lo = 0, hi = 1; s = _clamp01(s);
+    for (let i = 0; i < 10; i++) {
+      const cx = _bz(x1, x2, s);
+      if (Math.abs(cx - tx) < 1e-6) break;
+      if (cx < tx) lo = s; else hi = s;
+      s = (lo + hi) / 2;
+    }
+    return _bz(y1, y2, s);
+  }
+  const _easeSS = (t) => _cubicBezier(0.16, 1, 0.3, 1, t);
+  function _animate(duration, onTick) {
+    return new Promise(resolve => {
+      const start = performance.now();
+      function step(now) {
+        const t = Math.min(1, (now - start) / duration);
+        onTick(_easeSS(t));
+        if (t < 1) requestAnimationFrame(step); else resolve();
+      }
+      requestAnimationFrame(step);
+    });
+  }
+  function _smoothScrollTo(targetY, duration) {
+    const startY = window.scrollY;
+    const dy = Math.max(0, targetY) - startY;
+    if (Math.abs(dy) < 2) return Promise.resolve();
+    return _animate(duration, e => window.scrollTo(0, startY + dy * e));
+  }
+  // ── Pan & zoom on .mockup-inner ────────────────────────────────────
+  const _mockup = document.querySelector('.mockup');
+  const _mockupInner = document.querySelector('.mockup-inner');
+  const _mw = _mockup ? _mockup.clientWidth : 1100;
+  const _mh = _mockup ? _mockup.clientHeight : 1700;
+  let _zoom = { tx: 0, ty: 0, scale: 1 };
+  function _applyZoom(z) {
+    if (!_mockupInner) return;
+    _mockupInner.style.transform = 'translate(' + z.tx + 'px,' + z.ty + 'px) scale(' + z.scale + ')';
+  }
+  function _zoomForBox(box) {
+    if (!box) return { tx: 0, ty: 0, scale: 1 };
+    const L = box.offsetLeft, T = box.offsetTop, W = box.offsetWidth, H = box.offsetHeight;
+    const scale = Math.min(_mw / W, _mh / H) * 0.85;
+    const cx = L + W / 2, cy = T + H / 2;
+    return { tx: _mw / 2 - cx * scale, ty: _mh / 2 - cy * scale, scale };
+  }
+  function _animateZoomTo(target, duration) {
+    const from = { ..._zoom };
+    return _animate(duration, e => {
+      _zoom = {
+        tx: from.tx + (target.tx - from.tx) * e,
+        ty: from.ty + (target.ty - from.ty) * e,
+        scale: from.scale + (target.scale - from.scale) * e,
+      };
+      _applyZoom(_zoom);
+    });
+  }
+  const tourBtn = document.querySelector('[data-toggle="tour"]');
+  let _stopTour = null;
+  function _clearTouringMarks() {
+    document.querySelectorAll('.touring-active').forEach(el => el.classList.remove('touring-active'));
+  }
+  async function runTour() {
+    const seq = callouts.slice().sort((a, b) => +a.dataset.n - +b.dataset.n);
+    if (!seq.length) return;
+    document.body.classList.add('touring');
+    tourBtn.textContent = 'stop';
+    tourBtn.classList.add('on');
+    let stopped = false;
+    _stopTour = () => { stopped = true; };
+    for (const co of seq) {
+      if (stopped) break;
+      clearLit();
+      _clearTouringMarks();
+      const box = document.querySelector('.mk-box[data-n="' + co.dataset.n + '"]');
+      co.classList.add('touring-active');
+      if (box) box.classList.add('touring-active');
+      lightN(co.dataset.n);
+      const focusEl = box || co;
+      const r = focusEl.getBoundingClientRect();
+      const targetY = window.scrollY + r.top - window.innerHeight / 2 + r.height / 2;
+      const zoomTarget = _zoomForBox(box);
+      await Promise.all([
+        _smoothScrollTo(targetY, 700),
+        _animateZoomTo(zoomTarget, 700),
+      ]);
+      if (stopped) break;
+      await new Promise(res => setTimeout(res, 1800));
+    }
+    await _animateZoomTo({ tx: 0, ty: 0, scale: 1 }, 400);
+    _clearTouringMarks();
+    clearLit();
+    document.body.classList.remove('touring');
+    tourBtn.textContent = 'tour';
+    tourBtn.classList.remove('on');
+    _stopTour = null;
+  }
+  if (tourBtn) {
+    tourBtn.addEventListener('click', () => {
+      if (_stopTour) _stopTour();
+      else runTour();
+    });
+  }
+</script>
+</body></html>

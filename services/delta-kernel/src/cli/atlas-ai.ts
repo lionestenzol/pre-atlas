@@ -77,6 +77,28 @@ function readBrainText(file: string): string | null {
   catch { return null; }
 }
 
+// ── Lifecycle manifest guard ──
+// Returns convo_ids whose harvest manifest is mid-lifecycle (PLANNED, BUILDING,
+// REVIEWING) or already terminal (DONE, RESOLVED, DROPPED). Autonomous closers
+// must skip these — the human is still working the thread or already finished it.
+const MID_LIFECYCLE_STATUSES = new Set(['PLANNED', 'BUILDING', 'REVIEWING', 'DONE', 'RESOLVED', 'DROPPED']);
+function midLifecycleIds(): Set<string> {
+  const harvestDir = path.resolve(REPO_ROOT, 'services', 'cognitive-sensor', 'harvest');
+  const ids = new Set<string>();
+  let entries: string[] = [];
+  try { entries = fs.readdirSync(harvestDir); } catch { return ids; }
+  for (const entry of entries) {
+    const manifestPath = path.join(harvestDir, entry, 'manifest.json');
+    try {
+      const m = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      if (MID_LIFECYCLE_STATUSES.has(m.status) && m.convo_id != null) {
+        ids.add(String(m.convo_id));
+      }
+    } catch { /* skip unreadable manifests */ }
+  }
+  return ids;
+}
+
 // ── Cycleboard ──
 
 async function getCycleboardState(): Promise<any> {
@@ -154,7 +176,7 @@ async function getFullStateRaw(fields?: string[]): Promise<{ data: Record<string
   catch { degraded = true; }
 
   let signals: any = null;
-  try { signals = await apiFetch('/api/signals'); sources.push('signals'); }
+  try { signals = await apiFetch('/api/life-signals'); sources.push('signals'); }
   catch {
     signals = {
       energy: readBrainJson('energy_metrics.json'),
@@ -263,31 +285,31 @@ async function cmdOsint() { respond(readBrainJson('osint_feed.json')); }
 
 async function cmdEnergy(args: string[]) {
   if (args.length === 0 || args[0]?.startsWith('--')) {
-    const signals = await apiFetch('/api/signals').catch(() => null);
+    const signals = await apiFetch('/api/life-signals').catch(() => null);
     return respond(signals?.energy ?? readBrainJson('energy_metrics.json'));
   }
   const body: Record<string, any> = {};
   if (args[0] && !args[0].startsWith('--')) body.energy_level = parseInt(args[0]);
   const load = parseFlag(args, 'load'); if (load) body.mental_load = parseInt(load);
   const sleep = parseFlag(args, 'sleep'); if (sleep) body.sleep_quality = parseInt(sleep);
-  respond((await apiFetch('/api/signals/energy', { method: 'POST', body: JSON.stringify(body) })).energy);
+  respond((await apiFetch('/api/life-signals/energy', { method: 'POST', body: JSON.stringify(body) })).energy);
 }
 
 async function cmdFinance(args: string[]) {
   if (args.length === 0) {
-    const signals = await apiFetch('/api/signals').catch(() => null);
+    const signals = await apiFetch('/api/life-signals').catch(() => null);
     return respond(signals?.finance ?? readBrainJson('finance_metrics.json'));
   }
   const body: Record<string, any> = {};
   const r = parseFlag(args, 'runway'); if (r) body.runway_months = parseFloat(r);
   const i = parseFlag(args, 'income'); if (i) body.monthly_income = parseFloat(i);
   const e = parseFlag(args, 'expenses'); if (e) body.monthly_expenses = parseFloat(e);
-  respond((await apiFetch('/api/signals/finance', { method: 'POST', body: JSON.stringify(body) })).finance);
+  respond((await apiFetch('/api/life-signals/finance', { method: 'POST', body: JSON.stringify(body) })).finance);
 }
 
 async function cmdSkills(args: string[]) {
   if (args.length === 0) {
-    const signals = await apiFetch('/api/signals').catch(() => null);
+    const signals = await apiFetch('/api/life-signals').catch(() => null);
     return respond(signals?.skills ?? readBrainJson('skills_metrics.json'));
   }
   const body: Record<string, any> = {};
@@ -295,19 +317,19 @@ async function cmdSkills(args: string[]) {
   if (hasFlag(args, 'learning')) body.active_learning = true;
   const m = parseFlag(args, 'mastery'); if (m) body.mastery_count = parseInt(m);
   const g = parseFlag(args, 'growth'); if (g) body.growth_count = parseInt(g);
-  respond((await apiFetch('/api/signals/skills', { method: 'POST', body: JSON.stringify(body) })).skills);
+  respond((await apiFetch('/api/life-signals/skills', { method: 'POST', body: JSON.stringify(body) })).skills);
 }
 
 async function cmdNetwork(args: string[]) {
   if (args.length === 0) {
-    const signals = await apiFetch('/api/signals').catch(() => null);
+    const signals = await apiFetch('/api/life-signals').catch(() => null);
     return respond(signals?.network ?? readBrainJson('network_metrics.json'));
   }
   const body: Record<string, any> = {};
   const c = parseFlag(args, 'collab'); if (c) body.collaboration_score = parseInt(c);
   const r = parseFlag(args, 'relationships'); if (r) body.active_relationships = parseInt(r);
   const o = parseFlag(args, 'outreach'); if (o) body.outreach_this_week = parseInt(o);
-  respond((await apiFetch('/api/signals/network', { method: 'POST', body: JSON.stringify(body) })).network);
+  respond((await apiFetch('/api/life-signals/network', { method: 'POST', body: JSON.stringify(body) })).network);
 }
 
 // ── Write: Loops ──
@@ -315,13 +337,13 @@ async function cmdNetwork(args: string[]) {
 async function cmdClose(args: string[]) {
   const id = args[0];
   if (!id) return fail('MISSING_ARG', 'Usage: atlas-ai close <loop_id>');
-  respond(await apiFetch('/api/law/close_loop', { method: 'POST', body: JSON.stringify({ loop_id: id, outcome: 'closed', title: 'atlas-ai close' }) }));
+  respond(await apiFetch('/api/law/close_loop', { method: 'POST', body: JSON.stringify({ loop_id: id, outcome: 'closed', title: 'atlas-ai close', status: 'RESOLVED', artifact_path: null, coverage_score: null }) }));
 }
 
 async function cmdArchive(args: string[]) {
   const id = args[0];
   if (!id) return fail('MISSING_ARG', 'Usage: atlas-ai archive <loop_id>');
-  respond(await apiFetch('/api/law/close_loop', { method: 'POST', body: JSON.stringify({ loop_id: id, outcome: 'archived', title: 'atlas-ai archive' }) }));
+  respond(await apiFetch('/api/law/close_loop', { method: 'POST', body: JSON.stringify({ loop_id: id, outcome: 'archived', title: 'atlas-ai archive', status: 'DROPPED', artifact_path: null, coverage_score: null }) }));
 }
 
 // ── Write: Day Plan ──
@@ -623,11 +645,14 @@ async function compoundCloseStale(args: string[]): Promise<any> {
 
   const { data: state } = await getFullStateRaw();
   const now = Date.now();
-  const stale = (state.loops ?? []).filter((l: any) => {
+  const protectedIds = midLifecycleIds();
+  const candidates = (state.loops ?? []).filter((l: any) => {
     const age = l.created_at ? (now - new Date(l.created_at).getTime()) / 86400000 : 999;
     return age > ageDays && (l.score ?? 0) < maxScore;
   });
-  if (stale.length === 0) return { closed: 0 };
+  const stale = candidates.filter((l: any) => !protectedIds.has(String(l.convo_id)));
+  const skippedMidLifecycle = candidates.length - stale.length;
+  if (stale.length === 0) return { closed: 0, skipped_mid_lifecycle: skippedMidLifecycle };
 
   const work = await requestWork(`close-stale (${stale.length} loops)`);
   if (!work.approved) return { executed: false, denied: true, reason: work.reason };
@@ -635,14 +660,14 @@ async function compoundCloseStale(args: string[]): Promise<any> {
   let closed = 0;
   for (const loop of stale) {
     try {
-      await apiFetch('/api/law/close_loop', { method: 'POST', body: JSON.stringify({ loop_id: loop.convo_id, outcome: 'archived', title: 'atlas-ai auto-archive (stale)' }) });
+      await apiFetch('/api/law/close_loop', { method: 'POST', body: JSON.stringify({ loop_id: loop.convo_id, outcome: 'archived', title: 'atlas-ai auto-archive (stale)', status: 'DROPPED', artifact_path: null, coverage_score: null }) });
       closed++;
     } catch (e: any) { debug('close-stale error:', e.message); }
   }
 
   await completeWork(work.job_id);
   const after = await apiFetch('/api/state/unified').catch(() => null);
-  return { closed, new_closure_ratio: after?.derived?.closure_ratio ?? null, new_mode: after?.derived?.mode ?? null };
+  return { closed, skipped_mid_lifecycle: skippedMidLifecycle, new_closure_ratio: after?.derived?.closure_ratio ?? null, new_mode: after?.derived?.mode ?? null };
 }
 
 async function compoundDone(args: string[]): Promise<any> {
@@ -679,7 +704,7 @@ async function compoundCheckpoint(args: string[]): Promise<any> {
 
   const body: Record<string, any> = { energy_level: energyLevel };
   if (load) body.mental_load = parseInt(load);
-  await apiFetch('/api/signals/energy', { method: 'POST', body: JSON.stringify(body) });
+  await apiFetch('/api/life-signals/energy', { method: 'POST', body: JSON.stringify(body) });
 
   const { data: state } = await getFullStateRaw();
   const day = state.day;
@@ -735,7 +760,10 @@ async function compoundDo(): Promise<any> {
   let outcome = 'completed';
   try {
     if (decision.action === 'close-loop' && decision.target) {
-      result = await apiFetch('/api/law/close_loop', { method: 'POST', body: JSON.stringify({ loop_id: decision.target, outcome: 'closed', title: 'atlas-ai auto-close' }) });
+      if (midLifecycleIds().has(String(decision.target))) {
+        return { decision, executed: false, skipped_mid_lifecycle: true };
+      }
+      result = await apiFetch('/api/law/close_loop', { method: 'POST', body: JSON.stringify({ loop_id: decision.target, outcome: 'closed', title: 'atlas-ai auto-close', status: 'RESOLVED', artifact_path: null, coverage_score: null }) });
     } else if (decision.action === 'plan-day') {
       const dayType = (state.energy?.energy_level ?? 50) > 70 ? 'A' : (state.energy?.energy_level ?? 50) > 40 ? 'B' : 'C';
       const date = todayDate(); const cb = await getCycleboardState();

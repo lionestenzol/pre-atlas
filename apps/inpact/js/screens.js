@@ -255,6 +255,18 @@ const ScreenRenderers = {
             `).join('')}
           </div>
         ` : ''}
+
+        <!-- Stream: live Signal.v1 feed from the Optogon stack (Ship Target #1).
+             Populated by apps/inpact/js/signals.js on poll. Rule 6: only signals
+             that don't require attention are listed here; urgent/approval/error
+             surface in the floating banner. -->
+        <div class="td-chapter">
+          <span class="td-chapter-title">Stream</span>
+          <span class="td-chapter-sub">Recent activity from your stack.</span>
+        </div>
+        <div class="td-section" id="ip-stream-list" data-empty-text="Nothing flowing right now. The system will stream completions and status here as it works.">
+          <div style="color:var(--ip-gray-600);font-size:0.8125rem;">Nothing flowing right now. The system will stream completions and status here as it works.</div>
+        </div>
       </div>
     `;
   },

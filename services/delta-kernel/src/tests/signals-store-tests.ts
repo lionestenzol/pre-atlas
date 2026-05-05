@@ -189,6 +189,35 @@ test('resolving twice returns null on second attempt', () => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('re-ingesting a resolved signal preserves resolved state', () => {
+  // Regression guard: optogon retries can re-POST the same signal id.
+  // INSERT OR IGNORE must not stomp resolved_at/resolved_action back to NULL.
+  const dir = tempDir();
+  const store = new SignalsStore(dir, repoRoot);
+  const approval = makeSignal({
+    id: 'sig_reingest',
+    signal_type: 'approval_required',
+    payload: {
+      label: 'X', summary: 'Y', action_required: true,
+      action_options: [{ id: 'approve', label: 'Approve', risk_tier: 'low' }],
+    },
+  });
+  store.ingest(approval);
+  const res = store.resolve('sig_reingest', 'approve');
+  assert(res !== null, 'expected first resolve to succeed');
+  // Re-ingest the same signal id (simulates optogon retry).
+  store.ingest(approval);
+  // It should still be resolved — not back in the active list.
+  const active = store.list();
+  assert(active.length === 0, `expected 0 active after re-ingest, got ${active.length}`);
+  // And resolution record should still exist.
+  const resolutions = store.listResolutions();
+  assert(resolutions.length === 1, 'resolution record should survive re-ingest');
+  assert(resolutions[0].signal_id === 'sig_reingest', 'wrong signal id');
+  store.close();
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('persists across store close + reopen', () => {
   const dir = tempDir();
   const a = new SignalsStore(dir, repoRoot);

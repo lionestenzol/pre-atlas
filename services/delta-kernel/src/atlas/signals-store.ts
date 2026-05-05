@@ -103,9 +103,13 @@ export class SignalsStore {
       throw new SignalValidationError('Signal failed schema validation', messages);
     }
     const signal = payload as Signal;
+    // INSERT OR IGNORE so a duplicate id is a no-op rather than stomping
+    // an already-resolved signal's resolved_at/resolved_action back to NULL.
+    // Optogon retries on transient network errors can replay the same signal;
+    // this preserves any resolution state recorded in the meantime.
     this.db
       .prepare(
-        `INSERT OR REPLACE INTO signals
+        `INSERT OR IGNORE INTO signals
            (id, emitted_at, source_layer, signal_type, priority, payload_json, resolved_at, resolved_action)
          VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)`
       )

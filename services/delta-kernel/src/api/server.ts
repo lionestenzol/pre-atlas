@@ -97,7 +97,7 @@ const aegisClient = new AegisClient('http://localhost:3002', API_KEY ?? '', 5000
 // Auth middleware: require Bearer token on /api/* (except health and token endpoints)
 app.use('/api', (req, res, next) => {
   if (!API_KEY) { next(); return; } // dev mode: no key file = no auth
-  if (req.path === '/health' || req.path === '/services/health' || req.path === '/auth/token') { next(); return; }
+  if (req.path === '/health' || req.path === '/services/health' || req.path === '/auth/token' || req.path === '/cli/manifest' || req.path === '/cli/manifest.html') { next(); return; }
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -543,6 +543,178 @@ app.delete('/api/tasks/:id', (req, res) => {
   }
 
   res.json({ success: true });
+});
+
+// === GOALS ===
+
+type GoalCriterionPayload = { id: string; text: string; done: boolean; done_at?: number | null };
+type GoalStatePayload = {
+  goal_id: string;
+  title: string;
+  deadline: number;
+  projects: string[];
+  done_criteria: GoalCriterionPayload[];
+  status: 'active' | 'done' | 'partial' | 'missed' | 'abandoned';
+  closed_at: number | null;
+};
+
+function slugifyGoal(title: string): string {
+  return (title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 32);
+}
+
+function serializeGoal(entity: { entity_id: string; created_at: number }, state: GoalStatePayload) {
+  const total = (state.done_criteria || []).length;
+  const done = (state.done_criteria || []).filter(c => c.done).length;
+  const daysLeft = Math.ceil((state.deadline - Date.now()) / 86400000);
+  return {
+    id: state.goal_id,
+    entity_id: entity.entity_id,
+    title: state.title,
+    deadline: state.deadline,
+    created_at: entity.created_at,
+    projects: state.projects || [],
+    done_criteria: state.done_criteria || [],
+    status: state.status,
+    closed_at: state.closed_at,
+    progress: { done, total, days_left: daysLeft },
+  };
+}
+
+function findGoalByGoalId(goalIdOrPrefix: string) {
+  const entities = storage.loadEntitiesByType<GoalStatePayload>('goal');
+  const exact = entities.find(e => e.state.goal_id === goalIdOrPrefix);
+  if (exact) return exact;
+  const prefix = entities.filter(e => (e.state.goal_id || '').startsWith(goalIdOrPrefix));
+  return prefix.length === 1 ? prefix[0] : null;
+}
+
+app.get('/api/goals', (req, res) => {
+  const entities = storage.loadEntitiesByType<GoalStatePayload>('goal');
+  const activeOnly = req.query.active === '1' || req.query.active === 'true';
+  const goals = entities
+    .map(e => serializeGoal(e.entity, e.state))
+    .filter(g => !activeOnly || g.status === 'active')
+    .sort((a, b) => a.deadline - b.deadline);
+  res.json({ ok: true, goals });
+});
+
+app.get('/api/goals/:id', (req, res) => {
+  const found = findGoalByGoalId(req.params.id);
+  if (!found) { res.status(404).json({ ok: false, error: 'goal not found' }); return; }
+  res.json({ ok: true, goal: serializeGoal(found.entity, found.state) });
+});
+
+app.post('/api/goals', async (req, res) => {
+  const { title, deadline, projects, criteria } = req.body as {
+    title?: string;
+    deadline?: number | string;
+    projects?: string[];
+    criteria?: string[];
+  };
+  if (!title || typeof title !== 'string') {
+    res.status(400).json({ ok: false, error: 'title required' }); return;
+  }
+  const deadlineMs = typeof deadline === 'number' ? deadline : Date.parse(String(deadline || ''));
+  if (!deadlineMs || Number.isNaN(deadlineMs)) {
+    res.status(400).json({ ok: false, error: 'deadline required (epoch ms or ISO string)' }); return;
+  }
+  const criteriaList: GoalCriterionPayload[] = (criteria || []).map((text, i) => ({
+    id: 'c' + (i + 1),
+    text: String(text),
+    done: false,
+    done_at: null,
+  }));
+  const goalIdShort = 'g-' + Date.now().toString(36) + '-' + (slugifyGoal(title) || 'goal');
+  const goalState: GoalStatePayload = {
+    goal_id: goalIdShort,
+    title,
+    deadline: deadlineMs,
+    projects: Array.isArray(projects) && projects.length ? projects : ['Pre Atlas'],
+    done_criteria: criteriaList,
+    status: 'active',
+    closed_at: null,
+  };
+  const result = await createEntity('goal', goalState);
+  storage.saveEntity(result.entity, result.state);
+  storage.appendDelta(result.delta);
+  emitDeltaCreated(result.delta);
+  emitUnifiedStateIfChanged();
+  res.json({ ok: true, goal: serializeGoal(result.entity, result.state) });
+});
+
+app.post('/api/goals/:id/criteria/:cid/done', async (req, res) => {
+  const found = findGoalByGoalId(req.params.id);
+  if (!found) { res.status(404).json({ ok: false, error: 'goal not found' }); return; }
+  const cid = req.params.cid;
+  const state = found.state;
+  const criterion = (state.done_criteria || []).find(c => c.id === cid);
+  if (!criterion) { res.status(404).json({ ok: false, error: 'criterion not found' }); return; }
+  if (criterion.done) {
+    res.json({ ok: true, goal: serializeGoal(found.entity, state), already_done: true });
+    return;
+  }
+  const idx = state.done_criteria.findIndex(c => c.id === cid);
+  const ts = now();
+  const patches = [
+    { op: 'replace' as const, path: `/done_criteria/${idx}/done`, value: true },
+    { op: 'replace' as const, path: `/done_criteria/${idx}/done_at`, value: ts },
+  ];
+  const result = await createDelta(found.entity, state as unknown as Record<string, unknown>, patches, 'atlas-goal-cli');
+  storage.saveEntity(result.entity, result.state);
+  storage.appendDelta(result.delta);
+  emitDeltaCreated(result.delta);
+  emitUnifiedStateIfChanged();
+  res.json({ ok: true, goal: serializeGoal(result.entity, result.state as unknown as GoalStatePayload) });
+});
+
+app.post('/api/goals/:id/criteria/:cid/undo', async (req, res) => {
+  const found = findGoalByGoalId(req.params.id);
+  if (!found) { res.status(404).json({ ok: false, error: 'goal not found' }); return; }
+  const cid = req.params.cid;
+  const state = found.state;
+  const idx = (state.done_criteria || []).findIndex(c => c.id === cid);
+  if (idx < 0) { res.status(404).json({ ok: false, error: 'criterion not found' }); return; }
+  const patches = [
+    { op: 'replace' as const, path: `/done_criteria/${idx}/done`, value: false },
+    { op: 'replace' as const, path: `/done_criteria/${idx}/done_at`, value: null },
+  ];
+  const result = await createDelta(found.entity, state as unknown as Record<string, unknown>, patches, 'atlas-goal-cli');
+  storage.saveEntity(result.entity, result.state);
+  storage.appendDelta(result.delta);
+  res.json({ ok: true, goal: serializeGoal(result.entity, result.state as unknown as GoalStatePayload) });
+});
+
+app.post('/api/goals/:id/close', async (req, res) => {
+  const found = findGoalByGoalId(req.params.id);
+  if (!found) { res.status(404).json({ ok: false, error: 'goal not found' }); return; }
+  const { status } = req.body as { status?: GoalStatePayload['status'] };
+  let finalStatus: GoalStatePayload['status'];
+  if (status) {
+    if (!['done', 'partial', 'missed', 'abandoned'].includes(status)) {
+      res.status(400).json({ ok: false, error: 'invalid status' }); return;
+    }
+    finalStatus = status;
+  } else {
+    const criteria = found.state.done_criteria || [];
+    const total = criteria.length;
+    const done = criteria.filter(c => c.done).length;
+    finalStatus = total > 0 && done === total ? 'done' : done > 0 ? 'partial' : 'missed';
+  }
+  const ts = now();
+  const patches = [
+    { op: 'replace' as const, path: '/status', value: finalStatus },
+    { op: 'replace' as const, path: '/closed_at', value: ts },
+  ];
+  const result = await createDelta(found.entity, found.state as unknown as Record<string, unknown>, patches, 'atlas-goal-cli');
+  storage.saveEntity(result.entity, result.state);
+  storage.appendDelta(result.delta);
+  emitDeltaCreated(result.delta);
+  emitUnifiedStateIfChanged();
+  res.json({ ok: true, goal: serializeGoal(result.entity, result.state as unknown as GoalStatePayload) });
 });
 
 // === INGEST ===
@@ -1067,7 +1239,7 @@ async function processClosureEvent(closureInput: { loop_id?: string; title?: str
   // Load closures registry
   const closuresPath = path.join(cognitiveSensorDir, 'closures.json');
   let closuresRegistry: {
-    closures: Array<{ ts: number; loop_id: string | null; title: string | null; outcome: string }>;
+    closures: Array<{ ts: number; loop_id: string | null; title: string | null; outcome: string; artifact_path?: string | null; coverage_score?: number | null; status?: string }>;
     stats: {
       total_closures: number;
       closures_today: number;
@@ -1253,10 +1425,25 @@ async function processClosureEvent(closureInput: { loop_id?: string; title?: str
  * Idempotency: duplicate closures (same loop_id) are rejected.
  */
 app.post('/api/law/close_loop', async (req, res) => {
-  const { loop_id, title, outcome } = req.body;
+  const { loop_id, title, outcome, artifact_path, coverage_score, status } = req.body as {
+    loop_id?: string;
+    title?: string;
+    outcome?: string;
+    artifact_path?: string | null;
+    coverage_score?: number | null;
+    status?: 'DONE' | 'RESOLVED' | 'DROPPED';
+  };
 
   if (!outcome || (outcome !== 'closed' && outcome !== 'archived')) {
     res.status(400).json({ error: 'outcome must be "closed" or "archived"' });
+    return;
+  }
+  if (status && !['DONE', 'RESOLVED', 'DROPPED'].includes(status)) {
+    res.status(400).json({ error: 'status must be one of DONE | RESOLVED | DROPPED' });
+    return;
+  }
+  if (coverage_score != null && (typeof coverage_score !== 'number' || coverage_score < 0 || coverage_score > 1)) {
+    res.status(400).json({ error: 'coverage_score must be a number between 0 and 1' });
     return;
   }
 
@@ -1269,7 +1456,7 @@ app.post('/api/law/close_loop', async (req, res) => {
   // === A) COGNITIVE REGISTRY — closures.json ===
   const closuresPath = path.join(cognitiveSensorDir, 'closures.json');
   let closuresRegistry: {
-    closures: Array<{ ts: number; loop_id: string | null; title: string | null; outcome: string }>;
+    closures: Array<{ ts: number; loop_id: string | null; title: string | null; outcome: string; artifact_path?: string | null; coverage_score?: number | null; status?: string }>;
     stats: {
       total_closures: number;
       closures_today: number;
@@ -1317,6 +1504,9 @@ app.post('/api/law/close_loop', async (req, res) => {
     loop_id: loop_id || null,
     title: title || null,
     outcome,
+    artifact_path: artifact_path ?? null,
+    coverage_score: coverage_score ?? null,
+    status: status ?? (outcome === 'closed' ? 'RESOLVED' : 'DROPPED'),
   };
 
   // Append to registry
@@ -1402,7 +1592,7 @@ app.post('/api/law/close_loop', async (req, res) => {
       }
 
       // Append to loops_closed.json
-      let loopsClosed: Array<{ loop_id: string; title: string | null; closed_at: number; outcome: string }> = [];
+      let loopsClosed: Array<{ loop_id: string; title: string | null; closed_at: number; outcome: string; artifact_path?: string | null; coverage_score?: number | null; status?: string }> = [];
       if (fs.existsSync(loopsClosedPath)) {
         loopsClosed = JSON.parse(fs.readFileSync(loopsClosedPath, 'utf-8'));
       }
@@ -1411,6 +1601,9 @@ app.post('/api/law/close_loop', async (req, res) => {
         title: title || null,
         closed_at: timestamp,
         outcome,
+        artifact_path: artifact_path ?? null,
+        coverage_score: coverage_score ?? null,
+        status: status ?? (outcome === 'closed' ? 'RESOLVED' : 'DROPPED'),
       });
       fs.writeFileSync(loopsClosedPath, JSON.stringify(loopsClosed, null, 2));
     } catch (e) {
@@ -1791,10 +1984,11 @@ app.get('/api/work/metrics', (_req, res) => {
   });
 });
 
-// === SIGNALS (Phase 3C of doctrine/04_BUILD_PLAN.md) ===
+// === SIGNALS (Phase 3C of doctrine/04_BUILD_PLAN.md, Ship Target #1) ===
 // Accepts Signal.v1 payloads from any layer, exposes them for InPACT.
+// Persisted to SQLite (signals.db) by services/delta-kernel/src/atlas/signals-store.ts.
 
-app.post('/api/signals/ingest', (req, res) => {
+function handleSignalIngest(req: express.Request, res: express.Response): void {
   try {
     const signal = ingestSignal(repoRoot, req.body);
     res.status(202).json({ ok: true, signal_id: signal.id });
@@ -1806,11 +2000,16 @@ app.post('/api/signals/ingest', (req, res) => {
     const message = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({ ok: false, error: message });
   }
-});
+}
+
+// Canonical: POST /api/signals
+app.post('/api/signals', handleSignalIngest);
+// Deprecated alias: POST /api/signals/ingest (kept for one release; no callers remain after Ship #1)
+app.post('/api/signals/ingest', handleSignalIngest);
 
 app.get('/api/signals', (req, res) => {
   const since = typeof req.query.since === 'string' ? req.query.since : undefined;
-  res.json({ ok: true, signals: listSignals(since) });
+  res.json({ ok: true, signals: listSignals(since, repoRoot) });
 });
 
 app.post('/api/signals/:id/resolve', (req, res) => {
@@ -1822,7 +2021,7 @@ app.post('/api/signals/:id/resolve', (req, res) => {
   }
   const resolution = resolveSignal(signalId, actionId);
   if (!resolution) {
-    res.status(404).json({ ok: false, error: `Signal ${signalId} not found` });
+    res.status(404).json({ ok: false, error: `Signal ${signalId} not found or already resolved` });
     return;
   }
   res.json({ ok: true, resolution });
@@ -2218,6 +2417,158 @@ app.get('/api/notifications', (req, res) => {
   res.json({ ok: true, events: filtered });
 });
 
+// === CLI MANIFEST (machine-readable catalog for AI agents) ===
+
+app.get('/api/cli/manifest', (req, res) => {
+  const manifestPath = path.resolve(cognitiveSensorDir, 'cli_manifest.json');
+  try {
+    const raw = fs.readFileSync(manifestPath, 'utf-8');
+    const manifest = JSON.parse(raw);
+    res.json({ ok: true, data: manifest });
+  } catch (e: unknown) {
+    res.status(404).json({
+      ok: false,
+      error: {
+        code: 'MANIFEST_NOT_FOUND',
+        message: `cli_manifest.json not found at ${manifestPath}`,
+        details: e instanceof Error ? e.message : String(e),
+      },
+    });
+  }
+});
+
+app.get('/api/cli/manifest.html', (req, res) => {
+  const manifestPath = path.resolve(cognitiveSensorDir, 'cli_manifest.json');
+  let manifest: any;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  } catch (e: unknown) {
+    res.status(404).type('text/html').send(`<h1>cli_manifest.json not found</h1><pre>${e instanceof Error ? e.message : String(e)}</pre>`);
+    return;
+  }
+
+  const esc = (s: unknown): string => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  const AUTONOMY_COLOR: Record<string, string> = { human: '#4ade80', scheduled: '#60a5fa', autonomous: '#f87171' };
+
+  const clis = manifest.clis ?? {};
+  const cliNames = Object.keys(clis);
+  const totalCommands = cliNames.reduce((n, k) => n + Object.keys(clis[k].commands ?? {}).length, 0);
+
+  const header = `
+    <header>
+      <h1>Pre Atlas CLI Catalog</h1>
+      <div class="meta">
+        <span>v${esc(manifest.version)}</span>
+        <span>generated ${esc(manifest.generated_at)}</span>
+        <span><b>${cliNames.length}</b> CLIs</span>
+        <span><b>${totalCommands}</b> commands</span>
+      </div>
+      <div class="jump">
+        ${cliNames.map((n) => `<a href="#${esc(n)}">${esc(n)}</a>`).join(' · ')}
+      </div>
+    </header>
+  `;
+
+  const cliSections = cliNames.map((name) => {
+    const cli = clis[name];
+    const auton = String(cli.autonomy ?? 'human');
+    const color = AUTONOMY_COLOR[auton] ?? '#888';
+    const cmds = cli.commands ?? {};
+    const cmdRows = Object.keys(cmds).map((cname) => {
+      const c = cmds[cname];
+      const args = (c.args ?? []).join(' ') || '<span class="muted">-</span>';
+      return `<tr>
+        <td class="cmd"><code>${esc(cname)}</code></td>
+        <td class="args"><code>${args}</code></td>
+        <td class="desc">${esc(c.description)}</td>
+        <td class="example"><code>${esc(c.example)}</code></td>
+      </tr>`;
+    }).join('');
+
+    const readsList = (cli.reads ?? []).map((r: string) => `<li><code>${esc(r)}</code></li>`).join('') || '<li class="muted">none</li>';
+    const writesList = (cli.writes ?? []).map((w: string) => `<li><code>${esc(w)}</code></li>`).join('') || '<li class="muted">none</li>';
+
+    return `
+      <section id="${esc(name)}" class="cli">
+        <div class="cli-head">
+          <h2><span class="name">${esc(name)}</span> <span class="autonomy" style="background:${color}">${esc(auton)}</span></h2>
+          <div class="path"><code>${esc(cli.path)}</code></div>
+        </div>
+        <p class="desc">${esc(cli.description ?? '')}</p>
+        <div class="metagrid">
+          <div><strong>Runtime:</strong> <code>${esc(cli.runtime)}</code></div>
+          <div><strong>Help:</strong> <code>${esc(cli.help_invocation)}</code></div>
+          ${cli.launcher ? `<div><strong>Launcher:</strong> <code>${esc(cli.launcher)}</code></div>` : ''}
+          ${cli.output_format ? `<div><strong>Output:</strong> ${esc(cli.output_format)}</div>` : ''}
+          ${cli.safety ? `<div class="safety"><strong>Safety:</strong> ${esc(cli.safety)}</div>` : ''}
+        </div>
+        <details class="io"><summary>Reads / Writes</summary>
+          <div class="io-grid">
+            <div><strong>Reads</strong><ul>${readsList}</ul></div>
+            <div><strong>Writes</strong><ul>${writesList}</ul></div>
+          </div>
+        </details>
+        <table class="commands">
+          <thead><tr><th>Command</th><th>Args</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>${cmdRows}</tbody>
+        </table>
+      </section>
+    `;
+  }).join('');
+
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pre Atlas CLI Catalog</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background: #0b0f17; color: #e5e7eb; }
+  header { padding: 32px 40px 20px; border-bottom: 1px solid #1f2937; background: #0f172a; position: sticky; top: 0; z-index: 10; }
+  h1 { margin: 0 0 8px; font-size: 24px; color: #f3f4f6; }
+  header .meta { display: flex; gap: 16px; font-size: 12px; color: #9ca3af; margin-bottom: 12px; }
+  header .meta b { color: #e5e7eb; }
+  header .jump { font-size: 13px; color: #9ca3af; }
+  header .jump a { color: #60a5fa; text-decoration: none; margin-right: 2px; }
+  header .jump a:hover { text-decoration: underline; }
+  main { padding: 0 40px 40px; max-width: 1200px; margin: 0 auto; }
+  section.cli { margin-top: 32px; padding: 20px 24px; background: #111827; border: 1px solid #1f2937; border-radius: 10px; }
+  .cli-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 4px; }
+  h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+  .name { color: #f3f4f6; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .autonomy { font-size: 11px; padding: 2px 8px; border-radius: 4px; color: #0b0f17; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .path { font-size: 12px; color: #6b7280; }
+  p.desc { color: #d1d5db; font-size: 14px; margin: 10px 0; }
+  .metagrid { display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; color: #9ca3af; margin: 12px 0; }
+  .metagrid code { color: #e5e7eb; }
+  .safety { color: #fbbf24 !important; flex-basis: 100%; }
+  details.io { margin: 12px 0; padding: 8px 12px; background: #0b0f17; border: 1px solid #1f2937; border-radius: 6px; font-size: 13px; }
+  details.io summary { cursor: pointer; color: #9ca3af; user-select: none; }
+  .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+  .io-grid ul { padding-left: 18px; margin: 4px 0; color: #d1d5db; }
+  .muted { color: #6b7280; }
+  table.commands { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+  table.commands th { text-align: left; padding: 8px 10px; font-weight: 600; color: #9ca3af; border-bottom: 1px solid #1f2937; background: #0b0f17; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  table.commands td { padding: 8px 10px; border-bottom: 1px solid #1f2937; vertical-align: top; }
+  table.commands tr:last-child td { border-bottom: none; }
+  table.commands td.cmd code { color: #a78bfa; font-weight: 600; }
+  table.commands td.args code { color: #fbbf24; }
+  table.commands td.desc { color: #d1d5db; }
+  table.commands td.example code { color: #6ee7b7; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background: #0b0f17; padding: 1px 4px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  ${header}
+  <main>
+    ${cliSections}
+  </main>
+</body>
+</html>`;
+  res.type('text/html').send(html);
+});
+
 // === CYCLEBOARD PERSISTENCE ===
 
 app.get('/api/cycleboard', (req, res) => {
@@ -2510,11 +2861,14 @@ function saveSignals(signals: LifeSignals): void {
   }
 }
 
-app.get('/api/signals', (_req, res) => {
+// Life-signals: personal energy/finance/skills/network metrics. Distinct from Optogon Signal.v1.
+// Renamed from /api/signals to /api/life-signals to free the canonical signal namespace
+// for the Optogon stack (Ship Target #1, doctrine/02_ROSETTA_STONE.md Contract 5).
+app.get('/api/life-signals', (_req, res) => {
   res.json(loadSignals());
 });
 
-app.post('/api/signals/energy', (req, res) => {
+app.post('/api/life-signals/energy', (req, res) => {
   const body = req.body ?? {};
   const signals = loadSignals();
 
@@ -2538,7 +2892,7 @@ app.post('/api/signals/energy', (req, res) => {
   res.json(signals);
 });
 
-app.post('/api/signals/finance', (req, res) => {
+app.post('/api/life-signals/finance', (req, res) => {
   const body = req.body ?? {};
   const signals = loadSignals();
 
@@ -2558,7 +2912,7 @@ app.post('/api/signals/finance', (req, res) => {
   res.json(signals);
 });
 
-app.post('/api/signals/skills', (req, res) => {
+app.post('/api/life-signals/skills', (req, res) => {
   const body = req.body ?? {};
   const signals = loadSignals();
 
@@ -2579,7 +2933,7 @@ app.post('/api/signals/skills', (req, res) => {
   res.json(signals);
 });
 
-app.post('/api/signals/network', (req, res) => {
+app.post('/api/life-signals/network', (req, res) => {
   const body = req.body ?? {};
   const signals = loadSignals();
 
@@ -2597,7 +2951,7 @@ app.post('/api/signals/network', (req, res) => {
   res.json(signals);
 });
 
-app.post('/api/signals/bulk', (req, res) => {
+app.post('/api/life-signals/bulk', (req, res) => {
   const body = req.body ?? {};
   const signals = loadSignals();
 

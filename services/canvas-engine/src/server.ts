@@ -1,3 +1,4 @@
+import './load-env.js'; // MUST be first: loads .env before any process.env read
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express, { type Request, type Response } from 'express';
@@ -7,8 +8,10 @@ import { VENDOR_INFO } from './vendor/lovable/VENDOR_SHA.js';
 import { VitePool } from './sandbox/vite-pool.js';
 import { SitepullResolver } from './pipeline/sitepull-resolver.js';
 import { runUrlToClone, type CloneEvent } from './pipeline/url-to-clone.js';
+import { runImageToClone } from './pipeline/image-to-clone.js';
 import { SessionStore } from './pipeline/session-store.js';
 import { runEdit, type EditEventStream } from './pipeline/edit-loop.js';
+import { runImageEdit } from './pipeline/image-edit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
@@ -19,14 +22,19 @@ const PORT = Number(process.env.CANVAS_ENGINE_PORT ?? 3050);
 const VERSION = '0.1.0';
 const PHASE = 3;
 
-const cloneRequestSchema = z.object({
-  url: z.string().url(),
-  intent: z.string().optional(),
-});
+const cloneRequestSchema = z
+  .object({
+    url: z.string().url().optional(),
+    image: z.string().min(1).optional(),
+    intent: z.string().optional(),
+  })
+  .refine((body) => (body.url ? 1 : 0) + (body.image ? 1 : 0) === 1, {
+    message: 'provide exactly one of "url" or "image"',
+  });
 
 const editRequestSchema = z.object({
   sessionId: z.string().min(1),
-  targetId: z.string().min(1),
+  targetId: z.string().min(1).optional(),
   intent: z.string().min(1),
 });
 
@@ -53,7 +61,8 @@ function writeSseEvent(
 }
 
 const app = express();
-app.use(express.json({ limit: '2mb' }));
+// 16mb · base64 screenshots for the /clone image (vision) path can be several MB
+app.use(express.json({ limit: '16mb' }));
 
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
@@ -111,17 +120,29 @@ app.post('/clone', async (req: Request, res: Response) => {
     return;
   }
 
+  // The image (vision) path uses the claude CLI by default (no key). An API key
+  // is only an optional SDK fallback; empty string -> undefined so it's not
+  // mistaken for a real key.
+  const anthropicApiKey = process.env.ANTHROPIC_API_KEY || undefined;
+
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
   try {
-    for await (const event of runUrlToClone(body, {
-      pool,
-      resolveCapture: (url) => resolver.resolve(url),
-      store,
-    })) {
+    const events: AsyncGenerator<CloneEvent> =
+      body.image !== undefined
+        ? runImageToClone(
+            { image: body.image, intent: body.intent },
+            { pool, apiKey: anthropicApiKey, store },
+          )
+        : runUrlToClone(
+            { url: body.url as string, intent: body.intent },
+            { pool, resolveCapture: (url) => resolver.resolve(url), store },
+          );
+
+    for await (const event of events) {
       writeSseEvent(res, event);
     }
   } catch (err) {
@@ -148,13 +169,46 @@ app.post('/edit', async (req: Request, res: Response) => {
     return;
   }
 
+  const state = store.getState(body.sessionId);
+  if (state === undefined) {
+    res.status(404).json({ ok: false, error: 'session_not_found' });
+    return;
+  }
+
+  // Image clones edit via the claude CLI (no key; key is optional SDK fallback).
+  // Url clones use the deterministic region edit-loop (need an anatomy targetId).
+  const anthropicApiKey = process.env.ANTHROPIC_API_KEY || undefined;
+  if (state.source !== 'image' && (body.targetId ?? '').length === 0) {
+    res.status(400).json({
+      ok: false,
+      error: 'missing_target',
+      detail: 'url clones require a targetId (anatomy region/chain id) to edit.',
+    });
+    return;
+  }
+
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
   try {
-    for await (const event of runEdit(body, { pool, store })) {
+    const events: AsyncGenerator<EditEventStream> =
+      state.source === 'image'
+        ? runImageEdit(
+            { sessionId: body.sessionId, intent: body.intent },
+            { pool, store, apiKey: anthropicApiKey },
+          )
+        : runEdit(
+            {
+              sessionId: body.sessionId,
+              targetId: body.targetId as string,
+              intent: body.intent,
+            },
+            { pool, store },
+          );
+
+    for await (const event of events) {
       writeSseEvent(res, event);
     }
   } catch (err) {

@@ -9,10 +9,13 @@ export interface EditEvent {
   message?: string;
 }
 
+export type CloneSource = 'url' | 'image';
+
 export interface CloneSessionState {
   sessionId: string;
-  envelope: AnatomyV1;
-  capturePath: string;
+  source: CloneSource;
+  envelope?: AnatomyV1; // present for url clones; absent for image (vision) clones
+  capturePath?: string; // url clones only
   url: string;
   rootDir: string;
   edits: EditEvent[];
@@ -21,8 +24,9 @@ export interface CloneSessionState {
 
 export interface RegisterCloneArgs {
   sessionId: string;
-  envelope: AnatomyV1;
-  capturePath: string;
+  source?: CloneSource; // defaults to 'url' for back-compat
+  envelope?: AnatomyV1;
+  capturePath?: string;
   url: string;
   rootDir: string;
 }
@@ -33,6 +37,7 @@ export class SessionStore {
   public registerClone(args: RegisterCloneArgs): CloneSessionState {
     const state: CloneSessionState = {
       sessionId: args.sessionId,
+      source: args.source ?? 'url',
       envelope: args.envelope,
       capturePath: args.capturePath,
       url: args.url,

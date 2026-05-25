@@ -8,7 +8,9 @@
     "start": "tsx src/server.ts",
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "smoke": "node scripts/smoke-image-edit.mjs",
+    "smoke:clone": "node scripts/smoke-image-clone.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",

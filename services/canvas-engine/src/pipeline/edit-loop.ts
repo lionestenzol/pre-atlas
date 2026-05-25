@@ -154,6 +154,7 @@ interface FileChange {
 
 async function buildFileChanges(
   state: CloneSessionState,
+  envelope: AnatomyV1,
   target: EditTarget,
   edit: DeterministicEdit,
 ): Promise<{ files: FileChange[]; outcome: EditEvent['outcome']; message?: string }> {
@@ -161,7 +162,7 @@ async function buildFileChanges(
     return { files: [], outcome: 'unresolved', message: `id "${target.id}" not in regions[] or chains[]` };
   }
 
-  const componentNames = buildSeenNameMap(state.envelope);
+  const componentNames = buildSeenNameMap(envelope);
 
   if (target.kind === 'region') {
     const region = target.region;
@@ -233,6 +234,16 @@ export async function* runEdit(
     return;
   }
 
+  const envelope = state.envelope;
+  if (envelope === undefined) {
+    yield {
+      type: 'error',
+      phase: 'resolve',
+      message: `session ${opts.sessionId} is an image clone · region edits need the LLM edit path`,
+    };
+    return;
+  }
+
   if (deps.pool.getSession(opts.sessionId) === undefined) {
     yield { type: 'error', phase: 'resolve', message: `session ${opts.sessionId} not active in pool` };
     return;
@@ -242,7 +253,7 @@ export async function* runEdit(
 
   let prompt: string;
   try {
-    prompt = buildEditPrompt(state.envelope, { id: opts.targetId, intent: opts.intent });
+    prompt = buildEditPrompt(envelope, { id: opts.targetId, intent: opts.intent });
   } catch (err) {
     yield { type: 'error', phase: 'edit-prompt', message: formatErrorMessage(err) };
     return;
@@ -251,13 +262,13 @@ export async function* runEdit(
 
   yield { type: 'status', phase: 'parse-intent', message: 'parsing intent (deterministic stub)' };
   const edit = parseDeterministicIntent(opts.intent);
-  const target = resolveEditTarget(state.envelope, opts.targetId);
+  const target = resolveEditTarget(envelope, opts.targetId);
 
   yield { type: 'status', phase: 'apply', message: `applying ${edit.kind} edit` };
 
   let result: { files: FileChange[]; outcome: EditEvent['outcome']; message?: string };
   try {
-    result = await buildFileChanges(state, target, edit);
+    result = await buildFileChanges(state, envelope, target, edit);
   } catch (err) {
     const message = formatErrorMessage(err);
     yield { type: 'error', phase: 'apply', message };

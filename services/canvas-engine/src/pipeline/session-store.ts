@@ -11,10 +11,18 @@ export interface EditEvent {
 
 export type CloneSource = 'url' | 'image';
 
+// How the JSX was produced · drives the edit method (see server /edit):
+//   'deterministic' (url + structure-image) → region edit-loop (needs a targetId)
+//   'llm'           (vision + fused image)   → free-form claude edit
+export type CloneGenerator = 'deterministic' | 'llm';
+
 export interface CloneSessionState {
   sessionId: string;
   source: CloneSource;
-  envelope?: AnatomyV1; // present for url clones; absent for image (vision) clones
+  generator: CloneGenerator;
+  // the "map" · present for url, structure-image, and fused clones; absent for
+  // pixel-only vision clones
+  envelope?: AnatomyV1;
   capturePath?: string; // url clones only
   url: string;
   rootDir: string;
@@ -25,6 +33,7 @@ export interface CloneSessionState {
 export interface RegisterCloneArgs {
   sessionId: string;
   source?: CloneSource; // defaults to 'url' for back-compat
+  generator?: CloneGenerator; // defaults to 'deterministic'
   envelope?: AnatomyV1;
   capturePath?: string;
   url: string;
@@ -38,6 +47,7 @@ export class SessionStore {
     const state: CloneSessionState = {
       sessionId: args.sessionId,
       source: args.source ?? 'url',
+      generator: args.generator ?? 'deterministic',
       envelope: args.envelope,
       capturePath: args.capturePath,
       url: args.url,

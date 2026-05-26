@@ -9,6 +9,8 @@ import { VitePool } from './sandbox/vite-pool.js';
 import { SitepullResolver } from './pipeline/sitepull-resolver.js';
 import { runUrlToClone, type CloneEvent } from './pipeline/url-to-clone.js';
 import { runImageToClone } from './pipeline/image-to-clone.js';
+import { runImageToEnvelope } from './pipeline/image-to-envelope.js';
+import { runImageToCloneGuided } from './pipeline/image-to-clone-guided.js';
 import { SessionStore } from './pipeline/session-store.js';
 import { runEdit, type EditEventStream } from './pipeline/edit-loop.js';
 import { runImageEdit } from './pipeline/image-edit.js';
@@ -27,6 +29,12 @@ const cloneRequestSchema = z
     url: z.string().url().optional(),
     image: z.string().min(1).optional(),
     intent: z.string().optional(),
+    // image path only · how to clone a screenshot:
+    //   'vision'    = pixel-faithful LLM→code (default · the diagonal shortcut)
+    //   'structure' = LLM→envelope→deterministic skeleton (structure, canonical)
+    //   'fused'     = LLM→envelope, then structure-guided vision codegen
+    //                 (1:1 look + structure · the hub fusion)
+    via: z.enum(['vision', 'structure', 'fused']).optional(),
   })
   .refine((body) => (body.url ? 1 : 0) + (body.image ? 1 : 0) === 1, {
     message: 'provide exactly one of "url" or "image"',
@@ -131,16 +139,22 @@ app.post('/clone', async (req: Request, res: Response) => {
   res.flushHeaders();
 
   try {
-    const events: AsyncGenerator<CloneEvent> =
-      body.image !== undefined
-        ? runImageToClone(
-            { image: body.image, intent: body.intent },
-            { pool, apiKey: anthropicApiKey, store },
-          )
-        : runUrlToClone(
-            { url: body.url as string, intent: body.intent },
-            { pool, resolveCapture: (url) => resolver.resolve(url), store },
-          );
+    const imageDeps = { pool, apiKey: anthropicApiKey, store };
+    let events: AsyncGenerator<CloneEvent>;
+    if (body.image !== undefined) {
+      const imageOpts = { image: body.image, intent: body.intent };
+      events =
+        body.via === 'structure'
+          ? runImageToEnvelope(imageOpts, imageDeps)
+          : body.via === 'fused'
+            ? runImageToCloneGuided(imageOpts, imageDeps)
+            : runImageToClone(imageOpts, imageDeps);
+    } else {
+      events = runUrlToClone(
+        { url: body.url as string, intent: body.intent },
+        { pool, resolveCapture: (url) => resolver.resolve(url), store },
+      );
+    }
 
     for await (const event of events) {
       writeSseEvent(res, event);
@@ -175,14 +189,21 @@ app.post('/edit', async (req: Request, res: Response) => {
     return;
   }
 
-  // Image clones edit via the claude CLI (no key; key is optional SDK fallback).
-  // Url clones use the deterministic region edit-loop (need an anatomy targetId).
+  // A clone carrying an AnatomyV1 envelope (url clones, and image clones cloned
+  // via the structure/envelope path) uses the deterministic region edit-loop,
+  // which needs a targetId. An envelope-less vision clone edits via the claude
+  // CLI free-form path (no key; key is optional SDK fallback).
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY || undefined;
-  if (state.source !== 'image' && (body.targetId ?? '').length === 0) {
+  // Deterministic region edit-loop only when the JSX was deterministically
+  // emitted (url + structure-image). AI-authored clones (vision + fused) edit via
+  // the free-form claude path even if they carry an envelope (the map).
+  const useDeterministic =
+    state.envelope !== undefined && state.generator !== 'llm';
+  if (useDeterministic && (body.targetId ?? '').length === 0) {
     res.status(400).json({
       ok: false,
       error: 'missing_target',
-      detail: 'url clones require a targetId (anatomy region/chain id) to edit.',
+      detail: 'deterministic clones require a targetId (region/chain id) to edit.',
     });
     return;
   }
@@ -193,20 +214,19 @@ app.post('/edit', async (req: Request, res: Response) => {
   res.flushHeaders();
 
   try {
-    const events: AsyncGenerator<EditEventStream> =
-      state.source === 'image'
-        ? runImageEdit(
-            { sessionId: body.sessionId, intent: body.intent },
-            { pool, store, apiKey: anthropicApiKey },
-          )
-        : runEdit(
-            {
-              sessionId: body.sessionId,
-              targetId: body.targetId as string,
-              intent: body.intent,
-            },
-            { pool, store },
-          );
+    const events: AsyncGenerator<EditEventStream> = useDeterministic
+      ? runEdit(
+          {
+            sessionId: body.sessionId,
+            targetId: body.targetId as string,
+            intent: body.intent,
+          },
+          { pool, store },
+        )
+      : runImageEdit(
+          { sessionId: body.sessionId, intent: body.intent },
+          { pool, store, apiKey: anthropicApiKey },
+        );
 
     for await (const event of events) {
       writeSseEvent(res, event);
@@ -230,6 +250,32 @@ app.get('/sessions/:sessionId/edits', (req: Request, res: Response) => {
     return;
   }
   res.json({ sessionId, edits: state.edits });
+});
+
+// The "map": the AnatomyV1 envelope behind a clone. Present for url clones and
+// for image clones cloned via the structure/envelope path; absent for vision
+// (pixel-faithful) image clones.
+app.get('/sessions/:sessionId/envelope', (req: Request, res: Response) => {
+  const { sessionId } = req.params as { sessionId: string };
+  const state = store.getState(sessionId);
+  if (state === undefined) {
+    res.status(404).json({ ok: false, error: 'session_not_found' });
+    return;
+  }
+  if (state.envelope === undefined) {
+    res.status(409).json({
+      ok: false,
+      error: 'no_envelope',
+      detail: 'this clone has no anatomy envelope (vision image clone).',
+    });
+    return;
+  }
+  res.json({
+    ok: true,
+    sessionId,
+    source: state.source,
+    envelope: state.envelope,
+  });
 });
 
 app.delete('/sessions/:sessionId', async (req: Request, res: Response) => {

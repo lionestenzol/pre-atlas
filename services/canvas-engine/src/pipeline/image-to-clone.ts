@@ -59,7 +59,7 @@ function formatErrorMessage(error: unknown): string {
   return String(error);
 }
 
-function buildImageBlock(image: string): Anthropic.ImageBlockParam {
+export function buildImageBlock(image: string): Anthropic.ImageBlockParam {
   const dataUrlMatch = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(image);
   if (dataUrlMatch !== null) {
     const mediaType = dataUrlMatch[1];
@@ -84,7 +84,7 @@ function buildImageBlock(image: string): Anthropic.ImageBlockParam {
   throw new Error('image must be a data: URL (base64) or an http(s) URL');
 }
 
-function buildVisionInstruction(intent?: string): string {
+export function buildVisionInstruction(intent?: string): string {
   // Ported from abi/screenshot-to-code prompts/create/image.py, retargeted from
   // a single index.html to open-lovable's React + Vite <file>-block output. The
   // output format itself is governed by the system prompt (buildSystemPrompt).
@@ -141,7 +141,7 @@ async function streamVisionCompletion(
   return assembled;
 }
 
-async function writeTempImage(image: string): Promise<string> {
+export async function writeTempImage(image: string): Promise<string> {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'canvas-clone-'));
 
   const dataUrlMatch = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(image);
@@ -181,7 +181,7 @@ async function writeTempImage(image: string): Promise<string> {
 //   - 'cli'  → claude CLI only, no fallback
 //   - 'auto' → claude CLI first (no key), SDK fallback if the CLI fails and a
 //              key is configured. (default)
-async function generateCloneCode(
+export async function generateCloneCode(
   image: string,
   instruction: string,
   apiKey?: string,
@@ -310,6 +310,7 @@ export async function* runImageToClone(
   deps.store?.registerClone({
     sessionId: session.sessionId,
     source: 'image',
+    generator: 'llm', // pixel-only vision clone · edits via the free-form claude path
     url: session.url,
     rootDir: session.rootDir,
   });

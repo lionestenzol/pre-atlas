@@ -79,8 +79,10 @@ services/cognitive-sensor/ingest_log.json
 
 # === Generated HTML (rebuilt by Python pipeline) ===
 # Regenerate with: python build_cognitive_atlas.py / python build_cognitive_map.py
+# Regenerate galaxy with: python build_atlas_galaxy.py (needs atlas_points.json)
 services/cognitive-sensor/cognitive_atlas.html
 services/cognitive-sensor/cognitive_map.html
+services/cognitive-sensor/atlas_galaxy.html
 
 # === Generated docs manifest (rebuilt by build_docs_manifest.py) ===
 docs_manifest.json

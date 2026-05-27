@@ -44,8 +44,25 @@ def _load_clusters(p: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
 
 
+def _top_n_scores(scores: dict | None, n: int = 4) -> list[list]:
+    """Return top-N [label, score] pairs from a {label: score} dict.
+
+    Lets the convo modal show classification CONFIDENCE, not just the winner.
+    """
+    if not scores or not isinstance(scores, dict):
+        return []
+    pairs = [(k, float(v)) for k, v in scores.items()]
+    pairs.sort(key=lambda x: -x[1])
+    return [[k, round(v, 3)] for k, v in pairs[:n]]
+
+
 def _build_convo_index(classifications: list[dict]) -> dict[str, dict]:
-    """One small record per convo for the right-rail conversation list."""
+    """One small record per convo for the right-rail conversation list.
+
+    Keeps the classification CONFIDENCE so the modal can render bars for
+    competing domains / outcomes — not just the winner. This is the trust
+    surface: you see WHY the classifier picked what it picked.
+    """
     out = {}
     for c in classifications:
         if c.get("skipped"):
@@ -54,12 +71,39 @@ def _build_convo_index(classifications: list[dict]) -> dict[str, dict]:
             "title": c.get("title", "(untitled)"),
             "date": c.get("date") or "",
             "domain": c.get("domain") or "uncategorized",
+            "domain_secondary": c.get("domain_secondary") or "",
+            "domain_scores": _top_n_scores(c.get("domain_scores"), 4),
             "outcome": c.get("outcome") or "looped",
+            "outcome_scores": _top_n_scores(c.get("outcome_scores"), 4),
             "trajectory": c.get("emotional_trajectory") or "neutral",
+            "trajectory_detail": c.get("trajectory_detail") or "",
             "intensity": c.get("intensity") or "low",
             "word_count": int(c.get("word_count") or 0),
         }
     return out
+
+
+def _nearest_clusters(target_id: int, centroids: dict, top_n: int = 3) -> list[dict]:
+    """Top-N closest other clusters by 2D centroid distance.
+
+    Lets the cluster rail say "this is most similar to clusters X, Y, Z" —
+    so the user can verify that adjacent clusters actually feel related,
+    not noise.
+    """
+    target = centroids.get(str(target_id))
+    if not target:
+        return []
+    tx, ty = float(target[0]), float(target[1])
+    distances = []
+    for k, c in centroids.items():
+        cid = int(k)
+        if cid == target_id:
+            continue
+        dx, dy = float(c[0]) - tx, float(c[1]) - ty
+        dist = (dx * dx + dy * dy) ** 0.5
+        distances.append((cid, round(dist, 4)))
+    distances.sort(key=lambda x: x[1])
+    return [{"id": cid, "distance": d} for cid, d in distances[:top_n]]
 
 
 def _build_cluster_summary(clusters_data: dict, convo_index: dict) -> list[dict]:
@@ -112,6 +156,8 @@ def _build_cluster_summary(clusters_data: dict, convo_index: dict) -> list[dict]
             "top_titles": cs.get("top_titles", []),
             "domain_breakdown": dict(dom_counts.most_common()),
             "outcome_breakdown": dict(out_counts.most_common()),
+            "is_noise": cid < 0,  # HDBSCAN flags noise points as cluster -1
+            "nearest": _nearest_clusters(cid, centroids, top_n=3),
         })
     # Sort by message mass desc so the right-rail default-list is largest first
     out.sort(key=lambda c: c["msg_count"], reverse=True)
@@ -297,6 +343,50 @@ HTML_TEMPLATE = r"""<!doctype html>
     .modal-foot code { background: var(--bg); padding: 3px 8px; border-radius: 4px; color: var(--accent2); font-family: ui-monospace, Consolas, monospace; user-select: all; cursor: text; }
     .close { margin-left: auto; cursor: pointer; color: var(--muted); font-size: 18px; padding: 4px 8px; border-radius: 4px; }
     .close:hover { color: var(--ink); background: rgba(255,255,255,0.06); }
+
+    /* methodology "?" button + info panel */
+    .info-btn { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--panel-edge);
+      background: var(--bg2); color: var(--muted); font-size: 11px; font-weight: 600;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      margin-left: 10px; transition: all 0.15s; }
+    .info-btn:hover { color: var(--ink); border-color: var(--accent); background: rgba(124,92,255,0.1); }
+    .info-btn.on { background: var(--accent); color: white; border-color: var(--accent); }
+    #info-panel { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 6;
+      background: var(--panel); border: 1px solid var(--accent);
+      border-radius: 12px; padding: 18px 22px; backdrop-filter: blur(12px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); display: none; max-width: 720px; }
+    #info-panel.show { display: block; }
+    #info-panel h3 { margin: 0 0 14px; font-size: 14px; color: var(--accent2); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
+    #info-panel .row { margin: 10px 0; font-size: 12px; line-height: 1.55; color: var(--ink); }
+    #info-panel .row .label { color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.06em; margin-right: 8px; }
+    #info-panel .src { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--panel-edge);
+      font-size: 10px; color: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+    #info-panel .src b { color: var(--ink); }
+
+    /* classification confidence bars (inside the convo modal) */
+    .scores { margin: 10px 0; }
+    .scores .label { font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .score-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 11px; }
+    .score-row .name { flex: 0 0 90px; color: var(--ink); text-transform: capitalize; }
+    .score-row .bar { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+    .score-row .bar > div { height: 100%; border-radius: 3px; transition: width 0.3s; }
+    .score-row .val { flex: 0 0 38px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .score-row.winner .name { color: var(--accent2); font-weight: 600; }
+    .score-row.winner .val { color: var(--accent2); }
+
+    /* nearest clusters (in cluster rail) */
+    .nearest-block { padding: 12px 18px; border-top: 1px solid var(--panel-edge); }
+    .nearest-block .heading { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+    .nearest-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; cursor: pointer;
+      font-size: 12px; color: var(--ink); }
+    .nearest-row:hover .arrow { color: var(--accent2); }
+    .nearest-row .arrow { color: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+    .nearest-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .nearest-row .dist { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+    .noise-flag { background: rgba(255,107,138,0.12); color: var(--warm);
+      padding: 6px 12px; border-radius: 6px; font-size: 11px; margin: 8px 0;
+      border: 1px solid rgba(255,107,138,0.3); }
   </style>
 </head>
 <body>
@@ -310,11 +400,13 @@ HTML_TEMPLATE = r"""<!doctype html>
       <div class="tab" data-lens="ideas">Ideas</div>
       <div class="tab" data-lens="time">Time</div>
     </div>
+    <button class="info-btn" id="info-btn" title="What am I looking at?">?</button>
   </header>
 
   <main>
     <div id="viz">
       <div class="filters" id="filters"></div>
+      <div id="info-panel"></div>
       <div id="chart"></div>
     </div>
 
@@ -353,6 +445,7 @@ HTML_TEMPLATE = r"""<!doctype html>
       lens: 'map',
       domainFilter: null,    // null = all, or "technical"/"personal"/...
       selectedCluster: null, // cluster id or null
+      infoOpen: false,       // is the "?" methodology panel open
     };
 
     // ============ helpers ============
@@ -641,6 +734,34 @@ HTML_TEMPLATE = r"""<!doctype html>
       body.querySelectorAll('.convo-row').forEach(el => {
         el.addEventListener('click', () => showConvoModal(el.dataset.convo));
       });
+
+      // noise flag (if HDBSCAN classified the cluster id as -1)
+      if (c.is_noise) {
+        const flag = document.createElement('div');
+        flag.className = 'noise-flag';
+        flag.innerHTML = '<b>noise cluster (-1):</b> HDBSCAN couldn\'t group these. Low cohesion - trust this less.';
+        body.insertBefore(flag, body.firstChild);
+      }
+
+      // nearest clusters (so you can verify adjacent clusters actually feel related)
+      if (c.nearest && c.nearest.length) {
+        const block = document.createElement('div');
+        block.className = 'nearest-block';
+        block.innerHTML = `<div class="heading">nearest clusters (by centroid distance)</div>` +
+          c.nearest.map(n => {
+            const nc = D.clusters.find(x => x.id === n.id);
+            const name = nc ? nc.name : ('cluster ' + n.id);
+            return `<div class="nearest-row" data-jump="${n.id}">
+              <span class="arrow">-></span>
+              <span class="name">${escape(name)}</span>
+              <span class="dist">${n.distance}</span>
+            </div>`;
+          }).join('');
+        body.appendChild(block);
+        block.querySelectorAll('.nearest-row').forEach(el => {
+          el.addEventListener('click', () => selectCluster(parseInt(el.dataset.jump, 10)));
+        });
+      }
     }
 
     // ============ modal ============
@@ -658,13 +779,26 @@ HTML_TEMPLATE = r"""<!doctype html>
       `;
       const quotes = D.topQuotes[convoId] || [];
       const body = document.getElementById('modal-body');
+      let html = '';
+
+      // confidence bars - HOW the classifier picked the labels you see
+      html += renderScoreBars('domain', c.domain_scores, c.domain, dominantColor);
+      html += renderScoreBars('outcome', c.outcome_scores, c.outcome, outcomeColor);
+      if (c.trajectory_detail) {
+        html += `<div class="scores"><div class="label">trajectory detail</div>
+          <div style="font-size:11px; color:var(--muted); line-height:1.5; padding:6px 0">
+            ${escape(c.trajectory_detail)}</div></div>`;
+      }
+
+      // representative quotes (when available)
       if (quotes.length > 0) {
-        body.innerHTML = `<h3>representative quotes (${quotes.length})</h3>` +
+        html += `<h3 style="margin-top:18px">representative quotes (${quotes.length})</h3>` +
           quotes.map(q => `<div class="quote">${escape(q)}</div>`).join('');
       } else {
-        body.innerHTML = `<h3>representative quotes</h3>
-          <div class="quote no-quote">no ranked quotes extracted for this conversation. use the CLI to read the full text.</div>`;
+        html += `<h3 style="margin-top:18px">representative quotes</h3>
+          <div class="quote no-quote">no ranked quotes extracted - this conversation didn't surface any matching idea-extraction signals. use the CLI to read the full text.</div>`;
       }
+      body.innerHTML = html;
       document.getElementById('modal-cmd').textContent = `python atlas_query.py text --convo "${convoId}"`;
       document.getElementById('modal').classList.add('show');
     }
@@ -699,8 +833,55 @@ HTML_TEMPLATE = r"""<!doctype html>
         tab.classList.add('active');
         state.lens = tab.dataset.lens;
         renderChart();
+        if (state.infoOpen) renderInfoPanel();   // re-render panel content for new lens
       });
     });
+
+    // ============ methodology / "?" info panel ============
+
+    function renderInfoPanel() {
+      const m = D.methodology[state.lens];
+      if (!m) {
+        document.getElementById('info-panel').classList.remove('show');
+        return;
+      }
+      const el = document.getElementById('info-panel');
+      el.innerHTML = `
+        <h3>${escape(m.title)}</h3>
+        <div class="row"><span class="label">what</span>${escape(m.what)}</div>
+        <div class="row"><span class="label">axes</span>${escape(m.axes)}</div>
+        <div class="row"><span class="label">trust</span>${escape(m.trust)}</div>
+        <div class="src">source pipeline: <b>${escape(m.source)}</b></div>
+      `;
+      el.classList.add('show');
+    }
+    document.getElementById('info-btn').addEventListener('click', () => {
+      state.infoOpen = !state.infoOpen;
+      document.getElementById('info-btn').classList.toggle('on', state.infoOpen);
+      if (state.infoOpen) renderInfoPanel();
+      else document.getElementById('info-panel').classList.remove('show');
+    });
+
+    // ============ classification confidence bars (in the modal) ============
+
+    function renderScoreBars(label, scores, winnerName, colorFn) {
+      if (!scores || !scores.length) return '';
+      const max = Math.max(...scores.map(s => s[1])) || 1;
+      const rows = scores.map(([name, val]) => {
+        const cls = name === winnerName ? ' winner' : '';
+        const pct = Math.round((val / max) * 100);
+        const color = colorFn(name);
+        return `<div class="score-row${cls}">
+          <div class="name">${escape(name)}</div>
+          <div class="bar"><div style="width:${pct}%; background:${color}"></div></div>
+          <div class="val">${val.toFixed(2)}</div>
+        </div>`;
+      }).join('');
+      return `<div class="scores">
+        <div class="label">${escape(label)} confidence (top ${scores.length})</div>
+        ${rows}
+      </div>`;
+    }
 
     // ============ init ============
 
@@ -757,6 +938,40 @@ def main() -> int:
     top_quotes = _build_top_quotes_per_cluster(registry, cluster_summary)
     print(f"  top_quotes (per-convo): {len(top_quotes):,} convos with quotes")
 
+    # ----- methodology (the "?" panel per lens) -----
+    # Plain-English explanations of how each chart's data was actually computed.
+    # No jargon. Anchors to the script that owns the logic.
+    methodology = {
+        "map": {
+            "title": "How clusters were formed",
+            "what": "Every message (you + AI + tool, 533k total) was embedded by sentence-transformers (all-MiniLM-L6-v2, 384 dimensions). UMAP projected those 384D vectors down to 2D for the map. HDBSCAN grouped nearby points into clusters.",
+            "axes": "X / Y are UMAP coordinates - no units, just \"similar messages live near each other.\" Dot size = message count in that cluster. Dot color = dominant domain across the cluster's conversations.",
+            "trust": "Clusters with -1 ID are HDBSCAN \"noise\" - points that didn't fit anywhere. The cluster name is just the title of its highest-message conversation, not a topic label - it's a hint, not a definition.",
+            "source": "build_cognitive_atlas.py -> init_message_embeddings.py -> agent_classifier_convo.py",
+        },
+        "you": {
+            "title": "How time was attributed",
+            "what": "Each conversation got ONE primary domain assigned by agent_classifier_convo.py using semantic similarity to domain signatures (technical, personal, business, learning, processing, execution) plus keyword matching.",
+            "axes": "X = month (YYYY-MM). Y = count of conversations classified into each domain that month. Stacked areas, so total height = total conversations that month.",
+            "trust": "Only the WINNING domain shows. Click any conversation to see the full domain_scores (you'll often see a close 2nd place). 484 conversations were skipped as too short to classify.",
+            "source": "agent_classifier_convo.py (semantic signatures + keyword signals)",
+        },
+        "ideas": {
+            "title": "How ideas were ranked",
+            "what": "agent_excavator.py extracted ideas from message text via regex + semantic similarity (threshold 0.40). agent_deduplicator.py merged near-duplicates via cosine similarity (>=0.70 = same idea). agent_orchestrator.py ranked by priority = freq(20%) + recency(20%) + alignment(25%) + feasibility(15%) + compounding(20%).",
+            "axes": "Y = idea title. X = mention_count (how many distinct conversations the idea appeared in after dedup). Bar color = status (done / stalled / other).",
+            "trust": "Status (idea/started/stalled/done) was detected by keyword signals in the conversation text - it's an estimate, not a confirmation. The TOP-30 here are by raw mention count, not by priority - that's a separate ranking inside idea_registry.json.",
+            "source": "agent_excavator.py -> agent_deduplicator.py -> agent_classifier.py -> agent_orchestrator.py",
+        },
+        "time": {
+            "title": "How outcomes were classified",
+            "what": "Each conversation got ONE outcome assigned: PRODUCED (made something concrete), RESOLVED (got a usable answer), ABANDONED (ended without conclusion), LOOPED (kept revisiting without converging). Same agent as the You lens.",
+            "axes": "X = total word count bucket. Y = number of conversations. Stacked bars, so the height of each color = that outcome's share within the length bucket.",
+            "trust": "Outcome is HEURISTIC - based on linguistic patterns in the last messages of each conversation, not whether you actually shipped something. \"Looped\" = high signal that you stalled; \"produced\" can include planning outputs as well as shipped code.",
+            "source": "agent_classifier_convo.py outcome_signatures",
+        },
+    }
+
     payload = {
         "clusters": cluster_summary,
         "convos": convo_index,
@@ -764,6 +979,7 @@ def main() -> int:
         "topIdeas": top_ideas,
         "lengthByOutcome": length,
         "topQuotes": top_quotes,
+        "methodology": methodology,
     }
     blob = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
     # CRITICAL: when embedding JSON in a <script> tag, escape any character

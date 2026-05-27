@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-27T13:26:16.274813",
+  "generated_at": "2026-05-27T18:45:49.216559",
   "festivals": [
     {
       "id": "atlas-verified-reality-AV0001",
@@ -14,20 +14,6 @@
       "memory_hit": false,
       "evidence_strength": 0.0,
       "suggested_action": "LIKELY TRULY STALLED \u2014 zero evidence anywhere"
-    },
-    {
-      "id": "canvas-engine-CE0001",
-      "lifecycle": "ACTIVE",
-      "fest_pct": 0,
-      "id_suffix": "CE0001",
-      "keyword_used": "canvas-engine",
-      "keyword_source": "auto",
-      "disk_count": 200,
-      "git_keyword_count": 14,
-      "git_id_count": 0,
-      "memory_hit": true,
-      "evidence_strength": 1.0,
-      "suggested_action": "FEST UNDERMARKED \u2014 memory + keyword evidence, no fest-id in commits"
     },
     {
       "id": "product-level-SS0002",
@@ -156,34 +142,6 @@
       "suggested_action": "FEST AGREES (marked complete)"
     },
     {
-      "id": "canvas-90-day-CD0001",
-      "lifecycle": "READY",
-      "fest_pct": 1,
-      "id_suffix": "CD0001",
-      "keyword_used": "canvas-engine",
-      "keyword_source": "override",
-      "disk_count": 200,
-      "git_keyword_count": 14,
-      "git_id_count": 0,
-      "memory_hit": true,
-      "evidence_strength": 1.0,
-      "suggested_action": "FEST UNDERMARKED \u2014 memory + keyword evidence, no fest-id in commits"
-    },
-    {
-      "id": "mb3d-2026-MB0001",
-      "lifecycle": "PLANNING",
-      "fest_pct": 0,
-      "id_suffix": "MB0001",
-      "keyword_used": "mb3d-blender",
-      "keyword_source": "override",
-      "disk_count": 19,
-      "git_keyword_count": 0,
-      "git_id_count": 0,
-      "memory_hit": true,
-      "evidence_strength": 0.59,
-      "suggested_action": "FEST UNDERMARKED \u2014 memory + keyword evidence, no fest-id in commits"
-    },
-    {
       "id": "atlas-substrate-migration-AS0001",
       "lifecycle": "PLANNING",
       "fest_pct": 0,
@@ -210,20 +168,6 @@
       "memory_hit": true,
       "evidence_strength": 1.0,
       "suggested_action": "FEST UNDERMARKED \u2014 memory + keyword evidence, no fest-id in commits"
-    },
-    {
-      "id": "optogon-stack-OS0001",
-      "lifecycle": "PLANNING",
-      "fest_pct": 0,
-      "id_suffix": "OS0001",
-      "keyword_used": "optogon-stack",
-      "keyword_source": "auto",
-      "disk_count": 76,
-      "git_keyword_count": 6,
-      "git_id_count": 0,
-      "memory_hit": false,
-      "evidence_strength": 1.0,
-      "suggested_action": "AMBIGUOUS \u2014 disk/git evidence but no memory; may be keyword collision"
     },
     {
       "id": "inpact-ship-2026-04-15-IS0001",

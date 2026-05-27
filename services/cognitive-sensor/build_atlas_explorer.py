@@ -766,6 +766,19 @@ def main() -> int:
         "topQuotes": top_quotes,
     }
     blob = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+    # CRITICAL: when embedding JSON in a <script> tag, escape any character
+    # sequences that would close the script tag or break out of HTML comment
+    # context. A user message containing literal "</script>" or "-->" would
+    # otherwise let raw conversation text leak into the rendered DOM.
+    # See ~/.claude/rules/common/code-as-furniture.md.
+    blob = (
+        blob
+        .replace("</", "<\\/")        # </script>, </style>, etc.
+        .replace("<!--", "<\\!--")
+        .replace("-->", "--\\>")
+        .replace(" ", "\\u2028")  # JS line separator (breaks JS parse)
+        .replace(" ", "\\u2029")  # JS paragraph separator
+    )
     html = HTML_TEMPLATE.replace("{{DATA_JSON}}", blob)
 
     print(f"\nWriting {args.out.name} ...")

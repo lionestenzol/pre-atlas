@@ -70,6 +70,9 @@ services/cognitive-sensor/chatgpt_index.json
 # === Debug capture artifacts ===
 console-graph-errors.txt
 
+# === ingest.py per-run log (rebuilt each run) ===
+services/cognitive-sensor/ingest_log.json
+
 # === Generated state (recreated on run) ===
 .delta-fabric/
 .aegis-data/

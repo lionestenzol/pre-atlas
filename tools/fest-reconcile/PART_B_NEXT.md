@@ -1,6 +1,35 @@
 # Part B — corpus-wide intent-vs-artifact reconciliation
 
-**Status:** queued for next session. Part A shipped 2026-05-27 as `dbb3d94` + `92076f8` + `1c7deb6`.
+**Status:** SHIPPED 2026-05-27, two variants.
+
+## PRIMARY result: Claude Code corpus (cc_corpus_recon.py)
+
+Bruke's note 2026-05-27: "everything got made in claude code for the most part."
+This corpus (1017 sessions across 65 project dirs) is the real ship channel.
+
+- `tools/fest-reconcile/cc_corpus_recon.py` (matcher + loader)
+- `tools/fest-reconcile/cc_conversation_artifact_reconciliation.json`
+- `tools/fest-reconcile/CC_RECONCILIATION_REPORT.md`
+
+**Top-line:** 79 discussed_and_shipped · 33 discussed_but_not_shipped · 7 shipped_but_not_discussed · 16 neither · 5 skipped.
+
+The 7 "shipped without Claude Code discussion" are almost all cloned/vendored repos (airwindows, surge-xt, MB-Lab, outpost, mb3d_anim_demo). So the real "shipped outside the chat channel" count is ~0 - Claude Code is where everything Bruke built came from.
+
+**Surfaced bug in portfolio.py:** band=stale on actively-used items (mini-ship 33 sessions, weapon 18, fest 15, autopilot 14, competitor-monitor 16). portfolio.py uses directory mtime which misses recently-used-but-unchanged skills. Fixing this would move several items from bucket 2 -> bucket 1.
+
+## SIDECAR result: ChatGPT export corpus (corpus_recon.py)
+
+Kept as a side-channel diagnostic. Showed 52 shipped-without-discussion - but that was just "not in ChatGPT," not "undiscussed." Misleading on its own, useful as a contrast against the CC corpus.
+
+- `tools/fest-reconcile/corpus_recon.py`
+- `tools/fest-reconcile/conversation_artifact_reconciliation.json`
+- `tools/fest-reconcile/RECONCILIATION_REPORT.md`
+
+---
+
+## Original handoff (for reference)
+
+**Part A shipped 2026-05-27 as `dbb3d94` + `92076f8` + `1c7deb6`.**
 
 **Goal:** cross-reference the 6,534-conversation memory_db (2024-08-21 → 2026-05-21) against `portfolio_evidence.json` to emit three buckets:
 

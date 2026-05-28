@@ -1,0 +1,22 @@
+{
+  "festival": "corpus-archaeology",
+  "phases": {
+    "001_TEMPORAL_INDEX": {
+      "chatgpt": {
+        "status": "complete",
+        "finished_at": "2026-05-27T19:25:49.200360",
+        "artifact": "festival_out/chatgpt_temporal.json"
+      },
+      "cc": {
+        "status": "complete",
+        "finished_at": "2026-05-27T19:25:49.200364",
+        "artifact": "festival_out/cc_temporal.json"
+      },
+      "fs": {
+        "status": "complete",
+        "finished_at": "2026-05-27T19:25:49.200366",
+        "artifact": "festival_out/fs_temporal.json"
+      }
+    }
+  }
+}

@@ -29,10 +29,10 @@ All entries below: library confirmed, license clean, epoch fits subsystem age, n
 |---|---|---|---|---|---|
 | 4 | `services/aegis-fabric/src/observability/logger.ts` | **pino** v10 | HIGH | 48 | ✅ **SHIPPED 2026-05-29 · `3aa8093`** · 31/31 tests · -21 LOC net |
 | 5 | `services/aegis-fabric/src/policies/decision-cache.ts` | **lru-cache** v11 | HIGH | 63 | ✅ **SHIPPED 2026-05-29 · `6680440`** · 31/31 tests · parity-true (ttl + ttlAutopurge, no max bound) |
-| 6 | `services/cognitive-sensor/agent_excavator.py` + `agent_book_miner.py` `chunk_text()` | **langchain-text-splitters** | HIGH | ~28 (2×14 duplicate) | Exact duplicate across two files. One PR eliminates both + the drift risk. MIT · last release 2026-04-16. Caveat: Python >=3.10 required (confirm runtime). |
+| 6 | `services/cognitive-sensor/agent_excavator.py` + `agent_book_miner.py` `chunk_text()` | **langchain-text-splitters** | HIGH | ~28 (2×14 duplicate) | ✅ **SHIPPED 2026-05-29 · `2e6ef4a`** · 142/142 tests · consolidated into `text_utils.py` · Python 3.13.2 (>=3.10 ✓) |
 | 7 | `services/uasc-executor/server.py` | **fastapi** | HIGH | ~64 (handlers) | 4 endpoints; raw `BaseHTTPRequestHandler` with manual JSON dispatch. HMAC middleware ports cleanly via FastAPI DI. |
 | 8 | ~~`services/aegis-fabric/src/gateway/rate-limiter.ts`~~ | ~~rate-limiter-flexible~~ | — | — | **DEMOTED to Tier 3 HOLD 2026-05-29 · Session 1** · variable-per-tenant-quota model mismatch + async API + zero test coverage. See Tier 3 #17 below. |
-| 9 | `services/cognitive-sensor/triage_server.py` | **fastapi** | MEDIUM | ~77 (handlers) | Solid swap but threading→async boundary needs review (TriageHandler uses background-thread sync model). |
+| 9 | `services/cognitive-sensor/triage_server.py` | **fastapi** | MEDIUM | ~77 (handlers) | ✅ **SHIPPED 2026-05-29 · `6328dc1`** · 142/142 tests + 9/9 endpoint smokes · sync handlers in starlette threadpool (no asyncio refactor) · daemon-thread fan-out unchanged · `StaticFiles(html=True)` mount preserves fall-through serving |
 
 ---
 

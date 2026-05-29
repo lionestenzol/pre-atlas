@@ -1,0 +1,365 @@
+{
+  "audit_name": "Track 2D: Ecosystem prior-art verification",
+  "date": "2026-05-29",
+  "inputs": ["reinvention-surface.json", "reinvention-A6.json", "lava-layers.json"],
+  "candidates": [
+    {
+      "service": "aegis-fabric",
+      "file": "src/observability/logger.ts",
+      "line_range": "1-48",
+      "category": "logging",
+      "library_canonical": "pino",
+      "library_status": {
+        "registry": "npm",
+        "current_version": "10.3.1",
+        "first_release_year": 2016,
+        "last_release_date": "2026-01 (approx, 4 months before 2026-05-29)",
+        "weekly_downloads": "~10M+ (11,043 dependents in registry; fastest Node.js logger)",
+        "github_stars": "~14k",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch (pino 2016; aegis-fabric epoch 2026-03)",
+      "blockers": [],
+      "verdict": "GO",
+      "verdict_reason": "48-line custom JSON logger reinvents a solved category; pino is a direct drop-in with MIT license and active maintenance."
+    },
+    {
+      "service": "aegis-fabric",
+      "file": "src/policies/decision-cache.ts",
+      "line_range": "1-63",
+      "category": "caching",
+      "library_canonical": "lru-cache",
+      "library_status": {
+        "registry": "npm",
+        "current_version": "11.5.1",
+        "first_release_year": 2011,
+        "last_release_date": "2026-05 (published 2 days before audit date)",
+        "weekly_downloads": "990,460,771",
+        "github_stars": "~5k",
+        "license": "ISC",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch (lru-cache 2011; aegis-fabric epoch 2026-03)",
+      "blockers": [],
+      "verdict": "GO",
+      "verdict_reason": "Standard TTL+LRU cache with 990M weekly downloads; lru-cache v10+ has native TTL support matching current hand-roll exactly."
+    },
+    {
+      "service": "aegis-fabric",
+      "file": "src/gateway/rate-limiter.ts",
+      "line_range": "1-65",
+      "category": "rate limiting",
+      "library_canonical": "rate-limiter-flexible",
+      "library_status": {
+        "registry": "npm",
+        "current_version": "11.1.0",
+        "first_release_year": 2018,
+        "last_release_date": "2026 (v11.x active)",
+        "weekly_downloads": "not confirmed precisely; top result in category",
+        "github_stars": "~3k",
+        "license": "ISC",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch (rate-limiter-flexible 2018; aegis-fabric epoch 2026-03)",
+      "blockers": [
+        "Hand-roll's consume(tenantId, maxPerHour, agentId?) takes quota PER CALL — lazy-inits a bucket sized to that tenant's quota. RateLimiterMemory takes {points, duration} at CONSTRUCTION.",
+        "Workaround = Map<quota, RateLimiterMemory> + async API (breaks 'callers don't move') + try/catch for reject-as-control-flow.",
+        "Zero existing test coverage on the 429 path — run-tests.ts doesn't exercise rate limiting; swap would ship unverified."
+      ],
+      "verdict": "HOLD",
+      "verdict_reason": "Flipped GO → HOLD 2026-05-29 Session 1 after reading callsites. Per assemble-first 'no false symmetry': swap is *worse* (loses variable-per-tenant-quota model) + *later* (~45 LOC wrapper to model what's currently 65 LOC of hand-roll), not just *later*. Revisit when tenants converge on fixed quota tiers OR rate-limit tests establish parity baseline.",
+      "original_verdict_at_audit": "GO",
+      "verdict_reason_at_audit": "Token-bucket rate limiter per composite key is exactly rate-limiter-flexible's core use case; supports Redis-backed scaling if needed later."
+    },
+    {
+      "service": "cognitive-sensor",
+      "file": "agent_excavator.py",
+      "line_range": "142-155",
+      "category": "text chunking",
+      "library_canonical": "langchain-text-splitters",
+      "library_status": {
+        "registry": "PyPI",
+        "current_version": "1.1.2",
+        "first_release_year": 2024,
+        "last_release_date": "2026-04-16",
+        "weekly_downloads": "high (part of langchain ecosystem; hundreds of thousands of installs weekly)",
+        "github_stars": "inherits langchain ~100k",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "CAUTION — langchain-text-splitters first released March 2024 as standalone package; cognitive-sensor epoch is pre-2026, touched 2026-05-27. Library was available well before last modification date.",
+      "blockers": ["Requires Python >=3.10; confirm cognitive-sensor runtime version before swap"],
+      "verdict": "GO",
+      "verdict_reason": "Identical word-boundary overlap chunker duplicated in two files; langchain-text-splitters RecursiveCharacterTextSplitter replaces both; Python 3.10 requirement needs env confirm."
+    },
+    {
+      "service": "cognitive-sensor",
+      "file": "agent_book_miner.py",
+      "line_range": "196-209",
+      "category": "text chunking",
+      "library_canonical": "langchain-text-splitters",
+      "library_status": {
+        "registry": "PyPI",
+        "current_version": "1.1.2",
+        "first_release_year": 2024,
+        "last_release_date": "2026-04-16",
+        "weekly_downloads": "high",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "Same as agent_excavator — library available before 2026-05 last modification",
+      "blockers": ["Duplicate of above candidate — resolve both in one PR; Python >=3.10 check shared"],
+      "verdict": "GO",
+      "verdict_reason": "Exact duplicate of agent_excavator.py hand-roll; eliminating both in one swap removes two sources of divergence drift."
+    },
+    {
+      "service": "cognitive-sensor",
+      "file": "triage_server.py",
+      "line_range": "23, 120-197",
+      "category": "http framework",
+      "library_canonical": "fastapi",
+      "library_status": {
+        "registry": "PyPI",
+        "current_version": "0.136.3",
+        "first_release_year": 2018,
+        "last_release_date": "2026 (active; releases ~monthly)",
+        "weekly_downloads": "~10M+",
+        "github_stars": "~90k",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch (FastAPI 2018; cognitive-sensor epoch pre-2026)",
+      "blockers": ["Background-thread sync model in TriageHandler must be refactored — manual threading vs asyncio workers; rated MEDIUM confidence-swap-safe in 2A audit"],
+      "verdict": "GO",
+      "verdict_reason": "Raw http.server is a solved-category reinvention; FastAPI migration is straightforward for 2 endpoints but requires async/threading boundary review."
+    },
+    {
+      "service": "uasc-executor",
+      "file": "server.py",
+      "line_range": "13, 204-267",
+      "category": "http framework",
+      "library_canonical": "fastapi",
+      "library_status": {
+        "registry": "PyPI",
+        "current_version": "0.136.3",
+        "first_release_year": 2018,
+        "last_release_date": "2026 (active)",
+        "weekly_downloads": "~10M+",
+        "github_stars": "~90k",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch (FastAPI 2018; uasc-executor epoch 2026-04)",
+      "blockers": ["HMAC auth middleware must be ported; 4 endpoints only — LOW complexity swap"],
+      "verdict": "GO",
+      "verdict_reason": "HIGH confidence-swap-safe per 2A audit; BaseHTTPRequestHandler with manual JSON is textbook solved category; FastAPI + dependency injection handles HMAC cleanly."
+    },
+    {
+      "service": "cortex",
+      "file": "src/cortex/inpact/scheduler.py",
+      "line_range": "39-109",
+      "category": "scheduling / cron",
+      "library_canonical": "apscheduler",
+      "library_status": {
+        "registry": "PyPI",
+        "current_version": "3.11.2",
+        "first_release_year": 2009,
+        "last_release_date": "2025-12-22",
+        "weekly_downloads": "high (mature library, widely deployed)",
+        "github_stars": "~5.8k",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch (APScheduler 2009; cortex epoch 2026-04)",
+      "blockers": [
+        "APScheduler v4 is still pre-release and API-unstable — must use v3.x only",
+        "v3 AsyncIOScheduler has different coroutine lifecycle than current while-loop; stop-event cancellation pattern must be rewritten",
+        "2A audit rated this LOW confidence-swap-safe with MEDIUM moat_risk — defer until cortex scheduler is stable enough to touch"
+      ],
+      "verdict": "HOLD",
+      "verdict_reason": "Library exists and is maintained, but APScheduler v4 pre-release status + asyncio integration complexity makes this a non-trivial swap; revisit when APScheduler v4 reaches stable."
+    },
+    {
+      "service": "crucix",
+      "file": "lib/alerts/telegram.mjs",
+      "line_range": "~768 lines",
+      "category": "telegram bot framework",
+      "library_canonical": "telegraf",
+      "library_status": {
+        "registry": "npm",
+        "current_version": "4.16.3",
+        "first_release_year": 2016,
+        "last_release_date": "2024-03 (last publish; ~2 years stale as of audit date)",
+        "weekly_downloads": "~856,740",
+        "github_stars": "9,100",
+        "license": "MIT",
+        "maintained": "MARGINAL — no release since March 2024; active issues accumulating"
+      },
+      "epoch_check": "library available before subsystem epoch (telegraf 2016; crucix epoch 2026-04)",
+      "blockers": [
+        "telegraf last published March 2024 — 14 months stale at audit date; Telegram Bot API moves fast and crucix uses polling",
+        "grammY (grammy on npm) is the actively maintained successor with 1.26M weekly downloads, last release 2025; recommend grammY over telegraf"
+      ],
+      "verdict": "HOLD",
+      "verdict_reason": "telegraf itself is marginally maintained; swap to grammY instead — same polling/middleware pattern, TypeScript-native, actively maintained with 2025 releases; re-evaluate as GO against grammY."
+    },
+    {
+      "service": "crucix",
+      "file": "lib/alerts/discord.mjs",
+      "line_range": "unknown (not fully audited)",
+      "category": "discord bot framework",
+      "library_canonical": "discord.js",
+      "library_status": {
+        "registry": "npm",
+        "current_version": "14.x",
+        "first_release_year": 2015,
+        "last_release_date": "2026 (active)",
+        "weekly_downloads": "~5M+",
+        "github_stars": "~25k",
+        "license": "Apache-2.0",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch (discord.js 2015; crucix epoch 2026-04)",
+      "blockers": [
+        "A6 audit notes discord.js is already listed as optional dep in package.json — if so this may already be wired",
+        "File not fully audited in A6 — confirm hand-roll exists before scheduling swap"
+      ],
+      "verdict": "HOLD",
+      "verdict_reason": "discord.js is already in optional deps; need to confirm the actual implementation before calling this a hand-roll to swap — may already be delegating correctly."
+    },
+    {
+      "service": "crucix",
+      "file": "lib/delta/MemoryManager",
+      "line_range": "lib/delta/memory.mjs",
+      "category": "persistent state / delta tracking",
+      "library_canonical": "bullmq",
+      "library_status": {
+        "registry": "npm",
+        "current_version": "5.77.6",
+        "first_release_year": 2019,
+        "last_release_date": "2026 (active; v5.77.x very recent)",
+        "weekly_downloads": "~1M+",
+        "github_stars": "~6k",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch (bullmq 2019; crucix epoch 2026-04)",
+      "blockers": [
+        "bullmq requires Redis — adds infrastructure dependency not currently in crucix stack",
+        "OSINT sweep-cycle delta semantics (file-based runs/ dir pruning) are domain-specific; bullmq is a job queue, not a general delta store — partial fit only",
+        "A6 rated this HIGH severity but the fit is imprecise; leveldb or better-sqlite3 may be closer to the actual need"
+      ],
+      "verdict": "HOLD",
+      "verdict_reason": "Domain logic (OSINT delta semantics) is non-trivial; bullmq adds Redis infra overhead; better fit may be better-sqlite3 for persistent delta store — needs deeper audit of memory.mjs before committing."
+    },
+    {
+      "service": "crucix",
+      "file": "lib/llm/index.mjs",
+      "line_range": "LLM factory, 9 providers",
+      "category": "LLM provider abstraction",
+      "library_canonical": "litellm",
+      "library_status": {
+        "registry": "PyPI (Python) / npm via openai SDK pattern",
+        "current_version": "1.x (Python); no direct Node.js equivalent at same maturity",
+        "first_release_year": 2023,
+        "last_release_date": "2026 (active)",
+        "weekly_downloads": "high (Python ecosystem)",
+        "github_stars": "~18k",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "litellm is Python-only at scale; crucix is Node.js — language mismatch",
+      "blockers": [
+        "litellm is a Python library; crucix is Node.js — cannot swap directly",
+        "Vercel AI SDK (ai on npm) is the Node.js equivalent but is React/RSC-centric",
+        "The custom 9-provider factory in crucix includes Ollama local inference — few Node.js abstraction layers handle all 9 providers",
+        "This is the most speculative candidate in A6 — factory is 9 lines of provider-select, real cost is per-provider glue code which is domain-appropriate"
+      ],
+      "verdict": "SKIP",
+      "verdict_reason": "No mature Node.js library covers all 9 providers including Ollama with equivalent maturity to litellm; the factory pattern is thin and provider-glue is unavoidable — not a reinvention."
+    },
+    {
+      "service": "crucix",
+      "file": "dashboard/inject.mjs",
+      "line_range": "unknown (not fully audited)",
+      "category": "dashboard / data aggregation",
+      "library_canonical": "recharts",
+      "library_status": {
+        "registry": "npm",
+        "current_version": "2.x",
+        "first_release_year": 2016,
+        "last_release_date": "2025 (active)",
+        "weekly_downloads": "~3M+",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch (recharts 2016; crucix epoch 2026-04)",
+      "blockers": [
+        "inject.mjs not fully audited — unknown whether it is data transformation (replaceable) or presentation logic (different scope)",
+        "SSE broadcasting is the core role; recharts/grafana are visualization layers — category mismatch until file is audited",
+        "A6 noted this explicitly as speculative"
+      ],
+      "verdict": "SKIP",
+      "verdict_reason": "File not audited; proposed libraries (recharts, grafana) address visualization not SSE data injection — category unclear until inject.mjs is read."
+    },
+    {
+      "service": "crucix",
+      "file": "server.mjs: SSE event broadcasting",
+      "line_range": "Set<Response> management",
+      "category": "server-sent events",
+      "library_canonical": "socket.io",
+      "library_status": {
+        "registry": "npm",
+        "current_version": "4.8.1",
+        "first_release_year": 2010,
+        "last_release_date": "2026 (active)",
+        "weekly_downloads": "~8M+",
+        "github_stars": "~61k",
+        "license": "MIT",
+        "maintained": true
+      },
+      "epoch_check": "library available before subsystem epoch; socket.io 2010 vs crucix 2026-04",
+      "blockers": [
+        "A6 rated this LOW severity — current SSE implementation is described as simple and correct",
+        "Socket.io would require client-side library change (ws vs EventSource API)",
+        "ROI is low unless real-time scaling becomes a requirement"
+      ],
+      "verdict": "SKIP",
+      "verdict_reason": "A6 audit rated LOW severity and current impl is correct; overhead of Socket.io migration exceeds value for a simple broadcast-to-Set pattern."
+    }
+  ],
+  "summary": {
+    "total_verified": 14,
+    "go": 6,
+    "hold": 5,
+    "skip": 3,
+    "post_session_1_adjustments": "rate-limiter.ts flipped GO → HOLD 2026-05-29 after Session 1 callsite read revealed variable-per-tenant-quota mismatch.",
+    "top_go_candidates": [
+      {
+        "rank": 1,
+        "service": "aegis-fabric",
+        "swap": "custom logger.ts → pino",
+        "reason": "48 lines of logging reinvention; zero blockers; MIT; 990M+ weekly downloads ecosystem"
+      },
+      {
+        "rank": 2,
+        "service": "aegis-fabric",
+        "swap": "decision-cache.ts → lru-cache v11",
+        "reason": "Standard TTL cache; lru-cache has 990M weekly downloads; native TTL in v10+; 2-day-old release confirms active maintenance"
+      },
+      {
+        "rank": 3,
+        "service": "cognitive-sensor (x2)",
+        "swap": "chunk_text() in agent_excavator.py + agent_book_miner.py → langchain-text-splitters",
+        "reason": "Identical duplicate in two files; single PR eliminates both; MIT; actively maintained April 2026"
+      }
+    ],
+    "notable_flags": [
+      "telegraf last published March 2024 — recommend grammY as alternative (1.26M/wk, 2025 releases)",
+      "APScheduler v4 is pre-release/unstable — v3 only for cortex scheduler swap; revisit when v4 stabilizes",
+      "crucix LLM factory (lib/llm/index.mjs) is NOT a reinvention — no Node.js library covers all 9 providers at same maturity as the 9-line factory",
+      "crucix discord.mjs needs file audit before verdict — discord.js may already be in use as optional dep"
+    ]
+  }
+}

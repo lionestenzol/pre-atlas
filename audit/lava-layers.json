@@ -1,0 +1,187 @@
+{
+  "engine_used": "gemini",
+  "epochs_detected": [
+    "pre-2026",
+    "2026-03",
+    "2026-04",
+    "2026-05"
+  ],
+  "subsystems": [
+    {
+      "name": "delta-kernel",
+      "epoch_first_written": "pre-2026",
+      "epoch_last_touched": "2026-04-27",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "A hand-rolled, deterministic state engine is the core of governance; its rules are the product."
+    },
+    {
+      "name": "aegis-fabric",
+      "epoch_first_written": "2026-03",
+      "epoch_last_touched": "2026-04-27",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "A central, multi-tenant service should handle policy and agent approvals for all other services."
+    },
+    {
+      "name": "mirofish",
+      "epoch_first_written": "2026-03",
+      "epoch_last_touched": "2026-04-14",
+      "load_bearing_now": false,
+      "superseded_by": "cognitive-sensor",
+      "doctrine_at_time": "Specialized tasks like prediction and graph analysis justify their own microservice and dedicated database (Neo4j)."
+    },
+    {
+      "name": "openclaw",
+      "epoch_first_written": "2026-03",
+      "epoch_last_touched": "2026-04-14",
+      "load_bearing_now": false,
+      "superseded_by": null,
+      "doctrine_at_time": "A dedicated gateway service should handle multi-channel messaging and expose core functions as chat commands."
+    },
+    {
+      "name": "mosaic-orchestrator",
+      "epoch_first_written": "2026-03",
+      "epoch_last_touched": "2026-04-14",
+      "load_bearing_now": false,
+      "superseded_by": "optogon",
+      "doctrine_at_time": "Complex system workflows can be managed by a central orchestrator that calls other specialized microservices."
+    },
+    {
+      "name": "inpact",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-04-27",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "The user-facing product should be a simple, clean HTML page, not a complex dashboard."
+    },
+    {
+      "name": "code-converter",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-04-14",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "Code transformation is a core capability that deserves its own dedicated AST-based microservice."
+    },
+    {
+      "name": "uasc-executor",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-04-10",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "A deterministic, profile-driven command execution engine provides a safe, auditable layer for system actions."
+    },
+    {
+      "name": "cortex",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-05-02",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "An autonomous agent layer (Ghost Executor) should consume directives from the mind and execute them."
+    },
+    {
+      "name": "optogon",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-04-27",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "A central 'brain stem' should orchestrate all subsystems through a declarative, path-based, state-machine runtime."
+    },
+    {
+      "name": "blueprint-generator",
+      "epoch_first_written": "2026-03",
+      "epoch_last_touched": "2026-03-26",
+      "load_bearing_now": false,
+      "superseded_by": "canvas-engine",
+      "doctrine_at_time": "A dedicated Next.js application should handle the generation of new application blueprints or scaffolds."
+    },
+    {
+      "name": "canvas-engine",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-05-25",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "A live, editable React clone of any URL can be generated from its visual 'anatomy'."
+    },
+    {
+      "name": "mosaic-dashboard",
+      "epoch_first_written": "2026-03",
+      "epoch_last_touched": "2026-03-26",
+      "load_bearing_now": false,
+      "superseded_by": "lattice",
+      "doctrine_at_time": "A unified Next.js dashboard should provide a single pane of glass over all federated microservices."
+    },
+    {
+      "name": "atlas-substrate",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-05-10",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "The system's state and rules should be collapsed into a single, auditable database-like repository."
+    },
+    {
+      "name": "ws-gateway",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-04-06",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "Real-time UI updates require a dedicated NATS-to-Socket.IO bridge for the event bus."
+    },
+    {
+      "name": "crucix",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-04-14",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "A dedicated Node.js service is required for specific, yet-to-be-integrated backend functionality."
+    },
+    {
+      "name": "perception",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-04-27",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "A dedicated service should parse visual page structure into a canonical schema, reusing existing extension infrastructure."
+    },
+    {
+      "name": "triangulation",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-04-27",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "A dedicated service should verify UI element labels by triangulating DOM, spatial, and visual signals."
+    },
+    {
+      "name": "cognitive-sensor",
+      "epoch_first_written": "pre-2026",
+      "epoch_last_touched": "2026-05-27",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "Conversation analysis and mining is a core pipeline that should live in a dedicated Python service."
+    },
+    {
+      "name": "ai-exec-pipeline",
+      "epoch_first_written": "2026-04",
+      "epoch_last_touched": "2026-04-27",
+      "load_bearing_now": false,
+      "superseded_by": "cortex",
+      "doctrine_at_time": "An AI execution pipeline should be scaffolded as a distinct application with a server, client, and pipeline."
+    },
+    {
+      "name": "lattice",
+      "epoch_first_written": "2026-05",
+      "epoch_last_touched": "2026-05-29",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "The user experience should be a simple, responsive, single-file HTML view over tree, graph, and time."
+    },
+    {
+      "name": "routing-png-substrate",
+      "epoch_first_written": "2026-05",
+      "epoch_last_touched": "2026-05-02",
+      "load_bearing_now": true,
+      "superseded_by": null,
+      "doctrine_at_time": "Complex logic like state-machine routing tables can be compiled into a portable, fast-lookup PNG."
+    }
+  ]
+}

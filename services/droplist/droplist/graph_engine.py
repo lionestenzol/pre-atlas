@@ -10,10 +10,42 @@ as awaiting-you, never auto-completed.
 
 from __future__ import annotations
 
-from . import (clock, dag_builder, dag_update, dispatcher, engine, entities,
-               node_reviewer, node_router, state, storage)
+import os
+
+from . import (atlas_signal, clock, dag_builder, dag_update, dispatcher, engine,
+               entities, node_reviewer, node_router, state, storage)
 
 _MAX_CYCLES = 16
+
+
+def _maybe_emit_atlas_signal(dag: dict) -> None:
+    """Emit a Signal.v1 to Atlas if DROPLIST_ATLAS_SIGNALS_URL is set.
+
+    Fail-safe: any exception is caught and logged to dag_events.jsonl. The
+    graph_engine loop must complete normally regardless of emission outcome.
+    See PKT-006 / BIBLE §16.
+    """
+    url = os.environ.get("DROPLIST_ATLAS_SIGNALS_URL")
+    if not url:
+        return
+    record: dict = {
+        "dag_id": dag.get("dag_id"),
+        "event": "atlas_signal_emit",
+        "url": url,
+        "signal_id": None,
+        "ok": False,
+        "error": None,
+    }
+    try:
+        sig = atlas_signal.dag_to_signal(dag)
+        record["signal_id"] = sig.get("id")
+        resp = atlas_signal.emit_signal(sig, url)
+        record["ok"] = bool(resp.get("ok"))
+        if not record["ok"]:
+            record["error"] = str(resp.get("error", "unknown"))[:200]
+    except Exception as e:  # noqa: BLE001 — emission must never break the loop
+        record["error"] = f"{type(e).__name__}: {e}"[:200]
+    storage.append(storage.DAG_EVENTS, record)
 
 
 def _priority_score(packet) -> int:
@@ -168,6 +200,7 @@ def run_graph(raw_input: str) -> dict:
     storage.save_dag(dag)
     storage.append(storage.DAG_EVENTS,
                    {"dag_id": dag["dag_id"], "event": "settled", "status": dag["status"]})
+    _maybe_emit_atlas_signal(dag)
     return trace
 
 

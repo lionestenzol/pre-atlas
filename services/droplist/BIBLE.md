@@ -209,6 +209,8 @@ At least 4 of 5 must produce usable state without manual rescue.
 | MVP 2 recursive DAG loop | `test_graph.py` | 5 drops, 6 criteria each | 5/5 |
 | MVP 3 tool-connected execution | `test_tools.py` | 3 drops, 6 criteria each | 3/3 |
 | MVP 4 persistent operating layer | `test_persist.py` | 7-day clock-driven simulation, 7 checks | 7/7 |
+| PKT-005 Atlas seam mapping | `test_atlas_signal.py` | 4 fixture DAGs -> Signal.v1, structural + strict jsonschema | 4/4 |
+| PKT-006 live Atlas emission | `test_atlas_emit.py` | stdlib HTTP fixture, positive + negative case | 2/2 |
 
 Before any Execution Packet is closed, *all four* gates must still pass.
 
@@ -321,10 +323,23 @@ atlas_signal     (when                   POST /api/signals/ingest
 - **No persistence Atlas-side.** Ring buffer. If the consumer is down, signals are lost. PKT-006 should add a retry buffer on the DropList side.
 - **No back-channel today.** Atlas doesn't reach into DropList. That's OQ-3 + OQ-4 territory.
 
+### Live wire (shipped by PKT-006)
+
+`graph_engine.run_graph()` calls `_maybe_emit_atlas_signal(dag)` after every settle. Behavior:
+
+- **Env-gated:** emission happens only when `DROPLIST_ATLAS_SIGNALS_URL` is set. Unset = silent no-op (no network, no log noise).
+- **Fail-isolated:** any exception during mapping or POST is caught. `run_graph` returns normally regardless of emission outcome.
+- **Audited:** every emission attempt appends one record to `dag_events.jsonl`:
+  ```json
+  {"dag_id": "...", "event": "atlas_signal_emit", "url": "...",
+   "signal_id": "sig_...", "ok": true, "error": null}
+  ```
+  Reconstructable trace of every emission attempt without joining files.
+
 ### Open follow-ups
 
-- **PKT-006** wires live emission: `graph_engine.run_graph()` calls `atlas_signal.emit_signal(dag_to_signal(dag), url)` at terminal state. Single line; non-blocking; failure logs but doesn't break the loop.
 - **OQ-17** extends `Signal.v1.source_layer` enum to include `"droplist"` once Atlas-side cares about distinguishing.
+- **Retry buffer.** Failed emissions are logged but not retried. Add a buffered re-emit when the consumer comes back online (deferred — opens a new OQ if needed).
 - **n8n flow** itself (`n8n_flows/droplist_to_atlas_signal.json`) is a separate config artifact; pattern documented above, JSON not yet committed.
 
 ---

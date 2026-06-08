@@ -1,0 +1,269 @@
+# DropList / DAG Engine Product Bible
+
+**Status:** Living document. The contract for the DropList Packet Engine.
+**Doctrine card:** see `DOCTRINE.md`. Quote it at the top of every Execution Packet.
+**Workflow:** see §14. The Bible is the source. Execution Packets in `PACKETS/` are the bites.
+
+---
+
+## §1. Product Definition
+
+DropList is a capture-to-execution system. It takes messy real-world input and turns it into structured operating state.
+
+DropList is **not**:
+- a note app
+- a chatbot
+- a linear task list
+
+The core function:
+
+```
+Drop -> Packet -> Graph -> Dispatch -> Result -> Review -> Update -> Next Node
+```
+
+DropList helps a user capture fragmented reality, preserve context, detect dependencies, move ready work, and prevent already-finished work from being reopened.
+
+---
+
+## §2. Core User Problem
+
+The user does not think in linear checklists. The user thinks in connected systems: dependencies, blockers, parallel paths, recurring loops, and unfinished nodes.
+
+Most productivity tools force linear lists. Most AI tools respond with paragraphs. DropList gives messy input an execution structure.
+
+---
+
+## §3. Product Principle
+
+**The graph has authority.**
+
+Agents, tools, automations, and users can propose. The graph controls state.
+
+- No node is done without evidence.
+- No tool action runs without a node.
+- No dependency is removed without reason.
+- No completed core is reopened unless validation fails.
+
+---
+
+## §4. Core Loop
+
+1. User drops messy input.
+2. System creates a structured packet.
+3. Packet becomes a DAG.
+4. Dispatcher finds ready nodes.
+5. Nodes are routed to human, AI, tool, or automation.
+6. Results are captured as evidence.
+7. Reviewer checks result against `done_condition`.
+8. Graph updates.
+9. Newly unblocked nodes become ready.
+10. System summarizes current state.
+
+---
+
+## §5. Key Objects
+
+### Drop
+Raw user input. Text, voice transcript, photo note, list, log, idea, bug report, or observation.
+
+### Packet (`droplist/schema.py::WorkPacket`)
+Structured interpretation of a drop. Closed enum fields: `type, domain, assigned_to, status`.
+
+Required fields: `drop_id, created_at, raw_input, normalized_input, input_hash, type, domain, entities, retrieved_context, assigned_to, next_action, stop_condition, allowed_actions, blocked_actions, confidence, needs_human_decision, memory_update, status`.
+
+### DAG (`droplist/dag_builder.py::build_dag`)
+A dependency graph created from a packet.
+
+Fields: `dag_id, source_drop, domain, type, goal, raw_input, nodes, status, created_at, updated_at, project, entity_refs, links`.
+
+DAG status: `running, complete, failed, needs_human, stalled, blocked`.
+
+### Node
+A unit of executable work.
+
+Fields: `id, title, type, status, depends_on, agent, tool_type, tool_action, inputs_required, done_condition, result, result_refs, evidence, retry_count, max_retries, domain, project, entity_refs, parent_dag, priority_score, stale_after_hours, created_from, recurs, do_not_reopen_refs`.
+
+### Result
+Output from a human, AI agent, script, or tool.
+
+Fields: `node_id, status, result, evidence, confidence, new_nodes, receipt` (for tool nodes).
+
+### Review (`droplist/node_reviewer.py::review`)
+Validation layer. Returns `review_status, mark_node_as, reason, approved_new_nodes`.
+`review_status` in `{pass, fail, retry, blocked}`.
+
+### Entity (`droplist/entities.py`)
+A long-lived thing drops attach to. Drops resolve to the same entity across days.
+
+Entity types: `animal, project, person, asset`.
+Fields: `entity_id, name, type, related_dags, open_nodes, observations, last_observation, next_check, created_at, updated_at`.
+
+### Recurring Node
+A node the watcher materializes one-per-day-per-recurrence. Stored in `data/state/recurring_nodes.json`.
+
+### Do-Not-Reopen Lock
+A registry of refs that cannot be redesigned. Stored in `data/state/do_not_reopen.json`. Enforced at DAG build time.
+
+---
+
+## §6. Node Statuses
+
+| Status | Meaning |
+|---|---|
+| `ready` | Can run now. All deps satisfied. |
+| `running` | Currently assigned (transient). |
+| `waiting` | Depends on unfinished nodes. |
+| `blocked` | Missing required input or awaiting human. |
+| `review` | Result exists and needs validation. |
+| `done` | Completed and validated. |
+| `failed` | Attempted and failed. |
+| `archived` | No longer active. |
+
+---
+
+## §7. Required System Behavior
+
+The system must always be able to answer:
+
+- What exists?
+- What is ready?
+- What is blocked?
+- What is waiting?
+- What is done?
+- What evidence proves it?
+- What should not be reopened?
+- What is the next executable node?
+
+`command_brief.build_brief()` is the canonical answer surface.
+
+---
+
+## §8. First Build Target (shipped: MVP 1-4)
+
+Local-first infrastructure before complex UI.
+
+Required folders under `data/`:
+
+```
+packets.jsonl       drops -> packets
+mini_ships.jsonl    promoted packets
+llm_calls.jsonl     classifier + agent call log
+run_log.jsonl       execution memory (every CLI run)
+agent_runs.jsonl    agent outputs
+reviews.jsonl       reviewer decisions
+tool_runs.jsonl     tool receipts (evidence)
+dag_events.jsonl    DAG lifecycle events
+dags/<id>.json      per-DAG full state
+results/            file_writer artifacts (sandboxed)
+state/              recurring_nodes.json + do_not_reopen.json
+entities/<id>.json  long-lived things
+memory_index/       inventory output
+```
+
+Required modules: `schema, hashing, storage, classifier, retrieval, completion, engine, dag_builder, dispatcher, agents, toolrouter, node_router, node_reviewer, dag_update, graph_engine, clock, entities, state, watcher, command_brief, daily, review, inventory, llm, cli`.
+
+---
+
+## §9. First Working Flow
+
+Input: a messy text drop.
+Output: a packet JSON, a DAG JSON, a list of ready nodes, a node result (real or templated), a review decision, an updated DAG, a state summary.
+
+```
+drop --graph "the doe is limping and not eating"
+```
+
+does this end-to-end.
+
+---
+
+## §10. Build Rules
+
+- Do not optimize interface before proving state.
+- Do not add agents before proving dispatch.
+- Do not add tool integrations before proving review.
+- Do not add memory before proving graph updates.
+- Do not redesign working modules unless tests prove failure.
+
+---
+
+## §11. Done Condition for First Complete Build
+
+The first complete build is done when 5 real drops can move through:
+
+```
+drop -> packet -> dag -> dispatch -> result -> review -> update -> summary
+```
+
+At least 4 of 5 must produce usable state without manual rescue.
+
+**Shipped at MVP 2. Reinforced at MVP 3 and 4. Currently 5/5 across all gates.**
+
+---
+
+## §12. Acceptance Gates
+
+| Gate | Script | Coverage | Status |
+|---|---|---|---|
+| MVP 1 packet engine | `test_drops.py` | 20 drops, 7 criteria | 5/5 |
+| MVP 2 recursive DAG loop | `test_graph.py` | 5 drops, 6 criteria each | 5/5 |
+| MVP 3 tool-connected execution | `test_tools.py` | 3 drops, 6 criteria each | 3/3 |
+| MVP 4 persistent operating layer | `test_persist.py` | 7-day clock-driven simulation, 7 checks | 7/7 |
+
+Before any Execution Packet is closed, *all four* gates must still pass.
+
+---
+
+## §13. Open Questions
+
+First-class artifacts. Execution Packets resolve these by name.
+
+| ID | Question | Current behavior |
+|---|---|---|
+| OQ-1 | What happens when evidence is insufficient AND retry budget is exhausted? | Node marked `failed`. No recovery path. No re-triggering when world changes. |
+| OQ-2 | What happens when two drops produce overlapping DAGs (same entity, same goal)? | Separate graphs, cross-link exists, no merge. |
+| OQ-3 | Can a DAG depend on another DAG? | No. Only intra-DAG node deps. |
+| OQ-4 | How is a `done` node re-validated when the world changes? | It is not. `done` is terminal. |
+| OQ-5 | What is the canonical entity-resolution path beyond hardcoded `_TOKEN_MAP`? | String match against fixed dict; misses unknown names. |
+| OQ-6 | How does the LOCK guard distinguish "intentional redesign after validation failure" from "accidental reopen"? | All reopen attempts produce LOCK nodes; no human-override path. |
+| OQ-7 | What is the contract for cross-DAG `links`? | One-directional (new -> old). No backlink. No semantics on link type. |
+| OQ-8 | Should reviews link to receipts (so "why failed?" doesn't require manual join)? | No link today. Same `node_id`, different files. |
+| OQ-9 | Should stale-age be per-node or per-DAG? | Per-DAG today, which is coarse. |
+| OQ-10 | What is the Atlas seam, exactly? | `n8n_webhook` with `DROPLIST_N8N_URL` set. The endpoint contract is undefined. |
+| OQ-11 | MVP 1 (engine + router + completion) and MVP 2-4 (dag_builder + graph_engine) are two parallel pipelines. Is that intentional, or should they converge? | Both active. MVP 1 produces a finished packet; MVP 2-4 produces an executing graph. They share `(domain, type)` input but emit different shapes. Surfaced by PKT-001 abort. |
+| OQ-12 | The packet's `current_node` / `next_node` (router-DAG vocabulary: `"inventory_metadata"`, `"identify_project"`) is a different concept from the graph's ready-node IDs (`N1, N2`). Any external consumer reading the packet field would get the wrong "where am I" answer. | Field exists, no documented consumer. Decide rename / remove only if Atlas substrate plans to read it. |
+| OQ-13 | ~~Windows portability: `dag_builder.py` hardcodes `tool_action="python3 test_drops.py"`.~~ | **RESOLVED by PKT-003** (PKT-002 was incomplete). Fix: invocation-probe (`subprocess.run([cand, "--version"])`) at module load, returns bare command word so allowlist prefix match still applies. |
+| OQ-14 | ~~`test_tools.py` code/build drop ends DAG with 0 nodes done despite tool actions firing.~~ | **RESOLVED by PKT-003** (was a symptom of incomplete OQ-13 fix). `shutil.which()` returned a `.BAT` shim path; subprocess can't exec `.BAT` without shell, AND the path failed the allowlist prefix match. Invocation-probe sidesteps both. |
+| OQ-15 | `shutil.which()` is the wrong primitive on Windows for "what command should I exec?" because `.BAT` shims appear in PATH but can't be `subprocess.run([...])` directly. Are there other places in droplist that use `which()` or assume a name-in-PATH means invocable? | Audit deferred. Touch only when a third Windows portability bug surfaces. |
+| OQ-16 | Verification discipline: PKT-002 marked done after three of four gates passed. Strict gate (test_tools 3/3) failed silently because the other tests' criteria were tolerant of script_runner failures. Should `done` require strictest-gate-green, not majority-gate-green? | Bible §14 now requires re-investigation when verification shows partial gate-pass. PKT-002 retroactively superseded by PKT-003. |
+
+---
+
+## §14. Workflow
+
+When working in this repo:
+
+1. Read `DOCTRINE.md`.
+2. For any change, find the relevant Execution Packet in `PACKETS/`.
+3. If no packet exists for the change you want to make, **write the packet first**. Do not start work.
+4. **Pre-flight grep.** Before any deletion or rename, `grep -rn` the symbols you plan to touch. Paste the results into the packet's `Pre-flight evidence` section. No scope is final before the grep is run. (Added 2026-06-07 after PKT-001 abort.)
+5. Quote the doctrine + Bible §s the packet touches.
+6. Treat the packet's `Do not touch` list as a hard fence.
+7. Verify the `Done condition` before marking the packet `done`.
+8. If the work surfaces a new question, add it to §13 with a new OQ-id.
+9. If the work proves the premise was wrong, mark the packet `ABORTED` with a `Why aborted` section. Aborted packets are kept as record. The cost of an aborted packet is zero; the cost of an unaborted wrong assumption is real.
+
+The Bible is the source. The Doctrine is the always-loaded preamble. Execution Packets are the bites.
+
+The MVP ladder is retired. New work is a packet against the Bible, not a new MVP.
+
+---
+
+## §15. What is deliberately deferred
+
+- **Vector retrieval (Chroma/Qdrant).** Interface already returns `{source, snippet, relevance}`; swap is local.
+- **Atlas wire.** `n8n_webhook` is the seam. Needs a defined endpoint contract on the Atlas side. See OQ-10.
+- **Mini Ship promotion semantics.** `--ship` + `--ship-from` wired; promotion doctrine needs a Bible §.
+- **Inventory deep-read tier.** `deep_read_selected -> cleanup_plan -> ask_before_move_delete` nodes designed; not built.
+- **UI surface.** TGT Law (Tree, Graph, Time) must pass before makeup.
+- **LangGraph.** Not used. Add only when sub-DAGs genuinely need parallelism / retries / streaming the current dispatcher can't handle.

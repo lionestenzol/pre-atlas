@@ -131,12 +131,50 @@ def _script_runner(node, dag):
         return _receipt(node, "failed", {"error": "timeout", "command": cmd})
 
 
+_DEFAULT_SEARCH_STACK_URL = "http://127.0.0.1:3070/search"
+
+
+def _external_search(node, dag):
+    """Queries services/search-stack and returns top results in the receipt.
+
+    tool_action shape: free-text query (defaults to the dag goal if empty).
+    Reads SEARCH_STACK_URL env var; falls back to localhost:3070. If the service
+    is unreachable, returns a blocked receipt (not failed) so retries are cheap.
+    """
+    query = (node.get("tool_action") or "").strip() or dag.get("goal", "")
+    if not query:
+        return _receipt(node, "blocked", {"reason": "no query"}, {})
+    url = os.environ.get("SEARCH_STACK_URL", _DEFAULT_SEARCH_STACK_URL)
+    payload = {"q": query, "max_results": 5}
+    try:
+        req = urllib.request.Request(
+            url, data=json.dumps(payload).encode(),
+            headers={"Content-Type": "application/json"}, method="POST")
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+    except (urllib.error.URLError, OSError, json.JSONDecodeError) as e:
+        return _receipt(node, "blocked",
+                        {"reason": "search-stack unreachable", "error": str(e)[:200]},
+                        payload)
+    results = data.get("results") or []
+    summary = [
+        {"title": r.get("title", ""), "url": r.get("url", ""),
+         "snippet": (r.get("snippet") or "")[:200], "source": r.get("source", "")}
+        for r in results
+    ]
+    return _receipt(node, "success",
+                    {"n_results": len(summary), "results": summary,
+                     "providers_used": data.get("providers_used", [])},
+                    payload)
+
+
 TOOL_REGISTRY = {
     "calendar": _calendar,
     "file_writer": _file_writer,
     "message_drafter": _message_drafter,
     "n8n_webhook": _n8n_webhook,
     "script_runner": _script_runner,
+    "external_search": _external_search,
 }
 
 
@@ -184,12 +222,18 @@ def _check_script_runner(node, receipt, dag):
     return receipt["status"] == "success" and o.get("returncode") == 0
 
 
+def _check_external_search(node, receipt, dag):
+    o = receipt.get("output", {})
+    return receipt["status"] == "success" and int(o.get("n_results") or 0) > 0
+
+
 DONE_CHECKERS = {
     "calendar": _check_calendar,
     "file_writer": _check_file_writer,
     "message_drafter": _check_message_drafter,
     "n8n_webhook": _check_n8n,
     "script_runner": _check_script_runner,
+    "external_search": _check_external_search,
 }
 
 

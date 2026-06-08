@@ -346,7 +346,7 @@ atlas_signal     (when                   POST /api/signals/ingest
 
 ## §15. What is deliberately deferred
 
-- **Vector retrieval (Chroma/Qdrant).** Interface already returns `{source, snippet, relevance}`; swap is local.
+- ~~**Vector retrieval (Chroma/Qdrant).** Interface already returns `{source, snippet, relevance}`; swap is local.~~ **External half wired 2026-06-08 via services/search-stack** (`retrieve_with_external()` in `retrieval.py` + `external_search` tool in `toolrouter.py`, gated by `DROPLIST_EXTERNAL_SEARCH=1`). Internal vector swap (Chroma/Qdrant over the local packets corpus) still deferred — current internal retrieval is still token-overlap, but the {source, snippet, relevance} interface is now production-shaped.
 - ~~**Atlas wire.** `n8n_webhook` is the seam. Needs a defined endpoint contract on the Atlas side. See OQ-10.~~ **Contract defined in §16 (PKT-005). Live wire pending in PKT-006.**
 - **Mini Ship promotion semantics.** `--ship` + `--ship-from` wired; promotion doctrine needs a Bible §.
 - **Inventory deep-read tier.** `deep_read_selected -> cleanup_plan -> ask_before_move_delete` nodes designed; not built.

@@ -123,14 +123,20 @@ def cmd_show(drop_id: str, color: bool) -> int:
     return 1
 
 
-def cmd_memory_search(query: str, color: bool) -> int:
-    hits = retrieval.retrieve(query, storage.read_all(storage.PACKETS), k=5)
+def cmd_memory_search(query: str, color: bool, external: bool = False) -> int:
+    if external:
+        hits = retrieval.retrieve_with_external(
+            query, storage.read_all(storage.PACKETS), k=5
+        )
+    else:
+        hits = retrieval.retrieve(query, storage.read_all(storage.PACKETS), k=5)
     if not hits:
         print("no matches.")
         return 0
     c = _color(color)
     for h in hits:
-        print(f"{c['ok']}[{h['relevance']}]{c['off']} {h['source']} "
+        marker = c['warn'] if h.get('type') == 'external' else c['ok']
+        print(f"{marker}[{h['relevance']}]{c['off']} {h['source']} "
               f"({h.get('type')}/{h.get('domain')}): {h['snippet']}")
     return 0
 
@@ -465,6 +471,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--recent", type=int, metavar="N", help="show the last N packets")
     p.add_argument("--show", metavar="DROP_ID", help="show one packet by id")
     p.add_argument("--memory-search", metavar="QUERY", help="keyword search prior packets")
+    p.add_argument("--external", action="store_true",
+                   help="(with --memory-search) also query search-stack on :3070"
+                        " — requires DROPLIST_EXTERNAL_SEARCH=1")
     p.add_argument("--morning", action="store_true", help="print the daily command brief")
     p.add_argument("--review", action="store_true", help="surface unresolved work (drop-review)")
     p.add_argument("--domain", metavar="DOMAIN", help="(with --review) filter by domain")
@@ -494,7 +503,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.show:
         return cmd_show(args.show, color)
     if args.memory_search:
-        return cmd_memory_search(args.memory_search, color)
+        return cmd_memory_search(args.memory_search, color, external=args.external)
     if args.morning:
         return cmd_morning(color)
     if args.review:

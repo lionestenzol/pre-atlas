@@ -229,13 +229,14 @@ First-class artifacts. Execution Packets resolve these by name.
 | OQ-7 | What is the contract for cross-DAG `links`? | One-directional (new -> old). No backlink. No semantics on link type. |
 | OQ-8 | Should reviews link to receipts (so "why failed?" doesn't require manual join)? | No link today. Same `node_id`, different files. |
 | OQ-9 | Should stale-age be per-node or per-DAG? | Per-DAG today, which is coarse. |
-| OQ-10 | What is the Atlas seam, exactly? | `n8n_webhook` with `DROPLIST_N8N_URL` set. The endpoint contract is undefined. |
+| OQ-10 | ~~What is the Atlas seam, exactly?~~ | **RESOLVED by PKT-005** (2026-06-08). Seam = `POST /api/signals/ingest` on delta-kernel, accepting `Signal.v1`. Mapping defined in §16. Live emission wire is PKT-006. |
 | OQ-11 | MVP 1 (engine + router + completion) and MVP 2-4 (dag_builder + graph_engine) are two parallel pipelines. Is that intentional, or should they converge? | Both active. MVP 1 produces a finished packet; MVP 2-4 produces an executing graph. They share `(domain, type)` input but emit different shapes. Surfaced by PKT-001 abort. |
 | OQ-12 | The packet's `current_node` / `next_node` (router-DAG vocabulary: `"inventory_metadata"`, `"identify_project"`) is a different concept from the graph's ready-node IDs (`N1, N2`). Any external consumer reading the packet field would get the wrong "where am I" answer. | Field exists, no documented consumer. Decide rename / remove only if Atlas substrate plans to read it. |
 | OQ-13 | ~~Windows portability: `dag_builder.py` hardcodes `tool_action="python3 test_drops.py"`.~~ | **RESOLVED by PKT-003** (PKT-002 was incomplete). Fix: invocation-probe (`subprocess.run([cand, "--version"])`) at module load, returns bare command word so allowlist prefix match still applies. |
 | OQ-14 | ~~`test_tools.py` code/build drop ends DAG with 0 nodes done despite tool actions firing.~~ | **RESOLVED by PKT-003** (was a symptom of incomplete OQ-13 fix). `shutil.which()` returned a `.BAT` shim path; subprocess can't exec `.BAT` without shell, AND the path failed the allowlist prefix match. Invocation-probe sidesteps both. |
-| OQ-15 | `shutil.which()` is the wrong primitive on Windows for "what command should I exec?" because `.BAT` shims appear in PATH but can't be `subprocess.run([...])` directly. Are there other places in droplist that use `which()` or assume a name-in-PATH means invocable? | Audit deferred. Touch only when a third Windows portability bug surfaces. |
+| OQ-15 | ~~`shutil.which()` is the wrong primitive on Windows for "what command should I exec?"~~ | **RESOLVED by PKT-004** (2026-06-08). Audit found no other instances. Latent class-of-risk documented via guardrail comment at `toolrouter._SAFE_SCRIPT_PREFIXES`. |
 | OQ-16 | Verification discipline: PKT-002 marked done after three of four gates passed. Strict gate (test_tools 3/3) failed silently because the other tests' criteria were tolerant of script_runner failures. Should `done` require strictest-gate-green, not majority-gate-green? | Bible §14 now requires re-investigation when verification shows partial gate-pass. PKT-002 retroactively superseded by PKT-003. |
+| OQ-17 | `Signal.v1.source_layer` enum does not include `"droplist"`. PKT-005 uses `"optogon"` as a placeholder. Should the enum be extended? | Pending. Touches `contracts/schemas/Signal.v1.json` (settled core). Move only when DropList is a real producer Atlas-side cares about distinguishing. |
 
 ---
 
@@ -259,10 +260,79 @@ The MVP ladder is retired. New work is a packet against the Bible, not a new MVP
 
 ---
 
+## §16. Atlas Seam
+
+The wire from DropList into the Atlas substrate. Resolves OQ-10. Defined by PKT-005.
+
+### Endpoint
+
+```
+POST  http://<delta-kernel>/api/signals/ingest
+  Content-Type: application/json
+  Body:        Signal.v1 (see contracts/schemas/Signal.v1.json)
+  Response:    202 { ok: true, signal_id }   on success
+               400 { ok: false, error, details }   on schema validation failure
+```
+
+`delta-kernel` defaults to `127.0.0.1:3001` in Bruke's stack. Atlas-side store is in-memory ring (MAX_SIGNALS=500); signals are act-on-or-log-and-forget.
+
+### Mapping: DropList settled DAG -> Signal.v1
+
+Implemented in `droplist/atlas_signal.py::dag_to_signal()`. Pure function, I/O-free, fully tested by `test_atlas_signal.py` (4 fixtures, strict schema validation when `jsonschema` is installed).
+
+| Signal field | Source |
+|---|---|
+| `schema_version` | literal `"1.0"` |
+| `id` | `f"sig_{uuid4().hex[:12]}"` |
+| `emitted_at` | `clock.now_iso()` (test-controllable via `DROPLIST_NOW`) |
+| `source_layer` | `"optogon"` (placeholder until OQ-17 extends the enum) |
+| `signal_type` | `complete -> completion`, `failed -> error`, `needs_human -> approval_required`, `stalled -> blocked` |
+| `priority` | `urgent` if `dag.type in {warning, problem}` OR any node `priority_score >= 80`; `low` if `domain == general`; else `normal` |
+| `payload.task_id` | `dag.source_drop` |
+| `payload.label` | `dag.goal` (trimmed to 140 chars) |
+| `payload.summary` | `"{domain}/{type}: {n_done}/{n_total} done; status={dag.status}"` |
+| `payload.data` | `{ dag_id, domain, type, dag_status, nodes[], evidence_refs, entity_refs, links }` |
+| `payload.action_required` | `True` iff `signal_type == "approval_required"` |
+| `payload.action_options` | list of `{ id: node_id, label: node.title, risk_tier: "low" }` for human-blocked nodes (required by schema when action_required=true) |
+
+### Three layers, decoupled
+
+```
+                 minimal payload                  Signal.v1
+DropList graph -------------------> n8n flow ----------------------> delta-kernel
+graph_engine    (toolrouter         (transforms                       POST /api/signals/ingest
+                 _n8n_webhook;       per BIBLE §16)
+                 per-node, today)
+```
+
+Or, bypass n8n for testing / dev:
+
+```
+                Signal.v1
+DropList helper ----------------------> delta-kernel
+atlas_signal     (when                   POST /api/signals/ingest
+.emit_signal()    DROPLIST_DIRECT_SIGNALS_URL set)
+```
+
+### Guarantees and non-guarantees
+
+- **One settled-DAG event = one Signal.** Replays produce new `id`s.
+- **Pure mapping is idempotent** for a given DAG snapshot (same DAG -> same Signal up to id and emitted_at).
+- **No persistence Atlas-side.** Ring buffer. If the consumer is down, signals are lost. PKT-006 should add a retry buffer on the DropList side.
+- **No back-channel today.** Atlas doesn't reach into DropList. That's OQ-3 + OQ-4 territory.
+
+### Open follow-ups
+
+- **PKT-006** wires live emission: `graph_engine.run_graph()` calls `atlas_signal.emit_signal(dag_to_signal(dag), url)` at terminal state. Single line; non-blocking; failure logs but doesn't break the loop.
+- **OQ-17** extends `Signal.v1.source_layer` enum to include `"droplist"` once Atlas-side cares about distinguishing.
+- **n8n flow** itself (`n8n_flows/droplist_to_atlas_signal.json`) is a separate config artifact; pattern documented above, JSON not yet committed.
+
+---
+
 ## §15. What is deliberately deferred
 
 - **Vector retrieval (Chroma/Qdrant).** Interface already returns `{source, snippet, relevance}`; swap is local.
-- **Atlas wire.** `n8n_webhook` is the seam. Needs a defined endpoint contract on the Atlas side. See OQ-10.
+- ~~**Atlas wire.** `n8n_webhook` is the seam. Needs a defined endpoint contract on the Atlas side. See OQ-10.~~ **Contract defined in §16 (PKT-005). Live wire pending in PKT-006.**
 - **Mini Ship promotion semantics.** `--ship` + `--ship-from` wired; promotion doctrine needs a Bible §.
 - **Inventory deep-read tier.** `deep_read_selected -> cleanup_plan -> ask_before_move_delete` nodes designed; not built.
 - **UI surface.** TGT Law (Tree, Graph, Time) must pass before makeup.

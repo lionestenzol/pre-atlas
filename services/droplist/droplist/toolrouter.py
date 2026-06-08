@@ -106,6 +106,11 @@ def _n8n_webhook(node, dag):
         return _receipt(node, "failed", {"error": str(e), "url": url}, payload)
 
 
+# Adding a new prefix? Audit the corresponding dag_builder tool_action for
+# Windows-shim portability: shutil.which() returning a .BAT path is NOT proof
+# the bare name is invocable via subprocess.run([name, ...]). The
+# `_resolve_python_literal` helper in dag_builder.py shows the invocation-probe
+# pattern. See PKT-002 / PKT-003 / PKT-004 / OQ-15.
 _SAFE_SCRIPT_PREFIXES = ("python3 test_", "python test_", "echo ")
 
 

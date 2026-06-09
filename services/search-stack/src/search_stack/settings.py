@@ -4,11 +4,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT / "data"
 DATA_DIR.mkdir(exist_ok=True)
+
+# Load .env into os.environ so providers that use os.environ.get() (FRED, GovInfo,
+# NewsAPI, Yelp, YouTube, Google Maps, Perplexity, Keepa) see the values.
+# pydantic-settings populates the Settings class only, not os.environ.
+load_dotenv(ROOT / ".env")
 
 
 class Settings(BaseSettings):

@@ -230,19 +230,24 @@ codebase before editing it*. Full inventory + runnable examples:
   sweeps / sizing).
 - **Playbook vs inventory:** `docs/repo-search-stack.md` is the *inventory*;
   the operational rules are the **"DropList Search Tightening Protocol"** in
-  `docs/search-protocol.md` (the *playbook*).
-- **Verify the stack:** `bash tools/repo_search_check.sh`.
+  `docs/search-protocol.md` (the *playbook*: search-first/edit-last, the
+  es→fd→rg→sg→semgrep→ctags→tests→diff escalation ladder, and a Windows
+  substitutions table).
+- **Verify the stack:** `bash tools/repo_search_check.sh`, or the portable
+  `bash scripts/discover.sh` (checks all 13 tools + `es` and lists the Claude
+  Code skills/commands).
 
 **Naming correction (supersedes earlier guesses):** "DropList" is the *search
 protocol*, not a task/job CLI; there is no DropList/Atlas/RAG-DAG/Lattice
-"job system + SQLite spine." `scripts/discover.sh` still probes for those as a
-courtesy and degrades cleanly when absent, but the real belt is the stack
-above. ("Atlas" elsewhere = this repo's delta-kernel system, unrelated.)
+"job system + SQLite spine." (`.droplist` does appear as proof-log/output
+artifacts the protocol locates via `es`, but it is not a CLI or DB.) "Atlas"
+elsewhere = this repo's delta-kernel system, unrelated.
 
-> **Not yet committed (referenced but local-only on the operator's machine):**
-> `docs/search-protocol.md`, `~/.claude/rules/common/file-search.md`, and
-> `tools/repo_search_check.sh`. Push or paste these to make them durable
-> context too.
+> **Still local-only (referenced but not yet committed):**
+> `~/.claude/rules/common/file-search.md` (the `es`/Everything DSL cheatsheet)
+> and `tools/repo_search_check.sh` (the original stack verifier;
+> `scripts/discover.sh` is a portable stand-in). Push or paste these to make
+> them durable context too.
 
 ---
 

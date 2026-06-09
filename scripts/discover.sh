@@ -149,16 +149,51 @@ else
 fi
 
 # ── Tool belt ───────────────────────────────────────────────────────
-sec "TOOL BELT"
-echo "# the belt tools + how they're invoked  (dir: $TOOLBELT_DIR)"
+sec "TOOL BELT — CLIs"
+echo "# shell tools + how they're invoked  (dir: $TOOLBELT_DIR)"
 if [ -d "$TOOLBELT_DIR" ]; then
   ls -la "$TOOLBELT_DIR" 2>&1 | head -40
   sub "count"
-  echo "$(find "$TOOLBELT_DIR" -maxdepth 1 -type f -o -maxdepth 1 -type l 2>/dev/null | wc -l) entries"
+  echo "$(find "$TOOLBELT_DIR" -maxdepth 1 \( -type f -o -type l \) 2>/dev/null | wc -l) entries"
 else
   echo "(no tool-belt dir at $TOOLBELT_DIR — set TOOLBELT_DIR=...)"
 fi
-sub "CC protocol file, if it lives in a known spot"
-ls -la ./CLAUDE.md ./.claude "$HOME/.claude/CLAUDE.md" 2>/dev/null | head -20 || echo "(none found here)"
+
+# ── Agent belt: Claude Code skills + slash-commands ─────────────────
+# (the belt isn't only CLIs — much of it is Claude Code skills like
+#  repo-search, and project/user slash-commands. Capture those too.)
+sec "TOOL BELT — CLAUDE CODE SKILLS"
+SKILL_DIRS="$HOME/.claude/skills ./.claude/skills"
+found_skill=0
+for base in $SKILL_DIRS; do
+  [ -d "$base" ] || continue
+  for d in "$base"/*/; do
+    [ -f "$d/SKILL.md" ] || continue
+    found_skill=1
+    echo "## $(basename "$d")   ($d)"
+    # front-matter / opening lines usually carry name + description
+    sed -n '1,10p' "$d/SKILL.md" 2>/dev/null
+    echo
+  done
+done
+[ $found_skill -eq 0 ] && echo "(no SKILL.md found under: $SKILL_DIRS)"
+
+sec "TOOL BELT — SLASH COMMANDS"
+CMD_DIRS="$HOME/.claude/commands ./.claude/commands"
+found_cmd=0
+for base in $CMD_DIRS; do
+  [ -d "$base" ] || continue
+  for f in "$base"/*.md; do
+    [ -f "$f" ] || continue
+    found_cmd=1
+    echo "## /$(basename "${f%.md}")   ($f)"
+    sed -n '1,6p' "$f" 2>/dev/null
+    echo
+  done
+done
+[ $found_cmd -eq 0 ] && echo "(no command .md files under: $CMD_DIRS)"
+
+sec "CC PROTOCOL FILE (CLAUDE.md)"
+ls -la ./CLAUDE.md ./.claude/CLAUDE.md "$HOME/.claude/CLAUDE.md" 2>/dev/null | head -20 || echo "(none found)"
 
 echo; echo "===== END — paste this whole file (discovery.txt) back ====="

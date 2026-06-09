@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .providers.apify import ApifyProvider
 from .providers.arxiv import ArxivProvider
 from .providers.base import ExtractProvider, SearchProvider
 from .providers.brave import BraveProvider
@@ -73,6 +74,11 @@ _search_singletons: dict[str, SearchProvider] = {
     "google_maps": GoogleMapsProvider(),
     # Product
     "keepa": KeepaProvider(),
+    # Apify (one instance per actor adapter — each env-gated independently)
+    "apify_google_maps": ApifyProvider("google_maps"),
+    "apify_amazon": ApifyProvider("amazon"),
+    "apify_instagram": ApifyProvider("instagram"),
+    "apify_tiktok": ApifyProvider("tiktok"),
 }
 
 _extract_singletons: list[ExtractProvider] = [FirecrawlProvider()]
@@ -86,13 +92,13 @@ KIND_TO_PROVIDERS: dict[str, list[str]] = {
     "memory": ["memory"],
     "extract": [],
     "research": ["arxiv", "semantic_scholar", "openalex", "pubmed"],
-    "social": ["hackernews", "reddit"],
     "news": ["gdelt", "newsapi"],
     "legal": ["sec_edgar", "federal_register", "court_listener", "govinfo"],
     "data": ["world_bank", "data_gov", "fred"],
-    "local": ["openstreetmap", "yelp", "google_maps"],
+    "local": ["openstreetmap", "yelp", "google_maps", "apify_google_maps"],
     "multimedia": ["youtube"],
-    "product": ["keepa"],
+    "product": ["keepa", "apify_amazon"],
+    "social": ["hackernews", "reddit", "apify_instagram", "apify_tiktok"],
 }
 
 

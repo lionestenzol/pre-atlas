@@ -5,9 +5,11 @@
 > bottom. This packet reconciles the older docs (README, MACHINE_CONTEXT,
 > CONTEXT_PACKET) against current code as of **2026-06-08**.
 >
-> **Scope note:** this is about the **Pre Atlas monorepo**. It is *not* the
-> local DropList / RAG-DAG / Lattice "tool belt" — that's a separate personal
-> toolchain discovered via `scripts/discover.sh`.
+> **Scope note:** this packet is about the **Pre Atlas monorepo**. The
+> operator also runs a separate local **agent search belt** (a 13-tool
+> structural-code-search stack driven by the `repo-search` Claude Code skill) —
+> see §8 and `docs/repo-search-stack.md`. That belt operates *on* this repo but
+> doesn't ship with it.
 
 ---
 
@@ -208,5 +210,41 @@ Phase 7 federated/cross-device state replication.
 
 ---
 
-*Generated 2026-06-08 to consolidate scattered context for a fresh assistant.
+## 8. The operator's agent search belt (how the code gets read)
+
+Separate from the running system, the operator drives this repo through a
+local **structural-code-search belt** — a Claude Code skill (`repo-search`)
+over 13 CLI tools, plus a global file-locator. The rule is *understand the
+codebase before editing it*. Full inventory + runnable examples:
+**`docs/repo-search-stack.md`**.
+
+- **Step 0 — `es`** (voidtools Everything CLI): locate the right project/file
+  *anywhere on the machine* before any repo-local search. Cheatsheet:
+  `~/.claude/rules/common/file-search.md`.
+- **The 13-tool stack:** `rg` (text) · `fd` (files) · `bat` (read) · `eza`
+  (tree/list) · `tree` · `delta` (diffs) · `jq` (JSON) · `yq` (YAML/TOML) ·
+  `sg`/ast-grep (AST shape) · `semgrep` (static analysis) · `tree-sitter`
+  (parse trees) · `tokei` (LOC stats) · `ctags` (symbol index).
+- **Agent loop:** `eza --tree` → `fd` → `rg` → `sg` → `bat` → `ctags` → patch →
+  tests → `git diff | delta`. `semgrep`/`tokei` are out-of-band (bug-class
+  sweeps / sizing).
+- **Playbook vs inventory:** `docs/repo-search-stack.md` is the *inventory*;
+  the operational rules are the **"DropList Search Tightening Protocol"** in
+  `docs/search-protocol.md` (the *playbook*).
+- **Verify the stack:** `bash tools/repo_search_check.sh`.
+
+**Naming correction (supersedes earlier guesses):** "DropList" is the *search
+protocol*, not a task/job CLI; there is no DropList/Atlas/RAG-DAG/Lattice
+"job system + SQLite spine." `scripts/discover.sh` still probes for those as a
+courtesy and degrades cleanly when absent, but the real belt is the stack
+above. ("Atlas" elsewhere = this repo's delta-kernel system, unrelated.)
+
+> **Not yet committed (referenced but local-only on the operator's machine):**
+> `docs/search-protocol.md`, `~/.claude/rules/common/file-search.md`, and
+> `tools/repo_search_check.sh`. Push or paste these to make them durable
+> context too.
+
+---
+
+*Generated 2026-06-08, updated 2026-06-09 (added agent search belt, §8).
 If something here disagrees with code, the code wins — and this file is stale.*

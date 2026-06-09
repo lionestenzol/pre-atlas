@@ -1,29 +1,30 @@
-"""Memory provider — searches DropList packets + cognitive-sensor embeddings.
+"""Memory provider — talks to services/memory-hub on :3071 first; in-process
+fallback when memory-hub isn't running.
 
-Wraps existing tools rather than re-implementing:
-- droplist packets.jsonl via token-overlap (mirrors droplist/retrieval.py)
-- cognitive-sensor atlas_query.py via subprocess (its --json mode)
+Wraps existing tools (no re-implementation):
+  - memory-hub REST (preferred) — unified surface over droplist, atlas_query,
+    idea_registry, mirofish neo4j
+  - droplist packets.jsonl direct (fallback) — token-overlap on normalized_input
 
-If a store is unavailable (file missing, atlas_query not runnable), that source
-returns 0 results — provider stays enabled as long as ANY source is reachable.
+The HTTP path is the primary route — it gives Phase 3 a clean seam where
+adding new stores (mirofish graph queries, embedding-based retrieval) requires
+no change to search-stack. memory.py stays a 1-page wrapper.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 import re
-import shutil
-import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 from .base import SearchProvider, SearchResult
 
 PRE_ATLAS_ROOT = Path(__file__).resolve().parents[5]
 DROPLIST_PACKETS = PRE_ATLAS_ROOT / "services" / "droplist" / "data" / "packets.jsonl"
-ATLAS_QUERY = PRE_ATLAS_ROOT / "services" / "cognitive-sensor" / "atlas_query.py"
-IDEA_REGISTRY = PRE_ATLAS_ROOT / "services" / "cognitive-sensor" / "cycleboard" / "brain" / "idea_registry.json"
+DEFAULT_MEMORY_HUB_URL = "http://127.0.0.1:3071/search"
 
 _TOKEN = re.compile(r"[a-z0-9]+")
 _STOP = {
@@ -37,22 +38,81 @@ def _tokens(text: str) -> set[str]:
     return {t for t in _TOKEN.findall(text.lower()) if t not in _STOP and len(t) > 2}
 
 
+def _memory_hub_url() -> str:
+    return os.environ.get("MEMORY_HUB_URL", DEFAULT_MEMORY_HUB_URL)
+
+
 class MemoryProvider(SearchProvider):
     name = "memory"
     kind_default = "memory"
 
     def _check_enabled(self) -> bool:
-        return DROPLIST_PACKETS.exists() or ATLAS_QUERY.exists() or IDEA_REGISTRY.exists()
+        return DROPLIST_PACKETS.exists() or self._memory_hub_reachable()
+
+    @staticmethod
+    def _memory_hub_reachable() -> bool:
+        try:
+            urllib.request.urlopen(
+                _memory_hub_url().rsplit("/", 1)[0] + "/healthz", timeout=1.0
+            )
+            return True
+        except OSError:
+            return False
 
     async def search(self, query: str, max_results: int = 10) -> list[SearchResult]:
-        results: list[SearchResult] = []
-        results.extend(self._search_droplist(query, max_results))
-        results.extend(await self._search_atlas(query, max_results))
-        results.extend(self._search_idea_registry(query, max_results))
-        results.sort(key=lambda r: r.score, reverse=True)
-        return results[:max_results]
+        hub_hits = self._via_memory_hub(query, max_results)
+        if hub_hits is not None:
+            return hub_hits
+        return self._via_droplist_fallback(query, max_results)
 
-    def _search_droplist(self, query: str, k: int) -> list[SearchResult]:
+    def _via_memory_hub(self, query: str, max_results: int) -> list[SearchResult] | None:
+        """Returns None if memory-hub is unreachable; results otherwise."""
+        payload = {"q": query, "max_results": max_results}
+        req = urllib.request.Request(
+            _memory_hub_url(),
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=5.0) as resp:
+                body = resp.read().decode("utf-8")
+        except (urllib.error.URLError, OSError):
+            return None
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError:
+            return None
+        out: list[SearchResult] = []
+        for hit in data.get("results", []):
+            cid = hit.get("canonical_id") or hit.get("snippet", "")[:60]
+            url = self._url_for(hit.get("source", ""), cid)
+            out.append(
+                SearchResult(
+                    title=hit.get("snippet", "")[:200],
+                    url=url,
+                    snippet=hit.get("snippet", ""),
+                    score=float(hit.get("relevance") or 0.0),
+                    source=hit.get("source", "memory-hub"),
+                    kind="memory",
+                    raw=hit.get("raw") or {},
+                )
+            )
+        return out
+
+    @staticmethod
+    def _url_for(source: str, cid: str) -> str:
+        if source == "droplist":
+            return f"droplist://{cid}"
+        if source == "idea_registry":
+            return f"idea://{cid}"
+        if source == "cognitive_sensor":
+            return f"atlas://cluster/{cid}"
+        if source == "mirofish":
+            return f"mirofish://{cid}"
+        return f"memory://{cid}"
+
+    def _via_droplist_fallback(self, query: str, max_results: int) -> list[SearchResult]:
         if not DROPLIST_PACKETS.exists():
             return []
         q = _tokens(query)
@@ -81,7 +141,7 @@ class MemoryProvider(SearchProvider):
                         url=f"droplist://{p.get('drop_id', 'unknown')}",
                         snippet=text[:300],
                         score=round(relevance, 3),
-                        source="droplist",
+                        source="droplist-fallback",
                         kind="memory",
                         raw={"type": p.get("type"), "domain": p.get("domain")},
                     )
@@ -89,84 +149,4 @@ class MemoryProvider(SearchProvider):
         except OSError:
             return []
         out.sort(key=lambda r: r.score, reverse=True)
-        return out[:k]
-
-    async def _search_atlas(self, query: str, k: int) -> list[SearchResult]:
-        if not ATLAS_QUERY.exists() or not shutil.which(sys.executable):
-            return []
-        cmd = [sys.executable, str(ATLAS_QUERY), "search", query, "--limit", str(k)]
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=str(ATLAS_QUERY.parent),
-            )
-            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15.0)
-        except (OSError, asyncio.TimeoutError):
-            return []
-        if proc.returncode != 0:
-            return []
-        try:
-            data = json.loads(stdout.decode("utf-8") or "[]")
-        except json.JSONDecodeError:
-            return []
-        out: list[SearchResult] = []
-        entries = data if isinstance(data, list) else data.get("results", [])
-        for entry in entries[:k]:
-            cluster_id = entry.get("id") or entry.get("cluster_id", "")
-            score = float(entry.get("score") or entry.get("similarity") or 0.0)
-            label = entry.get("label") or entry.get("title") or cluster_id
-            out.append(
-                SearchResult(
-                    title=f"cluster:{cluster_id} {label}",
-                    url=f"atlas://cluster/{cluster_id}",
-                    snippet=(entry.get("preview") or entry.get("summary") or "")[:300],
-                    score=score,
-                    source="cognitive-sensor",
-                    kind="memory",
-                    raw={"cluster_id": cluster_id},
-                )
-            )
-        return out
-
-    def _search_idea_registry(self, query: str, k: int) -> list[SearchResult]:
-        if not IDEA_REGISTRY.exists():
-            return []
-        q = _tokens(query)
-        if not q:
-            return []
-        try:
-            data = json.loads(IDEA_REGISTRY.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return []
-        ideas = data if isinstance(data, list) else data.get("ideas", [])
-        out: list[SearchResult] = []
-        for idea in ideas:
-            if not isinstance(idea, dict):
-                continue
-            text_fields = " ".join(
-                str(idea.get(k_, "")) for k_ in ("title", "name", "description", "summary", "canon_id")
-            )
-            toks = _tokens(text_fields)
-            if not toks:
-                continue
-            overlap = q & toks
-            if not overlap:
-                continue
-            relevance = len(overlap) / (len(q) ** 0.5 * len(toks) ** 0.5)
-            idea_id = idea.get("canon_id") or idea.get("id") or idea.get("name", "idea")
-            title = idea.get("title") or idea.get("name") or idea_id
-            out.append(
-                SearchResult(
-                    title=str(title),
-                    url=f"idea://{idea_id}",
-                    snippet=str(idea.get("description") or idea.get("summary") or "")[:300],
-                    score=round(relevance, 3),
-                    source="idea-registry",
-                    kind="memory",
-                    raw={"canon_id": str(idea_id)},
-                )
-            )
-        out.sort(key=lambda r: r.score, reverse=True)
-        return out[:k]
+        return out[:max_results]

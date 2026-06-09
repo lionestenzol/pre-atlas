@@ -216,8 +216,8 @@ Separate from the running system, the operator drives this repo through a
 local **structural-code-search belt** — a Claude Code skill (`repo-search`)
 over 13 CLI tools, plus a global file-locator. The rule is *understand the
 codebase before editing it*. Full inventory + runnable examples:
-**`docs/repo-search-stack.md`**. `repo-search` is one skill in a wider ~40-skill
-Claude Code belt catalogued in **`AGENT_BELT.md`**.
+**`docs/repo-search-stack.md`**. `repo-search` is one skill in a wider Claude
+Code belt (35 skills + 27 commands) catalogued in **`AGENT_BELT.md`**.
 
 - **Step 0 — `es`** (voidtools Everything CLI): locate the right project/file
   *anywhere on the machine* before any repo-local search. Cheatsheet:

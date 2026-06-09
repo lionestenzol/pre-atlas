@@ -18,8 +18,20 @@ KIND_GITHUB = "github"
 KIND_FILE = "file"
 KIND_CODE = "code"
 KIND_MEMORY = "memory"
+KIND_RESEARCH = "research"
+KIND_SOCIAL = "social"
+KIND_NEWS = "news"
+KIND_LEGAL = "legal"
+KIND_DATA = "data"
+KIND_LOCAL = "local"
+KIND_MULTIMEDIA = "multimedia"
+KIND_PRODUCT = "product"
 
-VALID_KINDS = {KIND_WEB, KIND_EXTRACT, KIND_GITHUB, KIND_FILE, KIND_CODE, KIND_MEMORY}
+VALID_KINDS = {
+    KIND_WEB, KIND_EXTRACT, KIND_GITHUB, KIND_FILE, KIND_CODE, KIND_MEMORY,
+    KIND_RESEARCH, KIND_SOCIAL, KIND_NEWS, KIND_LEGAL, KIND_DATA, KIND_LOCAL,
+    KIND_MULTIMEDIA, KIND_PRODUCT,
+}
 
 URL_RE = re.compile(r"^https?://", re.IGNORECASE)
 
@@ -37,6 +49,22 @@ def classify(query: str, explicit_kind: str | None = None) -> str:
         return KIND_FILE
     if q.startswith(("rg:", "fd:", "sg:")):
         return KIND_CODE
+    if q.startswith(("arxiv:", "paper:", "doi:")):
+        return KIND_RESEARCH
+    if q.startswith(("reddit:", "hn:", "social:")):
+        return KIND_SOCIAL
+    if q.startswith("news:"):
+        return KIND_NEWS
+    if q.startswith(("sec:", "edgar:", "law:", "court:")):
+        return KIND_LEGAL
+    if q.startswith(("dataset:", "data:", "fred:")):
+        return KIND_DATA
+    if q.startswith(("place:", "near:", "yelp:", "maps:")):
+        return KIND_LOCAL
+    if q.startswith(("video:", "youtube:", "yt:")):
+        return KIND_MULTIMEDIA
+    if q.startswith(("amazon:", "asin:", "product:")):
+        return KIND_PRODUCT
     return KIND_WEB
 
 

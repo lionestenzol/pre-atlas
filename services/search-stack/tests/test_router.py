@@ -43,3 +43,43 @@ def test_explicit_kind_wins():
 
 def test_invalid_explicit_falls_back_to_inferred():
     assert classify("https://example.com", explicit_kind="bogus") == KIND_EXTRACT
+
+
+def test_research_prefix():
+    assert classify("arxiv:transformer") == "research"
+    assert classify("paper:attention is all you need") == "research"
+    assert classify("doi:10.1145/3133957") == "research"
+
+
+def test_social_prefix():
+    assert classify("reddit:claude code") == "social"
+    assert classify("hn:react server components") == "social"
+
+
+def test_news_prefix():
+    assert classify("news:anthropic dev day") == "news"
+
+
+def test_legal_prefix():
+    assert classify("sec:AAPL 10-K") == "legal"
+    assert classify("court:roe v wade") == "legal"
+
+
+def test_data_prefix():
+    assert classify("dataset:US population") == "data"
+    assert classify("fred:GDP") == "data"
+
+
+def test_local_prefix():
+    assert classify("place:Brooklyn pizza") == "local"
+    assert classify("yelp:coffee austin") == "local"
+
+
+def test_multimedia_prefix():
+    assert classify("video:claude tutorial") == "multimedia"
+    assert classify("yt:react server components") == "multimedia"
+
+
+def test_product_prefix():
+    assert classify("amazon:logitech mx master") == "product"
+    assert classify("asin:B07GBZ4Q68") == "product"

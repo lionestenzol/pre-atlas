@@ -11,7 +11,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { loadConfig, type ScpConfig } from './config.js';
 import { getSupabase } from './supabase.js';
-import { claimNextJob, completeJob, failJob } from './queue.js';
+import { claimNextJob, completeJob, failJob, reapStaleJobs } from './queue.js';
 import { compressRepository } from './source.js';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -36,14 +36,35 @@ export async function tick(db: SupabaseClient, config: ScpConfig): Promise<boole
   return true;
 }
 
+/** Run the reaper if its interval has elapsed. Returns the next due timestamp. */
+async function maybeReap(
+  db: SupabaseClient,
+  config: ScpConfig,
+  dueAt: number,
+): Promise<number> {
+  if (Date.now() < dueAt) return dueAt;
+  try {
+    const n = await reapStaleJobs(db, config.reapTimeoutMs / 1000);
+    if (n > 0) console.log(`[delta-scp] reaped ${n} orphaned job(s)`);
+  } catch (err) {
+    console.error('[delta-scp] reaper error:', err);
+  }
+  return Date.now() + config.reapIntervalMs;
+}
+
 /** Run the loop forever. Drains the queue, then idles one poll interval. */
 export async function runWorker(
   db: SupabaseClient = getSupabase(),
   config: ScpConfig = loadConfig(),
   signal?: AbortSignal,
 ): Promise<void> {
-  console.log(`[delta-scp] worker started · poll=${config.pollIntervalMs}ms`);
+  console.log(
+    `[delta-scp] worker started · poll=${config.pollIntervalMs}ms · ` +
+      `reap=${config.reapIntervalMs}ms/timeout=${config.reapTimeoutMs}ms`,
+  );
+  let reapDueAt = Date.now() + config.reapIntervalMs;
   while (!signal?.aborted) {
+    reapDueAt = await maybeReap(db, config, reapDueAt);
     let handled = false;
     try {
       handled = await tick(db, config);

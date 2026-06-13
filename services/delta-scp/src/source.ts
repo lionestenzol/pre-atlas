@@ -8,6 +8,7 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { compressTree, type CompressedState, type SourceFile } from './compressor.js';
 import { loadConfig, type ScpConfig } from './config.js';
+import { validateRepoUrl } from './validate.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -56,9 +57,14 @@ function localDir(repoUrl: string): string {
   return repoUrl.startsWith('file://') ? repoUrl.slice('file://'.length) : repoUrl;
 }
 
-/** Recursively collect includable source files under root, honouring ignores. */
-async function walk(root: string, maxFileBytes: number): Promise<SourceFile[]> {
+/**
+ * Recursively collect includable source files under root, honouring ignores.
+ * Aborts (throws) if the repo blows past the file-count or total-byte caps —
+ * a guardrail against a hostile or accidentally enormous repo.
+ */
+async function walk(root: string, config: ScpConfig): Promise<SourceFile[]> {
   const files: SourceFile[] = [];
+  let totalBytes = 0;
 
   async function recurse(dir: string): Promise<void> {
     const entries = await readdir(dir, { withFileTypes: true });
@@ -69,7 +75,14 @@ async function walk(root: string, maxFileBytes: number): Promise<SourceFile[]> {
         await recurse(abs);
       } else if (entry.isFile() && includeFile(entry.name)) {
         const info = await stat(abs);
-        if (info.size > maxFileBytes) continue;
+        if (info.size > config.maxFileBytes) continue;
+        if (files.length >= config.maxFiles) {
+          throw new Error(`repo exceeds maxFiles (${config.maxFiles})`);
+        }
+        totalBytes += info.size;
+        if (totalBytes > config.maxTotalBytes) {
+          throw new Error(`repo exceeds maxTotalBytes (${config.maxTotalBytes})`);
+        }
         const content = await readFile(abs, 'utf8');
         files.push({
           path: path.relative(root, abs).split(path.sep).join('/'),
@@ -96,7 +109,12 @@ async function cloneRepo(repoUrl: string, config: ScpConfig): Promise<string> {
   await execFileAsync(
     'git',
     ['clone', '--depth', '1', '--quiet', repoUrl, target],
-    { timeout: 120_000, maxBuffer: 16 * 1024 * 1024 },
+    {
+      timeout: 120_000,
+      maxBuffer: 16 * 1024 * 1024,
+      // Never block on a credential prompt; never let a URL invoke ext helpers.
+      env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+    },
   );
   return target;
 }
@@ -109,6 +127,13 @@ export async function compressRepository(
   repoUrl: string,
   config: ScpConfig = loadConfig(),
 ): Promise<CompressedState> {
+  // Defense in depth: the API gateway validates too, but the worker may be fed
+  // jobs from other producers, so re-check before touching the network/disk.
+  const verdict = validateRepoUrl(repoUrl, config);
+  if (!verdict.ok) {
+    throw new Error(`rejected repo_url: ${verdict.reason}`);
+  }
+
   let root: string;
   let cleanup = false;
 
@@ -120,7 +145,7 @@ export async function compressRepository(
   }
 
   try {
-    const files = await walk(root, config.maxFileBytes);
+    const files = await walk(root, config);
     return compressTree(repoUrl, files);
   } finally {
     if (cleanup) {

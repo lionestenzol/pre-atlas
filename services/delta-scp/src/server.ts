@@ -2,26 +2,37 @@
 //
 //   POST /jobs        { "repo_url": "..." }  -> enqueue, returns the job row
 //   GET  /jobs/:id                            -> job status + compressed_state
-//   GET  /healthz                             -> liveness
+//   GET  /healthz                             -> liveness (open)
+//
+// /jobs routes require an API key (Authorization: Bearer <key> or x-api-key).
 
 import express from 'express';
-import { loadConfig } from './config.js';
+import { loadConfig, type ScpConfig } from './config.js';
 import { getSupabase } from './supabase.js';
 import { enqueueJob, getJob } from './queue.js';
+import { requireApiKey } from './auth.js';
+import { validateRepoUrl } from './validate.js';
 
-export function createServer() {
+export function createServer(config: ScpConfig = loadConfig()) {
   const app = express();
   app.use(express.json({ limit: '256kb' }));
-  const db = getSupabase();
+  const db = getSupabase(config);
 
   app.get('/healthz', (_req, res) => {
     res.json({ ok: true, service: 'delta-scp' });
   });
 
-  app.post('/jobs', async (req, res) => {
+  const auth = requireApiKey(config);
+
+  app.post('/jobs', auth, async (req, res) => {
     const repoUrl = (req.body?.repo_url ?? '').toString().trim();
     if (!repoUrl) {
       res.status(400).json({ ok: false, error: 'repo_url is required' });
+      return;
+    }
+    const verdict = validateRepoUrl(repoUrl, config);
+    if (!verdict.ok) {
+      res.status(400).json({ ok: false, error: `rejected repo_url: ${verdict.reason}` });
       return;
     }
     try {
@@ -32,9 +43,9 @@ export function createServer() {
     }
   });
 
-  app.get('/jobs/:id', async (req, res) => {
+  app.get('/jobs/:id', auth, async (req, res) => {
     try {
-      const job = await getJob(db, req.params.id);
+      const job = await getJob(db, String(req.params.id));
       if (!job) {
         res.status(404).json({ ok: false, error: 'job not found' });
         return;
@@ -48,11 +59,13 @@ export function createServer() {
   return app;
 }
 
-export function startServer() {
-  const config = loadConfig();
-  const app = createServer();
+export function startServer(config: ScpConfig = loadConfig()) {
+  const app = createServer(config);
   return app.listen(config.port, () => {
     console.log(`[delta-scp] API gateway listening on :${config.port}`);
+    if (!config.apiKey) {
+      console.warn('[delta-scp] WARNING: SCP_API_KEY unset — /jobs routes return 503');
+    }
   });
 }
 

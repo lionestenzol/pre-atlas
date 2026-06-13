@@ -76,6 +76,22 @@ export async function failJob(
   if (error) throw new Error(`failJob failed: ${error.message}`);
 }
 
+/**
+ * Re-queue jobs orphaned by a crashed worker (stuck in 'processing' past the
+ * timeout). Delegates to the reap_stale_scp_jobs() SQL function. Returns the
+ * number of jobs reaped.
+ */
+export async function reapStaleJobs(
+  db: SupabaseClient,
+  timeoutSecs: number,
+): Promise<number> {
+  const { data, error } = await db.rpc('reap_stale_scp_jobs', {
+    timeout_secs: Math.max(1, Math.floor(timeoutSecs)),
+  });
+  if (error) throw new Error(`reapStaleJobs failed: ${error.message}`);
+  return ((data ?? []) as ScpJob[]).length;
+}
+
 /** Fetch a single job by id (for the API gateway's status endpoint). */
 export async function getJob(
   db: SupabaseClient,

@@ -1,5 +1,7 @@
 // Delta SCP · runtime configuration (env-driven, with sane defaults)
 
+import os from 'node:os';
+import path from 'node:path';
 import { loadEnvFile } from './env.js';
 
 export interface ScpConfig {
@@ -55,7 +57,10 @@ export function loadConfig(): ScpConfig {
     supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY ?? '',
     port: intInRange('SCP_PORT', 3012, 1, 65535),
     pollIntervalMs: intInRange('SCP_POLL_INTERVAL_MS', 5000, 1),
-    cloneDir: process.env.SCP_CLONE_DIR ?? '/tmp/delta-scp',
+    // Portable default: an absolute, drive-qualified temp path on every OS.
+    // A hardcoded '/tmp/...' becomes the drive-relative '\tmp\...' on Windows,
+    // which breaks git clone (see source.ts cloneRepo). os.tmpdir() avoids that.
+    cloneDir: process.env.SCP_CLONE_DIR ?? path.join(os.tmpdir(), 'delta-scp'),
     maxFileBytes: intInRange('SCP_MAX_FILE_BYTES', 1024 * 1024, 1),
     reapTimeoutMs: intInRange('SCP_REAP_TIMEOUT_MS', 10 * 60 * 1000, 1000),
     reapIntervalMs: intInRange('SCP_REAP_INTERVAL_MS', 60 * 1000, 1000),

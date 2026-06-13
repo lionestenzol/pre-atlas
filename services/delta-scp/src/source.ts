@@ -111,8 +111,16 @@ function clonePrefix(cloneDir: string, repoUrl: string): string {
  * processing the same repo_url never delete each other's checkout mid-run.
  */
 async function cloneRepo(repoUrl: string, config: ScpConfig): Promise<string> {
-  await mkdir(config.cloneDir, { recursive: true });
-  const target = await mkdtemp(clonePrefix(config.cloneDir, repoUrl));
+  // Resolve to an absolute, drive-qualified path. A drive-relative path such as
+  // `\tmp\delta-scp\…` (what a `/tmp/...` cloneDir yields on Windows) trips a
+  // Git-for-Windows bug: cloning into a *pre-existing empty* directory via such
+  // a path wrongly fails with "already exists and is not an empty directory".
+  // mkdtemp pre-creates the dir for race-safety, so we always hit that path;
+  // path.resolve hands git an absolute `C:\…` path it checks correctly.
+  // See ~/.claude/rules/common/code-as-furniture.md — fixed, not documented.
+  const baseDir = path.resolve(config.cloneDir);
+  await mkdir(baseDir, { recursive: true });
+  const target = await mkdtemp(clonePrefix(baseDir, repoUrl));
   await execFileAsync(
     'git',
     ['clone', '--depth', '1', '--quiet', repoUrl, target],

@@ -1,5 +1,7 @@
 // Delta SCP · runtime configuration (env-driven, with sane defaults)
 
+import { loadEnvFile } from './env.js';
+
 export interface ScpConfig {
   supabaseUrl: string;
   supabaseServiceKey: string;
@@ -40,6 +42,7 @@ function list(name: string): string[] {
 }
 
 export function loadConfig(): ScpConfig {
+  loadEnvFile(); // pick up a local .env on first load
   return {
     supabaseUrl: process.env.SUPABASE_URL ?? '',
     supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY ?? '',

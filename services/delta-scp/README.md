@@ -46,32 +46,45 @@ Rust, Java, Ruby, and more.
 | `src/cli.ts` | Offline one-shot compression (no DB) |
 | `test/queue.integration.test.ts` | Real-Postgres tests for claim + reaper |
 
-## Deploy
+## Turnkey local deploy
 
-1. **Schema** — apply both migrations to your Supabase project (it is Postgres):
+Drop your credentials in a `.env` and run one command — no manual `psql`:
 
-   ```bash
-   psql "$SUPABASE_DB_URL" -f ../../migrations/004_scp_compression_queue.sql
-   psql "$SUPABASE_DB_URL" -f ../../migrations/005_scp_reaper.sql
-   # or paste them into the Supabase SQL editor
-   ```
+```bash
+npm install
+cp .env.example .env          # fill in the values below
+npm run deploy                # applies the schema, then runs gateway + worker
+```
 
-   004 creates `scp_jobs`, the poll/status indexes, an `updated_at` trigger, and
-   the `claim_scp_job()` function (race-free claiming). 005 adds
-   `reap_stale_scp_jobs()` for crashed-worker recovery.
+`npm run deploy` = `npm run migrate` (apply migrations 004 + 005 to your DB) then
+`npm start`. The service auto-loads `.env` from the service root, so once the
+file is on disk it "just works" — anything already in the shell environment wins.
 
-2. **Config** — `cp .env.example .env` and fill in `SUPABASE_URL`,
-   `SUPABASE_SERVICE_KEY`, and `SCP_API_KEY` (without the API key the `/jobs`
-   routes stay disabled and return 503).
+`.env` essentials:
 
-3. **Run** — `npm install` then:
+| Var | Needed for | Where to find it (Supabase) |
+| --- | --- | --- |
+| `SUPABASE_URL` | runtime | Project Settings → API → Project URL |
+| `SUPABASE_SERVICE_KEY` | runtime | Project Settings → API → `service_role` key |
+| `SUPABASE_DB_URL` | `npm run migrate` only | Project Settings → Database → Connection string (URI) |
+| `SCP_API_KEY` | gateway auth | any secret you choose (without it `/jobs` returns 503) |
 
-   ```bash
-   npm start        # API gateway + worker in one process
-   # or split them:
-   npm run api
-   npm run worker
-   ```
+### Steps individually
+
+```bash
+npm run migrate   # apply the schema (idempotent; safe to re-run)
+npm start         # API gateway + worker in one process
+# or split them:
+npm run api
+npm run worker
+```
+
+`npm run migrate` creates `scp_jobs`, the poll/status indexes, the `updated_at`
+trigger, `claim_scp_job()` (race-free claiming) and `reap_stale_scp_jobs()`
+(crashed-worker recovery). It needs `SUPABASE_DB_URL`; the runtime needs only
+`SUPABASE_URL` + `SUPABASE_SERVICE_KEY`. You can still apply the SQL by hand
+(`psql "$SUPABASE_DB_URL" -f ../../migrations/004_scp_compression_queue.sql`,
+then `005_…`) or paste it into the Supabase SQL editor if you prefer.
 
 4. **Feed a repo URL → get compressed JSON:**
 

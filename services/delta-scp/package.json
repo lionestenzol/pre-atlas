@@ -1,0 +1,26 @@
+{
+  "name": "delta-scp",
+  "version": "0.1.0",
+  "description": "Delta SCP (Symbolic Compression Protocol) queue: repo URL -> compact symbolic JSON map, via a Supabase-backed job queue.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "worker": "tsx src/worker.ts",
+    "api": "tsx src/server.ts",
+    "compress": "tsx src/cli.ts",
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -28,6 +28,13 @@ function num(name: string, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+// Integer within [min, max]; out-of-range or non-finite values fall back to the
+// default so a stray `SCP_POLL_INTERVAL_MS=0` can't wedge the worker.
+function intInRange(name: string, fallback: number, min: number, max = Number.MAX_SAFE_INTEGER): number {
+  const value = Math.trunc(num(name, fallback));
+  return value >= min && value <= max ? value : fallback;
+}
+
 function bool(name: string, fallback: boolean): boolean {
   const raw = process.env[name];
   if (raw === undefined) return fallback;
@@ -46,17 +53,17 @@ export function loadConfig(): ScpConfig {
   return {
     supabaseUrl: process.env.SUPABASE_URL ?? '',
     supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY ?? '',
-    port: num('SCP_PORT', 3012),
-    pollIntervalMs: num('SCP_POLL_INTERVAL_MS', 5000),
+    port: intInRange('SCP_PORT', 3012, 1, 65535),
+    pollIntervalMs: intInRange('SCP_POLL_INTERVAL_MS', 5000, 1),
     cloneDir: process.env.SCP_CLONE_DIR ?? '/tmp/delta-scp',
-    maxFileBytes: num('SCP_MAX_FILE_BYTES', 1024 * 1024),
-    reapTimeoutMs: num('SCP_REAP_TIMEOUT_MS', 10 * 60 * 1000),
-    reapIntervalMs: num('SCP_REAP_INTERVAL_MS', 60 * 1000),
+    maxFileBytes: intInRange('SCP_MAX_FILE_BYTES', 1024 * 1024, 1),
+    reapTimeoutMs: intInRange('SCP_REAP_TIMEOUT_MS', 10 * 60 * 1000, 1000),
+    reapIntervalMs: intInRange('SCP_REAP_INTERVAL_MS', 60 * 1000, 1000),
     apiKey: process.env.SCP_API_KEY ?? '',
     allowedHosts: list('SCP_ALLOWED_HOSTS'),
     allowLocal: bool('SCP_ALLOW_LOCAL', false),
-    maxFiles: num('SCP_MAX_FILES', 20000),
-    maxTotalBytes: num('SCP_MAX_TOTAL_BYTES', 50 * 1024 * 1024),
+    maxFiles: intInRange('SCP_MAX_FILES', 20000, 1),
+    maxTotalBytes: intInRange('SCP_MAX_TOTAL_BYTES', 50 * 1024 * 1024, 1),
   };
 }
 

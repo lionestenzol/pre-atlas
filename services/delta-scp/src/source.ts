@@ -3,7 +3,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, readdir, rm, stat } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { compressTree, type CompressedState, type SourceFile } from './compressor.js';
@@ -47,14 +47,18 @@ function includeFile(name: string): boolean {
   return INCLUDE_EXT.has(ext);
 }
 
+// Mirrors validate.ts' notion of a local path so a repo_url accepted as "local"
+// is also fetched as local (absolute or resolvable relative path that exists).
 function isLocalPath(repoUrl: string): boolean {
   if (repoUrl.startsWith('file://')) return true;
-  if (path.isAbsolute(repoUrl) && existsSync(repoUrl)) return true;
-  return false;
+  if (path.isAbsolute(repoUrl)) return existsSync(repoUrl);
+  return existsSync(path.resolve(repoUrl));
 }
 
 function localDir(repoUrl: string): string {
-  return repoUrl.startsWith('file://') ? repoUrl.slice('file://'.length) : repoUrl;
+  return repoUrl.startsWith('file://')
+    ? repoUrl.slice('file://'.length)
+    : path.resolve(repoUrl);
 }
 
 /**
@@ -96,16 +100,19 @@ async function walk(root: string, config: ScpConfig): Promise<SourceFile[]> {
   return files;
 }
 
-function cloneTarget(cloneDir: string, repoUrl: string): string {
-  const slug = createHash('sha1').update(repoUrl).digest('hex').slice(0, 16);
-  return path.join(cloneDir, slug);
+function clonePrefix(cloneDir: string, repoUrl: string): string {
+  const slug = createHash('sha256').update(repoUrl).digest('hex').slice(0, 16);
+  return path.join(cloneDir, `${slug}-`);
 }
 
-/** Shallow-clone a remote repo into the clone dir (fresh each time). */
+/**
+ * Shallow-clone a remote repo into a unique per-run directory. Using mkdtemp
+ * (rather than a deterministic per-URL path that gets rm'd) means two workers
+ * processing the same repo_url never delete each other's checkout mid-run.
+ */
 async function cloneRepo(repoUrl: string, config: ScpConfig): Promise<string> {
   await mkdir(config.cloneDir, { recursive: true });
-  const target = cloneTarget(config.cloneDir, repoUrl);
-  await rm(target, { recursive: true, force: true });
+  const target = await mkdtemp(clonePrefix(config.cloneDir, repoUrl));
   await execFileAsync(
     'git',
     ['clone', '--depth', '1', '--quiet', repoUrl, target],
@@ -146,7 +153,7 @@ export async function compressRepository(
 
   try {
     const files = await walk(root, config);
-    return compressTree(repoUrl, files);
+    return compressTree(repoUrl, files, new Date().toISOString());
   } finally {
     if (cleanup) {
       await rm(root, { recursive: true, force: true }).catch(() => {});

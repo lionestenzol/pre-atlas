@@ -56,6 +56,14 @@ export async function completeJob(
   if (error) throw new Error(`completeJob failed: ${error.message}`);
 }
 
+// Persist a sanitized, size-capped error summary rather than a raw stack trace:
+// redact credentials embedded in URLs and bound the column growth, since
+// error_log is exposed via the status API.
+function toSafeErrorLog(err: unknown, maxLen = 2000): string {
+  const raw = String(err instanceof Error ? err.message : err);
+  return raw.replace(/\/\/[^/@\s]+@/g, '//***@').slice(0, maxLen);
+}
+
 /**
  * Mark a job failed. Re-queues (status back to 'pending') while attempts remain,
  * otherwise parks it in 'error' so it stops being retried forever.
@@ -70,7 +78,7 @@ export async function failJob(
     .from('scp_jobs')
     .update({
       status: exhausted ? 'error' : 'pending',
-      error_log: String(err instanceof Error ? err.stack ?? err.message : err),
+      error_log: toSafeErrorLog(err),
     })
     .eq('id', job.id);
   if (error) throw new Error(`failJob failed: ${error.message}`);

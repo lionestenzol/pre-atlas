@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS scp_jobs (
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT scp_jobs_status_chk
-        CHECK (status IN ('pending', 'processing', 'complete', 'error'))
+        CHECK (status IN ('pending', 'processing', 'complete', 'error')),
+    CONSTRAINT scp_jobs_attempt_chk      CHECK (attempt >= 0),
+    CONSTRAINT scp_jobs_max_attempts_chk CHECK (max_attempts >= 1)
 );
 
 -- Poll index: fast claim of the oldest pending job (partial → only pending rows).

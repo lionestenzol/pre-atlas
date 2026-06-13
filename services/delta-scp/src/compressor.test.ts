@@ -71,6 +71,12 @@ describe('compressTree', () => {
     expect(out.languages).toEqual({ python: 1, typescript: 1 });
   });
 
+  it('is deterministic: identical inputs produce identical output', () => {
+    // No injected timestamp -> uses the fixed default, so repeated calls match
+    // byte-for-byte (no hidden clock dependency).
+    expect(compressTree('repo://x', files)).toEqual(compressTree('repo://x', files));
+  });
+
   it('reports stats with a positive token yield on real source', () => {
     // Realistic source: a symbol declaration followed by non-symbol body lines,
     // which is where structural compression actually pays off.

@@ -149,9 +149,15 @@ export function extractSymbols(content: string, language: string): SymbolEntry[]
 
 /**
  * Pure compression: given the source files of a repo, produce the symbolic map.
- * No I/O — fully deterministic and unit-testable.
+ * No I/O — fully deterministic and unit-testable. generatedAt is injected (not
+ * read from the clock) so identical repo+files inputs always produce identical
+ * output; the I/O boundary (compressRepository) supplies the real timestamp.
  */
-export function compressTree(repo: string, files: SourceFile[]): CompressedState {
+export function compressTree(
+  repo: string,
+  files: SourceFile[],
+  generatedAt = '1970-01-01T00:00:00.000Z',
+): CompressedState {
   const symbolicNodes: SymbolicNode[] = [];
   const languages: Record<string, number> = {};
   let bytes = 0;
@@ -175,7 +181,6 @@ export function compressTree(repo: string, files: SourceFile[]): CompressedState
     });
   }
 
-  const generatedAt = new Date().toISOString();
   // compressed_tokens_est is measured against the serialized symbolic map minus
   // the stats block (which depends on this number), so we build the body first.
   const body = {

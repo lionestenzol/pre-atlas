@@ -16,15 +16,31 @@ import { compressRepository } from './source.js';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Strip credentials and query/fragment from a URL before it hits the logs. */
+function redactRepoUrl(input: string): string {
+  try {
+    const u = new URL(input);
+    u.username = '';
+    u.password = '';
+    u.search = '';
+    u.hash = '';
+    return u.toString();
+  } catch {
+    return '<non-url repo path>';
+  }
+}
+
 /** Process exactly one job if available. Returns true if a job was handled. */
 export async function tick(db: SupabaseClient, config: ScpConfig): Promise<boolean> {
   const job = await claimNextJob(db);
   if (!job) return false;
 
-  console.log(`[delta-scp] claimed job ${job.id} (attempt ${job.attempt}) · ${job.repo_url}`);
+  console.log(
+    `[delta-scp] claimed job ${job.id} (attempt ${job.attempt}) · ${redactRepoUrl(job.repo_url)}`,
+  );
   try {
     const compressed = await compressRepository(job.repo_url, config);
-    await completeJob(db, job.id, compressed);
+    await completeJob(db, job, compressed);
     console.log(
       `[delta-scp] complete ${job.id} · ${compressed.stats.files_included} files · ` +
         `token_yield=${compressed.stats.token_yield}`,

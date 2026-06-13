@@ -43,16 +43,25 @@ export async function claimNextJob(db: SupabaseClient): Promise<ScpJob | null> {
   return rows.length > 0 ? rows[0] : null;
 }
 
-/** Mark a claimed job complete and persist its compressed output. */
+/**
+ * Mark a claimed job complete and persist its compressed output.
+ *
+ * Scoped to the exact attempt that is still 'processing'. If the reaper has
+ * re-queued the row and another worker re-claimed it (incrementing attempt),
+ * this update matches zero rows and is a safe no-op — a slow worker can't
+ * overwrite the newer attempt's result.
+ */
 export async function completeJob(
   db: SupabaseClient,
-  jobId: string,
+  job: Pick<ScpJob, 'id' | 'attempt'>,
   compressedState: Record<string, unknown>,
 ): Promise<void> {
   const { error } = await db
     .from('scp_jobs')
     .update({ status: 'complete', compressed_state: compressedState })
-    .eq('id', jobId);
+    .eq('id', job.id)
+    .eq('attempt', job.attempt)
+    .eq('status', 'processing');
   if (error) throw new Error(`completeJob failed: ${error.message}`);
 }
 
@@ -74,13 +83,17 @@ export async function failJob(
   err: unknown,
 ): Promise<void> {
   const exhausted = job.attempt >= job.max_attempts;
+  // Scoped to this attempt while still 'processing' — see completeJob: a
+  // re-claimed (reaped) job won't be clobbered by the original slow worker.
   const { error } = await db
     .from('scp_jobs')
     .update({
       status: exhausted ? 'error' : 'pending',
       error_log: toSafeErrorLog(err),
     })
-    .eq('id', job.id);
+    .eq('id', job.id)
+    .eq('attempt', job.attempt)
+    .eq('status', 'processing');
   if (error) throw new Error(`failJob failed: ${error.message}`);
 }
 

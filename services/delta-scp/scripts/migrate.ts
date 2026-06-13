@@ -49,9 +49,13 @@ async function main() {
     process.exit(1);
   }
 
+  // Remote connections verify the server certificate by default. If your
+  // provider presents a cert Node can't validate, opt out with
+  // SCP_PG_INSECURE_TLS=true (understanding it disables MITM protection).
+  const insecureTls = /^(1|true|yes|on)$/i.test(process.env.SCP_PG_INSECURE_TLS ?? '');
   const client = new Client({
     connectionString: url,
-    ssl: isLocal(url) ? undefined : { rejectUnauthorized: false },
+    ssl: isLocal(url) ? undefined : { rejectUnauthorized: !insecureTls },
   });
   await client.connect();
   try {

@@ -39,7 +39,8 @@ export function createServer(config: ScpConfig = loadConfig()) {
       const job = await enqueueJob(db, repoUrl);
       res.status(201).json({ ok: true, job });
     } catch (err) {
-      res.status(500).json({ ok: false, error: String(err) });
+      console.error('[delta-scp] POST /jobs failed:', err);
+      res.status(500).json({ ok: false, error: 'internal server error' });
     }
   });
 
@@ -52,7 +53,8 @@ export function createServer(config: ScpConfig = loadConfig()) {
       }
       res.json({ ok: true, job });
     } catch (err) {
-      res.status(500).json({ ok: false, error: String(err) });
+      console.error('[delta-scp] GET /jobs/:id failed:', err);
+      res.status(500).json({ ok: false, error: 'internal server error' });
     }
   });
 

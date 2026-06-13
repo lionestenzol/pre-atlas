@@ -35,6 +35,11 @@ describe('validateRepoUrl', () => {
       'https://172.16.0.1/x',
       'https://169.254.169.254/latest',
       'https://metadata.google.internal/x',
+      // IPv6 loopback / unique-local / link-local
+      'https://[::1]/x',
+      'https://[fc00::1]/x',
+      'https://[fd00::1]/x',
+      'https://[fe80::1]/x',
     ]) {
       expect(validateRepoUrl(host, cfg()).ok).toBe(false);
     }

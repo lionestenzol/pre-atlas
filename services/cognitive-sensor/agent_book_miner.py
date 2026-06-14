@@ -21,6 +21,7 @@ from datetime import datetime
 from collections import defaultdict
 from numpy.linalg import norm
 from model_cache import get_model
+from text_utils import chunk_text
 
 BASE = Path(__file__).parent.resolve()
 
@@ -193,22 +194,6 @@ def extract_user_messages(convo):
     return messages
 
 
-def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
-    """Split long messages into overlapping word chunks."""
-    words = text.split()
-    if len(words) <= chunk_size:
-        return [text]
-
-    chunks = []
-    start = 0
-    while start < len(words):
-        end = start + chunk_size
-        chunk = " ".join(words[start:end])
-        chunks.append(chunk)
-        start = end - overlap
-    return chunks
-
-
 def count_keyword_hits(text):
     """Count how many power dynamics keyword patterns match."""
     return sum(1 for pat in POWER_KEYWORDS if pat.search(text))
@@ -289,7 +274,7 @@ def main():
         convo_passages = []
 
         for msg in user_messages:
-            chunks = chunk_text(msg)
+            chunks = chunk_text(msg, CHUNK_SIZE, CHUNK_OVERLAP)
 
             for chunk in chunks:
                 # Keyword check

@@ -142,6 +142,7 @@ export interface LifeSignals {
 export interface SystemStateData {
   [key: string]: unknown;
   mode: Mode;
+  last_mode_transition_at?: Timestamp;
   signals: {
     sleep_hours: number;
     open_loops: number;

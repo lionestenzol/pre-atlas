@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "IdeasDeduplicated.v1",
+  "title": "Ideas Deduplicated",
+  "description": "Deduplicated, clustered ideas produced by agent_deduplicator.py from ExcavatedIdeas.v1 input. Each entry is one canonical idea with the merged sources, version timeline, and related-idea cross-links.",
+  "type": "object",
+  "required": ["metadata", "ideas"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": [
+        "generated_at",
+        "total_conversations_scanned",
+        "total_ideas_extracted",
+        "ideas_before_dedup",
+        "ideas_after_dedup",
+        "merge_groups"
+      ],
+      "properties": {
+        "generated_at": { "type": "string" },
+        "total_conversations_scanned": { "type": "integer" },
+        "total_ideas_extracted": { "type": "integer" },
+        "ideas_before_dedup": { "type": "integer" },
+        "ideas_after_dedup": { "type": "integer" },
+        "merge_groups": { "type": "integer" },
+        "same_threshold": { "type": "number" },
+        "related_threshold": { "type": "number" }
+      }
+    },
+    "ideas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "canonical_id",
+          "canonical_title",
+          "canonical_text",
+          "category",
+          "mention_count",
+          "merged_from"
+        ],
+        "properties": {
+          "canonical_id": { "type": "string" },
+          "canonical_title": { "type": "string" },
+          "canonical_text": { "type": "string" },
+          "category": { "type": "string" },
+          "mention_count": { "type": "integer", "minimum": 1 },
+          "merged_from": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "version_timeline": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["idea_id", "convo_id", "date", "category"],
+              "properties": {
+                "idea_id": { "type": "string" },
+                "convo_id": { "type": "string" },
+                "convo_title": { "type": "string" },
+                "date": { "type": "string" },
+                "category": { "type": "string" },
+                "key_quote": { "type": "string" },
+                "evolution_note": { "type": "string" }
+              }
+            }
+          },
+          "related_ideas": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "all_key_quotes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "combined_signals": {
+            "type": "object",
+            "properties": {
+              "max_semantic_similarity": { "type": "number" },
+              "total_mentions": { "type": "integer" },
+              "first_date": { "type": "string" },
+              "last_date": { "type": "string" }
+            }
+          },
+          "embedding": { "type": "string" }
+        }
+      }
+    }
+  }
+}

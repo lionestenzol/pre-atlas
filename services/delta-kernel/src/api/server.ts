@@ -9,6 +9,8 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '../cli/sqlite-storage';
 import { createEntity, createDelta, now } from '../core/delta';
+import { buildCockpit, CockpitBuildContext } from '../core/cockpit';
+import type { InboxData, ThreadData, DraftData, EntityType } from '../core/types-core';
 import { getDaemon, JobName } from '../governance/governance_daemon';
 import { WorkController } from '../core/work-controller';
 import { getTimelineLogger } from '../core/timeline-logger.js';
@@ -28,6 +30,11 @@ import {
 } from '../atlas/signals-store.js';
 import { PreferencesStore } from '../atlas/preferences-store.js';
 import { ingestCloseSignal, CloseSignalValidationError } from '../atlas/close-signal.js';
+import {
+  buildViewmodel as buildLatticeViewmodel,
+  recordCorrection as recordLatticeCorrection,
+  CorrectionValidationError as LatticeCorrectionValidationError,
+} from '../atlas/lattice-projection.js';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -76,6 +83,7 @@ app.use(cors({
     'http://localhost:8889', 'http://127.0.0.1:8889', // CycleBoard
     'http://localhost:3008', 'http://127.0.0.1:3008', // UASC Executor
     'http://localhost:3006', 'http://127.0.0.1:3006', // inPACT
+    'http://localhost:3011', 'http://127.0.0.1:3011', // Lattice
     'null', // file:// protocol
   ],
 }));
@@ -2067,6 +2075,68 @@ app.get('/api/atlas/next-directive', (_req, res) => {
 });
 
 /**
+ * GET /api/atlas/cockpit
+ * Returns the current Cockpit payload — mode, signals, prepared actions,
+ * top tasks, drafts, leverage moves, mode_since stamped from the latest
+ * mode transition (state.last_mode_transition_at, with entity.created_at fallback).
+ * Read-only; safe to poll. Wires buildCockpit into a live route so its mode_since
+ * fix is load-bearing (was previously only exercised by fabric-tests).
+ */
+app.get('/api/atlas/cockpit', (_req, res) => {
+  try {
+    const systemStateEntities = storage.loadEntitiesByType<SystemStateData>('system_state');
+    if (systemStateEntities.length === 0) {
+      res.status(503).json({ ok: false, error: 'No system_state entity present' });
+      return;
+    }
+
+    // Inbox is in CockpitBuildContext shape but never read inside buildCockpit body.
+    // If absent, supply a structurally-valid empty inbox so the route can serve
+    // freshly-bootstrapped fabrics without writing on a GET.
+    const inboxEntities = storage.loadEntitiesByType<InboxData>('inbox');
+    const inbox = inboxEntities.length > 0
+      ? inboxEntities[0]
+      : {
+          entity: {
+            entity_id: 'synthetic-inbox-cockpit',
+            entity_type: 'inbox' as EntityType,
+            created_at: now(),
+            current_version: 1,
+            current_hash: '',
+            is_archived: false,
+          },
+          state: {
+            unread_count: 0,
+            priority_queue: [],
+            task_queue: [],
+            idea_queue: [],
+            last_activity_at: now(),
+          } satisfies InboxData,
+        };
+
+    const tasks = storage.loadEntitiesByType<TaskData>('task');
+    const threads = storage.loadEntitiesByType<ThreadData>('thread');
+    const drafts = storage.loadEntitiesByType<DraftData>('draft');
+    const pendingActions = storage.loadEntitiesByType<PendingActionData>('pending_action');
+
+    const ctx: CockpitBuildContext = {
+      systemState: systemStateEntities[0],
+      inbox,
+      tasks,
+      threads,
+      drafts,
+      pendingAction: pendingActions.length > 0 ? pendingActions[0] : null,
+    };
+
+    const cockpit = buildCockpit(ctx);
+    res.json({ ok: true, cockpit });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+/**
  * POST /api/atlas/close-signal - ingest CloseSignal.v1 from Optogon.
  * Validates, persists learned_preferences + confirmed decisions, returns summary.
  */
@@ -2121,6 +2191,47 @@ app.post('/api/atlas/preferences', (req, res) => {
     res.status(500).json({ ok: false, error: message });
   }
 });
+// === LATTICE SEAM (slice 1: idea_registry.execute_now -> viewmodel + project correction) ===
+
+/**
+ * GET /api/lattice/viewmodel
+ * Projects cognitive-sensor's idea_registry into lattice's items/events/projects
+ * shape, then overlays user corrections stored as `task` entities tagged
+ * cortex_metadata.source = 'lattice'. User-corrected items win.
+ */
+app.get('/api/lattice/viewmodel', (_req, res) => {
+  try {
+    const viewmodel = buildLatticeViewmodel(cognitiveSensorDir, storage);
+    res.json({ ok: true, viewmodel });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+/**
+ * POST /api/lattice/correct
+ * User correction from lattice's right-click menu. Persists as a `task` entity
+ * with cortex_metadata.source='lattice' AND appends to
+ * services/cognitive-sensor/lattice_corrections.jsonl so the next clustering
+ * run can read it as labeled supervision.
+ *
+ * Body: { id: string, project: string, originalProject?, originalTitle? }
+ */
+app.post('/api/lattice/correct', async (req, res) => {
+  try {
+    const result = await recordLatticeCorrection(cognitiveSensorDir, storage, req.body);
+    res.status(202).json({ ok: true, ...result });
+  } catch (error: unknown) {
+    if (error instanceof LatticeCorrectionValidationError) {
+      res.status(400).json({ ok: false, error: error.message });
+      return;
+    }
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
 // === TIMELINE (Phase 6C) ===
 
 /**

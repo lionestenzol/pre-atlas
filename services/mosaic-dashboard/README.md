@@ -1,3 +1,11 @@
+> **Status:** SUPERSEDED — `load_bearing_now: false`
+> **Superseded by:** `lattice`
+> **Source:** [`audit/lava-layers.json`](../../audit/lava-layers.json)
+>
+> This service is still installed but not load-bearing. New work should target the superseder.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

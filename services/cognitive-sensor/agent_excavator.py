@@ -15,6 +15,7 @@ import numpy as np
 from pathlib import Path
 from numpy.linalg import norm
 from model_cache import get_model
+from text_utils import chunk_text
 from validate import require_valid
 
 BASE = Path(__file__).parent.resolve()
@@ -139,22 +140,6 @@ def extract_user_text(convo):
     return " ".join(parts)
 
 
-def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
-    """Split text into overlapping word chunks."""
-    words = text.split()
-    if len(words) <= chunk_size:
-        return [text]
-
-    chunks = []
-    start = 0
-    while start < len(words):
-        end = start + chunk_size
-        chunk = " ".join(words[start:end])
-        chunks.append(chunk)
-        start = end - overlap
-    return chunks
-
-
 def detect_regex_signals(text):
     """Check text against intent patterns. Returns list of matched pattern strings."""
     matches = []
@@ -264,7 +249,7 @@ def main():
             pass
 
         # Chunk the text
-        chunks = chunk_text(user_text)
+        chunks = chunk_text(user_text, CHUNK_SIZE, CHUNK_OVERLAP)
         convo_ideas = []
 
         for chunk in chunks:

@@ -469,7 +469,7 @@ export function buildCockpit(ctx: CockpitBuildContext): CockpitState {
   return {
     timestamp: currentTime,
     mode,
-    mode_since: ctx.systemState.entity.created_at, // TODO: track mode changes
+    mode_since: ctx.systemState.state.last_mode_transition_at ?? ctx.systemState.entity.created_at,
     signals,
     prepared_actions,
     top_tasks,

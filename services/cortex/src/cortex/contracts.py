@@ -21,6 +21,7 @@ class TaskIntent(str, Enum):
     SYNC_SERVICE = "sync_service"
     ARCHIVE_ENTITY = "archive_entity"
     COMPUTE_METRIC = "compute_metric"
+    RUN_PATH = "run_path"
 
 
 class TaskDomain(str, Enum):
@@ -58,6 +59,7 @@ class ActionType(str, Enum):
     STATE_UPDATE = "state_update"
     SHELL_EXEC = "shell_exec"
     NOOP = "noop"
+    OPTOGON_SESSION = "optogon_session"
 
 
 class OutputType(str, Enum):

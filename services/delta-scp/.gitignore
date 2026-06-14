@@ -1,0 +1,8 @@
+# Local convenience file — holds the API key, never commit it.
+START-HERE.txt
+
+# Generated compression maps (DELTA_SCP output) — artifacts, not source.
+*-map.json
+react-map.json
+out.json
+result.json

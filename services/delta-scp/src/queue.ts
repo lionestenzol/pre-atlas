@@ -1,0 +1,128 @@
+// Delta SCP · job queue access (atomic claim + state transitions)
+
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+export type ScpJobStatus = 'pending' | 'processing' | 'complete' | 'error';
+
+export interface ScpJob {
+  id: string;
+  repo_url: string;
+  status: ScpJobStatus;
+  compressed_state: Record<string, unknown> | null;
+  error_log: string | null;
+  attempt: number;
+  max_attempts: number;
+  claimed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Enqueue a new compression job. Returns the created row. */
+export async function enqueueJob(
+  db: SupabaseClient,
+  repoUrl: string,
+): Promise<ScpJob> {
+  const { data, error } = await db
+    .from('scp_jobs')
+    .insert({ repo_url: repoUrl })
+    .select('*')
+    .single();
+  if (error) throw new Error(`enqueueJob failed: ${error.message}`);
+  return data as ScpJob;
+}
+
+/**
+ * Atomically claim the oldest pending job via the claim_scp_job() SQL function
+ * (UPDATE ... FOR UPDATE SKIP LOCKED). Concurrency-safe: two workers never get
+ * the same job. Returns null when the queue is empty.
+ */
+export async function claimNextJob(db: SupabaseClient): Promise<ScpJob | null> {
+  const { data, error } = await db.rpc('claim_scp_job');
+  if (error) throw new Error(`claimNextJob failed: ${error.message}`);
+  const rows = (data ?? []) as ScpJob[];
+  return rows.length > 0 ? rows[0] : null;
+}
+
+/**
+ * Mark a claimed job complete and persist its compressed output.
+ *
+ * Scoped to the exact attempt that is still 'processing'. If the reaper has
+ * re-queued the row and another worker re-claimed it (incrementing attempt),
+ * this update matches zero rows and is a safe no-op — a slow worker can't
+ * overwrite the newer attempt's result.
+ */
+export async function completeJob(
+  db: SupabaseClient,
+  job: Pick<ScpJob, 'id' | 'attempt'>,
+  compressedState: Record<string, unknown>,
+): Promise<void> {
+  const { error } = await db
+    .from('scp_jobs')
+    .update({ status: 'complete', compressed_state: compressedState })
+    .eq('id', job.id)
+    .eq('attempt', job.attempt)
+    .eq('status', 'processing');
+  if (error) throw new Error(`completeJob failed: ${error.message}`);
+}
+
+// Persist a sanitized, size-capped error summary rather than a raw stack trace:
+// redact credentials embedded in URLs and bound the column growth, since
+// error_log is exposed via the status API.
+function toSafeErrorLog(err: unknown, maxLen = 2000): string {
+  const raw = String(err instanceof Error ? err.message : err);
+  return raw.replace(/\/\/[^/@\s]+@/g, '//***@').slice(0, maxLen);
+}
+
+/**
+ * Mark a job failed. Re-queues (status back to 'pending') while attempts remain,
+ * otherwise parks it in 'error' so it stops being retried forever.
+ */
+export async function failJob(
+  db: SupabaseClient,
+  job: ScpJob,
+  err: unknown,
+): Promise<void> {
+  const exhausted = job.attempt >= job.max_attempts;
+  // Scoped to this attempt while still 'processing' — see completeJob: a
+  // re-claimed (reaped) job won't be clobbered by the original slow worker.
+  const { error } = await db
+    .from('scp_jobs')
+    .update({
+      status: exhausted ? 'error' : 'pending',
+      error_log: toSafeErrorLog(err),
+    })
+    .eq('id', job.id)
+    .eq('attempt', job.attempt)
+    .eq('status', 'processing');
+  if (error) throw new Error(`failJob failed: ${error.message}`);
+}
+
+/**
+ * Re-queue jobs orphaned by a crashed worker (stuck in 'processing' past the
+ * timeout). Delegates to the reap_stale_scp_jobs() SQL function. Returns the
+ * number of jobs reaped.
+ */
+export async function reapStaleJobs(
+  db: SupabaseClient,
+  timeoutSecs: number,
+): Promise<number> {
+  const { data, error } = await db.rpc('reap_stale_scp_jobs', {
+    timeout_secs: Math.max(1, Math.floor(timeoutSecs)),
+  });
+  if (error) throw new Error(`reapStaleJobs failed: ${error.message}`);
+  return ((data ?? []) as ScpJob[]).length;
+}
+
+/** Fetch a single job by id (for the API gateway's status endpoint). */
+export async function getJob(
+  db: SupabaseClient,
+  jobId: string,
+): Promise<ScpJob | null> {
+  const { data, error } = await db
+    .from('scp_jobs')
+    .select('*')
+    .eq('id', jobId)
+    .maybeSingle();
+  if (error) throw new Error(`getJob failed: ${error.message}`);
+  return (data as ScpJob) ?? null;
+}

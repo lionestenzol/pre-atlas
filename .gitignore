@@ -235,6 +235,11 @@ services/cognitive-sensor/harvest/
 services/cognitive-sensor/markdown_output/
 services/cognitive-sensor/fuzz-corpus/
 
+# === Local utilities (not for commit) ===
+sync_bridge.py
+.sync_bridge_config
+.sync_bridge.log
+
 # === cognitive-sensor cycleboard/brain runtime state ===
 services/cognitive-sensor/cycleboard/brain/cognitive_state.json
 services/cognitive-sensor/cycleboard/brain/closures.json
@@ -251,3 +256,8 @@ services/cognitive-sensor/cycleboard/brain/osint_feed.json
 services/cognitive-sensor/cycleboard/brain/prediction_results.json
 services/cognitive-sensor/cycleboard/brain/skills_metrics.json
 services/cognitive-sensor/cycleboard/brain/strategic_priorities.json
+
+# === Forensic / recon artifacts (regenerable, large) ===
+forensic-map.md
+.delta-scp/
+.weapon/

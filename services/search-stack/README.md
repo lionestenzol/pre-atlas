@@ -4,7 +4,7 @@ Unified search router for Pre Atlas. One REST API and one MCP server in front of
 
 - **External web search** — Exa (semantic), Tavily (real-time/news), Brave (broad index)
 - **Page extraction** — Firecrawl (managed)
-- **Local code/file** — repo-search ladder (es → fd → rg → sg)
+- **Local code/file** — code-recon ladder (es → fd → rg → sg)
 - **GitHub** — gh CLI passthrough
 - **Memory** — DropList retrieval + cognitive-sensor embeddings (Phase 3)
 
@@ -12,14 +12,14 @@ Sits at port 3070. Speaks REST for humans/curl and MCP for Claude.
 
 ## Why this exists
 
-Three search categories were already working but isolated: code search (`repo-search` skill), web extract (`sitepull`/`scrapling`/`anatomy-extension`), and capture (`droplist`). Three memory stores held embeddings, graphs, and packets but exposed no REST. There was no external web/agent-search at all.
+Three search categories were already working but isolated: code search (`code-recon` skill, formerly `repo-search`), web extract (`sitepull`/`scrapling`/`anatomy-extension`), and capture (`droplist`). Three memory stores held embeddings, graphs, and packets but exposed no REST. There was no external web/agent-search at all.
 
 This service:
 
 1. Adds **4 agent-search APIs** in one place with per-provider budget guards.
 2. Provides **one router** that picks the right tool per intent (no tool sprawl).
 3. Surfaces a **single MCP** so Claude can call `search_stack_search` from any session.
-4. Reuses existing infrastructure — does NOT rewrite sitepull, scrapling, repo-search, or atlas_query.
+4. Reuses existing infrastructure — does NOT rewrite sitepull, scrapling, code-recon, or atlas_query.
 
 See [`BIBLE.md`](BIBLE.md) for the contract.
 
@@ -63,7 +63,7 @@ Intent classifier (rule-based first):
 | Starts with `http(s)://` | `extract` | firecrawl → sitepull fallback |
 | Contains `site:github.com` or `repo:` | `github` | gh CLI |
 | Contains `path:` or `file:` prefix | `file` | es (machine layer) |
-| Contains repo-search operators (`rg:`, `fd:`, `sg:`) | `code` | repo-search ladder |
+| Contains code-recon operators (`rg:`, `fd:`, `sg:`) | `code` | code-recon ladder |
 | Explicit `kind=memory` | `memory` | droplist + cognitive-sensor (Phase 3) |
 
 ## Phase scope

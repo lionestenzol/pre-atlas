@@ -13,7 +13,7 @@ This doc captures the architecture; the implementation plan is at [.claude/plans
 | L1 | Human answer search | (Codex delegate) | deferred |
 | **L2** | **Agent search APIs** | **Exa + Tavily + Brave (search-stack)** | **Phase 1 — this build** |
 | L3 | Deep research | (covered by L2) | deferred — academic Phase 6+ |
-| L4 | Code & technical | `repo-search` skill + es/rg/fd/sg/semgrep | working |
+| L4 | Code & technical | `code-recon` skill + es/rg/fd/sg/semgrep | working |
 | L4b | GitHub | gh CLI + search-stack `kind=github` | Phase 1 |
 | L5 | Personal file | `es` (Everything CLI) | working |
 | **L6** | **Web crawl & extract** | **Firecrawl (managed) + sitepull + scrapling + anatomy-ext** | **Firecrawl new Phase 1** |
@@ -74,7 +74,7 @@ Each existing tool owns a distinct seam:
 - **sitepull** — whole-site clone (asset capture, generates a runnable local replica)
 - **scrapling** — page-level structured extraction (durable selectors, adaptive)
 - **anatomy-extension** — live-tab DOM inspection (computed style, paint order)
-- **repo-search** — local code (file/AST queries via es/rg/fd/sg)
+- **code-recon** — local code (file/AST queries via es/rg/fd/sg)
 - **competitor-monitor** — long-running intel snapshots over a known target list
 
 Merging them into one binary would create a lava layer (see `feedback_no_tool_sprawl`). Instead, the router knows the seam each owns and dispatches by intent. Users get a unified surface (one `POST /search`, one `search_stack_search` MCP tool); the tools stay separate and swappable.

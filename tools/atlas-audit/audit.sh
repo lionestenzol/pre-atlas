@@ -10,7 +10,7 @@
 # Exit code = count of NEW findings vs the most recent prior run
 # (0 = clean, N = N new things to look at). Suitable for cron / Task Scheduler.
 #
-# See docs/search-protocol.md and ~/.claude/skills/repo-search/SKILL.md.
+# See docs/search-protocol.md and ~/.claude/skills/code-recon/SKILL.md.
 
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

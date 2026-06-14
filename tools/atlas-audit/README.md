@@ -2,7 +2,7 @@
 
 Runs the DropList Search Tightening Protocol against Atlas-the-system on a schedule. Surfaces drift that would otherwise rot in the working tree (uncommitted doctrine, partial FSM coverage, missing state fields, schrödinger imports, broken Windows-reserved files, untested critical layers).
 
-Pairs with [docs/search-protocol.md](../../docs/search-protocol.md) and the global skill at `~/.claude/skills/repo-search/SKILL.md`.
+Pairs with [docs/search-protocol.md](../../docs/search-protocol.md) and the global skill at `~/.claude/skills/code-recon/SKILL.md`.
 
 ## What it checks
 

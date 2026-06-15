@@ -13,13 +13,13 @@ $HttpServer = "C:\Users\bruke\AppData\Roaming\npm\node_modules\http-server\bin\h
 $services = @(
     @{ Name = "delta-kernel";     Port = 3001; Cwd = "$RepoRoot\services\delta-kernel";        Cmd = "`$env:DELTA_REPO_ROOT='$RepoRoot'; `$env:DELTA_DATA_DIR='$RepoRoot\.delta-fabric'; npx tsx src/api/server.ts" },
     @{ Name = "aegis-fabric";     Port = 3002; Cwd = "$RepoRoot\services\aegis-fabric";        Cmd = "node --env-file=.env --import tsx/esm src/api/server.ts" },
-    @{ Name = "openclaw";         Port = 3004; Cwd = "$RepoRoot\services\openclaw";            Cmd = '$env:PYTHONPATH="src"; python -m uvicorn openclaw.api:app --host 127.0.0.1 --port 3004' },
-    @{ Name = "mosaic-orch";      Port = 3005; Cwd = "$RepoRoot\services\mosaic-orchestrator"; Cmd = '$env:PYTHONPATH="src"; python -m uvicorn mosaic.main:app --host 127.0.0.1 --port 3005' },
+    @{ Name = "openclaw";         Port = 3004; Cwd = "$RepoRoot\services\openclaw";            Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn openclaw.api:app --host 127.0.0.1 --port 3004" },
+    @{ Name = "mosaic-orch";      Port = 3005; Cwd = "$RepoRoot\services\mosaic-orchestrator"; Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn mosaic.main:app --host 127.0.0.1 --port 3005" },
     @{ Name = "inpact";           Port = 3006; Cwd = "$RepoRoot\apps\inpact";                  Cmd = "node `"$HttpServer`" . -p 3006 -c-1 --cors" },
     @{ Name = "code-converter";   Port = 3007; Cwd = "$RepoRoot\apps\code-converter";          Cmd = "python server.py" },
     @{ Name = "uasc";             Port = 3008; Cwd = "$RepoRoot\services\uasc-executor";       Cmd = "python server.py --port 3008" },
-    @{ Name = "cortex";           Port = 3009; Cwd = "$RepoRoot\services\cortex";              Cmd = '$env:PYTHONPATH="src"; python -m uvicorn cortex.main:app --host 127.0.0.1 --port 3009' },
-    @{ Name = "optogon";          Port = 3010; Cwd = "$RepoRoot\services\optogon";             Cmd = '$env:PYTHONPATH="src"; python -m uvicorn optogon.main:app --host 127.0.0.1 --port 3010' },
+    @{ Name = "cortex";           Port = 3009; Cwd = "$RepoRoot\services\cortex";              Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn cortex.main:app --host 127.0.0.1 --port 3009" },
+    @{ Name = "optogon";          Port = 3010; Cwd = "$RepoRoot\services\optogon";             Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn optogon.main:app --host 127.0.0.1 --port 3010" },
     @{ Name = "blueprint-gen";    Port = 3030; Cwd = "$RepoRoot\apps\blueprint-generator";     Cmd = "npx next dev -p 3030" },
     @{ Name = "canvas-engine";    Port = 3050; Cwd = "$RepoRoot\services\canvas-engine";       Cmd = "npm run dev" },
     @{ Name = "mosaic-dashboard"; Port = 3000; Cwd = "$RepoRoot\services\mosaic-dashboard";    Cmd = "npm run dev" },
@@ -48,7 +48,7 @@ foreach ($svc in $services) {
     Write-Host "  [start] $($svc.Name) :$($svc.Port)" -ForegroundColor White
     $logFile = Join-Path $LogDir "$($svc.Name).log"
     # Single -Command line: cd → seed log → run, redirecting all output to log
-    $inner = "Set-Location '$($svc.Cwd)'; Set-Content -Path '$logFile' -Value `"=== $($svc.Name) === $(Get-Date -Format o)`"; $($svc.Cmd) 2>&1 | Add-Content -Path '$logFile'"
+    $inner = "Set-Location '$($svc.Cwd)'; Set-Content -Path '$logFile' -Value '=== $($svc.Name) === $(Get-Date -Format o)'; $($svc.Cmd) 2>&1 | Add-Content -Path '$logFile'"
     Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $inner
     Start-Sleep -Milliseconds 300
 }

@@ -1,11 +1,13 @@
 # PKT-008 — Wire lattice-projection to consume DropList signals
 
-**Status:** drafted (not executed)
-**Owner:** next session
+**Status:** done
+**Owner:** Bruke
 **Scope:** ~45 min
 **Created:** 2026-06-15
+**Closed:** 2026-06-15
 **Resolves:** OQ-19
 **Bible refs:** §3 Principle ("graph has authority"), §10 (settled core boundary), §13 OQ-19, §16 Atlas Seam
+**Follow-up:** PKT-009 (UI consumer: correction gate widening for `drop_*`, ctx menu `'droplist'` branch, E2E smoke)
 
 ---
 

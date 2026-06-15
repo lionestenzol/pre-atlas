@@ -15,6 +15,7 @@
     "test": "tsx src/core/run-tests.ts",
     "test:api": "tsx src/tests/api-tests.ts",
     "test:work": "tsx src/tests/work-controller-tests.ts",
+    "test:lattice-droplist": "tsx src/tests/lattice-projection-droplist-tests.ts",
     "build": "tsc",
     "cycleboard": "tsx ../cognitive-sensor/cycleboard/cli.ts",
     "atlas-ai": "tsx src/cli/atlas-ai.ts",
@@ -36,6 +37,7 @@
     "cors": "^2.8.5",
     "express": "^5.2.1",
     "nats": "^2.29.3",
-    "node-cron": "^4.2.1"
+    "node-cron": "^4.2.1",
+    "zod": "^4.4.3"
   }
 }

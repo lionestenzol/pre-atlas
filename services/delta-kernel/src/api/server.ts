@@ -34,6 +34,7 @@ import {
   buildViewmodel as buildLatticeViewmodel,
   recordCorrection as recordLatticeCorrection,
   CorrectionValidationError as LatticeCorrectionValidationError,
+  type StorageLike as LatticeStorageLike,
 } from '../atlas/lattice-projection.js';
 
 // ES Module equivalent of __dirname
@@ -2002,7 +2003,15 @@ app.post('/api/atlas/preferences', (req, res) => {
  */
 app.get('/api/lattice/viewmodel', (_req, res) => {
   try {
-    const viewmodel = buildLatticeViewmodel(cognitiveSensorDir, storage);
+    // PKT-008 wire: extend the storage shim with the in-memory signals ring
+    // so droplist DAG signals project into the viewmodel as items.
+    // Object.create(storage) preserves the generic loadEntitiesByType<T>
+    // signature via the prototype chain; .bind() would erase generics.
+    const storageWithSignals: LatticeStorageLike = Object.assign(
+      Object.create(storage),
+      { loadSignals: () => listSignals() },
+    );
+    const viewmodel = buildLatticeViewmodel(cognitiveSensorDir, storageWithSignals);
     res.json({ ok: true, viewmodel });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';

@@ -18,6 +18,7 @@ import { join } from 'path';
 import { z } from 'zod';
 import { createEntity, now } from '../core/delta.js';
 import type { TaskData, Entity } from '../core/types-core.js';
+import type { Signal } from './signals-store.js';
 
 // === Viewmodel types (mirror lattice.html contract; string ids per option B) ===
 
@@ -28,7 +29,8 @@ export type LatticeProvenanceSource =
   | 'cognitive-sensor.idea_registry'
   | 'optogon'
   | 'user'
-  | 'ghost_executor';
+  | 'ghost_executor'
+  | 'droplist';
 
 export interface LatticeLink {
   kind: LatticeLinkKind;
@@ -192,6 +194,61 @@ function tiersOf(registry: IdeaRegistry): {
   };
 }
 
+// === Droplist signal -> LatticeItem mapping (PKT-008) ===
+// The Signal.v1 ingest is shared across layers; droplist DAGs are identified
+// by payload.data.dag_id, which is unique to atlas_signal.dag_to_signal().
+// Filtering on the marker (instead of source_layer) keeps the consumer stable
+// across OQ-17 — when Signal.v1 adds 'droplist' as a source_layer enum, no
+// change here is required.
+
+function isDroplistSignal(sig: Signal): boolean {
+  const data = sig.payload?.data;
+  if (typeof data !== 'object' || data === null) return false;
+  return typeof (data as Record<string, unknown>).dag_id === 'string';
+}
+
+// Q2 (PKT-008): completion -> done. Doctrine: the graph has authority;
+// settled droplist DAGs are verification.
+function signalStatusToLatticeStatus(signalType: Signal['signal_type']): LatticeStatus {
+  switch (signalType) {
+    case 'completion': return 'done';
+    case 'error': return 'blocked';
+    case 'approval_required': return 'blocked';
+    case 'blocked': return 'blocked';
+    case 'status': return 'active';
+    case 'insight': return 'open';
+    default: return 'open';
+  }
+}
+
+// Q3 (PKT-008): port relativeTime so the time field reflects emitted_at
+// instead of the 'recently' literal. Kept small and dependency-free.
+function relativeTime(isoTimestamp: string, nowMs: number = Date.now()): string {
+  const t = Date.parse(isoTimestamp);
+  if (!Number.isFinite(t)) return 'recently';
+  const deltaSeconds = Math.max(0, (nowMs - t) / 1000);
+  if (deltaSeconds < 60) return 'just now';
+  if (deltaSeconds < 3600) return `${Math.round(deltaSeconds / 60)}m ago`;
+  if (deltaSeconds < 86400) return `${Math.round(deltaSeconds / 3600)}h ago`;
+  if (deltaSeconds < 7 * 86400) return `${Math.round(deltaSeconds / 86400)}d ago`;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+function signalToItem(sig: Signal): LatticeItem {
+  const taskId = sig.payload.task_id ?? null;
+  return {
+    id: typeof taskId === 'string' && taskId.length > 0 ? taskId : sig.id,
+    title: sig.payload.label || '(droplist DAG)',
+    // First cut: all droplist items land under 'atlas'. Domain->project
+    // mapping is a follow-up (PKT-008 "What this does NOT do").
+    project: 'atlas',
+    status: signalStatusToLatticeStatus(sig.signal_type),
+    time: relativeTime(sig.emitted_at),
+    links: [],
+    provenance: { source: 'droplist' },
+  };
+}
+
 function buildItem(entry: IdeaRegistryEntry, tier: string): LatticeItem {
   const links: LatticeLink[] = [];
   for (const dep of entry.dependencies ?? []) {
@@ -217,6 +274,9 @@ export interface StorageLike {
   loadEntitiesByType<T>(type: string): Array<{ entity: Entity; state: T }>;
   saveEntity(entity: Entity, state: unknown): void;
   appendDelta(delta: unknown): void;
+  // Optional in-memory signals reader. Present only on the viewmodel path;
+  // the correction-write path doesn't need it. See PKT-008 (BIBLE §16 Atlas Seam).
+  loadSignals?: () => Signal[];
 }
 
 interface LatticeCorrectionMeta {
@@ -283,6 +343,27 @@ export function buildViewmodel(
   if (tiers) {
     for (const entry of tiers.execute_now) {
       items.push(buildItem(entry, 'execute_now'));
+    }
+  }
+
+  // Droplist signals -> items. Dedup by task_id (newest emitted_at wins) so
+  // replayed DAGs that emit multiple signals (running -> completion) surface
+  // as a single row at their latest state. Placed AFTER idea_registry items
+  // so the existing correction-overlay pass below can flip droplist items
+  // to user provenance too.
+  // See PKT-008 (BIBLE §3 graph has authority, §16 Atlas Seam).
+  if (typeof storage.loadSignals === 'function') {
+    const newestByTask = new Map<string, Signal>();
+    for (const sig of storage.loadSignals()) {
+      if (!isDroplistSignal(sig)) continue;
+      const key = sig.payload.task_id ?? sig.id;
+      const existing = newestByTask.get(key);
+      if (!existing || sig.emitted_at > existing.emitted_at) {
+        newestByTask.set(key, sig);
+      }
+    }
+    for (const sig of newestByTask.values()) {
+      items.push(signalToItem(sig));
     }
   }
 

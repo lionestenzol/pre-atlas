@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE LINE — Prompt Chain v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0b;
+    --panel:#121214;
+    --panel2:#17171a;
+    --line:#26262b;
+    --ink:#e9e6df;
+    --dim:#8a8a93;
+    --ember:#ff6b35;
+    --amber:#f5a623;
+    --pass:#3ddc84;
+    --fail:#ff4d4d;
+    --steel:#4b6b8a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Archivo',sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    background-image:
+      radial-gradient(circle at 20% -10%, rgba(255,107,53,.10), transparent 45%),
+      radial-gradient(circle at 90% 0%, rgba(75,107,138,.10), transparent 40%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px);
+    min-height:100vh;
+    padding:0 0 80px;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:0 18px}
+
+  /* header */
+  header{padding:34px 0 18px;border-bottom:1px solid var(--line);margin-bottom:22px}
+  .kicker{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.32em;color:var(--ember);text-transform:uppercase}
+  h1{font-weight:800;font-size:clamp(34px,9vw,58px);line-height:.92;letter-spacing:-.02em;margin:6px 0 8px}
+  h1 .stamp{color:var(--ember)}
+  .sub{font-family:'Space Mono',monospace;font-size:12.5px;color:var(--dim);line-height:1.5}
+  .sub b{color:var(--amber);font-weight:400}
+
+  /* input dock */
+  .dock{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:18px;
+    box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 18px 40px -28px rgba(0,0,0,.9)}
+  .dock label{display:block;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+  textarea{width:100%;min-height:120px;resize:vertical;background:#0c0c0e;border:1px solid var(--line);border-radius:7px;
+    color:var(--ink);font-family:'Space Mono',monospace;font-size:14px;line-height:1.55;padding:13px;outline:none}
+  textarea:focus{border-color:var(--ember);box-shadow:0 0 0 3px rgba(255,107,53,.12)}
+  .controls{display:flex;gap:10px;align-items:center;margin-top:13px;flex-wrap:wrap}
+  .run{flex:1;min-width:150px;cursor:pointer;border:none;border-radius:7px;padding:14px 18px;
+    background:linear-gradient(180deg,var(--ember),#e2531f);color:#100; font-family:'Archivo',sans-serif;font-weight:800;
+    font-size:15px;letter-spacing:.04em;text-transform:uppercase;transition:transform .08s, filter .15s}
+  .run:hover{filter:brightness(1.08)}
+  .run:active{transform:translateY(1px)}
+  .run:disabled{opacity:.45;cursor:not-allowed;filter:none}
+  .ghost{cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:7px;
+    padding:14px 16px;font-family:'Space Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+  .ghost:hover{color:var(--ink);border-color:var(--steel)}
+  .seed{font-family:'Space Mono',monospace;font-size:11px;color:var(--steel);cursor:pointer;text-decoration:underline dotted;margin-top:10px;display:inline-block}
+  .seed:hover{color:var(--amber)}
+
+  /* the line */
+  .line{position:relative;padding-left:6px}
+  .station{position:relative;border:1px solid var(--line);border-radius:9px;background:var(--panel);margin-bottom:10px;overflow:hidden;
+    transition:border-color .25s, box-shadow .25s}
+  .station::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line);transition:background .25s}
+  .station.running{border-color:var(--amber);box-shadow:0 0 0 1px rgba(245,166,35,.25), 0 14px 30px -26px var(--amber)}
+  .station.running::before{background:var(--amber);animation:pulse 1.1s infinite}
+  .station.done::before{background:var(--pass)}
+  .station.fail::before{background:var(--fail)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .st-head{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;user-select:none}
+  .st-num{font-family:'Space Mono',monospace;font-size:12px;color:var(--dim);width:24px;flex:none}
+  .station.done .st-num{color:var(--pass)}
+  .station.running .st-num{color:var(--amber)}
+  .st-meta{flex:1;min-width:0}
+  .st-name{font-weight:800;font-size:15px;letter-spacing:.01em}
+  .st-tag{font-family:'Space Mono',monospace;font-size:11px;color:var(--dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .st-status{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);flex:none;
+    border:1px solid var(--line);border-radius:20px;padding:3px 9px}
+  .station.running .st-status{color:var(--amber);border-color:var(--amber)}
+  .station.done .st-status{color:var(--pass);border-color:rgba(61,220,132,.4)}
+  .station.fail .st-status{color:var(--fail);border-color:rgba(255,77,77,.4)}
+
+  .st-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .st-body.open{max-height:2400px}
+  .st-inner{padding:0 15px 15px 51px;font-family:'Space Mono',monospace;font-size:12.5px;line-height:1.62;color:#cfccc4;
+    white-space:pre-wrap;word-break:break-word}
+  .st-inner.empty{color:var(--dim);font-style:italic}
+
+  /* close card */
+  .closecard{display:none;margin-top:20px;border:1px solid rgba(61,220,132,.4);border-radius:10px;
+    background:linear-gradient(180deg, rgba(61,220,132,.06), transparent);padding:18px 18px 4px;
+    box-shadow:0 0 0 1px rgba(61,220,132,.12)}
+  .closecard.show{display:block;animation:rise .4s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .closecard h3{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--pass);margin-bottom:12px}
+  .closecard .verdict{font-weight:800;font-size:22px;letter-spacing:-.01em;margin-bottom:14px;line-height:1.1}
+  .closecard p{font-family:'Space Mono',monospace;font-size:12.5px;line-height:1.6;color:#cfccc4;white-space:pre-wrap;margin-bottom:14px}
+
+  footer{font-family:'Space Mono',monospace;font-size:10.5px;color:#55555c;text-align:center;margin-top:34px;line-height:1.7}
+  .err{color:var(--fail);font-family:'Space Mono',monospace;font-size:12px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Prompt Chain System v1</div>
+    <h1>THE&nbsp;<span class="stamp">LINE</span></h1>
+    <div class="sub">A sales floor for ideas. Raw drop in &rarr; <b>eight stations</b> &rarr; a close out.<br>No discussion. Every drop ends in a decision.</div>
+  </header>
+
+  <div class="dock">
+    <label>Raw Drop</label>
+    <textarea id="input" placeholder="Drop anything. An idea. A task. A rabbit breeding note. A half-formed product. A mess.&#10;&#10;The line will classify it, structure it, map it, decide the next move, check itself, and close it."></textarea>
+    <div class="controls">
+      <button class="run" id="runBtn" onclick="runLine()">▶ Run the line</button>
+      <button class="ghost" onclick="resetLine()">Reset</button>
+    </div>
+    <span class="seed" onclick="seedExample()">load a sample drop ↩</span>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="line" id="line"></div>
+
+  <div class="closecard" id="closecard">
+    <h3>// Close</h3>
+    <div class="verdict" id="verdict">—</div>
+    <p id="closebody"></p>
+  </div>
+
+  <footer>
+    THE LINE runs on Claude · 8 sequential stations · self-contained<br>
+    to make it portable: point the fetch at your own endpoint + key
+  </footer>
+</div>
+
+<script>
+/* ---- the eight stations: prompts kept faithful to the spec ---- */
+const STAGES = [
+  { id:"intake", name:"Intake", tag:"What did I just drop?", status:"classify",
+    sys:`You are the Intake Agent. Read the user's raw input and classify it.
+Identify input_type (idea | task | project | animal/livestock log | expense | relationship note | business concept | code/build note | research question | schedule item | emotional/context note | unknown/mixed).
+Extract: 1.input_type 2.main topic 3.entities 4.dates/times 5.tasks 6.decisions 7.questions 8.urgency 9.missing context 10.recommended next agent.
+Return clean, scannable structured fields. Be terse. No preamble.` },
+
+  { id:"qualify", name:"Qualifier", tag:"Is this worth moving forward?",
+    sys:`You are the Qualifier Agent. Given the intake, decide what this input should BECOME.
+Classify as one of: discard | daily note | task | reminder | project | product idea | research item | system rule | build packet | business asset | memory item.
+Evaluate: leverage, urgency, money potential, dependency level, required effort, proof needed, next best move.
+Return: classification / why / what would make it valuable / what happens next. Be terse, decisive.` },
+
+  { id:"structure", name:"Structure", tag:"Make it usable.",
+    sys:`You are the Structure Agent. Turn the input into a clean usable object. Preserve original intent. Do NOT expand beyond what's useful.
+Produce: title / one-line definition / category / user-or-customer / problem / promise / required objects / dependencies / open loops / immediate next action.` },
+
+  { id:"relationships", name:"Relationship Map", tag:"What does this connect to?",
+    sys:`You are the Relationship Agent. Map this input against likely existing objects.
+Identify parent project, child tasks, related ideas, dependencies, blockers, people, assets, dates, recurring patterns, possible conflicts, downstream effects.
+Return edges ONLY, one per line, in the format:  SOURCE → RELATIONSHIP → TARGET` },
+
+  { id:"action", name:"Action Plan", tag:"What happens next?",
+    sys:`You are the Action Agent. Given the structured object and relationship map, decide the next move. It MUST be concrete and executable.
+Return: 1.next action 2.reason 3.estimated effort (low/medium/high) 4.done condition 5.blocker 6.who/what is needed 7.what NOT to do yet.` },
+
+  { id:"verify", name:"Verifier", tag:"Did the AI mess up?",
+    sys:`You are the Verification Agent. Compare the ORIGINAL raw input against everything produced so far.
+Check for: invented details, missing details, wrong assumptions, vague next actions, overcomplication, loss of user intent, unsupported conclusions, unclear dependencies.
+Return: PASS or FAIL / corrections needed / confidence score (0-100). If FAIL, give the revised key outputs. Be honest and strict.` },
+
+  { id:"close", name:"Close", tag:"Close it like a sale.",
+    sys:`You are the Close Agent. Force this into a decision. Pick ONE outcome: build now | schedule | store for later | turn into prompt | turn into document | turn into code task | ask one question | kill/pause.
+Use this format exactly:
+1. What this is
+2. Why it matters
+3. What proof is needed
+4. What objection/blocker exists
+5. How to handle it
+6. FINAL CLOSE DECISION: <one of the outcomes above>
+7. Next irreversible move` },
+
+  { id:"storage", name:"Storage", tag:"Where does it live?",
+    sys:`You are the Storage Agent. Decide where this output lives.
+Options: Daily Log | Project Bible | Build Packet | Research Queue | Task List | Prompt Library | Asset Library | Finance Log | Rabbit/Farm Log | Personal Context | Archive.
+Return: storage location / filename-or-title / tags / one-line summary / retrieval keywords / update rule.` }
+];
+
+/* ---- render the line ---- */
+const lineEl = document.getElementById('line');
+function buildLine(){
+  lineEl.innerHTML = '';
+  STAGES.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'station';
+    el.id = 'st-' + s.id;
+    el.innerHTML = `
+      <div class="st-head" onclick="toggle('${s.id}')">
+        <div class="st-num">0${i+1}</div>
+        <div class="st-meta">
+          <div class="st-name">${s.name}</div>
+          <div class="st-tag">${s.tag}</div>
+        </div>
+        <div class="st-status" id="stat-${s.id}">idle</div>
+      </div>
+      <div class="st-body" id="body-${s.id}">
+        <div class="st-inner empty" id="out-${s.id}">— waiting for the line —</div>
+      </div>`;
+    lineEl.appendChild(el);
+  });
+}
+buildLine();
+
+function toggle(id){
+  document.getElementById('body-'+id).classList.toggle('open');
+}
+function setStatus(id, txt, cls){
+  const st = document.getElementById('st-'+id);
+  st.classList.remove('running','done','fail');
+  if(cls) st.classList.add(cls);
+  document.getElementById('stat-'+id).textContent = txt;
+}
+function setOut(id, txt){
+  const o = document.getElementById('out-'+id);
+  o.classList.remove('empty');
+  o.textContent = txt;
+}
+
+/* ---- call the model ---- */
+async function callStage(stage, rawDrop, contextSoFar){
+  const userMsg = `RAW DROP FROM USER:\n"""\n${rawDrop}\n"""\n\n` +
+    (contextSoFar ? `CONTEXT FROM EARLIER STATIONS ON THE LINE:\n${contextSoFar}\n\n` : '') +
+    `Do your job as the ${stage.name} Agent now. Output only your station's result.`;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model:"claude-sonnet-4-20250514",
+      max_tokens:1000,
+      system: stage.sys,
+      messages:[{role:"user", content:userMsg}]
+    })
+  });
+  if(!res.ok){ throw new Error("Station "+stage.name+" returned "+res.status); }
+  const data = await res.json();
+  return data.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+}
+
+/* ---- run the whole line ---- */
+let running = false;
+async function runLine(){
+  if(running) return;
+  const raw = document.getElementById('input').value.trim();
+  const err = document.getElementById('err');
+  err.textContent = '';
+  document.getElementById('closecard').classList.remove('show');
+  if(!raw){ err.textContent = 'Drop something first.'; return; }
+
+  running = true;
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('runBtn').textContent = '◼ Running…';
+  buildLine();
+
+  const outputs = {};
+  for(const stage of STAGES){
+    setStatus(stage.id, 'running', 'running');
+    // auto-open the active station, close others for focus
+    document.querySelectorAll('.st-body').forEach(b=>b.classList.remove('open'));
+    document.getElementById('body-'+stage.id).classList.add('open');
+    document.getElementById('st-'+stage.id).scrollIntoView({behavior:'smooth', block:'center'});
+
+    const context = STAGES.filter(s=>outputs[s.id])
+      .map(s=>`### ${s.name}\n${outputs[s.id]}`).join("\n\n");
+    try{
+      const out = await callStage(stage, raw, context);
+      outputs[stage.id] = out;
+      setOut(stage.id, out);
+      setStatus(stage.id, 'done', 'done');
+    }catch(e){
+      setOut(stage.id, '⚠ ' + e.message + '\n\nThe line stopped here.');
+      setStatus(stage.id, 'fail', 'fail');
+      err.textContent = e.message + ' — if this is a network/domain issue, the runner needs your own API endpoint.';
+      break;
+    }
+  }
+
+  // surface the close
+  if(outputs.close){
+    const txt = outputs.close;
+    const m = txt.match(/FINAL CLOSE DECISION[:\s]*([^\n]+)/i);
+    document.getElementById('verdict').textContent = m ? m[1].trim().replace(/[<>]/g,'') : 'See station 07';
+    document.getElementById('closebody').textContent = txt;
+    document.getElementById('closecard').classList.add('show');
+  }
+
+  running = false;
+  document.getElementById('runBtn').disabled = false;
+  document.getElementById('runBtn').textContent = '▶ Run the line';
+}
+
+function resetLine(){
+  document.getElementById('input').value = '';
+  document.getElementById('err').textContent = '';
+  document.getElementById('closecard').classList.remove('show');
+  buildLine();
+}
+
+function seedExample(){
+  document.getElementById('input').value =
+`Thinking about a doe i bred last week, the new zealand white. need to track kindling date and check nest box. also keep half-wondering if i could turn the whole rabbit operation into a little local meat subscription thing but i never finish stuff like that. mostly i just want to not lose the breeding date again.`;
+}
+</script>
+<script>
+/* Minimal-touch live wiring: GET /api/dag/sample (?dag_id= override), populate via
+   tryWireLive(data) or data-bind="<key>" elements. Silent fallback to demo state.
+   See ~/.claude/rules/common/code-as-furniture.md -- no broken code left in place. */
+(function(){
+  var qs = new URLSearchParams(window.location.search);
+  var dagId = qs.get('dag_id');
+  var url = window.location.origin + '/api/dag/sample' + (dagId ? ('?dag_id=' + encodeURIComponent(dagId)) : '');
+  fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(data){
+      if(typeof window.tryWireLive === 'function'){
+        window.tryWireLive(data);
+      } else {
+        document.querySelectorAll('[data-bind]').forEach(function(el){
+          var k = el.getAttribute('data-bind');
+          if(k && data && Object.prototype.hasOwnProperty.call(data, k)){
+            var v = data[k];
+            if(v == null) return;
+            if(typeof v === 'string' && /<[a-z][\s\S]*>/i.test(v)) el.innerHTML = v;
+            else el.textContent = String(v);
+          }
+        });
+      }
+      console.log('[droplist chain] live wire OK from', url);
+    })
+    .catch(function(err){
+      console.log('[droplist chain] live wire fallback to demo state:', err && err.message || err);
+    });
+})();
+</script>
+</body>
+</html>

@@ -7,6 +7,7 @@ dependencies = []  # zero-dependency core; anthropic is an optional extra
 
 [project.optional-dependencies]
 llm = ["anthropic>=0.39"]
+ui = ["fastapi>=0.110", "uvicorn[standard]>=0.27"]
 
 [project.scripts]
 drop = "droplist.cli:main"
@@ -17,6 +18,7 @@ ship-from = "droplist.cli:shipfrom_main"
 graph = "droplist.cli:graph_main"
 brief = "droplist.cli:brief_main"
 watch = "droplist.cli:watch_main"
+droplist-ui = "droplist.server:run"
 
 [build-system]
 requires = ["setuptools>=68"]

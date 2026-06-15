@@ -241,6 +241,7 @@ First-class artifacts. Execution Packets resolve these by name.
 | OQ-17 | `Signal.v1.source_layer` enum does not include `"droplist"`. PKT-005 uses `"optogon"` as a placeholder. Should the enum be extended? | Pending. Touches `contracts/schemas/Signal.v1.json` (settled core). Move only when DropList is a real producer Atlas-side cares about distinguishing. |
 | OQ-18 | ~~DropList exposes `/api/lattice/viewmodel` at :3071 — but `apps/lattice/index.html:2368` hardcodes `ATLAS_BASE=http://127.0.0.1:3001` and delta-kernel already serves the same route via `lattice-projection.ts` (`server.ts:2003`). Two providers, one consumer pointed at the other.~~ | **RESOLVED by PKT-007** (2026-06-14). Duplicate route + `lattice_viewmodel.py` mapper removed from droplist. delta-kernel keeps the canonical Lattice surface. DropList feeds Lattice indirectly via PKT-006 Signal.v1 emission. Discovered by code-recon verify mode after a /weapon run shipped the duplicate. |
 | OQ-19 | Consumer side of the DropList -> Lattice seam is not wired. PKT-006 emits Signal.v1 to delta-kernel's `/api/signals/ingest`, but `services/delta-kernel/src/atlas/lattice-projection.ts` only reads `cognitive-sensor/idea_registry.json`. Signals arrive in delta-kernel's in-memory ring and are dropped on the floor by the viewmodel build. Settled droplist DAGs do not appear in `apps/lattice`. | **RESOLVED by PKT-008** (2026-06-15). Wire shipped: `lattice-projection.ts` extends `LatticeProvenanceSource` with `'droplist'`, projects signals filtered by `payload.data.dag_id` as `LatticeItem`s (dedup by `task_id`, newest `emitted_at` wins), inserted before correction overlay so user corrections still apply. Server injects `listSignals` at `/api/lattice/viewmodel` via prototype-chain wrapper. UI consumer follow-ups (right-click correction gate widening for `drop_*` ids; ctx menu `'droplist'` branch; E2E smoke) queued as PKT-009. |
+| OQ-20 | Should claude's chat-side outputs (explanations, widgets, recon snapshots) become substrate, and if so, what's the contract? | Defined by PKT-010 — `AtlasArtifact.v1` is the sibling contract to `Signal.v1`. Sits alongside §16's Signal seam under new §17. PKT-011+ wire the runtime path. |
 
 ---
 
@@ -343,6 +344,50 @@ atlas_signal     (when                   POST /api/signals/ingest
 - **OQ-17** extends `Signal.v1.source_layer` enum to include `"droplist"` once Atlas-side cares about distinguishing.
 - **Retry buffer.** Failed emissions are logged but not retried. Add a buffered re-emit when the consumer comes back online (deferred — opens a new OQ if needed).
 - **n8n flow** itself (`n8n_flows/droplist_to_atlas_signal.json`) is a separate config artifact; pattern documented above, JSON not yet committed.
+
+---
+
+## §17. Artifact Seam
+
+The wire from agents (claude, recon, anatomy-map) into the Atlas substrate. Resolves OQ-20. Defined by PKT-010.
+
+### Endpoint
+
+```
+POST  http://<delta-kernel>/api/atlas/artifacts/ingest
+  Content-Type: application/json
+  Body:        AtlasArtifact.v1 (see contracts/schemas/AtlasArtifact.v1.json)
+  Response:    202 { ok: true, artifact_id }   on success
+               400 { ok: false, error, details }   on schema validation failure
+```
+
+Endpoint is defined by this Bible section; the route is wired in PKT-011.
+
+### How artifacts differ from signals
+
+| | Signal (§16) | Artifact (§17) |
+|---|---|---|
+| Carries | Behavioral state | Derived knowledge |
+| Lifetime | Ephemeral (ring) | Durable (persisted via Storage class as `entity_type='artifact'`) |
+| Producer | DropList, optogon, ghost-executor | claude_code primarily; recon scripts; anatomy-map |
+| Re-renderable | No | Yes — `payload.widgets[].source` is the source of truth |
+
+The two seams stay separate so Signal.v1 (settled core) doesn't bend to carry payloads it wasn't designed for, and so each seam can evolve independently.
+
+### Three layers, decoupled (same shape as §16)
+
+```
+                       AtlasArtifact.v1
+claude / /show hook ----------------------> delta-kernel
+show_capture.js          POST /api/atlas/artifacts/ingest      (PKT-015 wires the producer; PKT-011 wires the route)
+```
+
+### Guarantees and non-guarantees
+
+- **One render = one artifact.** Re-runs produce new `id`s.
+- **Pure storage is idempotent** for a given input — same input → same artifact body (modulo `id` and `created_at`).
+- **Persistence Atlas-side.** Unlike signals, artifacts are kept indefinitely via the Storage class. Deletion is a future packet.
+- **No back-channel today.** Atlas doesn't reach into the producer. (Mirror of §16 same-named constraint.)
 
 ---
 

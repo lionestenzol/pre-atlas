@@ -16,6 +16,7 @@
     "test:api": "tsx src/tests/api-tests.ts",
     "test:work": "tsx src/tests/work-controller-tests.ts",
     "test:lattice-droplist": "tsx src/tests/lattice-projection-droplist-tests.ts",
+    "test:artifact-schema": "tsx src/tests/atlas-artifact-schema-tests.ts",
     "build": "tsc",
     "cycleboard": "tsx ../cognitive-sensor/cycleboard/cli.ts",
     "atlas-ai": "tsx src/cli/atlas-ai.ts",

@@ -1,10 +1,10 @@
 # PKT-010 — AtlasArtifact.v1 contract
 
-**Status:** DRAFT
+**Status:** done
 **Owner:** claude (drafted) → bruke (approve)
 **Scope:** ~60–75 min · 2 new files + 2 edits (schema, schema-test, package.json script, BIBLE.md §13+§17)
 **Created:** 2026-06-15
-**Closed:** —
+**Closed:** 2026-06-15 (`b7e02c8`)
 **Resolves:** OQ-20 (NEW, see §13 row added by this packet)
 **Bible refs:** §3 (Product Principle), §10 (Build Rules — settled-core fence), §13 (Open Questions), §14 steps 4 + 6 (pre-flight grep + Do-not-touch fence), §16 (Atlas Seam — sibling contract for behavioral signals), §17 (Artifact Seam — NEW, added by this packet)
 **Follows:** PKT-005 (Atlas seam contract — codified §16 against the pre-existing Signal.v1 schema; PKT-010 is bigger because it ships both the new AtlasArtifact.v1 schema AND §17, since no artifact schema exists yet to codify)

@@ -30,7 +30,17 @@ VALID_SIGNAL_TYPES = {"status", "completion", "blocked", "approval_required",
 VALID_PRIORITIES = {"urgent", "normal", "low"}
 REQUIRED_TOP = ["schema_version", "id", "emitted_at", "source_layer",
                 "signal_type", "priority", "payload"]
-REQUIRED_PAYLOAD = ["label", "summary"]
+REQUIRED_PAYLOAD = ["task_id", "label", "summary"]
+REQUIRED_PAYLOAD_DATA = [
+    "dag_id",
+    "domain",
+    "type",
+    "dag_status",
+    "nodes",
+    "evidence_refs",
+    "entity_refs",
+    "links",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +156,29 @@ def structural_check(sig: dict) -> list[str]:
     for k in REQUIRED_PAYLOAD:
         if k not in payload:
             errs.append(f"payload missing required key {k}")
+
+    # task_id must be a str or None (never absent)
+    if "task_id" in payload and payload["task_id"] is not None:
+        if not isinstance(payload["task_id"], str):
+            errs.append(f"payload.task_id must be str, got {type(payload['task_id']).__name__}")
+
+    # payload.data sub-field presence and basic type checks
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        errs.append("payload.data must be a dict")
+    else:
+        for k in REQUIRED_PAYLOAD_DATA:
+            if k not in data:
+                errs.append(f"payload.data missing required key {k}")
+        # Type assertions for structured sub-fields
+        if "nodes" in data and not isinstance(data["nodes"], list):
+            errs.append("payload.data.nodes must be a list")
+        if "evidence_refs" in data and not isinstance(data["evidence_refs"], list):
+            errs.append("payload.data.evidence_refs must be a list")
+        if "entity_refs" in data and not isinstance(data["entity_refs"], list):
+            errs.append("payload.data.entity_refs must be a list")
+        if "links" in data and not isinstance(data["links"], list):
+            errs.append("payload.data.links must be a list")
 
     # Schema invariant: action_required=true => action_options.minItems >= 1
     if payload.get("action_required") is True:

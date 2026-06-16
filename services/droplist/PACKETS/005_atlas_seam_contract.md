@@ -65,7 +65,7 @@ When a DAG settles into a terminal state (`complete`, `failed`, `needs_human`, `
 | `payload.task_id` | `dag.source_drop` (the drop_id) | |
 | `payload.label` | `dag.goal` (trimmed to 140 chars) | |
 | `payload.summary` | `f"{domain}/{type}: {done}/{total} done; status={dag.status}"` | |
-| `payload.data` | `{ dag_id, domain, type, dag_status, nodes: [...], evidence_refs, entity_refs }` | structured introspection |
+| `payload.data` | `{ dag_id, domain, type, dag_status, nodes: [...], evidence_refs, entity_refs, links }` | structured introspection |
 | `payload.action_required` | `True` iff `signal_type == "approval_required"` | enforces schema's allOf |
 | `payload.action_options` | list of `{ id: node_id, label: node.title, risk_tier: "low" }` for blocked-human nodes | required when action_required=true |
 

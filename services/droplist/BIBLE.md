@@ -316,7 +316,7 @@ Or, bypass n8n for testing / dev:
                 Signal.v1
 DropList helper ----------------------> delta-kernel
 atlas_signal     (when                   POST /api/signals/ingest
-.emit_signal()    DROPLIST_DIRECT_SIGNALS_URL set)
+.emit_signal()    DROPLIST_ATLAS_SIGNALS_URL set)
 ```
 
 ### Guarantees and non-guarantees

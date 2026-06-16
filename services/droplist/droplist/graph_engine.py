@@ -24,10 +24,43 @@ def _maybe_emit_atlas_signal(dag: dict) -> None:
     Fail-safe: any exception is caught and logged to dag_events.jsonl. The
     graph_engine loop must complete normally regardless of emission outcome.
     See PKT-006 / BIBLE §16.
+
+    Piggybacks the retry-queue pump on each settle: drain due retries (and
+    prune expired entries) BEFORE emitting the new signal. If a drained POST
+    still fails, ``emit_signal`` re-enqueues by the same signal_id — dedup
+    makes that a no-op, then ``mark_attempted(success=False)`` increments
+    attempts and reschedules.
     """
     url = os.environ.get("DROPLIST_ATLAS_SIGNALS_URL")
     if not url:
         return
+
+    # --- Retry pump (PKT-006 Stop 4) ---------------------------------------
+    try:
+        from . import retry_queue
+        retry_queue.prune_expired()
+        due = retry_queue.drain()
+        for entry in due:
+            try:
+                resp = atlas_signal.emit_signal(
+                    entry.get("signal") or {},
+                    entry.get("url") or url,
+                )
+                ok = bool(resp.get("ok"))
+                retry_queue.mark_attempted(entry, success=ok)
+            except Exception:  # noqa: BLE001 — never let one retry kill the pump
+                retry_queue.mark_attempted(entry, success=False)
+    except Exception as e:  # noqa: BLE001 — pump must never break the loop
+        try:
+            storage.append(storage.DAG_EVENTS, {
+                "dag_id": dag.get("dag_id"),
+                "event": "signal_retry_drain_error",
+                "error": f"{type(e).__name__}: {e}"[:200],
+            })
+        except Exception:  # noqa: BLE001
+            pass
+
+    # --- Emit current settle's new signal ----------------------------------
     record: dict = {
         "dag_id": dag.get("dag_id"),
         "event": "atlas_signal_emit",

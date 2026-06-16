@@ -349,5 +349,23 @@ def emit_signal(signal: dict, url: str, timeout: float = 10.0) -> dict[str, Any]
             return json.loads(raw) if raw else {"ok": True}
         except json.JSONDecodeError:
             return {"ok": True, "raw": raw[:200]}
+    except urllib.error.HTTPError as e:
+        # 4xx is a client-side bug (won't fix itself on retry); 5xx is server-side
+        # and transient. Only enqueue the latter. See PKT-006 retry buffer doctrine.
+        result: dict[str, Any] = {"ok": False, "error": str(e)}
+        if getattr(e, "code", 0) >= 500:
+            try:
+                from . import retry_queue
+                retry_queue.enqueue(signal, url, str(e))
+            except Exception:  # noqa: BLE001 — queueing must never break emission
+                pass
+        return result
     except (urllib.error.URLError, OSError) as e:
-        return {"ok": False, "error": str(e)}
+        # DNS, timeout, connection refused — always retryable.
+        result = {"ok": False, "error": str(e)}
+        try:
+            from . import retry_queue
+            retry_queue.enqueue(signal, url, str(e))
+        except Exception:  # noqa: BLE001
+            pass
+        return result

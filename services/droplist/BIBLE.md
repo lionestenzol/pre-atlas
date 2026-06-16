@@ -211,6 +211,7 @@ At least 4 of 5 must produce usable state without manual rescue.
 | MVP 4 persistent operating layer | `test_persist.py` | 7-day clock-driven simulation, 7 checks | 7/7 |
 | PKT-005 Atlas seam mapping | `test_atlas_signal.py` | 4 fixture DAGs -> Signal.v1, structural + strict jsonschema | 4/4 |
 | PKT-006 live Atlas emission | `test_atlas_emit.py` | stdlib HTTP fixture, positive + negative case | 2/2 |
+| PKT-006 retry buffer (Stop 4) | `test_atlas_retry.py` | enqueue / drain / dedup / TTL / max-attempts / 4xx-vs-5xx split / strict-mode preservation / settle-pump integration | 10/10 |
 
 Before any Execution Packet is closed, *all four* gates must still pass.
 
@@ -323,7 +324,7 @@ atlas_signal     (when                   POST /api/signals/ingest
 
 - **One settled-DAG event = one Signal.** Replays produce new `id`s.
 - **Pure mapping is idempotent** for a given DAG snapshot (same DAG -> same Signal up to id and emitted_at).
-- **No persistence Atlas-side.** Ring buffer. If the consumer is down, signals are lost. PKT-006 should add a retry buffer on the DropList side.
+- **No persistence Atlas-side.** Ring buffer. If the consumer is down, signals would be lost — ~~PKT-006 should add a retry buffer on the DropList side~~ **retry buffer SHIPPED 2026-06-16 (commit `088821b`, Stop 4)**: failed emissions persist to `signal_retry_queue.jsonl`, drained on next settle. See §16 "Retry buffer" below.
 - **No back-channel today.** Atlas doesn't reach into DropList. That's OQ-3 + OQ-4 territory.
 
 ### Live wire (shipped by PKT-006)
@@ -339,10 +340,21 @@ atlas_signal     (when                   POST /api/signals/ingest
   ```
   Reconstructable trace of every emission attempt without joining files.
 
+### Retry buffer (shipped Stop 4, commit `088821b`, 2026-06-16)
+
+When `emit_signal` hits a transient failure, the signal persists to `$DROPLIST_DATA/signal_retry_queue.jsonl` instead of being lost. The next `_maybe_emit_atlas_signal` call drains due entries before emitting the new settle's signal.
+
+- **Retryable failures:** `URLError` / `OSError` (DNS, timeout, conn refused) and HTTP 5xx responses.
+- **Non-retryable failures:** HTTP 4xx (client-side bug, won't fix itself) and `DROPLIST_STRICT_EMIT=1` validation_failed (returns before POST try-block, queue untouched — Stop-3 contract preserved).
+- **Schedule:** exponential backoff `[1m, 5m, 30m, 2h, 12h]`, max 5 attempts.
+- **Hygiene:** dedup by `signal_id` (duplicate enqueue = no-op), TTL 7 days, atomic file rewrite (`tempfile.mkstemp + os.replace`).
+- **Audit trail:** `signal_retry_success` / `signal_retry_exhausted` / `signal_retry_pruned` events in `dag_events.jsonl`.
+
+Implementation: `droplist/retry_queue.py` (309 LOC). Wire sites: `atlas_signal.emit_signal` (enqueue on failure) + `graph_engine._maybe_emit_atlas_signal` (`prune_expired -> drain -> re-POST -> mark_attempted` before current settle emit).
+
 ### Open follow-ups
 
-- **OQ-17** extends `Signal.v1.source_layer` enum to include `"droplist"` once Atlas-side cares about distinguishing.
-- **Retry buffer.** Failed emissions are logged but not retried. Add a buffered re-emit when the consumer comes back online (deferred — opens a new OQ if needed).
+- **OQ-17** extends `Signal.v1.source_layer` enum to include `"droplist"` once Atlas-side cares about distinguishing. Currently gated SKIP — `lattice-projection.ts:200-201` deliberately filters on a marker, not `source_layer`, to stay stable across OQ-17. No consumer branches on the value today.
 - **n8n flow** itself (`n8n_flows/droplist_to_atlas_signal.json`) is a separate config artifact; pattern documented above, JSON not yet committed.
 
 ---

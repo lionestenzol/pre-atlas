@@ -63,7 +63,7 @@ When a DAG settles into a terminal state (`complete`, `failed`, `needs_human`, `
 | `signal_type` | map from `dag.status`: complete -> `completion`, failed -> `error`, needs_human -> `approval_required`, stalled -> `blocked` | |
 | `priority` | derived from max node priority + DAG type (warning/problem -> urgent) | |
 | `payload.task_id` | `dag.source_drop` (the drop_id) | |
-| `payload.label` | `dag.goal` (trimmed to 80 chars) | |
+| `payload.label` | `dag.goal` (trimmed to 140 chars) | |
 | `payload.summary` | `f"{domain}/{type}: {done}/{total} done; status={dag.status}"` | |
 | `payload.data` | `{ dag_id, domain, type, dag_status, nodes: [...], evidence_refs, entity_refs }` | structured introspection |
 | `payload.action_required` | `True` iff `signal_type == "approval_required"` | enforces schema's allOf |
@@ -84,7 +84,7 @@ OR, bypass n8n for testing/dev:
                   Signal.v1
 DropList helper ------------------------> delta-kernel
 atlas_signal.py  (direct POST when         POST /api/signals/ingest
-                  DROPLIST_DIRECT_SIGNALS_URL set)
+                  DROPLIST_ATLAS_SIGNALS_URL set)
 ```
 
 This packet ships layer 1 (the pure-function mapping) + the direct-POST helper. Layer 2 (n8n flow) is a separate config artifact, deferred. Layer 3 (delta-kernel endpoint) already exists.

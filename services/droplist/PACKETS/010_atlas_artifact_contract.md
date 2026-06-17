@@ -158,7 +158,7 @@ No source-code changes to delta-kernel runtime, no `apps/lattice/` changes, no S
     "created_at": { "type": "string", "format": "date-time" },
     "source_layer": {
       "type": "string",
-      "enum": ["site_pull", "optogon", "atlas", "ghost_executor", "claude_code"]
+      "enum": ["site_pull", "optogon", "atlas", "ghost_executor", "claude_code", "droplist"]
     },
     "artifact_type": {
       "type": "string",
@@ -231,7 +231,7 @@ Field-by-field rationale:
 | `schema_version: "1.0"` | Rosetta canon (Signal, Directive, ContextPackage all `"1.0"`, not `"1.0.0"`). |
 | `id` | `string, minLength 1`. No format constraint — caller picks `art_<uuid12>` to match the `sig_<uuid12>` convention. Not enforced at schema-level (Signal.v1 doesn't either). |
 | `created_at` | ISO date-time. Diverges from Signal.v1's `emitted_at` because artifacts are *created* once and re-referenced; signals are *emitted* on a moment. Different verbs, different semantics. Convention is per-schema custom verbs (Signal `emitted_at`, Directive `issued_at`, ContextPackage `captured_at`, BuildOutput `completed_at`, SimulationReport `created_at` — `created_at` matches the durability semantic). |
-| `source_layer` | Same 5 values as `Signal.v1.source_layer` enum verbatim — including `claude_code`. No new enum value, no Signal.v1 modification. If a future producer (e.g. `droplist`) needs to emit artifacts, that requires extending BOTH `Signal.v1` and `AtlasArtifact.v1` enums together as a single doctrine move — OQ-17's resolution will trigger that, not this packet. |
+| `source_layer` | Same 6 values as `Signal.v1.source_layer` enum verbatim — including `claude_code` and `droplist`. At PKT-010 ship this was 5 values; OQ-17 was later resolved by Stop 5 (2026-06-17) which extended BOTH `Signal.v1` and `AtlasArtifact.v1` in a single doctrine move. |
 | `artifact_type` | New discriminator enum, 4 values. `widget` = a `/show` SVG/HTML rendering. `explanation` = prose-only output. `recon` = a `code-recon` skill output. `anatomy_map` = an `anatomy-map` skill HTML. Free to extend; lattice renderers branch on this. |
 | `topic` | The "what this is about" handle. `origin` distinguishes user-typed args (`/show foo`) from inferred-from-prior-turn (bare `/show`). Lets future readers know how reliable the topic string is. |
 | `session` | Conversation provenance — session id, turn index, model. Optional so non-conversational producers (recon scripts) can omit it. |
@@ -328,7 +328,7 @@ Untouched. Specifically:
 - `Signal.v1.signal_type` enum is **not** extended. Artifacts have their own `artifact_type` discriminator.
 - No `Signal.v1.payload.data` schema is added or changed.
 
-OQ-17 (extending `source_layer` to include `droplist`) is untouched by PKT-010 — it remains pending. If/when OQ-17 resolves, both `Signal.v1.source_layer` and `AtlasArtifact.v1.source_layer` extend together in a single doctrine move.
+~~OQ-17 (extending `source_layer` to include `droplist`) is untouched by PKT-010 — it remains pending.~~ **PKT-010 itself did not extend the enums; OQ-17 was resolved later by Stop 5 (2026-06-17), which extended both `Signal.v1.source_layer` and `AtlasArtifact.v1.source_layer` together as the single doctrine move predicted here.**
 
 ---
 
@@ -462,8 +462,8 @@ npm test                      # the original fabric-tests — MUST stay green
 - Does **NOT** ship a claude-side MCP server or skill. PKT-014.
 - Does **NOT** hook `/show` to emit artifacts. PKT-015.
 - Does **NOT** define `GET /api/atlas/context` (the "current lattice focus + recent artifacts" aggregate). Out of scope until PKT-011's follow-up sketch resolves how focus is tracked.
-- Does **NOT** extend `Signal.v1.source_layer` enum (OQ-17 untouched).
-- Does **NOT** add `"droplist"` to `AtlasArtifact.v1.source_layer` — when droplist becomes an artifact producer, both enums extend together (one doctrine move).
+- ~~Does **NOT** extend `Signal.v1.source_layer` enum (OQ-17 untouched).~~ **PKT-010 didn't; Stop 5 (2026-06-17) did — both enums extended together as the single doctrine move predicted above.**
+- ~~Does **NOT** add `"droplist"` to `AtlasArtifact.v1.source_layer` — when droplist becomes an artifact producer, both enums extend together (one doctrine move).~~ **Done by Stop 5 (2026-06-17), independent of droplist becoming an artifact producer — shipped on Bruke override for honesty (`Signal.v1` already had a real droplist producer via PKT-006).**
 - Does **NOT** define a `oneOf`-discriminated payload variant. Repo convention is enum-on-envelope + free payload. If a future packet proves the four artifact_types need separate shapes, that's a doctrine move with its own packet.
 
 ---

@@ -17,7 +17,7 @@ export interface Signal {
   schema_version: '1.0';
   id: string;
   emitted_at: string;
-  source_layer: 'site_pull' | 'optogon' | 'atlas' | 'ghost_executor' | 'claude_code';
+  source_layer: 'site_pull' | 'optogon' | 'atlas' | 'ghost_executor' | 'claude_code' | 'droplist';
   signal_type: 'status' | 'completion' | 'blocked' | 'approval_required' | 'error' | 'insight';
   priority: 'urgent' | 'normal' | 'low';
   payload: {

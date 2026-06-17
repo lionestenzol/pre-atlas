@@ -46,7 +46,7 @@ Store impl at: services/delta-kernel/src/atlas/signals-store.ts
   Signals are ephemeral (act-on-or-log), not persisted
 ```
 
-**Important finding:** `source_layer` enum does NOT include `"droplist"`. Closest semantic fit: `"optogon"` (DropList is part of the path-runtime / brain-stem layer that feeds Atlas). Opens OQ-17 to formally add `droplist`.
+**Important finding:** `source_layer` enum did not include `"droplist"` at PKT-005 ship; closest semantic fit was `"optogon"` (DropList is part of the path-runtime / brain-stem layer that feeds Atlas). Opened OQ-17 to formally add `droplist`. **OQ-17 has since shipped (Stop 5, 2026-06-17)** — the enum now includes `"droplist"` and the default has been flipped; the historical mapping below is retained for context.
 
 ## The contract
 
@@ -59,7 +59,7 @@ When a DAG settles into a terminal state (`complete`, `failed`, `needs_human`, `
 | `schema_version` | literal `"1.0"` | |
 | `id` | `f"sig_{uuid4().hex[:12]}"` | DropList-side id |
 | `emitted_at` | `clock.now_iso()` | controllable for tests |
-| `source_layer` | literal `"optogon"` (until OQ-17) | placeholder until enum extended |
+| `source_layer` | literal `"droplist"` (post-Stop-5; originally `"optogon"` placeholder until OQ-17) | enum extended 2026-06-17 |
 | `signal_type` | map from `dag.status`: complete -> `completion`, failed -> `error`, needs_human -> `approval_required`, stalled -> `blocked` | |
 | `priority` | derived from max node priority + DAG type (warning/problem -> urgent) | |
 | `payload.task_id` | `dag.source_drop` (the drop_id) | |
@@ -98,7 +98,7 @@ This packet ships layer 1 (the pure-function mapping) + the direct-POST helper. 
 ## Output
 
 1. **New module** `droplist/atlas_signal.py`:
-   - `dag_to_signal(dag, source_layer="optogon") -> dict` — pure function, no I/O
+   - `dag_to_signal(dag, source_layer="droplist") -> dict` — pure function, no I/O (default flipped from `"optogon"` by Stop 5)
    - `emit_signal(signal, url, timeout=10) -> dict` — POSTs via stdlib urllib (zero-dep)
    - Internal mapping tables for status / priority
 
@@ -145,5 +145,5 @@ This packet ships layer 1 (the pure-function mapping) + the direct-POST helper. 
 ## What this does NOT do
 
 - **Does not wire live emission.** When a DAG settles in graph_engine, NO signal is emitted today. PKT-006 will hook this in (single line: `atlas_signal.emit_settled(dag)` at the end of `run_graph()`).
-- **Does not change source_layer in the schema.** Uses `"optogon"` as placeholder. OQ-17 tracks the schema amendment.
+- ~~**Does not change source_layer in the schema.** Uses `"optogon"` as placeholder. OQ-17 tracks the schema amendment.~~ **PKT-005 itself did not change the schema; OQ-17 was resolved later by Stop 5 (2026-06-17), which extended the enum to include `"droplist"` and flipped the default.**
 - **Does not define the n8n flow.** The n8n config is an external artifact (`n8n_flows/droplist_to_atlas_signal.json`), not committed in this packet. Pattern documented in BIBLE §16.

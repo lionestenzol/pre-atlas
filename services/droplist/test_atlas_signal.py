@@ -24,7 +24,7 @@ from droplist import atlas_signal  # noqa: E402
 # Signal.v1 closed sets (must match contracts/schemas/Signal.v1.json)
 # ---------------------------------------------------------------------------
 
-VALID_SOURCE_LAYERS = {"site_pull", "optogon", "atlas", "ghost_executor", "claude_code"}
+VALID_SOURCE_LAYERS = {"site_pull", "optogon", "atlas", "ghost_executor", "claude_code", "droplist"}
 VALID_SIGNAL_TYPES = {"status", "completion", "blocked", "approval_required",
                       "error", "insight"}
 VALID_PRIORITIES = {"urgent", "normal", "low"}

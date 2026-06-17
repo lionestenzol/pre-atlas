@@ -85,13 +85,13 @@ def _collect_action_options(dag: dict) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-def dag_to_signal(dag: dict, source_layer: str = "optogon") -> dict[str, Any]:
+def dag_to_signal(dag: dict, source_layer: str = "droplist") -> dict[str, Any]:
     """Map a settled DropList DAG to a Signal.v1-shaped dict.
 
     Pure function. No I/O. Uses controllable clock so tests can pin timestamps.
 
-    `source_layer` defaults to "optogon" because the Signal.v1 enum does not
-    yet include "droplist". See OQ-17 in BIBLE §13.
+    `source_layer` defaults to "droplist" (OQ-17 resolved; the Signal.v1 enum
+    now includes it). See BIBLE §13 / §16.
     """
     nodes = dag.get("nodes", []) or []
     done = [n for n in nodes if n.get("status") == "done"]
@@ -157,7 +157,7 @@ def dag_to_signal(dag: dict, source_layer: str = "optogon") -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 # Closed sets — must match contracts/schemas/Signal.v1.json
-_VALID_SOURCE_LAYERS = {"site_pull", "optogon", "atlas", "ghost_executor", "claude_code"}
+_VALID_SOURCE_LAYERS = {"site_pull", "optogon", "atlas", "ghost_executor", "claude_code", "droplist"}
 _VALID_SIGNAL_TYPES = {"status", "completion", "blocked", "approval_required",
                        "error", "insight"}
 _VALID_PRIORITIES = {"urgent", "normal", "low"}

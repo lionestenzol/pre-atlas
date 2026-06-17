@@ -67,5 +67,5 @@ No regressions from pre-PKT-006 baseline. Positive + negative case both verified
 
 - **No retry buffer.** Failed emissions are logged once and forgotten. A re-emit on reconnection is deferred.
 - **No back-channel.** Atlas can't reach into DropList. Still OQ-3 / OQ-4 territory.
-- **No source_layer enum change.** Still uses `"optogon"` placeholder. OQ-17 unchanged.
+- ~~**No source_layer enum change.** Still uses `"optogon"` placeholder. OQ-17 unchanged.~~ **PKT-006 itself did not change the enum; OQ-17 was resolved later by Stop 5 (2026-06-17). Current code emits `source_layer="droplist"`.**
 - **No n8n flow JSON.** External config artifact; pattern documented in §16.

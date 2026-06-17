@@ -11,7 +11,7 @@
     "created_at": { "type": "string", "format": "date-time" },
     "source_layer": {
       "type": "string",
-      "enum": ["site_pull", "optogon", "atlas", "ghost_executor", "claude_code"]
+      "enum": ["site_pull", "optogon", "atlas", "ghost_executor", "claude_code", "droplist"]
     },
     "artifact_type": {
       "type": "string",

@@ -79,9 +79,10 @@ interface SignalEntry {
 }
 
 function readDroplistSignals(signalsRing: StorageLike): SignalEntry[] {
-  // pull from delta-kernel's signals ring; filter source_layer where
-  // (source_layer === 'optogon' && payload.source === 'droplist') OR
-  // source_layer === 'droplist' once OQ-17 ships.
+  // pull from delta-kernel's signals ring; the consumer filters on the
+  // payload.data.dag_id marker (not source_layer) — that design pre-dates
+  // OQ-17 and stays correct now that OQ-17 has shipped (Stop 5, 2026-06-17):
+  // the enum widening is set-monotone, so the marker filter is unaffected.
 }
 ```
 
@@ -92,7 +93,7 @@ function signalToItem(sig: SignalEntry): LatticeItem {
   return {
     id: sig.payload.task_id ?? sig.id,
     title: sig.payload.label ?? '(droplist DAG)',
-    project: 'atlas',   // first cut; refine when OQ-17 + domain mapping is decided
+    project: 'atlas',   // first cut; refine when domain mapping is decided (OQ-17 shipped via Stop 5)
     status: signalStatusToLatticeStatus(sig.signal_type),
     time: relativeTime(sig.emitted_at),
     links: [],
@@ -166,7 +167,7 @@ test_server         7/7
 ## What this does NOT do
 
 - **Does not modify droplist.** Settled core stays settled.
-- **Does not change the Signal.v1 schema.** OQ-17 (`source_layer = 'droplist'` enum extension) remains independent. PKT-008 reads existing signals where source_layer is the placeholder `'optogon'`.
+- ~~**Does not change the Signal.v1 schema.** OQ-17 (`source_layer = 'droplist'` enum extension) remains independent. PKT-008 reads existing signals where source_layer is the placeholder `'optogon'`.~~ **PKT-008 itself did not change the schema; OQ-17 was resolved later by Stop 5 (2026-06-17). Signals now arrive with `source_layer="droplist"`. The marker-filter consumer is unaffected — see line 200-202 in `lattice-projection.ts`.**
 - **Does not persist signals to disk.** PKT-008 keeps signals in-memory. Durability across delta-kernel restarts is a separate question (defer until a real consumer cares).
 - **Does not solve project routing.** Droplist signals all land in `project: 'atlas'` in the first cut. A domain -> project mapping is a follow-up OQ if/when Bruke wants doe DAGs to land under `property` instead.
 - **Does not delete idea_registry items.** Lattice continues to show 12 execute_now Atlas ideas alongside any droplist items.

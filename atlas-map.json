@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "groups": [
+    "services",
+    "apps",
+    "tools"
+  ],
+  "lattice_mirror_dir": "apps/lattice",
+  "substrate_pages_dir": "C:/Users/bruke/atlas/pages",
+  "substrate_nav_key": "system-map",
+  "substrate_nav_script": "/pages/nav.js",
+  "output_dir": "audit",
+  "preview_lines": 80,
+  "preview_char_cap": 5500,
+  "churn_days": 30,
+  "purposes": {
+    "aegis-fabric": "admin gateway · API middleware",
+    "canvas-engine": "URL→React clone via in-process Vite pool",
+    "cognitive-sensor": "conversation analysis pipeline · idea registry",
+    "cortex": "autonomous execution layer",
+    "crucix": "dashboard server (jarvis)",
+    "delta-kernel": "deterministic state engine · 6-mode FSM · API hub",
+    "droplist": "capture→packet→DAG engine",
+    "memory-hub": "memory aggregation",
+    "mirofish": "prediction engine, neo4j-dep",
+    "mosaic-dashboard": "next.js dashboard (legacy)",
+    "mosaic-orchestrator": "FastAPI orchestrator (legacy)",
+    "openclaw": "FastAPI service (legacy)",
+    "optogon": "autonomous executor · preference seeding · signal emission",
+    "perception": "Phase A stub",
+    "search-stack": "router over 28 search providers",
+    "triangulation": "Phase B stub",
+    "uasc-executor": "UASC command executor · HMAC auth",
+    "ws-gateway": "websocket gateway",
+    "inpact": "daily flow UI · onboarding · cycleboard",
+    "lattice": "viewmodel projection · tree/graph/timeline",
+    "code-converter": "python→C++ converter · AST engine",
+    "blueprint-generator": "next.js blueprint UI (legacy)",
+    "canvas-demo": "programmatic Remotion vs dummy site",
+    "webos-333": "experimental",
+    "atlas-audit": "audit pipeline & system index generator",
+    "anatomy-extension": "Chrome MV3 anatomy capture extension",
+    "anatomy-research": "anatomy R&D notes & captures",
+    "anatomy-rewrite": "anatomy rewrite scratch",
+    "codex-partner": "codex companion tooling",
+    "fest-reconcile": "festival manifest reconciler",
+    "mini-ship": "small-atom ship loop telemetry",
+    "reminders": "scheduling primitives",
+    "ai-exec-pipeline": "ai execution pipeline (legacy)"
+  },
+  "governance": {
+    "delta-kernel": { "automation": "active", "note": "governance daemon: 9 cron jobs; */5 heartbeat + preparation; preparation auto-completes auto-tier tasks" },
+    "cognitive-sensor": { "automation": "dormant", "note": "triage arm (auto_triage->cortex_bridge->decisions_to_atlas) is UNSCHEDULED; runs only when hand-cranked via `at`" },
+    "cortex": { "automation": "gated", "note": "executes a directive only when CORTEX_BRIDGE_APPLY=1 + CORTEX_BRIDGE_RUN_PROPOSAL=1 (both default off)" },
+    "optogon": { "automation": "gated", "note": "proposes triage verdicts; writes back only when AUTO_TRIAGE_APPLY=1 (default off)" },
+    "droplist": { "automation": "on_demand", "note": "drop->packet->DAG with tool-verified done_condition; not auto-scheduled" }
+  },
+  "new_since_audit": [
+    "droplist",
+    "memory-hub",
+    "search-stack",
+    "atlas-audit",
+    "reminders"
+  ],
+  "retired": [
+    "mirofish",
+    "openclaw",
+    "mosaic-dashboard",
+    "mosaic-orchestrator",
+    "blueprint-generator",
+    "ai-exec-pipeline"
+  ],
+  "service_edges": [
+    [
+      "lattice",
+      "delta-kernel"
+    ],
+    [
+      "inpact",
+      "delta-kernel"
+    ],
+    [
+      "droplist",
+      "delta-kernel"
+    ],
+    [
+      "cortex",
+      "delta-kernel"
+    ],
+    [
+      "optogon",
+      "delta-kernel"
+    ],
+    [
+      "optogon",
+      "cortex"
+    ],
+    [
+      "mosaic-orchestrator",
+      "optogon"
+    ],
+    [
+      "mosaic-dashboard",
+      "mosaic-orchestrator"
+    ],
+    [
+      "canvas-engine",
+      "delta-kernel"
+    ],
+    [
+      "code-converter",
+      "canvas-engine"
+    ],
+    [
+      "perception",
+      "triangulation"
+    ],
+    [
+      "ws-gateway",
+      "delta-kernel"
+    ],
+    [
+      "uasc-executor",
+      "delta-kernel"
+    ],
+    [
+      "aegis-fabric",
+      "delta-kernel"
+    ],
+    [
+      "inpact",
+      "cortex"
+    ],
+    [
+      "droplist",
+      "search-stack"
+    ],
+    [
+      "cognitive-sensor",
+      "delta-kernel"
+    ],
+    [
+      "crucix",
+      "canvas-engine"
+    ],
+    [
+      "lattice",
+      "cognitive-sensor"
+    ]
+  ]
+}

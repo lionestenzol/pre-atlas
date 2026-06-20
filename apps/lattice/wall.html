@@ -83,7 +83,7 @@ function tileEl(s, i) {
   el.className = 'tile'; el.dataset.idx = i;
   el.innerHTML =
     '<div class="bar"><span class="dot' + (liveSet.has(s.url)?' up':'') + '" id="dot'+i+'"></span>'
-    + '<span class="name" title="'+s.file+'">'+s.name+'</span>'
+    + '<span class="name" title="'+s.file+' — click to select in graph" onclick="tileClick('+i+')" style="cursor:pointer">'+s.name+'</span>'
     + '<span class="spacer"></span><span class="meta">'+s.group+' :'+s.port+'</span>'
     + '<span class="mini" onclick="reloadOne('+i+')">↻</span>'
     + '<a href="'+s.url+'" target="_blank" rel="noopener">↗</a></div>'
@@ -179,6 +179,42 @@ function focusFromHash(){
   if(tile){ tile.scrollIntoView({behavior:'smooth',block:'center'}); tile.classList.add('focus'); setTimeout(()=>tile.classList.remove('focus'),2800); }
 }
 window.addEventListener('hashchange', focusFromHash);
+
+// ===== Two-way sync with the system-map graph (brick 2) =====
+// Derive the subsystem name (= graph node id) from a surface's file path:
+// services/<name>/..., apps/<name>/..., tools/<name>/... → <name>; else group.
+function subsysOf(s){
+  const parts = (s.file||'').split(/[\\/]/);
+  const i = parts.findIndex(p => p==='services' || p==='apps' || p==='tools');
+  if (i >= 0 && parts[i+1]) return parts[i+1];
+  return s.group;
+}
+// Tile name clicked → tell the parent map to select this subsystem.
+function tileClick(i){
+  const s = view[i]; if(!s) return;
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type:'atlas-tile', key: subsysOf(s) }, '*');
+  }
+}
+// Parent map selected a subsystem → focus + highlight all its tiles, scroll to first.
+function focusSubsys(key){
+  if(!key) return;
+  const want = (''+key).toLowerCase();
+  const tiles = document.querySelectorAll('.tile');
+  let first = -1;
+  view.forEach((s,i)=>{
+    const t = tiles[i]; if(!t) return;
+    const match = subsysOf(s).toLowerCase() === want
+      || (s.name+' '+s.group+' '+(s.launch||'')).toLowerCase().includes(want);
+    t.classList.toggle('focus', match);
+    if(match && first<0) first = i;
+  });
+  if(first>=0 && tiles[first]) tiles[first].scrollIntoView({behavior:'smooth',block:'center'});
+}
+window.addEventListener('message', (e)=>{
+  const d = e.data;
+  if (d && d.type === 'atlas-focus') focusSubsys(d.key);
+});
 
 loadSurfaces();
 setInterval(updateCount, 2500);

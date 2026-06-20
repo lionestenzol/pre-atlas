@@ -1650,11 +1650,18 @@ function applySnapPreset(id) {
 }
 
 // Wall panel: the monitor wall as a dockable system-map panel (brick 1). Iframes
-// the shared wall.html (absolute :3011 URL so it works from any copy of the map),
-// lazy — the iframe src is only set on first open.
+// wall.html from the ACTUAL origin/port the map is served on (not a hardcoded
+// :3011), so it works whatever port hosts this copy. Lazy — src set on first open.
+function wallUrl() {
+  // http(s): resolve wall.html relative to this page → same actual port.
+  // file:// (no server): fall back to the canonical apps/lattice copy on :3011.
+  return location.protocol.startsWith('http')
+    ? new URL('wall.html', location.href).href
+    : 'http://localhost:3011/wall.html';
+}
 function ensureWallLoaded() {
   const f = document.getElementById('wall-frame');
-  if (f && !f.src) f.src = 'http://localhost:3011/wall.html';
+  if (f && !f.src) f.src = wallUrl();
 }
 
 function wallIsOpen() {

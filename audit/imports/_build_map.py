@@ -2095,11 +2095,18 @@ function applySnapPreset(id) {
 }
 
 // Wall panel: the monitor wall as a dockable system-map panel (brick 1). Iframes
-// the shared wall.html (absolute :3011 URL so it works from any copy of the map),
-// lazy — the iframe src is only set on first open.
+// wall.html from the ACTUAL origin/port the map is served on (not a hardcoded
+// :3011), so it works whatever port hosts this copy. Lazy — src set on first open.
+function wallUrl() {
+  // http(s): resolve wall.html relative to this page → same actual port.
+  // file:// (no server): fall back to the canonical apps/lattice copy on :3011.
+  return location.protocol.startsWith('http')
+    ? new URL('wall.html', location.href).href
+    : 'http://localhost:3011/wall.html';
+}
 function ensureWallLoaded() {
   const f = document.getElementById('wall-frame');
-  if (f && !f.src) f.src = 'http://localhost:3011/wall.html';
+  if (f && !f.src) f.src = wallUrl();
 }
 
 function wallIsOpen() {
@@ -3622,7 +3629,22 @@ window.addEventListener('load', async () => {
             except OSError:
                 pass
 
+    # Mirror wall.html next to each emitted system-map.html so the wall panel can
+    # load it relative to the ACTUAL serving origin/port (not a hardcoded :3011).
+    src_wall = Path(__file__).resolve().parents[2] / "apps" / "lattice" / "wall.html"
+
+    def _copy_wall(dst_dir: Path) -> None:
+        if not src_wall.is_file():
+            return
+        dst = dst_dir / "wall.html"
+        try:
+            if dst.resolve() != src_wall.resolve():  # don't copy onto the source
+                shutil.copyfile(src_wall, dst)
+        except OSError:
+            pass
+
     out_primary_html.write_text(rendered, encoding="utf-8")
+    _copy_wall(out_primary_dir)
     if out_mirror_html:
         # The mirror sits next to the vendored cytoscape so use the local path there.
         mirror_rendered = HTML.replace("Pre Atlas — system map", repo_title)
@@ -3635,6 +3657,7 @@ window.addEventListener('load', async () => {
                     shutil.copyfile(src_ext, mirror_dir / ext_name)
                 except OSError:
                     pass
+        _copy_wall(mirror_dir)
 
     if out_substrate_html:
         # Substrate copy gets <atlas-nav> injected into the header for
@@ -3652,6 +3675,7 @@ window.addEventListener('load', async () => {
             '<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.4/cytoscape.umd.min.js"></script>',
         )
         out_substrate_html.write_text(sub_rendered, encoding="utf-8")
+        _copy_wall(Path(out_substrate_html).parent)
 
     summary = {
         "root": str(root),

@@ -1485,6 +1485,10 @@ function zoomOut() { if (cy) cy.animate({ zoom: cy.zoom() / 1.3 }, { duration: 1
 // the wheel both treat this as the "meet you halfway" target.
 const READABLE_ZOOM = 1.1;
 
+// Background click-drag pans the view this many times the cursor's travel
+// (native is 1:1). >1 = the graph moves more than your cursor.
+const PAN_DRAG_SCALE = 2.2;
+
 // Two-finger gestures on the graph: VERTICAL (deltaY) = smooth zoom toward the
 // pointer (tamed scale); HORIZONTAL (deltaX) = pan. Cytoscape's own wheel-zoom
 // is disabled (userZoomingEnabled:false) so this is the single source of truth.
@@ -1508,6 +1512,27 @@ function wireGraphGestures() {
     const z = Math.max(cy.minZoom(), Math.min(cy.maxZoom(), cy.zoom() * factor));
     cy.zoom({ level: z, renderedPosition: rendered });
   }, { passive: false });
+
+  // Background click-drag → pan, amplified by PAN_DRAG_SCALE so the view travels
+  // more than the cursor. Skipped while a node is being dragged (cy :grabbed) so
+  // node-move still works; a small threshold preserves plain clicks/taps. We don't
+  // preventDefault here, so Cytoscape still gets tap/select/grab.
+  let drag = null;
+  cont.addEventListener('pointerdown', (e) => {
+    if (!cy || e.button !== 0) return;
+    drag = { x: e.clientX, y: e.clientY, pan: { ...cy.pan() }, moved: false };
+  });
+  cont.addEventListener('pointermove', (e) => {
+    if (!drag || !cy) return;
+    if (cy.$(':grabbed').nonempty()) { drag = null; return; }   // a node is being dragged
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 3) return;          // preserve clicks
+    drag.moved = true;
+    cy.pan({ x: drag.pan.x + dx * PAN_DRAG_SCALE, y: drag.pan.y + dy * PAN_DRAG_SCALE });
+  });
+  const endDrag = () => { drag = null; };
+  window.addEventListener('pointerup', endDrag);
+  cont.addEventListener('pointerleave', endDrag);
 }
 
 // Magnetic: bring a node to center at a readable zoom, but only zoom IN when
@@ -2688,6 +2713,7 @@ function renderServiceGraph() {
     minZoom: 0.2, maxZoom: 4,
     wheelSensitivity: 0.2,        // tame the zoom scale (default 1 is jumpy)
     userZoomingEnabled: false,    // wheel handled by wireGraphGestures: vertical=zoom, horizontal=pan
+    userPanningEnabled: false,    // background drag handled in wireGraphGestures (scaled pan)
   });
   wireGraphGestures();
   cy.on('tap', 'node[kind = "service"]', evt => {

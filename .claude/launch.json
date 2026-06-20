@@ -194,6 +194,19 @@
       "cwd": "services/atlas-map-api"
     },
     {
+      "name": "droplist",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "droplist.server:app", "--host", "127.0.0.1", "--port", "3073"],
+      "port": 3073,
+      "cwd": "services/droplist"
+    },
+    {
+      "name": "droplist-ui",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/droplist/ui", "-p", "3074", "-c-1", "--cors"],
+      "port": 3074
+    },
+    {
       "name": "audit-map",
       "runtimeExecutable": "node",
       "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "audit", "-p", "8897", "-c-1", "--cors"],

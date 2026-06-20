@@ -23,9 +23,9 @@
   }
 
   var META = {
-    droplist:   ['#0F6E56', 'packets & entities'],
-    cycleboard: ['#185FA5', 'conversation cards'],
-    inpact:     ['#993C1D', 'projects'],
+    droplist:   ['#0F6E56', 'intake · packets & entities', 'http://localhost:3074/line.html'],
+    cycleboard: ['#185FA5', 'conversation cards', 'http://localhost:8889/'],
+    inpact:     ['#993C1D', 'projects', ''],
   };
 
   function html() {
@@ -34,7 +34,11 @@
     var body = Object.keys(groups).map(function (src) {
       var color = (META[src] || ['#5F5E5A', ''])[0];
       var label = (META[src] || ['', ''])[1];
+      var url = (META[src] || ['', '', ''])[2];
       var list = groups[src];
+      var openLink = url
+        ? '<a href="' + url + '" target="_blank" rel="noopener" style="margin-left:auto;font-size:12px;color:' + color + ';text-decoration:none;">open ↗</a>'
+        : '';
       var rows = list.slice(0, 6).map(function (it) {
         return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f0efe9;">'
           + '<span style="color:#1d1d1b;font-size:13px;">' + esc(it.title).slice(0, 72) + '</span>'
@@ -45,7 +49,8 @@
         + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
         + '<span style="width:10px;height:10px;border-radius:50%;background:' + color + ';display:inline-block;"></span>'
         + '<strong style="font-size:14px;color:#1d1d1b;">' + esc(src) + '</strong>'
-        + '<span style="font-size:12px;color:#888780;">' + list.length + ' · ' + esc(label) + '</span></div>'
+        + '<span style="font-size:12px;color:#888780;">' + list.length + ' · ' + esc(label) + '</span>'
+        + openLink + '</div>'
         + rows + more + '</div>';
     }).join('');
     return '<section id="atlas-backbone" style="background:#fff;border:1px solid #e5e4dd;border-radius:14px;padding:22px;margin-bottom:22px;font-family:var(--ip-font,system-ui);">'

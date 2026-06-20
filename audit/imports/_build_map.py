@@ -1644,6 +1644,7 @@ function handleContextAction(act) {
   else if (act === 'focus-clear') { document.getElementById('focus-select').value = 'all'; applyFocus('all'); }
   else if (act === 'drill') { if (drillState.level === 'services') drillInto(id); }
   else if (act === 'copy-id') { navigator.clipboard && navigator.clipboard.writeText(id); }
+  else if (act === 'start' || act === 'stop' || act === 'restart') { runServiceAction(act, id); }
   else if (act === 'open-editor') {
     const s = SERVICES.find(x => x.name === id);
     if (s) {
@@ -2621,7 +2622,18 @@ function renderServiceGraph() {
   cy.on('cxttap', 'node[kind = "service"]', evt => {
     ctxTargetId = evt.target.data('id');
     const oe = evt.originalEvent || {};
+    const svc = (window.SERVICES || []).find(x => x.name === ctxTargetId);
+    const actionItems = [];
+    if (svc && svc.port) {
+      if (svc.running) {
+        actionItems.push({ label: '■ stop', act: 'stop' }, { label: '⟳ restart', act: 'restart' });
+      } else {
+        actionItems.push({ label: '▶ start', act: 'start' });
+      }
+      actionItems.push('-');
+    }
     showContextMenu([
+      ...actionItems,
       { label: 'drill into', act: 'drill', kbd: 'dbl-click' },
       { label: 'select', act: 'select' },
       '-',
@@ -3399,8 +3411,10 @@ async function hydrateLiveState() {
 function markLiveBadge(isLive) {
   const meta = document.getElementById('meta-line');
   if (!meta) return;
+  meta.querySelectorAll('[data-live-badge]').forEach(e => e.remove());  // idempotent re-render
   const ls = window.__liveState || {};
   const dot = document.createElement('span');
+  dot.setAttribute('data-live-badge', '');
   dot.title = isLive
     ? ('live from atlas-map-api :3072 · ' + (ls.matched || 0) + '/' + (ls.total || 0) + ' matched')
     : 'baked snapshot (atlas-map-api :3072 unreachable)';
@@ -3412,10 +3426,39 @@ function markLiveBadge(isLive) {
   if (ls.dormant && ls.dormant.length) parts.push('<span style="color:#888780">⚙ ' + ls.dormant.length + ' dormant: ' + ls.dormant.map(escapeHtml).join(', ') + '</span>');
   if (parts.length) {
     const line = document.createElement('span');
+    line.setAttribute('data-live-badge', '');
     line.style.cssText = 'margin-left:10px;font-size:12px';
     line.innerHTML = parts.join(' · ');
     line.title = ls.down && ls.down.length ? ('autostart but not answering: ' + ls.down.join(', ')) : '';
     meta.appendChild(line);
+  }
+}
+
+// Wire 3 (drive): start/stop/restart a service from the map. POSTs to the
+// allowlisted action endpoints, then re-probes live state and recolors. The
+// server only ever spawns launch.json-defined commands keyed by subsystem name.
+async function runServiceAction(act, id) {
+  if (!['start', 'stop', 'restart'].includes(act)) return;
+  setDetails('<strong>' + escapeHtml(id) + '</strong> · ' + act + 'ing…');
+  try {
+    const r = await fetch(ATLAS_MAP_API + '/map/' + act + '/' + encodeURIComponent(id), { method: 'POST' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      setDetails('<strong>' + escapeHtml(id) + '</strong> · ' + act + ' failed — ' + escapeHtml(String(j.detail || r.status)));
+      return;
+    }
+    setDetails('<strong>' + escapeHtml(id) + '</strong> · ' + act + ' issued — re-checking…');
+    // start/restart need time for the process to bind; stop is near-instant.
+    const wait = act === 'stop' ? 700 : 2800;
+    setTimeout(async () => {
+      const live = await hydrateLiveState();
+      if (typeof renderServiceGraph === 'function') renderServiceGraph();
+      markLiveBadge(live);
+      const s = (window.SERVICES || []).find(x => x.name === id);
+      setDetails('<strong>' + escapeHtml(id) + '</strong> · now ' + (s && s.running ? '<span style="color:#1D9E75">running</span>' : '<span style="color:#888780">stopped</span>'));
+    }, wait);
+  } catch (e) {
+    setDetails('<strong>' + escapeHtml(id) + '</strong> · ' + act + ' error — ' + escapeHtml(String(e)));
   }
 }
 

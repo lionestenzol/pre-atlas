@@ -142,6 +142,82 @@ def test_viewer_live_probe_returns_bool_running():
     assert all(isinstance(s["running"], bool) for s in body["services"])
 
 
+def test_launch_allowlist_loads():
+    from atlas_map_api import launcher
+    from atlas_map_api.loader import load_snapshot
+    root = load_snapshot().repo_root
+    cfgs = launcher.load_launch_configs(root)
+    assert len(cfgs) > 0
+    assert all("name" in c for c in cfgs)
+
+
+def test_config_resolves_by_port():
+    from atlas_map_api import launcher
+    from atlas_map_api.loader import load_snapshot
+    root = load_snapshot().repo_root
+    cfg = launcher.config_for_port(root, 3001)  # delta-kernel's API port
+    assert cfg is not None
+    assert cfg.get("runtimeExecutable")
+
+
+def test_start_unknown_subsystem_404():
+    r = client.post("/map/start/__nonexistent__")
+    assert r.status_code == 404
+
+
+def test_start_no_port_is_422_not_spawn():
+    # cognitive-sensor has no port → cannot be started; must 422, never spawn
+    r = client.post("/map/start/cognitive-sensor")
+    assert r.status_code == 422
+
+
+def test_stop_requires_launch_config():
+    # cognitive-sensor has no port / no launch config → stop must 422, not kill
+    r = client.post("/map/stop/cognitive-sensor")
+    assert r.status_code == 422
+
+
+def test_stop_refuses_self_port():
+    from atlas_map_api import launcher
+    res = launcher.stop_on_port(launcher.SELF_PORT)
+    assert res["ok"] is False
+    assert "itself" in res["error"]
+
+
+def test_start_is_idempotent_when_running(monkeypatch):
+    from atlas_map_api import launcher
+    from atlas_map_api.loader import load_snapshot
+    root = load_snapshot().repo_root
+    cfg = launcher.config_for_port(root, 3001)
+    monkeypatch.setattr(launcher, "port_alive", lambda *a, **k: True)
+    # Popen must NOT be called when the port is already alive
+    monkeypatch.setattr(launcher.subprocess, "Popen", lambda *a, **k: (_ for _ in ()).throw(AssertionError("spawned while running")))
+    res = launcher.start_from_config(cfg, root)
+    assert res["started"] is False
+    assert res["reason"] == "already running"
+
+
+def test_start_spawns_argv_without_shell(monkeypatch):
+    from atlas_map_api import launcher
+    from atlas_map_api.loader import load_snapshot
+    root = load_snapshot().repo_root
+    cfg = launcher.config_for_port(root, 3001)
+    captured = {}
+
+    class FakePopen:
+        def __init__(self, cmd, **kwargs):
+            captured["cmd"] = cmd
+            captured["kwargs"] = kwargs
+
+    monkeypatch.setattr(launcher, "port_alive", lambda *a, **k: False)
+    monkeypatch.setattr(launcher, "_resolve_exe", lambda exe: exe)  # pretend resolvable
+    monkeypatch.setattr(launcher.subprocess, "Popen", FakePopen)
+    res = launcher.start_from_config(cfg, root)
+    assert res["started"] is True
+    assert isinstance(captured["cmd"], list)  # argv, never a string
+    assert captured["kwargs"]["shell"] is False
+
+
 def test_admin_reload():
     r = client.post("/admin/reload")
     assert r.status_code == 200

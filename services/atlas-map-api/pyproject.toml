@@ -9,6 +9,7 @@ dependencies = [
     "pydantic>=2.9",
     "rapidfuzz>=3.10",
     "fastmcp>=0.4",
+    "psutil>=6.0",
 ]
 
 [project.optional-dependencies]

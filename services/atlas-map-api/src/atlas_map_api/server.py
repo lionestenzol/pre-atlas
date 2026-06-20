@@ -28,6 +28,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from rapidfuzz import fuzz
 
+from . import launcher
 from .graph import ServiceGraph
 from .loader import MapSnapshot, load_snapshot
 
@@ -40,11 +41,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="atlas-map-api", version="0.1.0", lifespan=lifespan)
 
-# CORS — the viewer (system-map.html served on :8897, lattice on :3011, etc.)
-# needs to query this API from a different origin.
+# CORS — the viewer queries this API from a different origin. Now that the API
+# has process start/stop/restart endpoints, allow_origins is restricted to the
+# known local viewer origins (was "*") so a malicious page can't drive services.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3011", "http://127.0.0.1:3011",   # lattice
+        "http://localhost:8897", "http://127.0.0.1:8897",   # audit-map
+        "http://localhost:8888", "http://127.0.0.1:8888",   # atlas-shell
+    ],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
@@ -85,6 +91,9 @@ async def root() -> dict[str, Any]:
             "/map/search?q=<q>&limit=N",
             "/map/signals",
             "/map/viewer?probe=true",
+            "POST /map/start/{name}",
+            "POST /map/stop/{name}",
+            "POST /map/restart/{name}",
             "/admin/reload",
         ],
     }
@@ -283,6 +292,63 @@ async def viewer(
         "services": services,
         "edges": edges,
     }
+
+
+def _require_subsystem(name: str) -> Any:
+    snap, _ = _ensure_loaded()
+    sub = snap.subsystems.get(name)
+    if not sub:
+        raise HTTPException(404, f"subsystem '{name}' not found")
+    return snap, sub
+
+
+@app.post("/map/start/{name}")
+async def start_service(name: str) -> dict[str, Any]:
+    """Start a stopped service by spawning its launch.json-defined command.
+
+    The request only names a known subsystem; the actual command is resolved
+    subsystem -> port -> launch.json config and spawned verbatim (see launcher).
+    """
+    snap, sub = _require_subsystem(name)
+    cfg = launcher.config_for_port(snap.repo_root, sub.port)
+    if cfg is None:
+        raise HTTPException(
+            422,
+            f"no launch.json config for '{name}'"
+            + (f" (port {sub.port})" if sub.port else " (no port — cannot be started)"),
+        )
+    return {"action": "start", "subsystem": name, **launcher.start_from_config(cfg, snap.repo_root)}
+
+
+@app.post("/map/stop/{name}")
+async def stop_service(name: str) -> dict[str, Any]:
+    """Stop a running service by terminating the process on its port.
+
+    Mirrors start's allowlist guard: only stop services that have a launch.json
+    config, so we never kill a process atlas-map-api has no business managing.
+    """
+    snap, sub = _require_subsystem(name)
+    if launcher.config_for_port(snap.repo_root, sub.port) is None:
+        raise HTTPException(422, f"no launch.json config for '{name}' — refusing to stop an unmanaged process")
+    return {"action": "stop", "subsystem": name, **launcher.stop_on_port(sub.port)}
+
+
+@app.post("/map/restart/{name}")
+async def restart_service(name: str) -> dict[str, Any]:
+    """Stop then start a service (best-effort stop, then spawn)."""
+    snap, sub = _require_subsystem(name)
+    cfg = launcher.config_for_port(snap.repo_root, sub.port)
+    if cfg is None:
+        raise HTTPException(422, f"no launch.json config for '{name}'")
+    stop_result = launcher.stop_on_port(sub.port)
+    # terminate() is graceful — wait (bounded) for the port to actually free so
+    # start_from_config's idempotency check doesn't see it "already running".
+    for _ in range(20):
+        if not launcher.port_alive(sub.port):
+            break
+        await asyncio.sleep(0.15)
+    start_result = launcher.start_from_config(cfg, snap.repo_root)
+    return {"action": "restart", "subsystem": name, "stop": stop_result, "start": start_result}
 
 
 @app.get("/map/signals")

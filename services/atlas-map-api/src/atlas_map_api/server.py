@@ -32,6 +32,7 @@ from rapidfuzz import fuzz
 from . import auth
 from . import items as items_backbone
 from . import launcher
+from . import surfaces as surfaces_mod
 from .graph import ServiceGraph
 from .loader import MapSnapshot, load_snapshot
 
@@ -372,6 +373,14 @@ async def restart_service(name: str) -> dict[str, Any]:
         await asyncio.sleep(0.15)
     start_result = launcher.start_from_config(cfg, snap.repo_root)
     return {"action": "restart", "subsystem": name, "stop": stop_result, "start": start_result}
+
+
+@app.get("/map/surfaces")
+async def map_surfaces() -> dict[str, Any]:
+    """Every visual surface (HTML UI) in the repo, mapped to its served URL +
+    mtime + group. The monitor wall reads this so it shows ALL screens."""
+    snap, _ = _ensure_loaded()
+    return surfaces_mod.all_surfaces(snap.repo_root)
 
 
 @app.get("/items")

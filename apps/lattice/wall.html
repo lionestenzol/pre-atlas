@@ -8,113 +8,120 @@
           --up:#1D9E75; --down:#5f5d54; --accent:#C0563D; --font:-apple-system,system-ui,sans-serif; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font); }
-  header { display:flex; align-items:center; gap:14px; padding:12px 18px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:10; }
-  header h1 { font-size:15px; font-weight:600; margin:0; letter-spacing:.3px; }
+  header { display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:10; flex-wrap:wrap; }
+  header h1 { font-size:14px; font-weight:600; margin:0; letter-spacing:.3px; }
   header .sub { font-size:12px; color:var(--muted); }
   header .spacer { flex:1; }
-  button { background:var(--tile); color:var(--text); border:1px solid var(--line); border-radius:8px;
-           padding:7px 13px; font-size:13px; cursor:pointer; font-family:var(--font); }
+  button, select, input { background:var(--tile); color:var(--text); border:1px solid var(--line); border-radius:8px;
+           padding:6px 11px; font-size:13px; cursor:pointer; font-family:var(--font); }
+  input { cursor:text; }
   button:hover { border-color:var(--muted); }
   button.go { background:var(--up); border-color:var(--up); color:#06231a; font-weight:600; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:14px; padding:16px; }
-  .tile { background:var(--tile); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; height:320px; }
-  .bar { display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--line); }
-  .dot { width:9px; height:9px; border-radius:50%; background:var(--down); flex:none; }
+  label.ctl { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:12px; padding:14px; }
+  .tile { background:var(--tile); border:1px solid var(--line); border-radius:11px; overflow:hidden; display:flex; flex-direction:column; height:280px; }
+  .bar { display:flex; align-items:center; gap:7px; padding:7px 11px; border-bottom:1px solid var(--line); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--down); flex:none; }
   .dot.up { background:var(--up); }
-  .name { font-size:13px; font-weight:500; }
-  .port { font-size:11px; color:var(--muted); }
+  .name { font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta { font-size:10px; color:var(--muted); white-space:nowrap; }
   .bar .spacer { flex:1; }
-  .bar a, .bar .mini { font-size:12px; color:var(--muted); text-decoration:none; cursor:pointer; padding:2px 6px; border-radius:6px; }
+  .bar a, .bar .mini { font-size:12px; color:var(--muted); text-decoration:none; cursor:pointer; padding:1px 5px; border-radius:6px; }
   .bar a:hover, .bar .mini:hover { color:var(--text); background:var(--bg); }
-  .frame { flex:1; position:relative; background:#0e0d0a; }
+  .frame { flex:1; background:#0e0d0a; }
   iframe { width:100%; height:100%; border:0; background:#fff; }
-  .scrim { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:12px; pointer-events:none; }
 </style>
 </head>
 <body>
 <header>
   <h1>ATLAS · monitor wall</h1>
-  <span class="sub" id="count">—</span>
+  <span class="sub" id="count">loading…</span>
   <span class="spacer"></span>
+  <input id="filter" type="search" placeholder="filter…" style="width:140px;" oninput="setFilter(this.value)">
+  <label class="ctl">sort
+    <select id="sort" onchange="setSort(this.value)">
+      <option value="group">group</option>
+      <option value="name">name</option>
+      <option value="recent">recently edited</option>
+    </select>
+  </label>
   <button class="go" onclick="startAll(this)">▶ start all</button>
-  <button onclick="reloadAll()">↻ reload all</button>
-  <a href="system-map.html" style="color:var(--muted);font-size:13px;text-decoration:none;padding:7px 0;">system map ↗</a>
+  <button onclick="reloadAll()">↻</button>
+  <a href="system-map.html" style="color:var(--muted);font-size:13px;text-decoration:none;padding:6px 0;">system map ↗</a>
 </header>
 <div class="grid" id="grid"></div>
 
 <script>
 const API = 'http://localhost:3072';
-// Curated web surfaces. launch = launch.json name to start; dep = an API the UI needs.
-const SURFACES = [
-  { name:'system map',     url:'http://localhost:3011/system-map.html',          port:3011, launch:'lattice' },
-  { name:'lattice',        url:'http://localhost:3011/index.html',               port:3011, launch:'lattice' },
-  { name:'inPACT',         url:'http://localhost:3006/',                         port:3006, launch:'inpact' },
-  { name:'droplist',       url:'http://localhost:3074/line.html',                port:3074, launch:'droplist-ui', dep:'droplist' },
-  { name:'cycleboard',     url:'http://localhost:8889/',                         port:8889, launch:'cycleboard' },
-  { name:'cortex',         url:'http://localhost:8891/',                         port:8891, launch:'cortex-dashboard' },
-  { name:'canvas-engine',  url:'http://localhost:3050/',                         port:3050, launch:'canvas-engine' },
-  { name:'mosaic',         url:'http://localhost:3000/',                         port:3000, launch:'mosaic-dashboard' },
-  { name:'aegis',          url:'http://localhost:8890/',                         port:8890, launch:'aegis-landing' },
-  { name:'thread-cards',   url:'http://localhost:8893/thread_cards.html',        port:8893, launch:'thread-cards' },
-  { name:'delta-kernel',   url:'http://localhost:5173/',                         port:5173, launch:'delta-web' },
-  { name:'code-converter', url:'http://localhost:3007/',                         port:3007, launch:'code-converter' },
-  { name:'blueprint',      url:'http://localhost:3030/',                         port:3030, launch:'blueprint-generator' },
-  { name:'atlas shell',    url:'http://localhost:8888/atlas_boot.html',          port:8888, launch:'atlas-shell' },
-  { name:'anatomy',        url:'http://localhost:8894/today.html',               port:8894, launch:'anatomy' },
-  { name:'cognitive atlas',url:'http://localhost:8893/cognitive_atlas.html',     port:8893, launch:'thread-cards' },
-  { name:'idea board',     url:'http://localhost:8893/idea_dashboard.html',      port:8893, launch:'thread-cards' },
-  { name:'inpact onboard', url:'http://localhost:3006/onboarding.html',          port:3006, launch:'inpact' },
-];
+let ALL = [];          // every surface from /map/surfaces
+let view = [];         // current sorted+filtered slice (what's tiled)
+let sortBy = 'group', filterStr = '';
 
 function tileEl(s, i) {
   const el = document.createElement('div');
   el.className = 'tile';
   el.innerHTML =
     '<div class="bar"><span class="dot" id="dot'+i+'"></span>'
-    + '<span class="name">'+s.name+'</span><span class="port">:'+s.port+'</span>'
-    + '<span class="spacer"></span>'
+    + '<span class="name" title="'+s.file+'">'+s.name+'</span>'
+    + '<span class="spacer"></span><span class="meta">'+s.group+' :'+s.port+'</span>'
     + '<span class="mini" onclick="reloadOne('+i+')">↻</span>'
     + '<a href="'+s.url+'" target="_blank" rel="noopener">↗</a></div>'
-    + '<div class="frame"><div class="scrim" id="scrim'+i+'">connecting…</div>'
-    + '<iframe id="if'+i+'" src="'+s.url+'" loading="lazy"'
-    + ' onload="markUp('+i+')"></iframe></div>';
+    + '<div class="frame"><iframe id="if'+i+'" src="'+s.url+'" loading="lazy" onload="markUp('+i+')"></iframe></div>';
   return el;
 }
-function markUp(i){ const d=document.getElementById('dot'+i); if(d) d.classList.add('up'); const s=document.getElementById('scrim'+i); if(s) s.style.display='none'; }
+function markUp(i){ const d=document.getElementById('dot'+i); if(d) d.classList.add('up'); updateCount(); }
 function reloadOne(i){ const f=document.getElementById('if'+i); if(f) f.src=f.src; }
-function reloadAll(){ SURFACES.forEach((_,i)=>reloadOne(i)); }
-function liveCount(){ return document.querySelectorAll('.dot.up').length; }
-function updateCount(){ document.getElementById('count').textContent = liveCount()+' / '+SURFACES.length+' live'; }
+function reloadAll(){ view.forEach((_,i)=>reloadOne(i)); }
+function updateCount(){ const up=document.querySelectorAll('.dot.up').length; document.getElementById('count').textContent = up+' / '+view.length+' live · '+ALL.length+' total'; }
+
+function sortedView(){
+  let list = ALL.filter(s => !filterStr || (s.name+' '+s.file+' '+s.group).toLowerCase().includes(filterStr));
+  if (sortBy==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  else if (sortBy==='recent') list.sort((a,b)=>b.mtime-a.mtime);
+  else list.sort((a,b)=>(a.group+'/'+a.file).localeCompare(b.group+'/'+b.file));
+  return list;
+}
+function render(){
+  view = sortedView();
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  view.forEach((s,i)=>grid.appendChild(tileEl(s,i)));
+  updateCount();
+  setTimeout(focusFromHash, 300);
+}
+function setSort(v){ sortBy=v; render(); }
+function setFilter(v){ filterStr=(v||'').toLowerCase(); render(); }
+
+async function loadSurfaces(){
+  try { const r=await fetch(API+'/map/surfaces'); if(r.ok){ const d=await r.json(); ALL=d.surfaces||[]; } } catch(e){}
+  render();
+}
 
 async function startAll(btn){
   if(btn){ btn.disabled=true; btn.textContent='starting…'; }
   let token='';
   try { const r=await fetch(API+'/admin/write-token'); if(r.ok) token=(await r.json()).token; } catch(e){}
-  const names=[...new Set(SURFACES.flatMap(s=>[s.launch, s.dep].filter(Boolean)))];
+  const names=[...new Set(ALL.map(s=>s.launch).filter(Boolean))];
   for(const n of names){
     try { await fetch(API+'/map/launch/'+encodeURIComponent(n),{method:'POST',headers:{'X-Atlas-Token':token}}); } catch(e){}
   }
   setTimeout(()=>{ reloadAll(); if(btn){ btn.disabled=false; btn.textContent='▶ start all'; } }, 3500);
 }
 
-const grid=document.getElementById('grid');
-SURFACES.forEach((s,i)=>grid.appendChild(tileEl(s,i)));
-updateCount();
-setInterval(updateCount, 2000);
-
 // Jump to a tile when opened with #focus=<service> (from a system-map node).
 function focusFromHash(){
   const m=(location.hash||'').match(/focus=([^&]+)/);
   if(!m) return;
   const want=decodeURIComponent(m[1]).toLowerCase();
-  let idx=SURFACES.findIndex(s=>s.name.toLowerCase()===want||s.launch.toLowerCase()===want);
-  if(idx<0) idx=SURFACES.findIndex(s=>want.includes(s.name.toLowerCase())||s.name.toLowerCase().includes(want)||want.includes(s.launch.toLowerCase()));
+  let idx=view.findIndex(s=>(s.name+' '+s.group+' '+(s.launch||'')).toLowerCase().includes(want));
   if(idx<0) return;
   const tile=document.querySelectorAll('.tile')[idx];
   if(tile){ tile.scrollIntoView({behavior:'smooth',block:'center'}); tile.style.outline='2px solid #C0563D'; tile.style.outlineOffset='-1px'; setTimeout(()=>{tile.style.outline='';},2800); }
 }
 window.addEventListener('hashchange', focusFromHash);
-setTimeout(focusFromHash, 300);  // defer so tiles are laid out before scroll/highlight
+
+loadSurfaces();
+setInterval(updateCount, 2500);
 </script>
 </body>
 </html>

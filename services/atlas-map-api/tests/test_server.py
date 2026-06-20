@@ -377,3 +377,12 @@ def test_launch_requires_token():
 
 def test_launch_unknown_name_404():
     assert client.post("/map/launch/__nope__", headers=_auth()).status_code == 404
+
+
+def test_surfaces_enumerates_all():
+    from atlas_map_api import surfaces
+    from atlas_map_api.loader import load_snapshot
+    res = surfaces.all_surfaces(load_snapshot().repo_root)
+    assert res["count"] > 20
+    assert all({"url", "mtime", "group", "file", "port"} <= set(s) for s in res["surfaces"])
+    assert any(s["file"] == "apps/lattice/index.html" for s in res["surfaces"])

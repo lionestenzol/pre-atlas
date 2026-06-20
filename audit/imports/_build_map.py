@@ -1481,6 +1481,46 @@ function applyFocus(level) {
 function zoomIn()  { if (cy) cy.animate({ zoom: cy.zoom() * 1.3 }, { duration: 180 }); }
 function zoomOut() { if (cy) cy.animate({ zoom: cy.zoom() / 1.3 }, { duration: 180 }); }
 
+// Zoom level at which node labels are comfortably readable. Magnetic click and
+// the wheel both treat this as the "meet you halfway" target.
+const READABLE_ZOOM = 1.1;
+
+// Two-finger gestures on the graph: VERTICAL (deltaY) = smooth zoom toward the
+// pointer (tamed scale); HORIZONTAL (deltaX) = pan. Cytoscape's own wheel-zoom
+// is disabled (userZoomingEnabled:false) so this is the single source of truth.
+// Wired once on the #cy container (which persists across cy rebuilds).
+function wireGraphGestures() {
+  const cont = document.getElementById('cy');
+  if (!cont || cont.dataset.gesturesWired) return;
+  cont.dataset.gesturesWired = '1';
+  cont.addEventListener('wheel', (e) => {
+    if (!cy) return;
+    e.preventDefault();
+    // Horizontal-dominant gesture → pan sideways (no zoom).
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      cy.panBy({ x: -e.deltaX, y: 0 });
+      return;
+    }
+    // Vertical → smooth, tamed zoom anchored on the cursor (pinch sends deltaY too).
+    const rect = cont.getBoundingClientRect();
+    const rendered = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const factor = Math.exp(-e.deltaY * 0.0018);
+    const z = Math.max(cy.minZoom(), Math.min(cy.maxZoom(), cy.zoom() * factor));
+    cy.zoom({ level: z, renderedPosition: rendered });
+  }, { passive: false });
+}
+
+// Magnetic: bring a node to center at a readable zoom, but only zoom IN when
+// you're currently too far out to read it — otherwise just glide it to center.
+function magneticFocus(node) {
+  if (!cy || !node) return;
+  if (cy.zoom() < READABLE_ZOOM) {
+    cy.animate({ zoom: READABLE_ZOOM, center: { eles: node } }, { duration: 240, easing: 'ease-out-cubic' });
+  } else {
+    cy.animate({ center: { eles: node } }, { duration: 180, easing: 'ease-out-cubic' });
+  }
+}
+
 function exportPNG() {
   if (!cy) return;
   try {
@@ -2605,7 +2645,7 @@ function renderServiceGraph() {
       { selector: 'node[w]', style: {
         'background-color': 'data(color)', 'label': 'data(label)',
         'text-wrap': 'wrap', 'text-valign': 'center', 'color': '#fff',
-        'font-size': 13, 'width': 'data(w)', 'height': 'data(h)', 'shape': 'data(shape)',
+        'font-size': 14, 'min-zoomed-font-size': 8, 'width': 'data(w)', 'height': 'data(h)', 'shape': 'data(shape)',
         'border-width': 0, 'font-weight': 500,
         'text-outline-width': 0,
         'line-height': 1.2,
@@ -2646,7 +2686,10 @@ function renderServiceGraph() {
       ? { name: 'cose-bilkent', animate: false, nodeRepulsion: 4500, idealEdgeLength: 80, nestingFactor: 0.1, gravity: 0.25, gravityRangeCompound: 1.5, gravityCompound: 1.0, padding: 20, fit: true, randomize: false, tile: true, tilingPaddingVertical: 12, tilingPaddingHorizontal: 12 }
       : { name: 'cose', animate: false, nodeRepulsion: 3500, idealEdgeLength: 85, nestingFactor: 5, gravity: 1.5, componentSpacing: 60, padding: 30, fit: true, nodeOverlap: 22 },
     minZoom: 0.2, maxZoom: 4,
+    wheelSensitivity: 0.2,        // tame the zoom scale (default 1 is jumpy)
+    userZoomingEnabled: false,    // wheel handled by wireGraphGestures: vertical=zoom, horizontal=pan
   });
+  wireGraphGestures();
   cy.on('tap', 'node[kind = "service"]', evt => {
     const id = evt.target.data('id');
     const s = SERVICES.find(x => x.name === id);
@@ -2660,6 +2703,7 @@ function renderServiceGraph() {
     }
     setSelection(id, 'graph');
     if (currentFocus !== 'all') applyFocus(currentFocus);
+    magneticFocus(evt.target);
     syncURL();
   });
   cy.on('dbltap', 'node[kind = "service"]', evt => drillInto(evt.target.data('id')));

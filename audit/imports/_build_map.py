@@ -564,6 +564,14 @@ def build(root: Path, config: dict[str, Any]) -> dict[str, Any]:
   .panel-minimized .panel-head { padding-bottom: 4px; }
   .panel-closed { display: none !important; }
 
+  /* Wall panel — every UI tiled live, as a dockable full-width row (brick 1) */
+  .panels-wall { display: block; }
+  .panels-wall > [data-panel="wall"] { display: flex; flex-direction: column; }
+  .wall-body { border: 1px solid var(--border); border-radius: 12px; background: var(--panel); overflow: hidden; height: 46vh; min-height: 280px; }
+  #wall-frame { width: 100%; height: 100%; border: 0; background: #15140f; display: block; }
+  .panel-fullscreen .wall-body { height: calc(100vh - 80px) !important; }
+  .panel-drawer .wall-body { height: calc(100vh - 80px) !important; }
+
   /* Snap-layout popover — hover the ⛶ on any panel head */
   .snap-popover { position: fixed; background: var(--panel); border: 1px solid var(--border-2); border-radius: 8px; padding: 10px; box-shadow: 0 10px 28px rgba(0,0,0,0.3); z-index: 200; display: none; min-width: 280px; max-width: 320px; }
   .snap-popover.shown { display: block; }
@@ -810,14 +818,6 @@ def build(root: Path, config: dict[str, Any]) -> dict[str, Any]:
     </div>
   </nav>
 
-  <div id="wall-view" style="display:none;position:fixed;inset:0;z-index:60;background:#15140f;flex-direction:column;">
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #33312a;color:#e8e6dd;font:500 13px system-ui;">
-      <button onclick="toggleWall()" style="background:#1d1c16;color:#e8e6dd;border:1px solid #33312a;border-radius:7px;padding:5px 11px;cursor:pointer;">← map</button>
-      <span>monitor wall — every UI tiled live</span>
-    </div>
-    <iframe id="wall-frame" style="flex:1;border:0;background:#15140f;" title="monitor wall"></iframe>
-  </div>
-
   <div class="search-row">
     <input type="search" class="search-input" id="search" placeholder="search services and files…" autocomplete="off">
     <div class="chip-row" id="chips">
@@ -992,6 +992,23 @@ def build(root: Path, config: dict[str, Any]) -> dict[str, Any]:
             <thead><tr id="list-head"></tr></thead>
             <tbody id="list-body"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+    <div class="panels-wall">
+      <div data-panel="wall" class="panel-closed">
+        <div class="panel-head">
+          <span class="title">wall</span>
+          <span>every UI tiled live · click a tile's name to select it in the graph</span>
+          <span class="panel-actions" data-panel-actions="wall">
+            <button class="panel-act-btn" data-act="min" title="Minimize">−</button>
+            <button class="panel-act-btn" data-act="max" title="Maximize (Esc)">⛶</button>
+            <button class="panel-act-btn" data-act="drawer" title="Open as drawer">▢</button>
+            <button class="panel-act-btn" data-act="close" title="Close (restorable)">×</button>
+          </span>
+        </div>
+        <div class="wall-body">
+          <iframe id="wall-frame" title="monitor wall"></iframe>
         </div>
       </div>
     </div>
@@ -1939,7 +1956,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && maximizedPanel) { restorePanel(); e.stopPropagation(); }
 });
 
-const PANEL_LABELS = { graph: 'graph', detail: 'details', tree: 'tree', list: 'list' };
+const PANEL_LABELS = { graph: 'graph', detail: 'details', tree: 'tree', list: 'list', wall: 'wall' };
 
 function panelNode(key) { return document.querySelector('[data-panel="' + key + '"]'); }
 
@@ -2013,7 +2030,7 @@ function updateRestoreBar() {
   const bar = document.getElementById('panel-restore-bar');
   if (!bar) return;
   bar.innerHTML = '';
-  ['graph', 'detail', 'tree', 'list'].forEach(key => {
+  ['graph', 'detail', 'tree', 'list', 'wall'].forEach(key => {
     const n = panelNode(key);
     if (!n) return;
     if (n.classList.contains('panel-closed') || n.classList.contains('panel-minimized')) {
@@ -2077,30 +2094,53 @@ function applySnapPreset(id) {
   try { localStorage.setItem('panel-snap', id); } catch (e) {}
 }
 
-// Wall mode: the monitor wall as a system-map view. Iframes the shared
-// wall.html (absolute :3011 URL so it works from any copy of the map), lazy —
-// only loads the 10 surface iframes when you first open the mode.
+// Wall panel: the monitor wall as a dockable system-map panel (brick 1). Iframes
+// the shared wall.html (absolute :3011 URL so it works from any copy of the map),
+// lazy — the iframe src is only set on first open.
+function ensureWallLoaded() {
+  const f = document.getElementById('wall-frame');
+  if (f && !f.src) f.src = 'http://localhost:3011/wall.html';
+}
+
+function wallIsOpen() {
+  const n = panelNode('wall');
+  return !!n && !n.classList.contains('panel-closed') && !n.classList.contains('panel-minimized');
+}
+
 function toggleWall() {
-  const v = document.getElementById('wall-view');
-  if (!v) return;
-  const open = v.style.display !== 'flex';
-  if (open) {
-    const f = document.getElementById('wall-frame');
-    if (f && !f.src) f.src = 'http://localhost:3011/wall.html';
-    v.style.display = 'flex';
+  const n = panelNode('wall');
+  if (!n) return;
+  if (wallIsOpen()) {
+    closePanel('wall');
   } else {
-    v.style.display = 'none';
+    ensureWallLoaded();
+    restorePanelToNormal('wall');
+    n.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
 
-// Click a service node in the structure view → jump to its live tile on the
-// wall. Passes the service name via #focus= so wall.html scrolls + highlights it.
+// Click "monitor" in the context menu → open the wall panel focused on a node.
 function openMonitor(id) {
-  const v = document.getElementById('wall-view');
-  const f = document.getElementById('wall-frame');
-  if (f) f.src = 'http://localhost:3011/wall.html#focus=' + encodeURIComponent(id);
-  if (v) v.style.display = 'flex';
+  ensureWallLoaded();
+  if (!wallIsOpen()) restorePanelToNormal('wall');
+  const n = panelNode('wall');
+  if (n) n.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  wallHighlight(id);
 }
+
+// ===== Wall <-> graph selection sync (brick 2) =====
+// Graph/list/tree selection -> tell the wall to focus that subsystem's tiles.
+function wallHighlight(id) {
+  const f = document.getElementById('wall-frame');
+  if (f && f.src && f.contentWindow) {
+    f.contentWindow.postMessage({ type: 'atlas-focus', key: id }, '*');
+  }
+}
+// Wall tile click -> select that subsystem in graph/list/tree/preview.
+window.addEventListener('message', (e) => {
+  const d = e.data;
+  if (d && d.type === 'atlas-tile' && d.key) setSelection(d.key, 'wall');
+});
 
 // Tiny SVG renderer for a 2×2 preview thumbnail with a chosen cell highlighted.
 function snapThumb(preset, focusKey) {
@@ -2443,6 +2483,7 @@ function setSelection(id, source) {
   if (source !== 'graph') graphHighlight(id);
   if (source !== 'list')  listHighlight(id);
   if (source !== 'tree')  treeHighlight(id);
+  if (source !== 'wall')  wallHighlight(id);
   if (source !== 'url') syncURL();
   // Iframe preview sync — feed the selected service into the preview tab so
   // switching to "preview" always shows the latest selection.

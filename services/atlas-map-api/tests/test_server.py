@@ -236,6 +236,56 @@ def test_items_source_filter():
     assert all(it["source"] == "inpact" for it in body["items"])
 
 
+def test_parse_backbone_id():
+    from atlas_map_api import items as ib
+    assert ib.parse_backbone_id("bb:droplist:DAG-1") == ("droplist", "DAG-1")
+    assert ib.parse_backbone_id("garbage") == (None, None)
+    assert ib.parse_backbone_id("bb:droplist:") == (None, None)
+
+
+def test_write_through_droplist_preserves_fields(tmp_path):
+    import json
+    from atlas_map_api import items as ib
+    dags = tmp_path / "services" / "droplist" / "data" / "dags"
+    dags.mkdir(parents=True)
+    pkt = dags / "DAG-test.json"
+    pkt.write_text(json.dumps({"dag_id": "DAG-test", "goal": "feed goat",
+                               "status": "needs_human", "nodes": [1, 2]}), encoding="utf-8")
+    res = ib.set_item_status(tmp_path, "bb:droplist:DAG-test", "done")
+    assert res["ok"] is True
+    assert res["old_status"] == "needs_human" and res["new_status"] == "done"
+    after = json.loads(pkt.read_text(encoding="utf-8"))
+    assert after["status"] == "done"
+    assert after["goal"] == "feed goat" and after["nodes"] == [1, 2]  # untouched
+    assert "updated_at" in after
+    assert (dags / "DAG-test.json.bak").is_file()  # backup taken before mutate
+
+
+def test_write_through_rejects_nondroplist(tmp_path):
+    from atlas_map_api import items as ib
+    res = ib.set_item_status(tmp_path, "bb:cycleboard:abc", "done")
+    assert res["ok"] is False and "not supported" in res["error"]
+
+
+def test_write_through_rejects_bad_status(tmp_path):
+    from atlas_map_api import items as ib
+    assert ib.set_item_status(tmp_path, "bb:droplist:DAG-x", "")["ok"] is False
+    assert ib.set_item_status(tmp_path, "bb:droplist:DAG-x", "x" * 99)["ok"] is False
+
+
+def test_write_through_rejects_path_traversal(tmp_path):
+    from atlas_map_api import items as ib
+    # native id with path separators / .. must be refused, never reach the filesystem
+    for evil in ("bb:droplist:../../../../etc/passwd", "bb:droplist:..\\..\\x", "bb:droplist:a/b"):
+        res = ib.set_item_status(tmp_path, evil, "done")
+        assert res["ok"] is False, evil
+
+
+def test_status_endpoint_rejects_nondroplist():
+    r = client.post("/items/bb:cycleboard:abc/status", json={"status": "done"})
+    assert r.status_code == 422
+
+
 def test_admin_reload():
     r = client.post("/admin/reload")
     assert r.status_code == 200

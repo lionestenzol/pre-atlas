@@ -24,7 +24,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from rapidfuzz import fuzz
 
@@ -362,6 +362,20 @@ async def items(source: str | None = Query(None, description="Filter to one sour
     """
     snap, _ = _ensure_loaded()
     return items_backbone.all_items(snap.repo_root, source)
+
+
+@app.post("/items/{item_id}/status")
+async def set_item_status_endpoint(item_id: str, status: str = Body(..., embed=True)) -> dict[str, Any]:
+    """Write-through (brick 3): set a backbone item's status in its SOURCE store.
+
+    Only droplist packets are writable; every other source returns 422. The
+    write is atomic + backed up + field-preserving (see items.set_item_status).
+    """
+    snap, _ = _ensure_loaded()
+    result = items_backbone.set_item_status(snap.repo_root, item_id, status)
+    if not result.get("ok"):
+        raise HTTPException(422, result.get("error", "write-through failed"))
+    return {"action": "set_status", "item": item_id, **result}
 
 
 @app.get("/map/signals")

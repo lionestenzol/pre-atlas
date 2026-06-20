@@ -1972,10 +1972,31 @@ function addItem(projectId, title) {
   return item;
 }
 
+async function setBackboneStatus(it, status) {
+  // brick 3: write-through to the source store via atlas-map-api. Only droplist
+  // packets are writable today; other sources return 422 → leave the item as-is.
+  try {
+    const r = await fetch(ATLAS_MAP_API + '/items/' + encodeURIComponent(it.id) + '/status', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (!r.ok) {
+      const msg = (await r.json().catch(() => ({}))).detail || ('HTTP ' + r.status);
+      if (typeof setDetails === 'function') setDetails(escapeHtml(it.title) + ' — write not applied: ' + escapeHtml(String(msg)));
+      return;
+    }
+    it.status = status;        // optimistic
+    rerenderAll();
+    await loadBackbone();      // re-pull so the view reflects the SOURCE store
+  } catch (e) { /* API down → leave item unchanged */ }
+}
+
 async function setItemStatus(id, status) {
   const it = itemById(id);
   if (!it) return;
   if (it.status === status) return;
+  // Backbone items (bb:source:id) write through to their source store.
+  if (typeof it.id === 'string' && it.id.startsWith('bb:')) { await setBackboneStatus(it, status); return; }
   // Substrate-tracked items go through Replicache (optimistic + rollback handled by lib).
   // Locally-added items mutate the in-memory array directly.
   if (typeof it.id === 'string' && /^canon_/.test(it.id) && window.latticeSync) {

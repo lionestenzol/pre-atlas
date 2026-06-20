@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
+from atlas_map_api import auth
 from atlas_map_api.server import app
 
 
 client = TestClient(app)
+
+
+def _auth() -> dict[str, str]:
+    """Header carrying the valid write token for state-changing POSTs."""
+    return {"X-Atlas-Token": auth.current_token()}
 
 
 def test_root_lists_endpoints():
@@ -161,19 +168,19 @@ def test_config_resolves_by_port():
 
 
 def test_start_unknown_subsystem_404():
-    r = client.post("/map/start/__nonexistent__")
+    r = client.post("/map/start/__nonexistent__", headers=_auth())
     assert r.status_code == 404
 
 
 def test_start_no_port_is_422_not_spawn():
     # cognitive-sensor has no port → cannot be started; must 422, never spawn
-    r = client.post("/map/start/cognitive-sensor")
+    r = client.post("/map/start/cognitive-sensor", headers=_auth())
     assert r.status_code == 422
 
 
 def test_stop_requires_launch_config():
     # cognitive-sensor has no port / no launch config → stop must 422, not kill
-    r = client.post("/map/stop/cognitive-sensor")
+    r = client.post("/map/stop/cognitive-sensor", headers=_auth())
     assert r.status_code == 422
 
 
@@ -282,11 +289,83 @@ def test_write_through_rejects_path_traversal(tmp_path):
 
 
 def test_status_endpoint_rejects_nondroplist():
-    r = client.post("/items/bb:cycleboard:abc/status", json={"status": "done"})
+    r = client.post("/items/bb:cycleboard:abc/status", json={"status": "done"}, headers=_auth())
     assert r.status_code == 422
 
 
 def test_admin_reload():
-    r = client.post("/admin/reload")
+    r = client.post("/admin/reload", headers=_auth())
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
+
+
+# ---------- write-token guard (X-Atlas-Token) ----------
+
+# Every state-changing POST must be guarded; reads stay open. Parametrized so a
+# new POST endpoint added without a token gate fails this test loudly.
+_GUARDED_POSTS = [
+    ("/admin/reload", None),
+    ("/map/start/delta-kernel", None),
+    ("/map/stop/delta-kernel", None),
+    ("/map/restart/delta-kernel", None),
+    ("/items/bb:droplist:DAG-x/status", {"status": "done"}),
+]
+
+
+@pytest.mark.parametrize("path,body", _GUARDED_POSTS)
+def test_post_without_token_is_401(path, body):
+    r = client.post(path, json=body) if body is not None else client.post(path)
+    assert r.status_code == 401, f"{path} should require X-Atlas-Token"
+
+
+@pytest.mark.parametrize("path,body", _GUARDED_POSTS)
+def test_post_with_bad_token_is_401(path, body):
+    headers = {"X-Atlas-Token": "not-the-real-token"}
+    r = client.post(path, json=body, headers=headers) if body is not None else client.post(path, headers=headers)
+    assert r.status_code == 401, f"{path} should reject a wrong token"
+
+
+def test_post_with_valid_token_passes_guard():
+    # A wrong-shaped item still gets past the auth gate (422 from the handler),
+    # proving the valid token is accepted rather than 401'd.
+    r = client.post("/items/bb:cycleboard:abc/status", json={"status": "done"}, headers=_auth())
+    assert r.status_code == 422  # handler-level rejection, NOT 401
+
+
+def test_write_token_handout_endpoint_is_open_and_matches():
+    # GET handout has no auth (browser bootstrap) and returns the active token.
+    r = client.get("/admin/write-token")
+    assert r.status_code == 200
+    assert r.json()["token"] == auth.current_token()
+
+
+def test_load_or_create_token_is_idempotent(tmp_path):
+    t1 = auth.load_or_create_token(tmp_path)
+    t2 = auth.load_or_create_token(tmp_path)
+    assert t1 == t2
+    assert (tmp_path / auth.TOKEN_FILENAME).is_file()
+
+
+def test_token_env_var_overrides_file(tmp_path, monkeypatch):
+    monkeypatch.setenv(auth.TOKEN_ENV, "env-supplied-token")
+    assert auth.load_or_create_token(tmp_path) == "env-supplied-token"
+    # env wins → no file written
+    assert not (tmp_path / auth.TOKEN_FILENAME).is_file()
+
+
+def test_workflow_returns_dag(tmp_path):
+    import json
+    from atlas_map_api import items as ib
+    dags = tmp_path / "services" / "droplist" / "data" / "dags"
+    dags.mkdir(parents=True)
+    (dags / "DAG-w.json").write_text(json.dumps({"dag_id": "DAG-w", "goal": "g", "status": "open",
+        "nodes": [{"id": "N1", "title": "a", "status": "done", "depends_on": "[]"},
+                  {"id": "N2", "title": "b", "status": "blocked", "depends_on": "['N1']"}]}), encoding="utf-8")
+    wf = ib.get_workflow(tmp_path, "bb:droplist:DAG-w")
+    assert wf["ok"] and len(wf["nodes"]) == 2
+    assert {"from": "N1", "to": "N2"} in wf["edges"]
+
+
+def test_workflow_rejects_nondroplist(tmp_path):
+    from atlas_map_api import items as ib
+    assert ib.get_workflow(tmp_path, "bb:cycleboard:81")["ok"] is False

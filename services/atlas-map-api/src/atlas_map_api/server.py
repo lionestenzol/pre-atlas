@@ -12,8 +12,9 @@ Endpoints:
   GET  /map/signals                   live: ports + autostart + retired
 
 The data comes from <repo>/audit/system-index.json + <repo>/atlas-map.json,
-loaded on startup. Use POST /admin/reload to re-read from disk after the
-builder runs (no auth — local dev only; do not expose this port externally).
+loaded on startup. Use POST /admin/reload to re-read from disk after the builder
+runs. All POST endpoints require an X-Atlas-Token header (see auth.py); GET reads
+are open. Bind 127.0.0.1 only — do not expose this port externally.
 """
 
 from __future__ import annotations
@@ -24,10 +25,11 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Body, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from rapidfuzz import fuzz
 
+from . import auth
 from . import items as items_backbone
 from . import launcher
 from .graph import ServiceGraph
@@ -36,7 +38,10 @@ from .loader import MapSnapshot, load_snapshot
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    _ensure_loaded()
+    snap, _ = _ensure_loaded()
+    # Resolve (and, if absent, generate + persist) the write token at startup so
+    # the .atlas-write-token file exists for consumers (CLI, viewer) to read.
+    auth.load_or_create_token(snap.repo_root)
     yield
 
 
@@ -51,6 +56,7 @@ app.add_middleware(
         "http://localhost:3011", "http://127.0.0.1:3011",   # lattice
         "http://localhost:8897", "http://127.0.0.1:8897",   # audit-map
         "http://localhost:8888", "http://127.0.0.1:8888",   # atlas-shell
+        "http://localhost:3006", "http://127.0.0.1:3006",   # inpact
     ],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -95,7 +101,9 @@ async def root() -> dict[str, Any]:
             "POST /map/start/{name}",
             "POST /map/stop/{name}",
             "POST /map/restart/{name}",
-            "/admin/reload",
+            "POST /items/{item_id}/status",
+            "GET /admin/write-token",
+            "POST /admin/reload",
         ],
     }
 
@@ -106,7 +114,20 @@ async def healthz() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/admin/reload")
+@app.get("/admin/write-token")
+async def write_token() -> dict[str, str]:
+    """Hand the write token to a CORS-trusted viewer origin.
+
+    The static lattice viewer can't read the gitignored .atlas-write-token off
+    disk, so it bootstraps the secret here. CORS (allow_origins) restricts which
+    browser origins can read this response — a DNS-rebind tab at a foreign origin
+    cannot. Local processes with filesystem access can read the file directly, so
+    this endpoint exposes nothing they couldn't already obtain.
+    """
+    return {"token": auth.current_token()}
+
+
+@app.post("/admin/reload", dependencies=[Depends(auth.require_write_token)])
 async def reload_snapshot() -> dict[str, Any]:
     """Re-read system-index.json + atlas-map.json from disk."""
     global _snapshot, _graph, _loaded_at
@@ -303,7 +324,7 @@ def _require_subsystem(name: str) -> Any:
     return snap, sub
 
 
-@app.post("/map/start/{name}")
+@app.post("/map/start/{name}", dependencies=[Depends(auth.require_write_token)])
 async def start_service(name: str) -> dict[str, Any]:
     """Start a stopped service by spawning its launch.json-defined command.
 
@@ -321,7 +342,7 @@ async def start_service(name: str) -> dict[str, Any]:
     return {"action": "start", "subsystem": name, **launcher.start_from_config(cfg, snap.repo_root)}
 
 
-@app.post("/map/stop/{name}")
+@app.post("/map/stop/{name}", dependencies=[Depends(auth.require_write_token)])
 async def stop_service(name: str) -> dict[str, Any]:
     """Stop a running service by terminating the process on its port.
 
@@ -334,7 +355,7 @@ async def stop_service(name: str) -> dict[str, Any]:
     return {"action": "stop", "subsystem": name, **launcher.stop_on_port(sub.port)}
 
 
-@app.post("/map/restart/{name}")
+@app.post("/map/restart/{name}", dependencies=[Depends(auth.require_write_token)])
 async def restart_service(name: str) -> dict[str, Any]:
     """Stop then start a service (best-effort stop, then spawn)."""
     snap, sub = _require_subsystem(name)
@@ -364,7 +385,7 @@ async def items(source: str | None = Query(None, description="Filter to one sour
     return items_backbone.all_items(snap.repo_root, source)
 
 
-@app.post("/items/{item_id}/status")
+@app.post("/items/{item_id}/status", dependencies=[Depends(auth.require_write_token)])
 async def set_item_status_endpoint(item_id: str, status: str = Body(..., embed=True)) -> dict[str, Any]:
     """Write-through (brick 3): set a backbone item's status in its SOURCE store.
 
@@ -376,6 +397,17 @@ async def set_item_status_endpoint(item_id: str, status: str = Body(..., embed=T
     if not result.get("ok"):
         raise HTTPException(422, result.get("error", "write-through failed"))
     return {"action": "set_status", "item": item_id, **result}
+
+
+@app.get("/items/{item_id}/workflow")
+async def item_workflow(item_id: str) -> dict[str, Any]:
+    """A droplist packet's DAG (steps + depends_on edges + states) — the flow
+    behind a flat item, for the workflow viewer. Read-only, droplist-only."""
+    snap, _ = _ensure_loaded()
+    result = items_backbone.get_workflow(snap.repo_root, item_id)
+    if not result.get("ok"):
+        raise HTTPException(404, result.get("error", "workflow not found"))
+    return result
 
 
 @app.get("/map/signals")

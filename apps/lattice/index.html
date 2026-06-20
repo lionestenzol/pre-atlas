@@ -2180,6 +2180,7 @@ function renderCtxMenuBody(menu, item) {
   const isBackbone = typeof item.id === 'string' && item.id.startsWith('bb:');
   const bbSource = isBackbone ? item.id.split(':')[1] : null;
   const crossNav =
+    (isBackbone && bbSource === 'droplist' ? '<button class="ctx-btn" data-action="workflow">show workflow ↳</button>' : '') +
     (isBackbone ? '<button class="ctx-btn" data-action="open-source">open in ' + escapeHtml(bbSource) + ' ↗</button>' : '') +
     '<button class="ctx-btn" data-action="open-map">open system map ↗</button>';
 
@@ -2190,6 +2191,57 @@ function renderCtxMenuBody(menu, item) {
     '<button class="ctx-btn" data-action="graph">show in graph</button>' +
     crossNav +
     '<button class="ctx-btn danger" data-action="delete">delete item</button>';
+}
+
+// Render a droplist packet's DAG as an actual workflow graph — the steps, the
+// dependency flow, and the state of each — instead of a flat list row. This is
+// what makes lattice a workflow viewer, not just a task list.
+async function openWorkflow(id) {
+  const it = itemById(id);
+  if (!it) return;
+  let wf;
+  try {
+    const r = await fetch(ATLAS_MAP_API + '/items/' + encodeURIComponent(it.id) + '/workflow');
+    if (!r.ok) return;
+    wf = await r.json();
+  } catch (e) { return; }
+  if (!wf || !wf.nodes || !wf.nodes.length) return;
+
+  var prev = document.getElementById('wf-overlay');
+  if (prev) prev.remove();
+  var ov = document.createElement('div');
+  ov.id = 'wf-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(20,20,20,0.55);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML =
+    '<div style="background:#fff;border-radius:14px;width:min(900px,92vw);height:min(640px,86vh);display:flex;flex-direction:column;overflow:hidden;font-family:var(--font,system-ui);">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #eee;">'
+    + '<div><strong style="font-size:15px;color:#1d1d1b;">' + escapeHtml(wf.goal || it.title) + '</strong>'
+    + ' <span style="color:#888780;font-size:12px;">· ' + escapeHtml(String(wf.status || '')) + ' · ' + wf.nodes.length + ' steps · ' + wf.edges.length + ' deps</span></div>'
+    + '<button id="wf-close" style="border:none;background:#f0efe9;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;">close</button></div>'
+    + '<div id="wf-graph" style="flex:1;min-height:0;"></div></div>';
+  document.body.appendChild(ov);
+  document.getElementById('wf-close').onclick = function () { ov.remove(); };
+  ov.onclick = function (e) { if (e.target === ov) ov.remove(); };
+
+  if (typeof cytoscape !== 'function') return;
+  var COL = { done: '#1D9E75', blocked: '#D85A30', active: '#378ADD', open: '#888780' };
+  var els = wf.nodes.map(function (n) {
+    return { data: { id: n.id, label: n.title, color: COL[n.status] || '#888780', st: n.status } };
+  }).concat(wf.edges.map(function (e) {
+    return { data: { source: e.from, target: e.to } };
+  }));
+  cytoscape({
+    container: document.getElementById('wf-graph'),
+    elements: els,
+    layout: { name: 'breadthfirst', directed: true, padding: 24, spacingFactor: 1.15 },
+    style: [
+      { selector: 'node', style: { 'background-color': 'data(color)', 'label': 'data(label)', 'font-size': '9px',
+        'text-wrap': 'wrap', 'text-max-width': '130px', 'color': '#1d1d1b', 'text-valign': 'bottom', 'text-margin-y': 5,
+        'width': 18, 'height': 18, 'border-width': 1, 'border-color': '#fff' } },
+      { selector: 'edge', style: { 'width': 1.5, 'line-color': '#c9c7be', 'target-arrow-color': '#c9c7be',
+        'target-arrow-shape': 'triangle', 'curve-style': 'bezier' } },
+    ],
+  });
 }
 
 // Open the surface that owns a backbone item, deep-linked where supported.
@@ -2262,6 +2314,7 @@ function handleCtxAction(action, value) {
   }
   else if (action === 'open-source') openItemSurface(id);
   else if (action === 'open-map') window.open('system-map.html', '_blank', 'noopener');
+  else if (action === 'workflow') openWorkflow(id);
   else if (action === 'delete') deleteItem(id);
 }
 

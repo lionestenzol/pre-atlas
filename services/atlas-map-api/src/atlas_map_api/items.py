@@ -19,6 +19,7 @@ is brick 2 and lives elsewhere — this is the seam everything will read from.
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 import re
@@ -210,6 +211,66 @@ def set_item_status(repo_root: Path, bb_id: str, new_status: str) -> dict[str, A
         "ok": True, "source": source, "id": native_id,
         "old_status": old_status, "new_status": new_status,
         "ref": str(f.relative_to(repo_root)).replace("\\", "/"),
+    }
+
+
+def _parse_deps(raw: Any) -> list[str]:
+    """depends_on is stored as a python-repr string ("['N1', 'N3']") or a list."""
+    if isinstance(raw, list):
+        return [str(x) for x in raw]
+    if isinstance(raw, str) and raw.strip():
+        try:
+            v = ast.literal_eval(raw)
+            return [str(x) for x in v] if isinstance(v, list) else []
+        except (ValueError, SyntaxError):
+            return []
+    return []
+
+
+def get_workflow(repo_root: Path, bb_id: str) -> dict[str, Any]:
+    """Return a droplist packet's DAG as nodes + edges (steps + depends_on flow).
+
+    This is what turns the flat item 'Check Goat · needs_human' into the actual
+    workflow underneath it: 6 steps, their states, and the dependency edges.
+    """
+    source, native = parse_backbone_id(bb_id)
+    if source != "droplist":
+        return {"ok": False, "error": f"workflow view is droplist-only (got '{source}')"}
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", native or ""):
+        return {"ok": False, "error": "invalid packet id"}
+    f = repo_root / "services" / "droplist" / "data" / "dags" / f"{native}.json"
+    if not f.is_file():
+        return {"ok": False, "error": f"packet '{native}' not found"}
+    d = _read_json(f)
+    if not isinstance(d, dict):
+        return {"ok": False, "error": "packet unreadable"}
+
+    nodes_out: list[dict[str, Any]] = []
+    edges_out: list[dict[str, str]] = []
+    known: set[str] = set()
+    for n in (d.get("nodes") or []):
+        if isinstance(n, dict) and (n.get("id") or n.get("node_id")):
+            known.add(str(n.get("id") or n.get("node_id")))
+    for n in (d.get("nodes") or []):
+        if not isinstance(n, dict):
+            continue
+        nid = str(n.get("id") or n.get("node_id") or "")
+        if not nid:
+            continue
+        nodes_out.append({
+            "id": nid,
+            "title": n.get("title") or nid,
+            "type": n.get("type") or "",
+            "status": n.get("status") or "open",
+            "done_condition": n.get("done_condition") or "",
+        })
+        for dep in _parse_deps(n.get("depends_on")):
+            if dep in known:
+                edges_out.append({"from": dep, "to": nid})
+    return {
+        "ok": True, "id": native, "goal": d.get("goal") or "",
+        "status": d.get("status"), "domain": d.get("domain"),
+        "nodes": nodes_out, "edges": edges_out,
     }
 
 

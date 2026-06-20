@@ -218,6 +218,24 @@ def test_start_spawns_argv_without_shell(monkeypatch):
     assert captured["kwargs"]["shell"] is False
 
 
+def test_items_backbone_aggregates_sources():
+    r = client.get("/items")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["count"] >= 0
+    assert isinstance(body["by_source"], dict)
+    # every item carries the one unified shape
+    for it in body["items"][:50]:
+        assert set(it.keys()) >= {"id", "source", "kind", "title", "status", "updated"}
+        assert it["source"] in ("droplist", "cycleboard", "inpact")
+
+
+def test_items_source_filter():
+    r = client.get("/items?source=inpact")
+    body = r.json()
+    assert all(it["source"] == "inpact" for it in body["items"])
+
+
 def test_admin_reload():
     r = client.post("/admin/reload")
     assert r.status_code == 200

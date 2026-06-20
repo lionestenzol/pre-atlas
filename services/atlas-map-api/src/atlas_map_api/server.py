@@ -28,6 +28,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from rapidfuzz import fuzz
 
+from . import items as items_backbone
 from . import launcher
 from .graph import ServiceGraph
 from .loader import MapSnapshot, load_snapshot
@@ -349,6 +350,18 @@ async def restart_service(name: str) -> dict[str, Any]:
         await asyncio.sleep(0.15)
     start_result = launcher.start_from_config(cfg, snap.repo_root)
     return {"action": "restart", "subsystem": name, "stop": stop_result, "start": start_result}
+
+
+@app.get("/items")
+async def items(source: str | None = Query(None, description="Filter to one source: droplist|cycleboard|inpact")) -> dict[str, Any]:
+    """The item backbone (brick 1): one unified feed of every surface's items.
+
+    Aggregates droplist packets/entities, cycleboard cards, and inpact projects
+    into a single {id, source, kind, title, status, updated} shape — so all your
+    stuff is visible in one place for the first time. Read-only, fail-soft.
+    """
+    snap, _ = _ensure_loaded()
+    return items_backbone.all_items(snap.repo_root, source)
 
 
 @app.get("/map/signals")

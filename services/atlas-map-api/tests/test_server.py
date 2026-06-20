@@ -369,3 +369,11 @@ def test_workflow_returns_dag(tmp_path):
 def test_workflow_rejects_nondroplist(tmp_path):
     from atlas_map_api import items as ib
     assert ib.get_workflow(tmp_path, "bb:cycleboard:81")["ok"] is False
+
+
+def test_launch_requires_token():
+    assert client.post("/map/launch/lattice").status_code == 401
+
+
+def test_launch_unknown_name_404():
+    assert client.post("/map/launch/__nope__", headers=_auth()).status_code == 404

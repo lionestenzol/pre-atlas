@@ -101,6 +101,7 @@ async def root() -> dict[str, Any]:
             "POST /map/start/{name}",
             "POST /map/stop/{name}",
             "POST /map/restart/{name}",
+            "POST /map/launch/{name}",
             "POST /items/{item_id}/status",
             "GET /admin/write-token",
             "POST /admin/reload",
@@ -397,6 +398,18 @@ async def set_item_status_endpoint(item_id: str, status: str = Body(..., embed=T
     if not result.get("ok"):
         raise HTTPException(422, result.get("error", "write-through failed"))
     return {"action": "set_status", "item": item_id, **result}
+
+
+@app.post("/map/launch/{name}", dependencies=[Depends(auth.require_write_token)])
+async def launch_config(name: str) -> dict[str, Any]:
+    """Start a launch.json entry by its NAME — covers UI servers (lattice,
+    cycleboard, droplist-ui, …) that aren't ported subsystems and so can't be
+    reached by /map/start. Idempotent (won't double-spawn). Allowlist = launch.json."""
+    snap, _ = _ensure_loaded()
+    cfg = next((c for c in launcher.load_launch_configs(snap.repo_root) if c.get("name") == name), None)
+    if cfg is None:
+        raise HTTPException(404, f"no launch.json entry named '{name}'")
+    return {"action": "launch", "name": name, **launcher.start_from_config(cfg, snap.repo_root)}
 
 
 @app.get("/items/{item_id}/workflow")

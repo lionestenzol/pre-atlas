@@ -1972,12 +1972,31 @@ function addItem(projectId, title) {
   return item;
 }
 
+// Cache the write token (shared secret guarding all POSTs). Fetched once from
+// the CORS-trusted handout endpoint; a foreign (DNS-rebind) origin can't read it.
+let _atlasTokenPromise = null;
+async function atlasWriteToken() {
+  if (!_atlasTokenPromise) {
+    _atlasTokenPromise = (async () => {
+      try {
+        const r = await fetch(ATLAS_MAP_API + '/admin/write-token');
+        if (!r.ok) return null;
+        return (await r.json()).token || null;
+      } catch (_) { return null; }
+    })();
+  }
+  return _atlasTokenPromise;
+}
+
 async function setBackboneStatus(it, status) {
   // brick 3: write-through to the source store via atlas-map-api. Only droplist
   // packets are writable today; other sources return 422 → leave the item as-is.
   try {
+    const tok = await atlasWriteToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (tok) headers['X-Atlas-Token'] = tok;
     const r = await fetch(ATLAS_MAP_API + '/items/' + encodeURIComponent(it.id) + '/status', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers,
       body: JSON.stringify({ status }),
     });
     if (!r.ok) {
@@ -2156,12 +2175,36 @@ function renderCtxMenuBody(menu, item) {
       '<div class="ctx-row"><span class="ctx-row-label">status</span>' + statusRow + '</div>';
   }
 
+  // Cross-surface navigation: backbone items open their source surface; any
+  // item can jump to the system-map (lattice's richer sibling viewer).
+  const isBackbone = typeof item.id === 'string' && item.id.startsWith('bb:');
+  const bbSource = isBackbone ? item.id.split(':')[1] : null;
+  const crossNav =
+    (isBackbone ? '<button class="ctx-btn" data-action="open-source">open in ' + escapeHtml(bbSource) + ' ↗</button>' : '') +
+    '<button class="ctx-btn" data-action="open-map">open system map ↗</button>';
+
   menu.innerHTML =
     provHeader +
     body +
     '<div class="ctx-divider"></div>' +
     '<button class="ctx-btn" data-action="graph">show in graph</button>' +
+    crossNav +
     '<button class="ctx-btn danger" data-action="delete">delete item</button>';
+}
+
+// Open the surface that owns a backbone item, deep-linked where supported.
+function openItemSurface(id) {
+  const it = itemById(id);
+  if (!it) return;
+  const m = String(it.id).match(/^bb:([^:]+):(.+)$/);
+  if (!m) return;
+  const src = m[1], native = m[2];
+  const urls = {
+    cycleboard: 'http://localhost:8889/#convo=' + encodeURIComponent(native),
+    inpact: 'http://localhost:3006/',
+    droplist: 'http://localhost:3073/',
+  };
+  if (urls[src]) window.open(urls[src], '_blank', 'noopener');
 }
 
 function bindCtxMenuActions(menu) {
@@ -2217,6 +2260,8 @@ function handleCtxAction(action, value) {
     renderGraph(id);
     switchView('graph');
   }
+  else if (action === 'open-source') openItemSurface(id);
+  else if (action === 'open-map') window.open('system-map.html', '_blank', 'noopener');
   else if (action === 'delete') deleteItem(id);
 }
 

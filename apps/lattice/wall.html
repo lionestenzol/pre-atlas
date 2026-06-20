@@ -46,16 +46,24 @@
 const API = 'http://localhost:3072';
 // Curated web surfaces. launch = launch.json name to start; dep = an API the UI needs.
 const SURFACES = [
-  { name:'system map',    url:'http://localhost:3011/system-map.html', port:3011, launch:'lattice' },
-  { name:'lattice',       url:'http://localhost:3011/index.html',      port:3011, launch:'lattice' },
-  { name:'inPACT',        url:'http://localhost:3006/',                port:3006, launch:'inpact' },
-  { name:'droplist',      url:'http://localhost:3074/line.html',       port:3074, launch:'droplist-ui', dep:'droplist' },
-  { name:'cycleboard',    url:'http://localhost:8889/',                port:8889, launch:'cycleboard' },
-  { name:'cortex',        url:'http://localhost:8891/',                port:8891, launch:'cortex-dashboard' },
-  { name:'canvas-engine', url:'http://localhost:3050/',                port:3050, launch:'canvas-engine' },
-  { name:'mosaic',        url:'http://localhost:3000/',                port:3000, launch:'mosaic-dashboard' },
-  { name:'aegis',         url:'http://localhost:8890/',                port:8890, launch:'aegis-landing' },
-  { name:'thread-cards',  url:'http://localhost:8893/thread_cards.html',port:8893, launch:'thread-cards' },
+  { name:'system map',     url:'http://localhost:3011/system-map.html',          port:3011, launch:'lattice' },
+  { name:'lattice',        url:'http://localhost:3011/index.html',               port:3011, launch:'lattice' },
+  { name:'inPACT',         url:'http://localhost:3006/',                         port:3006, launch:'inpact' },
+  { name:'droplist',       url:'http://localhost:3074/line.html',                port:3074, launch:'droplist-ui', dep:'droplist' },
+  { name:'cycleboard',     url:'http://localhost:8889/',                         port:8889, launch:'cycleboard' },
+  { name:'cortex',         url:'http://localhost:8891/',                         port:8891, launch:'cortex-dashboard' },
+  { name:'canvas-engine',  url:'http://localhost:3050/',                         port:3050, launch:'canvas-engine' },
+  { name:'mosaic',         url:'http://localhost:3000/',                         port:3000, launch:'mosaic-dashboard' },
+  { name:'aegis',          url:'http://localhost:8890/',                         port:8890, launch:'aegis-landing' },
+  { name:'thread-cards',   url:'http://localhost:8893/thread_cards.html',        port:8893, launch:'thread-cards' },
+  { name:'delta-kernel',   url:'http://localhost:5173/',                         port:5173, launch:'delta-web' },
+  { name:'code-converter', url:'http://localhost:3007/',                         port:3007, launch:'code-converter' },
+  { name:'blueprint',      url:'http://localhost:3030/',                         port:3030, launch:'blueprint-generator' },
+  { name:'atlas shell',    url:'http://localhost:8888/atlas_boot.html',          port:8888, launch:'atlas-shell' },
+  { name:'anatomy',        url:'http://localhost:8894/today.html',               port:8894, launch:'anatomy' },
+  { name:'cognitive atlas',url:'http://localhost:8893/cognitive_atlas.html',     port:8893, launch:'thread-cards' },
+  { name:'idea board',     url:'http://localhost:8893/idea_dashboard.html',      port:8893, launch:'thread-cards' },
+  { name:'inpact onboard', url:'http://localhost:3006/onboarding.html',          port:3006, launch:'inpact' },
 ];
 
 function tileEl(s, i) {

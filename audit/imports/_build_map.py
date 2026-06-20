@@ -806,8 +806,17 @@ def build(root: Path, config: dict[str, Any]) -> dict[str, Any]:
       <button onclick="fitGraph()">fit</button>
       <button onclick="relayoutGraph()">re-layout</button>
       <button class="layouts-btn" id="layouts-btn" data-panel-target="all">layouts ▾</button>
+      <button onclick="toggleWall()" title="Monitor wall — every UI tiled live">⊞ wall</button>
     </div>
   </nav>
+
+  <div id="wall-view" style="display:none;position:fixed;inset:0;z-index:60;background:#15140f;flex-direction:column;">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #33312a;color:#e8e6dd;font:500 13px system-ui;">
+      <button onclick="toggleWall()" style="background:#1d1c16;color:#e8e6dd;border:1px solid #33312a;border-radius:7px;padding:5px 11px;cursor:pointer;">← map</button>
+      <span>monitor wall — every UI tiled live</span>
+    </div>
+    <iframe id="wall-frame" style="flex:1;border:0;background:#15140f;" title="monitor wall"></iframe>
+  </div>
 
   <div class="search-row">
     <input type="search" class="search-input" id="search" placeholder="search services and files…" autocomplete="off">
@@ -2065,6 +2074,22 @@ function applySnapPreset(id) {
   updateRestoreBar();
   if (cy) setTimeout(() => { cy.resize(); cy.fit(undefined, 30); }, 200);
   try { localStorage.setItem('panel-snap', id); } catch (e) {}
+}
+
+// Wall mode: the monitor wall as a system-map view. Iframes the shared
+// wall.html (absolute :3011 URL so it works from any copy of the map), lazy —
+// only loads the 10 surface iframes when you first open the mode.
+function toggleWall() {
+  const v = document.getElementById('wall-view');
+  if (!v) return;
+  const open = v.style.display !== 'flex';
+  if (open) {
+    const f = document.getElementById('wall-frame');
+    if (f && !f.src) f.src = 'http://localhost:3011/wall.html';
+    v.style.display = 'flex';
+  } else {
+    v.style.display = 'none';
+  }
 }
 
 // Tiny SVG renderer for a 2×2 preview thumbnail with a chosen cell highlighted.

@@ -3069,11 +3069,29 @@ function markLiveBadge(isLive) {
 // Wire 3 (drive): start/stop/restart a service from the map. POSTs to the
 // allowlisted action endpoints, then re-probes live state and recolors. The
 // server only ever spawns launch.json-defined commands keyed by subsystem name.
+// Cache the write token (shared secret guarding all POSTs). Fetched once from
+// the CORS-trusted handout endpoint; a foreign (DNS-rebind) origin can't read it.
+let _atlasTokenPromise = null;
+async function atlasWriteToken() {
+  if (!_atlasTokenPromise) {
+    _atlasTokenPromise = (async () => {
+      try {
+        const r = await fetch(ATLAS_MAP_API + '/admin/write-token');
+        if (!r.ok) return null;
+        return (await r.json()).token || null;
+      } catch (_) { return null; }
+    })();
+  }
+  return _atlasTokenPromise;
+}
+
 async function runServiceAction(act, id) {
   if (!['start', 'stop', 'restart'].includes(act)) return;
   setDetails('<strong>' + escapeHtml(id) + '</strong> · ' + act + 'ing…');
   try {
-    const r = await fetch(ATLAS_MAP_API + '/map/' + act + '/' + encodeURIComponent(id), { method: 'POST' });
+    const tok = await atlasWriteToken();
+    const headers = tok ? { 'X-Atlas-Token': tok } : {};
+    const r = await fetch(ATLAS_MAP_API + '/map/' + act + '/' + encodeURIComponent(id), { method: 'POST', headers });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) {
       setDetails('<strong>' + escapeHtml(id) + '</strong> · ' + act + ' failed — ' + escapeHtml(String(j.detail || r.status)));

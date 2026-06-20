@@ -17,9 +17,33 @@ import httpx
 DEFAULT_BASE = "http://127.0.0.1:3072"
 MARKER = Path("audit/system-index.json")
 
+# Shared-secret guard for state-changing POSTs (mirrors atlas_map_api.auth).
+TOKEN_ENV = "ATLAS_WRITE_TOKEN"
+TOKEN_FILENAME = ".atlas-write-token"
+
 
 def api_base() -> str:
     return os.environ.get("ATLAS_API_URL", DEFAULT_BASE).rstrip("/")
+
+
+def write_token(repo_root: Path | None = None) -> str | None:
+    """Resolve the X-Atlas-Token POSTs must carry: env var, else the gitignored
+    <repo_root>/.atlas-write-token file the server writes at startup. None if
+    neither is found (the CLI then gets a clean 401 from the API)."""
+    env = os.environ.get(TOKEN_ENV)
+    if env and env.strip():
+        return env.strip()
+    root = repo_root or find_repo_root()
+    if root is None:
+        return None
+    f = root / TOKEN_FILENAME
+    try:
+        if f.is_file():
+            tok = f.read_text(encoding="utf-8").strip()
+            return tok or None
+    except OSError:
+        pass
+    return None
 
 
 def find_repo_root(start: Path | None = None) -> Path | None:
@@ -95,7 +119,13 @@ class AtlasClient:
         return r.json()
 
     def _post(self, path: str) -> dict[str, Any]:
-        r = self._client.post(path)
+        # State-changing endpoints require the shared secret. Resolve lazily so
+        # read-only commands never need the token present.
+        headers = {}
+        tok = write_token()
+        if tok:
+            headers["X-Atlas-Token"] = tok
+        r = self._client.post(path, headers=headers)
         r.raise_for_status()
         return r.json()
 

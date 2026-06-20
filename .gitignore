@@ -46,6 +46,9 @@ dist-ssr/
 .cache/
 .vite/
 
+# === atlas-map-api write-token (auto-generated shared secret, never commit) ===
+.atlas-write-token
+
 # === Large data files (too big for git) ===
 # These are source data files, not version controlled
 services/cognitive-sensor/results.db

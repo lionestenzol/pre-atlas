@@ -1654,6 +1654,7 @@ function handleContextAction(act) {
   else if (act === 'drill') { if (drillState.level === 'services') drillInto(id); }
   else if (act === 'copy-id') { navigator.clipboard && navigator.clipboard.writeText(id); }
   else if (act === 'start' || act === 'stop' || act === 'restart') { runServiceAction(act, id); }
+  else if (act === 'monitor') { openMonitor(id); }
   else if (act === 'open-editor') {
     const s = SERVICES.find(x => x.name === id);
     if (s) {
@@ -2090,6 +2091,15 @@ function toggleWall() {
   } else {
     v.style.display = 'none';
   }
+}
+
+// Click a service node in the structure view → jump to its live tile on the
+// wall. Passes the service name via #focus= so wall.html scrolls + highlights it.
+function openMonitor(id) {
+  const v = document.getElementById('wall-view');
+  const f = document.getElementById('wall-frame');
+  if (f) f.src = 'http://localhost:3011/wall.html#focus=' + encodeURIComponent(id);
+  if (v) v.style.display = 'flex';
 }
 
 // Tiny SVG renderer for a 2×2 preview thumbnail with a chosen cell highlighted.
@@ -2655,8 +2665,9 @@ function renderServiceGraph() {
       } else {
         actionItems.push({ label: '▶ start', act: 'start' });
       }
-      actionItems.push('-');
     }
+    if (svc) actionItems.push({ label: '⊞ open monitor', act: 'monitor' });
+    if (actionItems.length) actionItems.push('-');
     showContextMenu([
       ...actionItems,
       { label: 'drill into', act: 'drill', kbd: 'dbl-click' },

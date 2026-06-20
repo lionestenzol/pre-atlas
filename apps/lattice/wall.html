@@ -93,6 +93,20 @@ const grid=document.getElementById('grid');
 SURFACES.forEach((s,i)=>grid.appendChild(tileEl(s,i)));
 updateCount();
 setInterval(updateCount, 2000);
+
+// Jump to a tile when opened with #focus=<service> (from a system-map node).
+function focusFromHash(){
+  const m=(location.hash||'').match(/focus=([^&]+)/);
+  if(!m) return;
+  const want=decodeURIComponent(m[1]).toLowerCase();
+  let idx=SURFACES.findIndex(s=>s.name.toLowerCase()===want||s.launch.toLowerCase()===want);
+  if(idx<0) idx=SURFACES.findIndex(s=>want.includes(s.name.toLowerCase())||s.name.toLowerCase().includes(want)||want.includes(s.launch.toLowerCase()));
+  if(idx<0) return;
+  const tile=document.querySelectorAll('.tile')[idx];
+  if(tile){ tile.scrollIntoView({behavior:'smooth',block:'center'}); tile.style.outline='2px solid #C0563D'; tile.style.outlineOffset='-1px'; setTimeout(()=>{tile.style.outline='';},2800); }
+}
+window.addEventListener('hashchange', focusFromHash);
+setTimeout(focusFromHash, 300);  // defer so tiles are laid out before scroll/highlight
 </script>
 </body>
 </html>

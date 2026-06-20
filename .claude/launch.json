@@ -81,6 +81,12 @@
       "port": 3006
     },
     {
+      "name": "lattice",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "apps/lattice", "-p", "3011", "-c-1", "--cors"],
+      "port": 3011
+    },
+    {
       "name": "optogon",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "uvicorn", "optogon.main:app", "--host", "0.0.0.0", "--port", "3010"],
@@ -124,6 +130,74 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "tools/anatomy-extension", "-p", "8896", "-c-1", "--cors"],
       "port": 8896
+    },
+    {
+      "name": "triage-server",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["triage_server.py"],
+      "port": 8765,
+      "cwd": "services/cognitive-sensor"
+    },
+    {
+      "name": "openclaw",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "openclaw.api:app", "--host", "127.0.0.1", "--port", "3004"],
+      "env": {"PYTHONPATH": "src"},
+      "port": 3004,
+      "cwd": "services/openclaw"
+    },
+    {
+      "name": "mosaic-orch",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "mosaic.main:app", "--host", "127.0.0.1", "--port", "3005"],
+      "env": {"PYTHONPATH": "src"},
+      "port": 3005,
+      "cwd": "services/mosaic-orchestrator"
+    },
+    {
+      "name": "uasc",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["server.py", "--port", "3008"],
+      "port": 3008,
+      "cwd": "services/uasc-executor"
+    },
+    {
+      "name": "cortex",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "cortex.main:app", "--host", "127.0.0.1", "--port", "3009"],
+      "env": {"PYTHONPATH": "src"},
+      "port": 3009,
+      "cwd": "services/cortex"
+    },
+    {
+      "name": "search-stack",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "search_stack.server:app", "--host", "127.0.0.1", "--port", "3070"],
+      "env": {"PYTHONPATH": "src"},
+      "port": 3070,
+      "cwd": "services/search-stack"
+    },
+    {
+      "name": "memory-hub",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "memory_hub.server:app", "--host", "127.0.0.1", "--port", "3071"],
+      "env": {"PYTHONPATH": "src"},
+      "port": 3071,
+      "cwd": "services/memory-hub"
+    },
+    {
+      "name": "atlas-map-api",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "atlas_map_api.server:app", "--host", "127.0.0.1", "--port", "3072"],
+      "env": {"PYTHONPATH": "src"},
+      "port": 3072,
+      "cwd": "services/atlas-map-api"
+    },
+    {
+      "name": "audit-map",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "audit", "-p", "8897", "-c-1", "--cors"],
+      "port": 8897
     }
   ]
 }

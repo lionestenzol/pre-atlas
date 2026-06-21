@@ -16,6 +16,7 @@ const base: ScpConfig = {
   allowLocal: false,
   maxFiles: 10,
   maxTotalBytes: 1000,
+  flueDir: '/tmp/flue',
 };
 const cfg = (over: Partial<ScpConfig> = {}): ScpConfig => ({ ...base, ...over });
 

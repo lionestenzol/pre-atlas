@@ -21,6 +21,8 @@ export interface ScpConfig {
   allowLocal: boolean; // permit local paths / file:// (off by default)
   maxFiles: number; // abort a repo that walks past this many source files
   maxTotalBytes: number; // abort a repo whose scanned source exceeds this
+  // The flue: where rendered Markdown drops are written for the Chainer/droplist.
+  flueDir: string;
 }
 
 function num(name: string, fallback: number): number {
@@ -69,6 +71,9 @@ export function loadConfig(): ScpConfig {
     allowLocal: bool('SCP_ALLOW_LOCAL', false),
     maxFiles: intInRange('SCP_MAX_FILES', 20000, 1),
     maxTotalBytes: intInRange('SCP_MAX_TOTAL_BYTES', 50 * 1024 * 1024, 1),
+    // Default to a local outbox in the service dir — loose, explicit coupling to
+    // droplist (point SCP_FLUE_DIR at droplist's watched inbox to wire them up).
+    flueDir: process.env.SCP_FLUE_DIR ?? path.join(process.cwd(), 'flue-out'),
   };
 }
 

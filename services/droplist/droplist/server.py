@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import (  # noqa: F401 — atlas_signal/dag_builder kept for v2 mutation surface
@@ -13,6 +13,7 @@ from . import (  # noqa: F401 — atlas_signal/dag_builder kept for v2 mutation 
     command_brief,
     dag_builder,
     entities,
+    intake,
     state,
     storage,
 )
@@ -29,7 +30,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -144,9 +145,39 @@ def get_entities(type: Optional[str] = None) -> dict:
     return {"entities": ents}
 
 
+@app.post("/api/drop")
+async def post_drop(request: Request) -> dict:
+    """Intake valve: catch raw input, run the bouncer + chainer, secure or drop.
+
+    Body: a JSON object carrying the raw text under any of ``raw`` /
+    ``rawInput`` / ``text`` (rawInput matches the webhook-snippet field name).
+    Optional ``ship: true`` also emits a Mini Ship.
+
+    Always returns HTTP 200 with ``{"status": "secured" | "dropped", ...}`` so
+    an upstream webhook does not retry a deliberately-dropped (noise/duplicate)
+    payload. Malformed requests get 4xx; a genuine storage fault gets 500.
+    """
+    try:
+        body = await request.json()
+    except Exception:  # noqa: BLE001 — bad/empty JSON body
+        raise HTTPException(status_code=400, detail="request body must be JSON")
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="request body must be a JSON object")
+
+    raw = body.get("raw") or body.get("rawInput") or body.get("text") or ""
+    if not isinstance(raw, str):
+        raise HTTPException(status_code=400, detail="'raw' must be a string")
+
+    return intake.chain_intake(raw, make_ship=bool(body.get("ship", False)))
+
+
 def run() -> None:
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=3071)
+    # Port 3073: 3071 is owned by memory-hub (.claude/launch.json). Two FastAPI
+    # services cannot bind the same port; droplist moved off the collision so the
+    # atlas-map action layer resolves droplist→3073 (not memory-hub's 3071).
+    # See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
+    uvicorn.run(app, host="127.0.0.1", port=3073)
 
 
 if __name__ == "__main__":

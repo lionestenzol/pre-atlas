@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildGraphRows } from './graph.js';
+import { buildGraphRows, resolveEdgeRows, type AstEdgeRow } from './graph.js';
 import type { SourceFile } from './compressor.js';
 
 const files: SourceFile[] = [
@@ -55,5 +55,42 @@ describe('buildGraphRows', () => {
 
   it('is deterministic', () => {
     expect(buildGraphRows('app', files)).toEqual(buildGraphRows('app', files));
+  });
+
+  it('de-dups nodes sharing an identity so a plain insert stays unique-safe', () => {
+    // Two defs with the same name+kind in one file (overload / conditional def).
+    const dup = buildGraphRows('app', [
+      { path: 'm.py', content: 'def foo():\n    pass\ndef foo():\n    pass\n' },
+    ]);
+    const fooNodes = dup.nodes.filter((n) => n.name === 'foo' && n.node_type === 'function');
+    expect(fooNodes).toHaveLength(1);
+    expect(fooNodes[0].start_line).toBe(1); // first occurrence wins
+  });
+});
+
+describe('resolveEdgeRows', () => {
+  const idByKey = new Map<string, string>([
+    ['src/b/index.ts|index.ts|file', 'id-b'],
+    ['src/c/index.ts|index.ts|file', 'id-c'],
+    ['src/a.ts|a.ts|file', 'id-a'],
+  ]);
+  const edge = (sp: string, tp: string): AstEdgeRow => ({
+    source: { file_path: sp, name: sp.split('/').pop()!, node_type: 'file' },
+    target: { file_path: tp, name: tp.split('/').pop()!, node_type: 'file' },
+    edge_type: 'imports',
+    weight: 1,
+  });
+
+  it('resolves by full identity — same basename in different dirs does not collide', () => {
+    const out = resolveEdgeRows([edge('src/a.ts', 'src/b/index.ts')], idByKey);
+    expect(out).toEqual([{ source_id: 'id-a', target_id: 'id-b', edge_type: 'imports', weight: 1 }]);
+    // a -> c/index.ts must map to id-c, NOT id-b, despite the identical basename
+    const out2 = resolveEdgeRows([edge('src/a.ts', 'src/c/index.ts')], idByKey);
+    expect(out2[0].target_id).toBe('id-c');
+  });
+
+  it('drops edges whose endpoints are not indexed (external/unindexed)', () => {
+    const out = resolveEdgeRows([edge('src/a.ts', 'node_modules/x/index.ts')], idByKey);
+    expect(out).toEqual([]);
   });
 });

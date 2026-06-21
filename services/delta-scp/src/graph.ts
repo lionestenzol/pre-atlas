@@ -165,7 +165,19 @@ export function buildGraphRows(repoName: string, files: SourceFile[]): GraphRows
     }
   }
 
-  // De-dup edges (same source/target/type) so persist upserts don't churn.
+  // De-dup nodes by identity (file_path|name|node_type) — the schema's UNIQUE
+  // key. Two same-named symbols of the same kind in one file (TS declaration
+  // merging, Python overloads, conditional defs) collapse to one, keeping a
+  // plain insert from tripping the unique constraint. First occurrence wins.
+  const nodeSeen = new Set<string>();
+  const dedupedNodes = nodes.filter((n) => {
+    const k = `${n.file_path}|${n.name}|${n.node_type}`;
+    if (nodeSeen.has(k)) return false;
+    nodeSeen.add(k);
+    return true;
+  });
+
+  // De-dup edges (same source/target/type) so the insert doesn't churn.
   const seen = new Set<string>();
   const dedupedEdges = edges.filter((e) => {
     const k = `${e.source.file_path}>${e.target.file_path}:${e.edge_type}`;
@@ -174,40 +186,33 @@ export function buildGraphRows(repoName: string, files: SourceFile[]): GraphRows
     return true;
   });
 
-  return { nodes, edges: dedupedEdges };
+  return { nodes: dedupedNodes, edges: dedupedEdges };
 }
 
 const keyId = (k: NodeKey) => `${k.file_path}|${k.name}|${k.node_type}`;
 
+export interface ResolvedEdgeRow {
+  source_id: string;
+  target_id: string;
+  edge_type: string;
+  weight: number;
+}
+
 /**
- * Upsert the graph into Supabase: nodes first (on the identity constraint), then
- * read their ids back, then edges (skipping any whose endpoints didn't resolve).
- * Thin I/O over buildGraphRows — verified by integration, not unit tests.
+ * Pure: map identity-keyed edges onto DB rows via the node-id index. An edge is
+ * resolved by the FULL node identity (file_path|name|node_type), never by name
+ * alone — so a `imports` edge to `src/b/index.ts` can't collide with `src/c/
+ * index.ts`. Edges whose endpoints aren't in the index (external packages,
+ * unindexed files) are dropped — the graph holds only edges between known nodes.
+ *
+ * Tested directly: this is the correctness-critical step (a name-only mapping
+ * silently mis-wires or drops cross-file edges).
  */
-export async function persistGraph(
-  db: SupabaseClient,
-  repoName: string,
-  rows: GraphRows,
-): Promise<{ nodes: number; edges: number }> {
-  if (rows.nodes.length === 0) return { nodes: 0, edges: 0 };
-
-  const { error: nodeErr } = await db
-    .from('ast_nodes')
-    .upsert(rows.nodes, { onConflict: 'repo_name,file_path,name,node_type' });
-  if (nodeErr) throw new Error(`persistGraph nodes failed: ${nodeErr.message}`);
-
-  const { data: idRows, error: selErr } = await db
-    .from('ast_nodes')
-    .select('id,file_path,name,node_type')
-    .eq('repo_name', repoName);
-  if (selErr) throw new Error(`persistGraph id lookup failed: ${selErr.message}`);
-
-  const idByKey = new Map<string, string>();
-  for (const r of (idRows ?? []) as Array<{ id: string; file_path: string; name: string; node_type: string }>) {
-    idByKey.set(keyId({ file_path: r.file_path, name: r.name, node_type: r.node_type }), r.id);
-  }
-
-  const edgeRows = rows.edges
+export function resolveEdgeRows(
+  edges: AstEdgeRow[],
+  idByKey: Map<string, string>,
+): ResolvedEdgeRow[] {
+  return edges
     .map((e) => {
       const source_id = idByKey.get(keyId(e.source));
       const target_id = idByKey.get(keyId(e.target));
@@ -215,13 +220,57 @@ export async function persistGraph(
         ? { source_id, target_id, edge_type: e.edge_type, weight: e.weight }
         : null;
     })
-    .filter((e): e is NonNullable<typeof e> => e !== null);
+    .filter((e): e is ResolvedEdgeRow => e !== null);
+}
 
+/**
+ * Sync a repo's graph into Supabase with a repo-scoped delete-and-replace:
+ *
+ *   1. delete every ast_node for this repo  (ON DELETE CASCADE clears its edges)
+ *   2. insert all current nodes, returning their fresh ids
+ *   3. resolve edges against the full node set, then insert them
+ *
+ * Idempotent — a re-run reflects the repo exactly as it is now, dropping rows
+ * for files/symbols that no longer exist (the gap a plain upsert leaves). It is
+ * deliberately repo-scoped, NOT per-file: every node exists before any edge is
+ * mapped, so cross-file `imports` edges resolve. A per-file sync cannot see the
+ * other file's nodes and would silently drop those edges.
+ *
+ * Thin I/O over buildGraphRows + resolveEdgeRows. The delete+insert is not a
+ * transaction here, so a mid-sync failure can leave the repo's graph empty until
+ * the next job repopulates it — acceptable for a secondary index that the worker
+ * already rebuilds fail-soft on every job.
+ */
+export async function persistGraph(
+  db: SupabaseClient,
+  repoName: string,
+  rows: GraphRows,
+): Promise<{ nodes: number; edges: number }> {
+  // 1. Drop the repo's existing nodes; CASCADE removes their edges.
+  const { error: delErr } = await db.from('ast_nodes').delete().eq('repo_name', repoName);
+  if (delErr) throw new Error(`persistGraph delete failed: ${delErr.message}`);
+
+  if (rows.nodes.length === 0) return { nodes: 0, edges: 0 };
+
+  // 2. Insert nodes, returning ids in one round trip (no separate read-back).
+  const { data: inserted, error: nodeErr } = await db
+    .from('ast_nodes')
+    .insert(rows.nodes)
+    .select('id,file_path,name,node_type');
+  if (nodeErr || !inserted) {
+    throw new Error(`persistGraph insert nodes failed: ${nodeErr?.message ?? 'no rows returned'}`);
+  }
+
+  const idByKey = new Map<string, string>();
+  for (const r of inserted as Array<{ id: string; file_path: string; name: string; node_type: string }>) {
+    idByKey.set(keyId({ file_path: r.file_path, name: r.name, node_type: r.node_type }), r.id);
+  }
+
+  // 3. Resolve + insert edges against the full node set.
+  const edgeRows = resolveEdgeRows(rows.edges, idByKey);
   if (edgeRows.length > 0) {
-    const { error: edgeErr } = await db
-      .from('ast_edges')
-      .upsert(edgeRows, { onConflict: 'source_id,target_id,edge_type' });
-    if (edgeErr) throw new Error(`persistGraph edges failed: ${edgeErr.message}`);
+    const { error: edgeErr } = await db.from('ast_edges').insert(edgeRows);
+    if (edgeErr) throw new Error(`persistGraph insert edges failed: ${edgeErr.message}`);
   }
 
   return { nodes: rows.nodes.length, edges: edgeRows.length };

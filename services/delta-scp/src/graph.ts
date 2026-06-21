@@ -83,13 +83,19 @@ function basename(p: string): string {
 }
 
 // Resolve a JS/TS relative specifier to a known repo file (try extensions + index).
+// Handles the TS-ESM convention where source imports carry a `.js` extension that
+// maps to a `.ts` file on disk (import './x.js' -> x.ts) — without the rewrite,
+// import edges silently drop in every TS-ESM repo (incl. delta-scp itself).
 function resolveJsImport(fromFile: string, spec: string, known: Set<string>): string | null {
   if (!spec.startsWith('.')) return null; // bare package => external, no node
   const baseDir = path.posix.dirname(fromFile);
   const joined = path.posix.normalize(path.posix.join(baseDir, spec));
+  const stripped = joined.replace(/\.(?:ts|tsx|js|jsx|mjs|cjs)$/, ''); // ./x.js -> ./x
   const candidates = [
     joined,
+    ...JS_EXTS.map((e) => `${stripped}.${e}`), // try .ts for a .js specifier
     ...JS_EXTS.map((e) => `${joined}.${e}`),
+    ...JS_EXTS.map((e) => `${stripped}/index.${e}`),
     ...JS_EXTS.map((e) => `${joined}/index.${e}`),
   ];
   return candidates.find((c) => known.has(c)) ?? null;

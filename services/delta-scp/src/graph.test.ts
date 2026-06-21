@@ -48,6 +48,17 @@ describe('buildGraphRows', () => {
     });
   });
 
+  it('resolves a TS-ESM .js specifier to the .ts source file', () => {
+    // import './session.js' must map to session.ts on disk, or every TS-ESM
+    // import edge silently drops (the bug the live e2e caught).
+    const esm = buildGraphRows('app', [
+      { path: 'src/auth/login.ts', content: "import { SESSION } from './session.js';\n" },
+      { path: 'src/auth/session.ts', content: 'export const SESSION = 1;\n' },
+    ]);
+    const e = esm.edges.find((x) => x.source.file_path === 'src/auth/login.ts');
+    expect(e?.target.file_path).toBe('src/auth/session.ts');
+  });
+
   it('resolves a python dotted import to a repo file', () => {
     const e = edges.find((x) => x.source.file_path === 'src/app.py');
     expect(e?.target.file_path).toBe('auth/helpers.py');

@@ -12,7 +12,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { loadConfig, type ScpConfig } from './config.js';
 import { getSupabase } from './supabase.js';
 import { claimNextJob, completeJob, failJob, reapStaleJobs } from './queue.js';
-import { compressRepository } from './source.js';
+import { fetchSourceFiles } from './source.js';
+import { compressTree } from './compressor.js';
+import { buildGraphRows, persistGraph } from './graph.js';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -30,6 +32,25 @@ function redactRepoUrl(input: string): string {
   }
 }
 
+/**
+ * Auto-populate the AST graph (migration 006) from a job's source files.
+ * Fail-soft: the graph is a secondary index, so a missing migration or a DB
+ * hiccup is logged and swallowed — it must never fail an already-complete job.
+ */
+async function populateGraph(
+  db: SupabaseClient,
+  repoUrl: string,
+  files: { path: string; content: string }[],
+): Promise<void> {
+  try {
+    const rows = buildGraphRows(repoUrl, files);
+    const { nodes, edges } = await persistGraph(db, repoUrl, rows);
+    console.log(`[delta-scp] graph populated · ${nodes} nodes · ${edges} edges`);
+  } catch (err) {
+    console.error('[delta-scp] graph populate failed (non-fatal):', err);
+  }
+}
+
 /** Process exactly one job if available. Returns true if a job was handled. */
 export async function tick(db: SupabaseClient, config: ScpConfig): Promise<boolean> {
   const job = await claimNextJob(db);
@@ -39,12 +60,18 @@ export async function tick(db: SupabaseClient, config: ScpConfig): Promise<boole
     `[delta-scp] claimed job ${job.id} (attempt ${job.attempt}) · ${redactRepoUrl(job.repo_url)}`,
   );
   try {
-    const compressed = await compressRepository(job.repo_url, config);
+    // One fetch feeds both compression and graph population.
+    const files = await fetchSourceFiles(job.repo_url, config);
+    const compressed = compressTree(job.repo_url, files, new Date().toISOString());
     await completeJob(db, job, compressed);
     console.log(
       `[delta-scp] complete ${job.id} · ${compressed.stats.files_included} files · ` +
         `token_yield=${compressed.stats.token_yield}`,
     );
+    // Secondary index, after the job is durably complete.
+    if (config.graphAutoPopulate) {
+      await populateGraph(db, job.repo_url, files);
+    }
   } catch (err) {
     await failJob(db, job, err);
     console.error(`[delta-scp] failed ${job.id}:`, err);

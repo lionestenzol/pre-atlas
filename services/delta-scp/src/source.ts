@@ -135,13 +135,17 @@ async function cloneRepo(repoUrl: string, config: ScpConfig): Promise<string> {
 }
 
 /**
- * Full pipeline step 3: fetch the repo (local path or git clone) and compress it
- * into the symbolic map. Cleans up any clone it created.
+ * Fetch a repo's source files (local path or git clone), honouring the walk
+ * guardrails, and clean up any clone it created. Content is fully read into
+ * memory during the walk, so the checkout can be removed before returning.
+ *
+ * Extracted so consumers that need the raw files — e.g. the worker populating
+ * the AST graph — can reuse a single fetch instead of cloning twice.
  */
-export async function compressRepository(
+export async function fetchSourceFiles(
   repoUrl: string,
   config: ScpConfig = loadConfig(),
-): Promise<CompressedState> {
+): Promise<SourceFile[]> {
   // Defense in depth: the API gateway validates too, but the worker may be fed
   // jobs from other producers, so re-check before touching the network/disk.
   const verdict = validateRepoUrl(repoUrl, config);
@@ -160,11 +164,21 @@ export async function compressRepository(
   }
 
   try {
-    const files = await walk(root, config);
-    return compressTree(repoUrl, files, new Date().toISOString());
+    return await walk(root, config);
   } finally {
     if (cleanup) {
       await rm(root, { recursive: true, force: true }).catch(() => {});
     }
   }
+}
+
+/**
+ * Full pipeline step 3: fetch the repo and compress it into the symbolic map.
+ */
+export async function compressRepository(
+  repoUrl: string,
+  config: ScpConfig = loadConfig(),
+): Promise<CompressedState> {
+  const files = await fetchSourceFiles(repoUrl, config);
+  return compressTree(repoUrl, files, new Date().toISOString());
 }

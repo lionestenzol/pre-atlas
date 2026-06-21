@@ -23,6 +23,8 @@ export interface ScpConfig {
   maxTotalBytes: number; // abort a repo whose scanned source exceeds this
   // The flue: where rendered Markdown drops are written for the Chainer/droplist.
   flueDir: string;
+  // Worker auto-populates the AST graph (migration 006) after each job. Fail-soft.
+  graphAutoPopulate: boolean;
 }
 
 function num(name: string, fallback: number): number {
@@ -74,6 +76,7 @@ export function loadConfig(): ScpConfig {
     // Default to a local outbox in the service dir — loose, explicit coupling to
     // droplist (point SCP_FLUE_DIR at droplist's watched inbox to wire them up).
     flueDir: process.env.SCP_FLUE_DIR ?? path.join(process.cwd(), 'flue-out'),
+    graphAutoPopulate: bool('SCP_GRAPH_AUTOPOPULATE', true),
   };
 }
 

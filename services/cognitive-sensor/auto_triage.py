@@ -198,6 +198,27 @@ def main() -> int:
             except Exception as exc:
                 logger.warning("cortex_bridge failed for %s: %s", loop_id, exc)
 
+        # Rung 4: drop an actionable triage result into the DropList, where the
+        # intake bouncer + chainer turn it into a deduped Work Packet. This is the
+        # loop/auto-triage -> droplist wire. Env-gated (DROPLIST_DROP_URL) and
+        # fail-soft via droplist_bridge — dormant default, never breaks the run.
+        # See ~/.claude/rules/common/code-as-furniture.md.
+        drop_summary = None
+        if (
+            proposed_action
+            and proposed_action != "none"
+            and confidence >= MIN_CONFIDENCE
+        ):
+            try:
+                from droplist_bridge import drop as drop_to_droplist
+                drop_summary = drop_to_droplist(
+                    item.get("title", loop_id),
+                    proposed_action,
+                    rationale,
+                )
+            except Exception as exc:  # noqa: BLE001 — seam must never kill triage
+                logger.warning("droplist_bridge failed for %s: %s", loop_id, exc)
+
         run_record["items"].append({
             "loop_id": loop_id,
             "session_id": sid,
@@ -207,6 +228,7 @@ def main() -> int:
             "rationale": rationale,
             "applied": applied,
             "directive": directive_summary,
+            "drop": drop_summary,
         })
 
     if APPLY and any(i.get("applied") for i in run_record["items"]):

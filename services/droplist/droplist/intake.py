@@ -22,17 +22,12 @@ from __future__ import annotations
 
 import os
 
-from . import engine, storage
+from . import dropstore, engine, storage
 from .hashing import input_hash, normalize
 
 # Inputs shorter than this (after normalization) are treated as noise. Tunable
 # so a different intake source (e.g. structured webhook) can relax it.
 MIN_CHARS = int(os.environ.get("DROPLIST_INTAKE_MIN_CHARS", "3"))
-
-
-def _existing_hashes() -> set[str]:
-    """Every input_hash already secured in the drop list."""
-    return {p.get("input_hash", "") for p in storage.read_all(storage.PACKETS)}
 
 
 def chain_intake(raw: str, make_ship: bool = False) -> dict:
@@ -47,7 +42,7 @@ def chain_intake(raw: str, make_ship: bool = False) -> dict:
     norm = normalize(raw or "")
     h = input_hash(norm)
 
-    # Bouncer gate 1 — noise.
+    # Bouncer gate 1 — noise (cheap, local; reject before any classify work).
     if len(norm) < MIN_CHARS:
         return {
             "status": "dropped",
@@ -55,16 +50,25 @@ def chain_intake(raw: str, make_ship: bool = False) -> dict:
             "delta_hash": h,
         }
 
+    # Chainer: build the packet WITHOUT persisting, then let the store's
+    # insert_if_new be the single dedup authority. Under JSONL this is a
+    # read-then-append; under a hosted backend it becomes an atomic
+    # UNIQUE(input_hash) insert that makes concurrent multi-device drops safe.
+    packet, ship = engine.process_drop(raw, make_ship=make_ship, persist=False)
+
+    store = dropstore.get_store()
     # Bouncer gate 2 — zero-delta duplicate.
-    if h in _existing_hashes():
+    if not store.insert_if_new(packet.to_dict()):
         return {
             "status": "dropped",
             "reason": "duplicate: delta_hash already secured",
-            "delta_hash": h,
+            "delta_hash": packet.input_hash,
         }
 
-    # Survivor -> the chainer (classify + route + complete + store).
-    packet, ship = engine.process_drop(raw, make_ship=make_ship)
+    # Secured: persist the optional Mini Ship (a separate collection, not part
+    # of the drop-list repo) only now that the packet itself is locked in.
+    if ship is not None:
+        storage.append(storage.MINI_SHIPS, ship.to_dict())
 
     result = {
         "status": "secured",

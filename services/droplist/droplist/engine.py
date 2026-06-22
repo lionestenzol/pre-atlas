@@ -11,7 +11,7 @@ from __future__ import annotations
 import time
 import uuid
 
-from . import classifier, completion, retrieval, router, storage
+from . import classifier, completion, dropstore, retrieval, router, storage
 from .hashing import ClassificationCache, input_hash, normalize
 from .schema import MiniShipPacket, WorkPacket
 
@@ -37,11 +37,20 @@ def _drop_id() -> str:
     return "drop_" + uuid.uuid4().hex[:12]
 
 
-def process_drop(raw: str, make_ship: bool = False) -> tuple[WorkPacket, MiniShipPacket | None]:
+def process_drop(
+    raw: str, make_ship: bool = False, persist: bool = True
+) -> tuple[WorkPacket, MiniShipPacket | None]:
+    """Build a Work Packet from raw input. Persists it by default.
+
+    persist=False builds and returns the packet (and ship) WITHOUT writing —
+    the intake valve uses this so the store's atomic insert_if_new is the
+    single dedup authority. Callers that want plain capture keep the default.
+    """
     norm = normalize(raw)
     h = input_hash(norm)
 
-    prior = storage.read_all(storage.PACKETS)
+    store = dropstore.get_store()
+    prior = store.read_all()
     cache = ClassificationCache(prior)
 
     cls = classifier.classify(norm, h, cache)
@@ -66,12 +75,14 @@ def process_drop(raw: str, make_ship: bool = False) -> tuple[WorkPacket, MiniShi
     )
     completion.complete(packet)
 
-    storage.append(storage.PACKETS, packet.to_dict())
+    if persist:
+        store.append(packet.to_dict())
 
     ship = None
     if make_ship:
         ship = to_mini_ship(packet)
-        storage.append(storage.MINI_SHIPS, ship.to_dict())
+        if persist:
+            storage.append(storage.MINI_SHIPS, ship.to_dict())
 
     return packet, ship
 

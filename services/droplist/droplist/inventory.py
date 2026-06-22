@@ -17,7 +17,7 @@ import os
 import time
 import uuid
 
-from . import storage
+from . import dropstore, storage
 from .schema import WorkPacket
 
 
@@ -155,5 +155,5 @@ def run_inventory(folder: str, do_hash: bool = False) -> tuple[dict, WorkPacket,
                       f"({report['file_count']} files, {dup} dup groups)",
         status="routed",
     )
-    storage.append(storage.PACKETS, packet.to_dict())
+    dropstore.get_store().append(packet.to_dict())
     return report, packet, inv_path

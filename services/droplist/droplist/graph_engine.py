@@ -158,7 +158,18 @@ def _enrich(dag: dict, packet) -> dict:
 
 def run_graph(raw_input: str) -> dict:
     packet, _ = engine.process_drop(raw_input)
+    return run_graph_from_packet(packet)
 
+
+def run_graph_from_packet(packet) -> dict:
+    """Settle an already-built WorkPacket into a DAG, run the loop, emit the signal.
+
+    Split out of run_graph so the intake valve (intake.chain_intake) can settle a
+    packet it has ALREADY deduped/secured WITHOUT re-running process_drop — which
+    would double-store the packet. run_graph stays behavior-identical: process_drop
+    then this. This is the wire that lets an HTTP /api/drop reach Atlas/lattice.
+    See ~/.claude/rules/common/assemble-first.md.
+    """
     dag = dag_builder.build_dag(packet)
     dag_errs = dag_builder.validate_dag(dag)
     dag = _enrich(dag, packet)

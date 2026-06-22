@@ -283,6 +283,28 @@ def validate_signal(signal: dict) -> list[str]:
     return errs
 
 
+def _delta_auth_header() -> dict[str, str]:
+    """Bearer header for delta-kernel's aegis middleware, mirroring close_loop.py:28.
+
+    delta-kernel's signal ingest (and most routes) sit behind aegis auth; without
+    the tenant key the POST silent-401s and the signal never reaches Atlas/lattice
+    — the gap the spine recon surfaced 2026-06-22. Source order: DROPLIST_ATLAS_TOKEN
+    env override, else the repo-root .aegis-tenant-key shared secret. Best-effort:
+    if neither is present, returns {} and emission stays fail-soft as before.
+    See ~/.claude/rules/common/code-as-furniture.md — no half-wired seam left in place.
+    """
+    token = (os.environ.get("DROPLIST_ATLAS_TOKEN") or "").strip()
+    if not token:
+        try:
+            from pathlib import Path
+            key_path = Path(__file__).resolve().parents[3] / ".aegis-tenant-key"
+            if key_path.exists():
+                token = key_path.read_text(encoding="utf-8").strip()
+        except Exception:  # noqa: BLE001 — auth is best-effort; never break emission
+            token = ""
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
 def emit_signal(signal: dict, url: str, timeout: float = 10.0) -> dict[str, Any]:
     """POST a Signal.v1 dict to a delta-kernel-shaped ingest endpoint.
 
@@ -340,7 +362,7 @@ def emit_signal(signal: dict, url: str, timeout: float = 10.0) -> dict[str, Any]
         req = urllib.request.Request(
             url,
             data=body,
-            headers={"Content-Type": "application/json"},
+            headers={"Content-Type": "application/json", **_delta_auth_header()},
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=timeout) as resp:

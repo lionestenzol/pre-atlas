@@ -70,6 +70,18 @@ def chain_intake(raw: str, make_ship: bool = False) -> dict:
     if ship is not None:
         storage.append(storage.MINI_SHIPS, ship.to_dict())
 
+    # Spine wire (Option A): when the Atlas/lattice signal wire is active, settle
+    # the secured packet into a DAG so graph_engine emits a Signal.v1 downstream
+    # (delta-kernel -> lattice). Gated on the SAME env var as emission so default
+    # capture behavior is unchanged; fail-soft so a graph fault never undoes a
+    # secured drop. See ~/.claude/rules/common/code-as-furniture.md.
+    if os.environ.get("DROPLIST_ATLAS_SIGNALS_URL"):
+        try:
+            from . import graph_engine
+            graph_engine.run_graph_from_packet(packet)
+        except Exception:  # noqa: BLE001 — the secured drop stands regardless
+            pass
+
     result = {
         "status": "secured",
         "delta_hash": packet.input_hash,

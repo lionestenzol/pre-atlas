@@ -52,8 +52,25 @@ architecture* deliberately replaced by the delta-kernel hub + optogon + lattice.
 - `services/cognitive-sensor/run_daily.py:35` → hardcodes `http://localhost:3005`
 
 cortex is gated (`CORTEX_BRIDGE_APPLY=1`, default off) so this may be a dormant
-path — but the wiring is real, which the autopsy flatly denied. **OPEN DECISION:
-is cortex→mosaic live or dead code? Settle before retiring mosaic-orchestrator.**
+path — but the wiring is real, which the autopsy flatly denied.
+
+**RESOLVED 2026-06-24 — cortex→mosaic is dormant human-triggered dead code, not a
+live dependency. mosaic-orchestrator's DEAD verdict HOLDS.** Evidence:
+- Nothing in any backend creates `RUN_PIPELINE`/`COMPUTE_METRIC` intents — the only
+  creators are buttons + a regex parser in cortex `dashboard.html:130,133,189-192`
+  (`quickFire('run_pipeline','mosaic',…)`). `rg "RUN_PIPELINE|COMPUTE_METRIC"` over
+  `src/` returns only the enum defs + `@template` decorators.
+- cognitive-sensor `run_daily.py:167` POSTs `:3005/api/v1/workflows/daily`, but
+  `run_daily` has no cron/launch entry; it runs only via the manual `atlas daily`
+  CLI (`atlas_cli.py:17`), and `atlas_agent.py:91` *inlines* the steps rather than
+  calling it.
+- The cortex executor (`executor.py:157-165`) WOULD fire the HTTP call — so these
+  are real, latent call sites, just never triggered autonomously.
+
+**Cleanup (not revive):** to make those two manual features work, repoint them at
+the live superseder (optogon / delta-kernel) or delete the dead call sites — do NOT
+revive mosaic-orchestrator. Sites: cortex `dashboard.html:130,133` + `planner.py`
+RUN_PIPELINE/COMPUTE_METRIC templates; cognitive-sensor `run_daily.py:35,167`.
 
 ## The one to revive: triangulation
 

@@ -23,6 +23,7 @@ inline (2026-06-20), not documented-and-left.
 
 from __future__ import annotations
 
+import json
 import os
 import secrets
 from pathlib import Path
@@ -31,6 +32,15 @@ from fastapi import Header, HTTPException
 
 TOKEN_ENV = "ATLAS_WRITE_TOKEN"
 TOKEN_FILENAME = ".atlas-write-token"
+
+# Role-token registry (used by /describe enforcement). Maps additional tokens to a
+# role NAME so a caller's role is derived from the token they present, not from a
+# self-asserted query param. The privileged write token always resolves to "root".
+ROLE_TOKENS_ENV = "ATLAS_ROLE_TOKENS"          # JSON: {"<token>": "<role>", ...}
+ROLE_TOKENS_FILENAME = ".atlas-role-tokens.json"  # gitignored, same shape
+DEFAULT_CALLER_ROLE = "anon"                   # no token / unknown token => least privilege
+
+_role_tokens: dict[str, str] | None = None
 
 # Resolved once per process and reused. Set by load_or_create_token() (called at
 # startup) or lazily by the dependency so tests / bare TestClient still work.
@@ -108,3 +118,64 @@ async def require_write_token(x_atlas_token: str | None = Header(default=None)) 
     expected = _ensure_token()
     if not x_atlas_token or not secrets.compare_digest(x_atlas_token, expected):
         raise HTTPException(401, "missing or invalid X-Atlas-Token")
+
+
+# ---------------------------------------------------------------------------
+# Role-token registry — derive a caller's ROLE from the token they present.
+# This is what turns /describe from a self-asserted demo (?role=root) into an
+# enforced surface: the token IS the role; the query param can only narrow.
+# ---------------------------------------------------------------------------
+def _role_tokens_file(repo_root: Path) -> Path:
+    return repo_root / ROLE_TOKENS_FILENAME
+
+
+def load_role_tokens(repo_root: Path) -> dict[str, str]:
+    """Resolve the {token: role_name} map from env + gitignored file (cached).
+
+    Both sources are optional — with neither configured, only the privileged write
+    token (=> root) and the implicit anon fallback exist. Fail-soft: malformed
+    config yields an empty map rather than crashing.
+    """
+    global _role_tokens
+    if _role_tokens is not None:
+        return _role_tokens
+
+    mapping: dict[str, str] = {}
+
+    raw_env = os.environ.get(ROLE_TOKENS_ENV)
+    if raw_env and raw_env.strip():
+        try:
+            parsed = json.loads(raw_env)
+            if isinstance(parsed, dict):
+                mapping.update({str(k): str(v) for k, v in parsed.items()})
+        except json.JSONDecodeError:
+            pass
+
+    f = _role_tokens_file(repo_root)
+    try:
+        if f.is_file():
+            parsed = json.loads(f.read_text(encoding="utf-8"))
+            if isinstance(parsed, dict):
+                mapping.update({str(k): str(v) for k, v in parsed.items()})
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    _role_tokens = mapping
+    return _role_tokens
+
+
+def resolve_caller_role(token: str | None, repo_root: Path) -> str:
+    """Map a presented X-Atlas-Token to a role NAME. Fail-safe: anything we can't
+    positively authorize resolves to the least-privileged role.
+
+    Precedence: privileged write token => 'root'; else role-token registry; else
+    anon. Uses constant-time comparison for the write token to avoid timing leaks.
+    """
+    if not token:
+        return DEFAULT_CALLER_ROLE
+    try:
+        if secrets.compare_digest(token, _ensure_token()):
+            return "root"
+    except Exception:
+        pass
+    return load_role_tokens(repo_root).get(token, DEFAULT_CALLER_ROLE)

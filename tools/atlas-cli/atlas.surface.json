@@ -1,0 +1,88 @@
+{
+  "surface": "atlas-cli",
+  "headline": "Typer CLI front-end over atlas-map-api (:3072) — query the Pre Atlas system map (locate/neighbors/path/search) from any cwd, plus an admin snapshot reload.",
+  "kind": "cli",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "where",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "atlas where",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:111"
+    },
+    {
+      "id": "locate",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "atlas locate <file>",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:137"
+    },
+    {
+      "id": "neighbors",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "atlas neighbors <name> -n <hops>",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:156"
+    },
+    {
+      "id": "path",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "atlas path <from> <to>",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:181"
+    },
+    {
+      "id": "search",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "atlas search <query>",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:205"
+    },
+    {
+      "id": "status",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "atlas status",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:238"
+    },
+    {
+      "id": "list",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "atlas list --group <g>",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:260"
+    },
+    {
+      "id": "show",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "atlas show <name>",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:292"
+    },
+    {
+      "id": "reload",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "atlas reload",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:314"
+    },
+    {
+      "id": "open",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "atlas open [name]",
+      "evidence": "tools/atlas-cli/src/atlas_cli/main.py:326"
+    }
+  ]
+}

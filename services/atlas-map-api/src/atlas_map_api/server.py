@@ -25,11 +25,13 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
-from fastapi import Body, Depends, FastAPI, HTTPException, Query
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from rapidfuzz import fuzz
 
 from . import auth
+from . import describe as describe_mod
 from . import items as items_backbone
 from . import launcher
 from . import surfaces as surfaces_mod
@@ -98,6 +100,8 @@ async def root() -> dict[str, Any]:
             "/map/path?from=X&to=Y",
             "/map/search?q=<q>&limit=N",
             "/map/signals",
+            "/describe",
+            "/describe/{surface}?role=R&format=json|text",
             "/map/viewer?probe=true",
             "POST /map/start/{name}",
             "POST /map/stop/{name}",
@@ -430,6 +434,49 @@ async def item_workflow(item_id: str) -> dict[str, Any]:
     if not result.get("ok"):
         raise HTTPException(404, result.get("error", "workflow not found"))
     return result
+
+
+@app.get("/describe")
+async def describe_index() -> dict[str, Any]:
+    """Discovery: which roles exist, and which surfaces have declared themselves.
+
+    The roles are the 'test-takers'; each surface listed here will hand a
+    different form to each role via /describe/{surface}.
+    """
+    snap, _ = _ensure_loaded()
+    return {
+        "roles": [r.to_dict() for r in describe_mod.ROLES.values()],
+        "default_role": describe_mod.DEFAULT_ROLE,
+        "surfaces": describe_mod.described_surfaces(snap.repo_root),
+    }
+
+
+@app.get("/describe/{surface}")
+async def describe_surface_endpoint(
+    surface: str,
+    role: str | None = Query(None, description="Request a NARROWER preview role (cannot escalate past your token)"),
+    format: str = Query("json", description="json | text"),
+    x_atlas_token: str | None = Header(default=None),
+) -> Any:
+    """The headless, caller-scoped self-description of one surface — its 'form'.
+
+    The caller's role is DERIVED from their X-Atlas-Token (no token => anon). The
+    `role` query param may only *narrow* that role (preview a lower form), never
+    escalate it — so `?role=root` from an unauthenticated caller still yields the
+    anon form. Higher-criticality capabilities are progressively redacted unless
+    cleared; criticality>=2 redactions carry an existence proof. Pass format=text
+    for the screen-reader / CLI / TTS narration of the same descriptor.
+    """
+    snap, _ = _ensure_loaded()
+    overlay = describe_mod.load_overlay(snap.repo_root, surface)
+    if overlay is None:
+        raise HTTPException(404, f"surface '{surface}' has not declared a self-description overlay")
+    token_role = describe_mod.resolve_role(auth.resolve_caller_role(x_atlas_token, snap.repo_root))
+    effective = describe_mod.narrow_role(token_role, role)
+    form = describe_mod.describe_surface(overlay, effective, secret=auth.current_token())
+    if format == "text":
+        return PlainTextResponse(describe_mod.render_text(form))
+    return form
 
 
 @app.get("/map/signals")

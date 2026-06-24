@@ -49,6 +49,9 @@ dist-ssr/
 # === atlas-map-api write-token (auto-generated shared secret, never commit) ===
 .atlas-write-token
 
+# === atlas-map-api role-token registry (maps tokens -> describe roles, never commit) ===
+.atlas-role-tokens.json
+
 # === Large data files (too big for git) ===
 # These are source data files, not version controlled
 services/cognitive-sensor/results.db

@@ -1,0 +1,67 @@
+{
+  "surface": "optogon",
+  "headline": "FastAPI path-runner that drives doctrine paths turn-by-turn, executes via Codex, and emits/serves signals",
+  "capabilities": [
+    {
+      "id": "health",
+      "label": "Check the engine health",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /health"
+    },
+    {
+      "id": "list_paths",
+      "label": "List available doctrine paths",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /paths"
+    },
+    {
+      "id": "session_start",
+      "label": "Start a path session and run the first turn",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /session/start",
+      "needs": ["path_id", "initial_context"]
+    },
+    {
+      "id": "session_turn",
+      "label": "Advance a session with a message",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /session/{session_id}/turn",
+      "needs": ["session_id", "message"]
+    },
+    {
+      "id": "session_run",
+      "label": "One-shot drive a path to completion (auto-executes Codex)",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 2,
+      "invoke": "POST /session/run",
+      "needs": ["path_id", "initial_context"]
+    },
+    {
+      "id": "session_get",
+      "label": "Read a session's full state",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /session/{session_id}",
+      "needs": ["session_id"]
+    },
+    {
+      "id": "signals_list",
+      "label": "List emitted signals",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /signals",
+      "needs": ["since"]
+    }
+  ]
+}

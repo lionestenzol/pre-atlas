@@ -1,0 +1,50 @@
+{
+  "surface": "memory-hub",
+  "headline": "Aggregates memory across droplist, idea-registry, cognitive-sensor, and mirofish into one search/save surface",
+  "capabilities": [
+    {
+      "id": "status",
+      "label": "Check store health",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /healthz"
+    },
+    {
+      "id": "search",
+      "label": "Search aggregated memory across all sources",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "POST /search",
+      "needs": ["q", "max_results", "sources"]
+    },
+    {
+      "id": "get_idea",
+      "label": "Look up an idea by canonical id",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /idea/{canonical_id}",
+      "needs": ["canonical_id"]
+    },
+    {
+      "id": "graph_entity",
+      "label": "Get graph neighbors for an entity",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /entity/{name}",
+      "needs": ["name", "max_results"]
+    },
+    {
+      "id": "save",
+      "label": "Append a packet to the droplist store",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /save",
+      "needs": ["type", "content", "source", "metadata"]
+    }
+  ]
+}

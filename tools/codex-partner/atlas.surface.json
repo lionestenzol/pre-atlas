@@ -1,0 +1,62 @@
+{
+  "surface": "codex-partner",
+  "headline": "Codex companion CLI — one-shot delegate.py wrapper that auto-starts Optogon and drives the delegate_to_codex path to run OpenAI Codex, returning prose or schema-typed JSON.",
+  "kind": "cli",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "delegate-intent",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 3,
+      "invoke": "python tools/codex-partner/delegate.py \"<intent>\"",
+      "evidence": "tools/codex-partner/delegate.py:124-160",
+      "notes": "Primary command. Positional intent string is classified and routed; on match Codex executes (default sandbox read-only, may escalate to workspace-write per outputs.sandbox). Exec of an external agent over the codebase => criticality 3."
+    },
+    {
+      "id": "delegate-cwd",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 3,
+      "invoke": "python tools/codex-partner/delegate.py \"<intent>\" --cwd \"C:/path\"",
+      "evidence": "tools/codex-partner/delegate.py:127,155",
+      "notes": "Sets the working directory Codex operates in; targets which tree the delegated exec can read/write."
+    },
+    {
+      "id": "delegate-schema",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 2,
+      "invoke": "python tools/codex-partner/delegate.py \"<intent>\" --schema tools/codex-partner/schemas/<name>.schema.json",
+      "evidence": "tools/codex-partner/delegate.py:128-129,150-158",
+      "notes": "Typed handoff: passes output_schema_path so Codex returns schema-constrained JSON (review/decision/fact-extract/diff-summary) instead of prose."
+    },
+    {
+      "id": "delegate-no-autostart",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "python tools/codex-partner/delegate.py \"<intent>\" --no-autostart",
+      "evidence": "tools/codex-partner/delegate.py:131-140",
+      "notes": "Disables the Optogon auto-spawn; fails with exit 3 if :3010 is down. Controls lifecycle/spawn behavior."
+    },
+    {
+      "id": "optogon-autostart",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "python tools/codex-partner/delegate.py \"<intent>\"  (implicit when :3010 down)",
+      "evidence": "tools/codex-partner/delegate.py:76-109",
+      "notes": "Side effect of the default run: detaches a uvicorn process serving optogon.main:app on 127.0.0.1:3010 and waits up to 30s for /health. Spawns a long-lived background service."
+    },
+    {
+      "id": "optogon-health-probe",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "python tools/codex-partner/delegate.py \"<intent>\"  (preflight GET /health)",
+      "evidence": "tools/codex-partner/delegate.py:54-59,136",
+      "notes": "Read-only liveness check against http://127.0.0.1:3010/health before any work; the safe public status read on this surface."
+    }
+  ]
+}

@@ -26,6 +26,8 @@ from typing import Optional
 from fastmcp import FastMCP
 from rapidfuzz import fuzz
 
+from . import auth
+from . import describe as describe_mod
 from .graph import ServiceGraph
 from .loader import MapSnapshot, load_snapshot
 
@@ -266,6 +268,49 @@ async def atlas_reload() -> dict:
     _graph = None
     snap, _ = _ensure()
     return {"status": "ok", "loaded_at": _loaded_at, "subsystem_count": len(snap.subsystems)}
+
+
+@mcp.tool()
+async def atlas_describe(surface: str, role: str = "agent") -> dict:
+    """Headless, caller-scoped self-description of a surface — the agent-facing 'form'.
+
+    Returns what an agent at `role` may do with `surface` right now: its state slot,
+    the available actions (with how to invoke them), capabilities locked one
+    clearance step away, and a count + existence proofs of fully-redacted ones.
+    This is the 'OpenRouter for my services' agent surface — one call tells an agent
+    exactly which of a service's capabilities are safe for it to use.
+
+    Args:
+        surface: A described service name (see atlas_describe_list).
+        role: anon | agent-ro | agent | operator | root (default agent — agents get
+              less than the hands-on human operator by design).
+
+    Returns:
+        The caller's form {surface, form_id, caller, fields, locked, redacted,
+        redacted_proofs, totals}, or {error} if the surface has no overlay.
+    """
+    snap, _ = _ensure()
+    overlay = describe_mod.load_overlay(snap.repo_root, surface)
+    if overlay is None:
+        return {"error": f"surface '{surface}' has not declared a self-description overlay"}
+    resolved = describe_mod.resolve_role(role)
+    return describe_mod.describe_surface(overlay, resolved, secret=auth.current_token())
+
+
+@mcp.tool()
+async def atlas_describe_list() -> dict:
+    """Discovery for the self-description layer: which roles exist and which surfaces
+    have declared themselves.
+
+    Returns:
+        {roles: [{role, clearance, exposure, directions}], default_role, surfaces: [...]}
+    """
+    snap, _ = _ensure()
+    return {
+        "roles": [r.to_dict() for r in describe_mod.ROLES.values()],
+        "default_role": describe_mod.DEFAULT_ROLE,
+        "surfaces": describe_mod.described_surfaces(snap.repo_root),
+    }
 
 
 def run() -> None:

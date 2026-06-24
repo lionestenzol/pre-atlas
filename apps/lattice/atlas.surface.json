@@ -1,0 +1,80 @@
+{
+  "surface": "lattice",
+  "headline": "Single-file viewmodel UI (tree/graph/timeline) over Atlas work items; reads delta-kernel /api/lattice/viewmodel, corrects status/project back via Replicache and writes backbone status through atlas-map-api.",
+  "kind": "ui",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "switch-view",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "Click tree/graph/timeline view tab",
+      "evidence": "apps/lattice/index.html:2501"
+    },
+    {
+      "id": "filter-sidebar",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "Click sidebar project/status filter (all/active/blocked/project)",
+      "evidence": "apps/lattice/index.html:1326"
+    },
+    {
+      "id": "focus-in-graph",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "Right-click item -> show in graph (or click node)",
+      "evidence": "apps/lattice/index.html:2310"
+    },
+    {
+      "id": "graph-knobs",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "Click knobs (settings) then toggle reach/node-types/tier",
+      "evidence": "apps/lattice/index.html:2353"
+    },
+    {
+      "id": "add-item",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Click add (or inline new-item row) and type a title",
+      "evidence": "apps/lattice/index.html:1959"
+    },
+    {
+      "id": "correct-status",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Right-click item -> pick status pill (open/active/blocked/done/dropped)",
+      "evidence": "apps/lattice/index.html:2308"
+    },
+    {
+      "id": "correct-project",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Right-click item -> pick project pip (correctProject via Replicache push to /api/lattice/correct)",
+      "evidence": "apps/lattice/index.html:2321"
+    },
+    {
+      "id": "backbone-write-through",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "Right-click backbone (bb:) item -> set status; POSTs atlas-map-api /items/{id}/status with X-Atlas-Token",
+      "evidence": "apps/lattice/index.html:1991"
+    },
+    {
+      "id": "delete-item",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "Right-click item -> delete item",
+      "evidence": "apps/lattice/index.html:2318"
+    }
+  ]
+}

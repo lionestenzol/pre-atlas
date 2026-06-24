@@ -1,0 +1,35 @@
+{
+  "surface": "cognitive-sensor",
+  "headline": "FastAPI triage server (127.0.0.1:8765) — read conversations by index, record triage verdicts that fan out atlas-sync + Optogon reasoning, serve atlas viewer HTML.",
+  "kind": "http",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "get-conv",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /api/conv/{idx}",
+      "evidence": "services/cognitive-sensor/triage_server.py:188",
+      "notes": "Returns one full conversation (title + messages) by numeric index into memory_db.json. 400 on non-int, 404 out of range."
+    },
+    {
+      "id": "post-decide",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /api/decide",
+      "evidence": "services/cognitive-sensor/triage_server.py:212",
+      "notes": "Upserts a triage verdict (KEEP/CLOSE/MINE/ARCHIVE/REVIEW/DROP/DONE/SKIP) into thread_decisions.json, then fires _run_sync_pipeline (fs_actor.py + decisions_to_atlas.py) on a daemon thread; REVIEW on fs- cards also starts an Optogon triage session."
+    },
+    {
+      "id": "static-viewers",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /thread_cards.html",
+      "evidence": "services/cognitive-sensor/triage_server.py:246",
+      "notes": "StaticFiles mount over the service dir (html=True). Serves thread_cards.html, cognitive_atlas.html and other atlas viewers; '/' returns index.html. Closest thing to a public read/health surface."
+    }
+  ]
+}

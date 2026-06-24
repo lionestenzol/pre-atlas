@@ -1,0 +1,98 @@
+{
+  "surface": "fest-reconcile",
+  "headline": "Phased CLI pipeline that reconciles fest-declared progress against disk/git/memory/corpus evidence and emits ranked JSON ship-evidence artifacts.",
+  "kind": "cli",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "reconcile",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python reconcile.py",
+      "evidence": "tools/fest-reconcile/reconcile.py:131",
+      "notes": "Runs fest list, scores each festival vs disk/git/MEMORY evidence; writes festival_evidence.json."
+    },
+    {
+      "id": "portfolio",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python portfolio.py",
+      "evidence": "tools/fest-reconcile/portfolio.py:248",
+      "notes": "Portfolio-wide ship-evidence audit across repos/GitHub/skills/Pre-Atlas internals; writes portfolio_evidence.json."
+    },
+    {
+      "id": "corpus-recon",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python corpus_recon.py",
+      "evidence": "tools/fest-reconcile/corpus_recon.py:315",
+      "notes": "Cross-references ChatGPT memory_db conversations vs portfolio; emits discussed/shipped buckets."
+    },
+    {
+      "id": "cc-corpus-recon",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python cc_corpus_recon.py",
+      "evidence": "tools/fest-reconcile/cc_corpus_recon.py:353",
+      "notes": "Same recon over ~1000 Claude Code session .jsonl transcripts vs portfolio."
+    },
+    {
+      "id": "temporal-index",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python phase1_temporal_index.py all",
+      "evidence": "tools/fest-reconcile/phase1_temporal_index.py:205",
+      "notes": "Phase 1. Subcommand seq in {chatgpt,cc,fs,all}; builds *_temporal.json and updates _progress.json ledger."
+    },
+    {
+      "id": "seed-clusters",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python seed_clusters.py",
+      "evidence": "tools/fest-reconcile/seed_clusters.py:288",
+      "notes": "Phase 2 Seq 01. Groups portfolio items into topic clusters; writes clusters_v0.json (--v2 for v2 path)."
+    },
+    {
+      "id": "expand-clusters",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python expand_clusters.py",
+      "evidence": "tools/fest-reconcile/expand_clusters.py:179",
+      "notes": "Phase 2 Seq 02. Expands clusters with co-occurring corpus terms; writes clusters_v1.json."
+    },
+    {
+      "id": "validate-clusters",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python validate_clusters.py",
+      "evidence": "tools/fest-reconcile/validate_clusters.py:130",
+      "notes": "Phase 2 Seq 03. Computes coverage/distinctness/FP-sample diagnostics; writes clusters_final.json."
+    },
+    {
+      "id": "build-era-matrix",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python build_era_matrix.py --era-label L --start YYYY-MM-DD --end YYYY-MM-DD --out PATH",
+      "evidence": "tools/fest-reconcile/build_era_matrix.py:87",
+      "notes": "Phase 3. Builds per-era cluster count matrix for a date window."
+    },
+    {
+      "id": "ship-flow",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python ship_flow.py",
+      "evidence": "tools/fest-reconcile/ship_flow.py:159",
+      "notes": "Phase 4. Joins ChatGPT idea / CC build / FS ship per strong-band item; writes ship_flow.json."
+    }
+  ]
+}

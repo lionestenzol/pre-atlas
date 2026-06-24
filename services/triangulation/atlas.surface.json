@@ -1,0 +1,7 @@
+{
+  "surface": "triangulation",
+  "headline": "Phase B HTTP stub — never launched; do not build on this surface.",
+  "kind": "http",
+  "lifecycle": "stub",
+  "capabilities": []
+}

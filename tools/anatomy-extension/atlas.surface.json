@@ -1,0 +1,64 @@
+{
+  "surface": "anatomy-extension",
+  "headline": "Chrome MV3 extension that overlays an annotation/anatomy HUD on any page; Alt+click labels elements, popup toggles/exports/clears, side-panel hover lights regions.",
+  "kind": "ui",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "popup-status",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "Open popup (reads scope + label count)",
+      "evidence": "popup.js:13 refresh() -> send('status'); content.js:2682 reply({ on, count, scope })"
+    },
+    {
+      "id": "popup-toggle",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Click toggle (turn on/off) in popup",
+      "evidence": "popup.js:20 toggle click -> send('toggle'); content.js:2681 setOn(!state.on)"
+    },
+    {
+      "id": "alt-click-label",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Alt+click any page element to label it",
+      "evidence": "content.js:181 onClick if(!e.altKey) return; content.js:186 promptLabel(e.target, ...)"
+    },
+    {
+      "id": "panel-hover-light",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "Hover a label/dot in the side panel to light its region",
+      "evidence": "content.js:809 mouseenter -> lightN(c.dataset.n); content.js:152 dot mouseenter -> showTooltip"
+    },
+    {
+      "id": "hud-toggle-overlays",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Click HUD numbers/labels/lines toggle buttons",
+      "evidence": "content.js:865 numbersBtn click toggle no-numbers; content.js:872 labelsBtn; content.js:878 linesBtn -> drawLeaderLines()"
+    },
+    {
+      "id": "popup-export",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Click export in popup (download labels)",
+      "evidence": "popup.js:24 export click -> send('export'); content.js:2683 doExport()"
+    },
+    {
+      "id": "popup-clear-page",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "Click clear page in popup (confirm-gated wipe of all labels for scope)",
+      "evidence": "popup.js:27 clear click -> confirm() then send('clear'); content.js:2684 state.labels[scopeKey()]=[]; save()"
+    }
+  ]
+}

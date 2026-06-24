@@ -198,6 +198,17 @@ def test_describe_unknown_surface_404():
     assert client.get("/describe/does-not-exist?role=root").status_code == 404
 
 
+def test_describe_state_none_without_live():
+    assert client.get("/describe/delta-kernel").json()["state"] is None
+
+
+def test_describe_live_populates_state():
+    body = client.get("/describe/delta-kernel?live=1").json()
+    assert body["state"] is not None and body["state"]["probed"] is True
+    assert body["state"]["via"] == "health"  # probed the public health read
+    assert "reachable" in body["state"]
+
+
 def test_render_text_no_actions_case():
     overlay = d.SurfaceOverlay("x", "headline", (
         d.Capability("secret", "Secret", "write", "internal", 3, "POST /x"),

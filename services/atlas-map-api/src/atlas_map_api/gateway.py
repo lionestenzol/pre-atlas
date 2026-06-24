@@ -163,8 +163,13 @@ def build_argv(invoke: str, args: dict[str, Any]) -> tuple[list[str], str | None
 # ---------------------------------------------------------------------------
 # Enforcement
 # ---------------------------------------------------------------------------
-def _enforce(snap: MapSnapshot, surface: str, capability_id: str, args: dict[str, Any] | None, token: str | None):
-    """Return (overlay, capability, role) on success, or a refusal dict."""
+def _enforce(snap: MapSnapshot, surface: str, capability_id: str, args: dict[str, Any] | None,
+             token: str | None, role_name: str | None = None):
+    """Return (overlay, capability, role) on success, or a refusal dict.
+
+    role_name, when given, is an in-process trust assertion (the MCP path runs in
+    the user's local session and has no HTTP token) — it sets the role directly.
+    The HTTP path leaves it None and derives the role from the token."""
     overlay = describe_mod.load_overlay(snap.repo_root, surface)  # surface name validated inside
     if overlay is None:
         return _refusal(404, f"surface '{surface}' has no self-description")
@@ -172,7 +177,7 @@ def _enforce(snap: MapSnapshot, surface: str, capability_id: str, args: dict[str
     if cap is None:
         return _refusal(404, f"capability '{capability_id}' not found on '{surface}'")
 
-    role = describe_mod.resolve_role(auth.resolve_caller_role(token, snap.repo_root))
+    role = describe_mod.resolve_role(role_name or auth.resolve_caller_role(token, snap.repo_root))
     form = describe_mod.describe_surface(overlay, role)
     if capability_id not in {f["id"] for f in form["fields"]}:
         return _refusal(403, f"'{capability_id}' not available to role '{role.name}'")
@@ -182,8 +187,12 @@ def _enforce(snap: MapSnapshot, surface: str, capability_id: str, args: dict[str
     if undeclared:
         return _refusal(400, f"undeclared args rejected: {sorted(undeclared)} (allowed: {sorted(allowed)})")
 
-    if is_write(overlay.kind, cap) and not WRITES_ENABLED:
-        return _refusal(501, "writes are gated off (set DESCRIBE_GATEWAY_WRITES=1)")
+    if is_write(overlay.kind, cap):
+        if not WRITES_ENABLED:
+            return _refusal(501, "writes are gated off (set DESCRIBE_GATEWAY_WRITES=1)")
+        scope = auth.caller_write_surfaces(token, snap.repo_root)
+        if scope is not None and surface not in scope:
+            return _refusal(403, f"token is not write-scoped to '{surface}'")
     return overlay, cap, role
 
 
@@ -257,11 +266,34 @@ def _invoke_cli(snap, surface, cap, role, args) -> dict[str, Any]:
     )
 
 
+async def fetch_state(snap: MapSnapshot, surface: str) -> dict[str, Any]:
+    """Probe a surface's own public health/status read to fill the /describe `state`
+    slot — the surface reporting its current state ("contextually self-aware"). Uses
+    the gateway as anon (public reads only), fail-soft."""
+    overlay = describe_mod.load_overlay(snap.repo_root, surface)
+    if overlay is None or overlay.kind != "http":
+        return {"probed": False, "reason": "not an http surface"}
+    # GET verb (not just the read label) so a mislabeled mutating POST can't be probed.
+    publics = [
+        c for c in overlay.capabilities
+        if c.direction == "read" and c.exposure == "public" and parse_invoke(c.invoke)[0] == "GET"
+    ]
+    health = next(
+        (c for c in publics if c.id in ("status", "health", "healthz")
+         or "health" in c.invoke.lower()),
+        publics[0] if publics else None,
+    )
+    if health is None:
+        return {"probed": False, "reason": "no public read capability"}
+    res = await call_capability(snap, surface, health.id, None, token=None)  # anon, public read
+    return {"probed": True, "via": health.id, "reachable": bool(res.get("ok")), "report": res.get("data")}
+
+
 async def call_capability(
     snap: MapSnapshot, surface: str, capability_id: str,
-    args: dict[str, Any] | None, token: str | None,
+    args: dict[str, Any] | None, token: str | None, role_name: str | None = None,
 ) -> dict[str, Any]:
-    enforced = _enforce(snap, surface, capability_id, args, token)
+    enforced = _enforce(snap, surface, capability_id, args, token, role_name)
     if isinstance(enforced, dict):
         return enforced
     overlay, cap, role = enforced

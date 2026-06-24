@@ -27,6 +27,7 @@ import json
 import os
 import secrets
 from pathlib import Path
+from typing import Any
 
 from fastapi import Header, HTTPException
 
@@ -129,39 +130,64 @@ def _role_tokens_file(repo_root: Path) -> Path:
     return repo_root / ROLE_TOKENS_FILENAME
 
 
-def load_role_tokens(repo_root: Path) -> dict[str, str]:
-    """Resolve the {token: role_name} map from env + gitignored file (cached).
+def _normalize_entry(raw: Any) -> dict[str, Any]:
+    """Coerce a role-token value to {role, write_surfaces}. A bare string is a role
+    with no write scoping; a dict may add `write_surfaces: [..]` to restrict which
+    surfaces that token may WRITE (reads are unaffected). None => all surfaces."""
+    if isinstance(raw, dict):
+        # Absent key => no extra restriction (role-based writes). Present but not a
+        # list (a typo like "droplist" or an explicit null) => deny-all, fail-closed:
+        # a misconfigured scope must never silently widen to all surfaces.
+        if "write_surfaces" not in raw:
+            scope: list[str] | None = None
+        elif isinstance(raw["write_surfaces"], list):
+            scope = [str(s) for s in raw["write_surfaces"]]
+        else:
+            scope = []
+        return {"role": str(raw.get("role", DEFAULT_CALLER_ROLE)), "write_surfaces": scope}
+    return {"role": str(raw), "write_surfaces": None}
+
+
+def load_role_tokens(repo_root: Path) -> dict[str, dict[str, Any]]:
+    """Resolve the {token: {role, write_surfaces}} map from env + gitignored file.
 
     Both sources are optional — with neither configured, only the privileged write
-    token (=> root) and the implicit anon fallback exist. Fail-soft: malformed
-    config yields an empty map rather than crashing.
+    token (=> root) and the implicit anon fallback exist. Values may be a role
+    string or a {"role": ..., "write_surfaces": [...]} object. Fail-soft: malformed
+    config yields an empty map rather than crashing. Cached in-process.
     """
     global _role_tokens
     if _role_tokens is not None:
         return _role_tokens
 
-    mapping: dict[str, str] = {}
-
-    raw_env = os.environ.get(ROLE_TOKENS_ENV)
-    if raw_env and raw_env.strip():
+    mapping: dict[str, dict[str, Any]] = {}
+    for source in (os.environ.get(ROLE_TOKENS_ENV), _read_role_tokens_file(repo_root)):
+        if not source:
+            continue
         try:
-            parsed = json.loads(raw_env)
-            if isinstance(parsed, dict):
-                mapping.update({str(k): str(v) for k, v in parsed.items()})
+            parsed = json.loads(source)
         except json.JSONDecodeError:
-            pass
-
-    f = _role_tokens_file(repo_root)
-    try:
-        if f.is_file():
-            parsed = json.loads(f.read_text(encoding="utf-8"))
-            if isinstance(parsed, dict):
-                mapping.update({str(k): str(v) for k, v in parsed.items()})
-    except (OSError, json.JSONDecodeError):
-        pass
+            continue
+        if isinstance(parsed, dict):
+            mapping.update({str(k): _normalize_entry(v) for k, v in parsed.items()})
 
     _role_tokens = mapping
     return _role_tokens
+
+
+def reload_role_tokens() -> None:
+    """Drop the cached role-token map so the next resolve re-reads env + file. Wire
+    into /admin/reload so an operator can rotate/revoke tokens without a restart."""
+    global _role_tokens
+    _role_tokens = None
+
+
+def _read_role_tokens_file(repo_root: Path) -> str | None:
+    f = _role_tokens_file(repo_root)
+    try:
+        return f.read_text(encoding="utf-8") if f.is_file() else None
+    except OSError:
+        return None
 
 
 def resolve_caller_role(token: str | None, repo_root: Path) -> str:
@@ -178,4 +204,22 @@ def resolve_caller_role(token: str | None, repo_root: Path) -> str:
             return "root"
     except Exception:
         pass
-    return load_role_tokens(repo_root).get(token, DEFAULT_CALLER_ROLE)
+    entry = load_role_tokens(repo_root).get(token)
+    return entry["role"] if entry else DEFAULT_CALLER_ROLE
+
+
+def caller_write_surfaces(token: str | None, repo_root: Path) -> set[str] | None:
+    """Which surfaces may this token WRITE? None = no extra restriction (all). A set
+    = the token is scoped to writing only those surfaces. The privileged write token
+    (root) is unrestricted; tokens without a `write_surfaces` clause are too."""
+    if not token:
+        return None
+    try:
+        if secrets.compare_digest(token, _ensure_token()):
+            return None
+    except Exception:
+        pass
+    entry = load_role_tokens(repo_root).get(token)
+    if entry and entry.get("write_surfaces") is not None:
+        return set(entry["write_surfaces"])
+    return None

@@ -141,3 +141,34 @@ def test_low_clearance_meta_does_not_leak_resolved_url():
     # anon reads delta-kernel health -> meta carries the DECLARED invoke, not the host:port URL.
     body = client.post("/call", json={"surface": "delta-kernel", "capability": "health"}).json()
     assert body["meta"].get("invoke") == "GET /api/health"
+
+
+# ---- per-surface write-scoped tokens ------------------------------------------
+def test_write_scoped_token_allows_in_scope_blocks_out_of_scope(monkeypatch):
+    monkeypatch.setattr(gateway, "WRITES_ENABLED", True)
+    monkeypatch.setattr(auth, "_role_tokens", {"scoped-tok": {"role": "agent", "write_surfaces": ["droplist"]}})
+    h = {"X-Atlas-Token": "scoped-tok"}
+    # in-scope write -> reaches invocation
+    r_in = client.post("/call", json={"surface": "droplist", "capability": "drop", "args": {"text": "x"}}, headers=h)
+    assert r_in.status_code == 200 and r_in.json()["kind"] == "http"
+    # out-of-scope write (same agent role can SEE it, but token isn't scoped to it) -> 403
+    r_out = client.post("/call", json={"surface": "delta-kernel", "capability": "emit_signal", "args": {"signal": "x"}}, headers=h)
+    assert r_out.status_code == 403
+
+
+def test_caller_write_surfaces(monkeypatch):
+    repo = load_snapshot().repo_root
+    monkeypatch.setattr(auth, "_role_tokens", {"scoped-tok": {"role": "agent", "write_surfaces": ["droplist"]}})
+    assert auth.caller_write_surfaces("scoped-tok", repo) == {"droplist"}
+    assert auth.caller_write_surfaces(auth.current_token(), repo) is None  # root unrestricted
+    assert auth.caller_write_surfaces(None, repo) is None
+
+
+def test_malformed_write_surfaces_fails_closed(monkeypatch):
+    repo = load_snapshot().repo_root
+    # a string typo instead of a list must DENY all writes, not silently grant them.
+    monkeypatch.setattr(auth, "_role_tokens", {"typo": auth._normalize_entry({"role": "agent", "write_surfaces": "droplist"})})
+    assert auth.caller_write_surfaces("typo", repo) == set()
+    # absent key -> unrestricted (role-based)
+    monkeypatch.setattr(auth, "_role_tokens", {"plain": auth._normalize_entry({"role": "agent"})})
+    assert auth.caller_write_surfaces("plain", repo) is None

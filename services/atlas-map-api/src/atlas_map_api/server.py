@@ -140,6 +140,7 @@ async def reload_snapshot() -> dict[str, Any]:
     global _snapshot, _graph, _loaded_at
     _snapshot = None
     _graph = None
+    auth.reload_role_tokens()  # pick up rotated/revoked role tokens without a restart
     snap, _ = _ensure_loaded()
     return {"status": "ok", "loaded_at": _loaded_at, "subsystem_count": len(snap.subsystems)}
 
@@ -457,6 +458,7 @@ async def describe_surface_endpoint(
     surface: str,
     role: str | None = Query(None, description="Request a NARROWER preview role (cannot escalate past your token)"),
     format: str = Query("json", description="json | text"),
+    live: bool = Query(False, description="Probe the surface's public health read to fill `state`"),
     x_atlas_token: str | None = Header(default=None),
 ) -> Any:
     """The headless, caller-scoped self-description of one surface — its 'form'.
@@ -475,6 +477,8 @@ async def describe_surface_endpoint(
     token_role = describe_mod.resolve_role(auth.resolve_caller_role(x_atlas_token, snap.repo_root))
     effective = describe_mod.narrow_role(token_role, role)
     form = describe_mod.describe_surface(overlay, effective, secret=auth.current_token())
+    if live:
+        form["state"] = await gateway_mod.fetch_state(snap, surface)
     if format == "text":
         return PlainTextResponse(describe_mod.render_text(form))
     return form

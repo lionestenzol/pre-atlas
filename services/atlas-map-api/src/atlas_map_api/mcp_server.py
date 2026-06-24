@@ -28,6 +28,7 @@ from rapidfuzz import fuzz
 
 from . import auth
 from . import describe as describe_mod
+from . import gateway as gateway_mod
 from .graph import ServiceGraph
 from .loader import MapSnapshot, load_snapshot
 
@@ -293,7 +294,8 @@ async def atlas_describe(surface: str, role: str = "agent") -> dict:
     overlay = describe_mod.load_overlay(snap.repo_root, surface)
     if overlay is None:
         return {"error": f"surface '{surface}' has not declared a self-description overlay"}
-    resolved = describe_mod.resolve_role(role)
+    # MCP callers earn 'agent'; the role arg may only NARROW it (no previewing root).
+    resolved = describe_mod.narrow_role(describe_mod.resolve_role("agent"), role)
     return describe_mod.describe_surface(overlay, resolved, secret=auth.current_token())
 
 
@@ -311,6 +313,33 @@ async def atlas_describe_list() -> dict:
         "default_role": describe_mod.DEFAULT_ROLE,
         "surfaces": describe_mod.described_surfaces(snap.repo_root),
     }
+
+
+@mcp.tool()
+async def atlas_call(surface: str, capability: str, args: Optional[dict] = None) -> dict:
+    """Invoke a service capability BY NAME through the gateway — the agent's uniform
+    front door (mirror of HTTP POST /call). You can only call a capability your
+    'agent' form shows (see atlas_describe); access is enforced by the registry.
+
+    Reads work out of the box. Writes need the gateway armed (DESCRIBE_GATEWAY_WRITES=1)
+    and a write-capable capability visible to the 'agent' role; cli needs
+    DESCRIBE_GATEWAY_CLI=1. MCP callers act as role 'agent' (agents get less than the
+    hands-on operator by design).
+
+    Args:
+        surface: a described surface name.
+        capability: a capability id on that surface (from atlas_describe).
+        args: declared params only (path placeholders + the capability's `needs`).
+
+    Returns:
+        The normalized envelope {ok, code, surface, capability, kind, status, data,
+        error, meta}, or {error} on a gateway-level refusal.
+    """
+    snap, _ = _ensure()
+    result = await gateway_mod.call_capability(snap, surface, capability, args, token=None, role_name="agent")
+    if result.get("refusal"):
+        return {"error": result["error"], "code": result["code"]}
+    return result
 
 
 def run() -> None:

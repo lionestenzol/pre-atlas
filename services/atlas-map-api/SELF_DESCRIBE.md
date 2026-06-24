@@ -78,8 +78,13 @@ curl -H "X-Atlas-Token: $(cat .atlas-write-token)" \
 curl 'http://127.0.0.1:3072/describe'
 ```
 
-Agents reach the same thing over MCP: `atlas_describe(surface, role="agent")` and
-`atlas_describe_list()`.
+Pass `?live=1` to fill the `state` slot — the gateway probes the surface's own
+public health read and embeds the report, so the form shows what's true *right now*
+(the "contextually self-aware" surface).
+
+Agents reach the same things over MCP: `atlas_describe(surface, role="agent")`,
+`atlas_describe_list()`, and `atlas_call(surface, capability, args)` — the gateway's
+uniform front door for agents (MCP callers act as role `agent`).
 
 ## Layer 3 — the call gateway (`POST /call`)
 
@@ -104,7 +109,9 @@ curl -X POST 'http://127.0.0.1:3072/call' -H "X-Atlas-Token: $(cat .atlas-write-
 **Dispatch by kind:** http surfaces proxy the declared route; cli surfaces run the
 declared command (argv-only, no shell). **Writes are opt-in** (`DESCRIBE_GATEWAY_WRITES=1`)
 and "write" is decided by the HTTP **verb** (POST/PUT/PATCH/DELETE), not just the
-`direction` label — the verb is ground truth. **cli is opt-in** (`DESCRIBE_GATEWAY_CLI=1`).
+`direction` label — the verb is ground truth. A role-token may be **write-scoped**
+to specific surfaces (`{"role":"agent","write_surfaces":["droplist"]}` in
+`.atlas-role-tokens.json`); a malformed scope fails closed (deny-all). **cli is opt-in** (`DESCRIBE_GATEWAY_CLI=1`).
 ui/websocket aren't invocable yet (422). Refusals: 404 unknown, 403 not visible to
 your role, 400 undeclared args, 422 non-invocable kind / no port, 501 write|cli
 gated, 502 upstream unreachable.

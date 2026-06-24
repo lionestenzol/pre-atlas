@@ -4,35 +4,51 @@
     {
       "name": "delta-api",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["tsx", "src/api/server.ts"],
+      "runtimeArgs": [
+        "tsx",
+        "src/api/server.ts"
+      ],
       "port": 3001,
       "cwd": "services/delta-kernel"
     },
     {
       "name": "delta-web",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite"],
+      "runtimeArgs": [
+        "vite"
+      ],
       "port": 5173,
       "cwd": "services/delta-kernel/web"
     },
     {
       "name": "aegis-api",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["tsx", "src/api/server.ts"],
+      "runtimeArgs": [
+        "tsx",
+        "src/api/server.ts"
+      ],
       "port": 3002,
       "cwd": "services/aegis-fabric"
     },
     {
       "name": "blueprint-generator",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev", "-p", "3030"],
+      "runtimeArgs": [
+        "next",
+        "dev",
+        "-p",
+        "3030"
+      ],
       "port": 3030,
       "cwd": "apps/blueprint-generator"
     },
     {
       "name": "mosaic-dashboard",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "autoPort": false,
       "cwd": "services/mosaic-dashboard"
@@ -40,178 +56,378 @@
     {
       "name": "atlas-shell",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["http-server", ".", "-p", "8888", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "http-server",
+        ".",
+        "-p",
+        "8888",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8888
     },
     {
       "name": "cycleboard",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/cognitive-sensor/cycleboard", "-p", "8889", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "services/cognitive-sensor/cycleboard",
+        "-p",
+        "8889",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8889
     },
     {
       "name": "aegis-landing",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/aegis-fabric/landing", "-p", "8890", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "services/aegis-fabric/landing",
+        "-p",
+        "8890",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8890
     },
     {
       "name": "code-converter",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["server.py"],
+      "runtimeArgs": [
+        "server.py"
+      ],
       "port": 3007,
       "cwd": "apps/code-converter"
     },
     {
       "name": "cortex-dashboard",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/cortex", "-p", "8891", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "services/cortex",
+        "-p",
+        "8891",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8891
     },
     {
       "name": "inpact-site-legacy",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "C:/Users/bruke/OneDrive/Desktop/inPACT-site", "-p", "8892", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "C:/Users/bruke/OneDrive/Desktop/inPACT-site",
+        "-p",
+        "8892",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8892
     },
     {
       "name": "inpact",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "apps/inpact", "-p", "3006", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "apps/inpact",
+        "-p",
+        "3006",
+        "-c-1",
+        "--cors"
+      ],
       "port": 3006
     },
     {
       "name": "lattice",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "apps/lattice", "-p", "3011", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "apps/lattice",
+        "-p",
+        "3011",
+        "-c-1",
+        "--cors"
+      ],
       "port": 3011
     },
     {
       "name": "optogon",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "uvicorn", "optogon.main:app", "--host", "127.0.0.1", "--port", "3010"],
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "optogon.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3010"
+      ],
       "port": 3010,
       "cwd": "services/optogon"
     },
     {
       "name": "canvas-engine",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3050,
       "cwd": "services/canvas-engine"
     },
     {
       "name": "ai-exec-pipeline",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["server.py"],
+      "runtimeArgs": [
+        "server.py"
+      ],
       "port": 5000,
       "cwd": "apps/ai-exec-pipeline"
     },
     {
       "name": "anatomy",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "anatomy", "-p", "8894", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "anatomy",
+        "-p",
+        "8894",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8894
     },
     {
       "name": "thread-cards",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/cognitive-sensor", "-p", "8893", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "services/cognitive-sensor",
+        "-p",
+        "8893",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8893
     },
     {
       "name": "tour-test",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "_research/openscreen-lift-test", "-p", "8895", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "_research/openscreen-lift-test",
+        "-p",
+        "8895",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8895
     },
     {
       "name": "anatomy-calibration",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "tools/anatomy-extension", "-p", "8896", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "tools/anatomy-extension",
+        "-p",
+        "8896",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8896
     },
     {
       "name": "triage-server",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["triage_server.py"],
+      "runtimeArgs": [
+        "triage_server.py"
+      ],
       "port": 8765,
       "cwd": "services/cognitive-sensor"
     },
     {
       "name": "openclaw",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "uvicorn", "openclaw.api:app", "--host", "127.0.0.1", "--port", "3004"],
-      "env": {"PYTHONPATH": "src"},
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "openclaw.api:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3004"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      },
       "port": 3004,
       "cwd": "services/openclaw"
     },
     {
       "name": "mosaic-orch",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "uvicorn", "mosaic.main:app", "--host", "127.0.0.1", "--port", "3005"],
-      "env": {"PYTHONPATH": "src"},
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "mosaic.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3005"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      },
       "port": 3005,
       "cwd": "services/mosaic-orchestrator"
     },
     {
       "name": "uasc",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["server.py", "--port", "3008"],
+      "runtimeArgs": [
+        "server.py",
+        "--port",
+        "3008"
+      ],
       "port": 3008,
       "cwd": "services/uasc-executor"
     },
     {
       "name": "cortex",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "uvicorn", "cortex.main:app", "--host", "127.0.0.1", "--port", "3009"],
-      "env": {"PYTHONPATH": "src"},
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "cortex.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3009"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      },
       "port": 3009,
       "cwd": "services/cortex"
     },
     {
       "name": "search-stack",
       "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "uvicorn", "search_stack.server:app", "--host", "127.0.0.1", "--port", "3070"],
-      "env": {"PYTHONPATH": "src"},
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "search_stack.server:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3070"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      },
       "port": 3070,
       "cwd": "services/search-stack"
     },
     {
       "name": "memory-hub",
       "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "uvicorn", "memory_hub.server:app", "--host", "127.0.0.1", "--port", "3071"],
-      "env": {"PYTHONPATH": "src"},
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "memory_hub.server:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3071"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      },
       "port": 3071,
       "cwd": "services/memory-hub"
     },
     {
       "name": "atlas-map-api",
       "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "uvicorn", "atlas_map_api.server:app", "--host", "127.0.0.1", "--port", "3072"],
-      "env": {"PYTHONPATH": "src"},
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "atlas_map_api.server:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3072"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      },
       "port": 3072,
       "cwd": "services/atlas-map-api"
     },
     {
       "name": "droplist",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "uvicorn", "droplist.server:app", "--host", "127.0.0.1", "--port", "3073"],
-      "env": {"DROPLIST_ATLAS_SIGNALS_URL": "http://localhost:3001/api/signals/ingest"},
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "droplist.server:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3073"
+      ],
+      "env": {
+        "DROPLIST_ATLAS_SIGNALS_URL": "http://localhost:3001/api/signals/ingest"
+      },
       "port": 3073,
       "cwd": "services/droplist"
     },
     {
       "name": "droplist-ui",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "services/droplist/ui", "-p", "3074", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "services/droplist/ui",
+        "-p",
+        "3074",
+        "-c-1",
+        "--cors"
+      ],
       "port": 3074
     },
     {
       "name": "audit-map",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "audit", "-p", "8897", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "audit",
+        "-p",
+        "8897",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8897
+    },
+    {
+      "name": "triangulation",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "triangulation.api:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3074"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "port": 3074,
+      "cwd": "services/triangulation"
     }
   ]
 }

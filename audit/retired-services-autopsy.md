@@ -1,5 +1,12 @@
 # Retired-Services Autopsy — verified 2026-06-24
 
+> **UPDATE 2026-06-24:** triangulation **REVIVED** — `api.py` now wraps the working
+> `verify()` in 3 FastAPI endpoints on **port 3074**, registered in the
+> self-description registry (lifecycle `live`, 4 caps) + `.claude/launch.json`.
+> Booted live: `/healthz` ok, `/verify` returns real verdicts. 54/54 tests
+> (46 + 8 new api). The remaining 7 stay dead; the cortex→mosaic question (below)
+> is still open.
+
 > Question (Bruke): *"were these retired because they were bad, or only because
 > they had nothing to connect to?"* — i.e. would the capability registry / spine
 > revive them. Method: 8-agent forensic workflow, then an independent code-recon +

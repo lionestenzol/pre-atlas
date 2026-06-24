@@ -81,14 +81,40 @@ curl 'http://127.0.0.1:3072/describe'
 Agents reach the same thing over MCP: `atlas_describe(surface, role="agent")` and
 `atlas_describe_list()`.
 
+## Layer 3 — the call gateway (`POST /call`)
+
+One front door invokes a capability **by name** — no host/port/route knowledge.
+Access is enforced by the registry: you can only call a capability your own
+`/describe` form shows (not locked, not redacted). The gateway resolves
+surface→port (launch.json runtime truth → snapshot fallback) and proxies the
+declared route to the live service.
+
+```bash
+# anon may invoke a public read through the gateway
+curl -X POST 'http://127.0.0.1:3072/call' \
+     -H 'Content-Type: application/json' \
+     -d '{"surface":"triangulation","capability":"healthz"}'
+
+# an agent/operator invokes an agent-visible capability with args
+curl -X POST 'http://127.0.0.1:3072/call' -H "X-Atlas-Token: $(cat .atlas-write-token)" \
+     -H 'Content-Type: application/json' \
+     -d '{"surface":"triangulation","capability":"verify","args":{"elements":[...]}}'
+```
+
+First brick = the safe half of the hybrid: **read-only http** surfaces. Writes are
+gated (`DESCRIBE_GATEWAY_WRITES=1`), and cli/ui/websocket surfaces aren't
+proxyable yet (422). Refusals: 404 unknown surface/capability, 403 not visible to
+your role, 422 non-http / no port, 501 write gated, 502 upstream unreachable.
+
 ## Verify
 
 ```bash
 ./.venv/Scripts/python.exe scripts/verify_overlays.py   # every endpoint is real
-./.venv/Scripts/python.exe -m pytest -q                 # 88 tests
+./.venv/Scripts/python.exe -m pytest -q                 # 98 tests
 ```
 
-## Deferred (not in this layer)
+## Deferred (next bricks)
 
-Live `state` population (the `state:null` slot), the call-normalization gateway
-(layer 3), and app-UI surfaces (inpact/lattice). See `.weapon/spec.md` CUT_LIST.
+Write-scoped tokens (to ungate `/call` writes safely), call *normalization* (one
+uniform envelope vs today's route-and-proxy), cli/ui capability invocation, and
+live `state` population (the `state:null` slot).

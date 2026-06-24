@@ -32,6 +32,7 @@ from rapidfuzz import fuzz
 
 from . import auth
 from . import describe as describe_mod
+from . import gateway as gateway_mod
 from . import items as items_backbone
 from . import launcher
 from . import surfaces as surfaces_mod
@@ -477,6 +478,30 @@ async def describe_surface_endpoint(
     if format == "text":
         return PlainTextResponse(describe_mod.render_text(form))
     return form
+
+
+@app.post("/call")
+async def call_endpoint(
+    surface: str = Body(...),
+    capability: str = Body(...),
+    args: dict[str, Any] | None = Body(default=None),
+    x_atlas_token: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Layer-3 gateway: invoke a service capability BY NAME through one front door.
+
+    Access is enforced by the registry — you can only call a capability your own
+    /describe form shows (not locked, not redacted). Resolves surface->port and
+    proxies the declared route to the live service. Read-only http surfaces only
+    in this brick; writes gated (DESCRIBE_GATEWAY_WRITES=1), cli/ui not proxyable.
+    """
+    snap, _ = _ensure_loaded()
+    result = await gateway_mod.call_capability(snap, surface, capability, args, x_atlas_token)
+    # Gateway-level failures (enforcement / resolution) carry `error` and no
+    # `response`; a proxied upstream reply always carries `response` and is
+    # returned verbatim even if the upstream status was non-2xx.
+    if "error" in result and "response" not in result:
+        raise HTTPException(result.get("code", 400), result["error"])
+    return result
 
 
 @app.get("/map/signals")

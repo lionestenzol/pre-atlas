@@ -101,10 +101,20 @@ curl -X POST 'http://127.0.0.1:3072/call' -H "X-Atlas-Token: $(cat .atlas-write-
      -d '{"surface":"triangulation","capability":"verify","args":{"elements":[...]}}'
 ```
 
-First brick = the safe half of the hybrid: **read-only http** surfaces. Writes are
-gated (`DESCRIBE_GATEWAY_WRITES=1`), and cli/ui/websocket surfaces aren't
-proxyable yet (422). Refusals: 404 unknown surface/capability, 403 not visible to
-your role, 422 non-http / no port, 501 write gated, 502 upstream unreachable.
+**Dispatch by kind:** http surfaces proxy the declared route; cli surfaces run the
+declared command (argv-only, no shell). **Writes are opt-in** (`DESCRIBE_GATEWAY_WRITES=1`)
+and "write" is decided by the HTTP **verb** (POST/PUT/PATCH/DELETE), not just the
+`direction` label — the verb is ground truth. **cli is opt-in** (`DESCRIBE_GATEWAY_CLI=1`).
+ui/websocket aren't invocable yet (422). Refusals: 404 unknown, 403 not visible to
+your role, 400 undeclared args, 422 non-invocable kind / no port, 501 write|cli
+gated, 502 upstream unreachable.
+
+**Hardening (adversarial-reviewed):** path-param values are percent-encoded (no
+`../` traversal or `?`-query injection past the declared route); caller args must
+match the capability's declared params (no smuggling); cli rejects leading-dash
+values + shell metachars, resolves the exe via PATH (no cwd hijack), and caps
+arg size; surface names are charset-restricted (no filesystem traversal); internal
+URLs/argv/cwd are withheld from low-clearance callers.
 
 ## Verify
 
@@ -115,6 +125,6 @@ your role, 422 non-http / no port, 501 write gated, 502 upstream unreachable.
 
 ## Deferred (next bricks)
 
-Write-scoped tokens (to ungate `/call` writes safely), call *normalization* (one
-uniform envelope vs today's route-and-proxy), cli/ui capability invocation, and
+Per-surface write-scoped tokens (finer than role-level), full call *normalization*
+(one uniform request envelope, not just response), **ui/websocket** invocation, and
 live `state` population (the `state:null` slot).

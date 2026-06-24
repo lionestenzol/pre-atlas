@@ -496,10 +496,10 @@ async def call_endpoint(
     """
     snap, _ = _ensure_loaded()
     result = await gateway_mod.call_capability(snap, surface, capability, args, x_atlas_token)
-    # Gateway-level failures (enforcement / resolution) carry `error` and no
-    # `response`; a proxied upstream reply always carries `response` and is
-    # returned verbatim even if the upstream status was non-2xx.
-    if "error" in result and "response" not in result:
+    # Gateway-level refusals (enforcement / resolution) surface as HTTP errors; a
+    # reached invocation returns its normalized envelope verbatim, even when the
+    # upstream itself failed (the envelope's own `ok`/`status` carry that).
+    if result.get("refusal"):
         raise HTTPException(result.get("code", 400), result["error"])
     return result
 

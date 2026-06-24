@@ -31,9 +31,14 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
+
+# Surface names index into the filesystem (services/apps/tools/<name>) — restrict to
+# a safe charset so a caller-supplied name can never path-traverse out of its group.
+_SAFE_SURFACE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 Direction = Literal["read", "write"]
 Exposure = Literal["public", "agent", "internal"]
@@ -183,7 +188,10 @@ def load_overlay(repo_root: Path, surface: str) -> SurfaceOverlay | None:
     """Read a surface's self-description overlay, or None if it hasn't declared one.
 
     Fail-soft: a malformed overlay yields None rather than crashing the gateway.
+    A surface name that isn't a safe identifier (path-traversal attempt) yields None.
     """
+    if not _SAFE_SURFACE.match(surface):
+        return None
     p = overlay_path(repo_root, surface)
     if not p.is_file():
         return None

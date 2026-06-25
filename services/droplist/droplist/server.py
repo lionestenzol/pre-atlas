@@ -239,21 +239,121 @@ def _find_node(dag: dict, node_id: str) -> Optional[dict]:
     return next((n for n in dag["nodes"] if n["id"] == node_id), None)
 
 
+# ---------------------------------------------------------------------------
+# Per-DAG write serialization (TOCTOU fix).
+#
+# complete_node load-check-mutate-saves a DAG that each request reads off disk
+# independently. The not-done check and the save are not atomic, so two
+# concurrent completes on the same node could both pass the check, both call
+# apply_review, both save, and both append a `node_completed` audit row —
+# violating the spec's "one wins" contract (duplicate audit events; both
+# requests return `updates` instead of one getting `already_done`). The on-disk
+# DAG stays correct because the transitions are idempotent, but the audit log
+# double-counts.
+#
+# Fix: serialize the whole load->check->mutate->save->append for a given dag_id
+# behind a per-DAG lock. A real threading.Lock (not asyncio.Lock) so it also
+# holds against the optional daemon thread (server.py:51) that mutates DAGs on a
+# separate OS thread. The locked section is await-free, so it never yields the
+# event loop while held — no deadlock, no starvation.
+# See ~/.claude/rules/common/code-as-furniture.md — bug fixed inline, not documented.
+# ---------------------------------------------------------------------------
+_dag_locks_guard = threading.Lock()
+_dag_locks: dict[str, threading.Lock] = {}
+
+
+def _dag_lock(dag_id: str) -> threading.Lock:
+    """Return the process-wide lock for one dag_id, creating it on first use.
+
+    The guard lock makes the get-or-create itself atomic so two threads racing
+    on a never-seen dag_id can't end up with two different locks.
+    """
+    with _dag_locks_guard:
+        lock = _dag_locks.get(dag_id)
+        if lock is None:
+            lock = threading.Lock()
+            _dag_locks[dag_id] = lock
+        return lock
+
+
+def _complete_node_core(dag_id: str, node_id: str, body: dict) -> dict:
+    """The serialized load->check->mutate->save->append for one node completion.
+
+    Synchronous and await-free so the whole critical section runs atomically
+    under the per-DAG lock. Raises HTTPException for the 404/409 cases exactly
+    as the endpoint did before the refactor. Returns the response dict.
+    """
+    with _dag_lock(dag_id):
+        # load the dag the same way GET /api/dag/{dag_id} does (server.py:75-80)
+        dag = storage.load_dag(dag_id)
+        if dag is None:
+            raise HTTPException(status_code=404, detail=f"dag {dag_id} not found")
+        node = _find_node(dag, node_id)
+        if node is None:
+            raise HTTPException(
+                status_code=404, detail=f"node {node_id} not found in dag {dag_id}"
+            )
+
+        # idempotent: a done node is a no-op, no double-mutation. Inside the lock
+        # this is the compare half of an atomic compare-and-set on node status:
+        # the loser of a concurrent race re-reads `done` here and stops.
+        if node["status"] == "done":
+            return {
+                "dag_id": dag_id,
+                "node": node_id,
+                "already_done": True,
+                "dag_status": dag["status"],
+                "updates": [],
+                "ready_now": [n["id"] for n in dispatcher.get_ready_nodes(dag)],
+            }
+
+        # you can't check off step 3 while step 1 is still open
+        done = {n["id"] for n in dag["nodes"] if n["status"] == "done"}
+        unmet = [d for d in node.get("depends_on", []) if d not in done]
+        if unmet:
+            raise HTTPException(
+                status_code=409, detail=f"{node_id} blocked by {unmet}"
+            )
+
+        note = body.get("note")
+        evidence = body.get("evidence") or []
+        if not isinstance(evidence, list):
+            raise HTTPException(status_code=400, detail="'evidence' must be a list")
+        result: dict[str, Any] = {
+            "by": "human",
+            "note": note,
+            "evidence": evidence,
+            "result": body.get("result"),
+            "at": clock.now_iso(),
+        }
+        review = {"mark_node_as": "done", "approved_new_nodes": []}
+        # apply_review does the whole advance step: done + wake deps + flip dag.status
+        updates = dag_update.apply_review(dag, node, result, review)
+
+        storage.save_dag(dag)  # same persistence graph_engine.py uses (graph_engine.py:235)
+        storage.append(storage.DAG_EVENTS, {
+            "event": "node_completed", "dag_id": dag_id, "node_id": node_id,
+            "by": "human", "at": clock.now_iso(), "updates": updates,
+        })
+        return {
+            "dag_id": dag_id,
+            "node": node_id,
+            "dag_status": dag["status"],
+            "updates": updates,
+            "ready_now": [n["id"] for n in dispatcher.get_ready_nodes(dag)],
+        }
+
+
 @app.post("/api/dag/{dag_id}/node/{node_id}/complete")
 async def complete_node(dag_id: str, node_id: str, request: Request) -> dict:
     """Mark a node done, unblock its dependents, and flip the DAG to complete
     when the last node lands. Idempotent on an already-done node; 409 if the
-    node's dependencies are not all done yet."""
-    # load the dag the same way GET /api/dag/{dag_id} does (server.py:75-80)
-    dag = storage.load_dag(dag_id)
-    if dag is None:
-        raise HTTPException(status_code=404, detail=f"dag {dag_id} not found")
-    node = _find_node(dag, node_id)
-    if node is None:
-        raise HTTPException(
-            status_code=404, detail=f"node {node_id} not found in dag {dag_id}"
-        )
+    node's dependencies are not all done yet.
 
+    Body parsing (the handler's only await) happens up front; the actual
+    load->check->mutate->save->append is delegated to _complete_node_core, which
+    runs under a per-DAG lock so concurrent completes can't double-fire.
+    """
     # optional body: {"result": <any>, "evidence": [<str>...], "note": <str>}
     try:
         body = await request.json()
@@ -262,52 +362,7 @@ async def complete_node(dag_id: str, node_id: str, request: Request) -> dict:
     if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="request body must be a JSON object")
 
-    # idempotent: a done node is a no-op, no double-mutation
-    if node["status"] == "done":
-        return {
-            "dag_id": dag_id,
-            "node": node_id,
-            "already_done": True,
-            "dag_status": dag["status"],
-            "updates": [],
-            "ready_now": [n["id"] for n in dispatcher.get_ready_nodes(dag)],
-        }
-
-    # you can't check off step 3 while step 1 is still open
-    done = {n["id"] for n in dag["nodes"] if n["status"] == "done"}
-    unmet = [d for d in node.get("depends_on", []) if d not in done]
-    if unmet:
-        raise HTTPException(
-            status_code=409, detail=f"{node_id} blocked by {unmet}"
-        )
-
-    note = body.get("note")
-    evidence = body.get("evidence") or []
-    if not isinstance(evidence, list):
-        raise HTTPException(status_code=400, detail="'evidence' must be a list")
-    result: dict[str, Any] = {
-        "by": "human",
-        "note": note,
-        "evidence": evidence,
-        "result": body.get("result"),
-        "at": clock.now_iso(),
-    }
-    review = {"mark_node_as": "done", "approved_new_nodes": []}
-    # apply_review does the whole advance step: done + wake deps + flip dag.status
-    updates = dag_update.apply_review(dag, node, result, review)
-
-    storage.save_dag(dag)  # same persistence graph_engine.py uses (graph_engine.py:235)
-    storage.append(storage.DAG_EVENTS, {
-        "event": "node_completed", "dag_id": dag_id, "node_id": node_id,
-        "by": "human", "at": clock.now_iso(), "updates": updates,
-    })
-    return {
-        "dag_id": dag_id,
-        "node": node_id,
-        "dag_status": dag["status"],
-        "updates": updates,
-        "ready_now": [n["id"] for n in dispatcher.get_ready_nodes(dag)],
-    }
+    return _complete_node_core(dag_id, node_id, body)
 
 
 @app.get("/api/dag/{dag_id}/checklist")

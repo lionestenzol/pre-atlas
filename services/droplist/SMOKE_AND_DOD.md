@@ -77,24 +77,57 @@ Real surface (verified against committed code):
 
 **S0 — unit baseline**
 ```
-python -m pytest -q          # expect: 62 passed
+python -m pytest -q          # expect: 65 passed
 ```
 
-**S1 — capture → plan → mark-off (live API)**
+**S1 — plan → mark-off (live API)**
+
+> Why we **seed** the plan instead of `POST /api/drop`: a live drop does not leave
+> a hand-markable plan. With default env a drop becomes a clarify-intent packet
+> (`category:general`, `confidence:0.35`) and **no DAG** is built — the DAG wire is
+> gated on `DROPLIST_ATLAS_SIGNALS_URL` (intake.py:78). And when that var *is* set,
+> `graph_engine.run_graph_from_packet` calls `advance_dag`, which auto-runs the DAG
+> straight to `complete` (graph_engine.py:269) — no `ready` node survives to mark
+> off by hand. So we seed a `running` DAG with a `ready` head directly, exactly the
+> way `test_markoff.py` does (`storage.save_dag`). This isolates Brick 1 (the
+> plan→advance write side) from the auto-pilot path.
 ```
-# boot in one terminal:
+# boot in one terminal (scratch data dir):
 DROPLIST_DATA=/tmp/dl-smoke python -m uvicorn droplist.server:app --port 3073
-# in another:
-curl -s -XPOST localhost:3073/api/drop -H 'content-type: application/json' \
-  -d '{"raw":"ship the lattice export button: design, build, test"}'
-DAG=$(curl -s localhost:3073/api/dags | python -c "import sys,json;print(json.load(sys.stdin)[0]['dag_id'])")
-curl -s localhost:3073/api/dag/$DAG/checklist            # expect: tasks[] w/ statuses, blocked_by
-N=$(curl -s localhost:3073/api/dag/$DAG/checklist | python -c "import sys,json;print([t['id'] for t in json.load(sys.stdin)['tasks'] if t['status']=='ready'][0]")
-curl -s -XPOST localhost:3073/api/dag/$DAG/node/$N/complete \
-  -d '{"note":"smoke","evidence":["smoke"]}'             # expect: dag_status, ready_now[] grows
+
+# in another, with the SAME data dir so the server reads the seed off disk:
+DROPLIST_DATA=/tmp/dl-smoke python - <<'PY'
+from droplist import storage
+def node(nid, status, deps=None, title="node", dc=""):
+    return {"id": nid, "status": status, "agent": "ops", "tool_type": "",
+            "title": title, "done_condition": dc, "depends_on": deps or [],
+            "result": None, "evidence": [], "retry_count": 0, "max_retries": 2}
+storage.save_dag({
+    "dag_id": "DAG-SMOKE", "source_drop": "drop_smoke", "domain": "build_product",
+    "type": "task", "goal": "ship the lattice export button", "status": "running",
+    "nodes": [
+        node("N1", "ready",   title="design", dc="spec written"),
+        node("N2", "waiting", ["N1"], title="build", dc="endpoint responds"),
+        node("N3", "waiting", ["N2"], title="test",  dc="tests green"),
+    ],
+    "entity_refs": [], "links": [],
+})
+print("seeded DAG-SMOKE")
+PY
+
+# now drive the seeded plan through the live API:
+curl -s localhost:3073/api/dags                          # expect: DAG-SMOKE, status running
+curl -s localhost:3073/api/dag/DAG-SMOKE/checklist       # expect: tasks[] w/ statuses, blocked_by
+curl -s -XPOST localhost:3073/api/dag/DAG-SMOKE/node/N1/complete \
+  -H 'content-type: application/json' -d '{"note":"smoke","evidence":["smoke"]}'
+                                                         # expect: dag_status running, ready_now:["N2"]
+curl -s -XPOST localhost:3073/api/dag/DAG-SMOKE/node/N2/complete -d '{}'   # ready_now:["N3"]
+curl -s -XPOST localhost:3073/api/dag/DAG-SMOKE/node/N3/complete -d '{}'   # dag_status:"complete"
 ```
-PASS: checklist renders; completing the ready node wakes its dependent into
-`ready_now`; repeating to the last node yields `dag_status:"complete"`.
+PASS: checklist renders three tasks (`N1` ready, `N2`/`N3` waiting with
+`blocked_by`); completing each ready node wakes its dependent into `ready_now`;
+the last completion yields `dag_status:"complete"` with `ready_now:[]`, and
+`GET /api/brief` lists no ready node for `DAG-SMOKE`.
 
 **S2 — headless tick**
 ```
@@ -135,7 +168,7 @@ before; `chain_reports.jsonl` has a record. (test_chains.py is the formal proof.
 | B8 | chain with bad cron expr `"0 99 * * *"` | rejected at validate, never scheduled |
 | B9 | chain whose condition matches nothing | no action, no report, tick exit 0 |
 | B10 | `daemon --once` with empty/no data dir | exit 0, empty report, creates dirs, no crash |
-| B11 | two concurrent `complete` on the same ready node | one wins; no duplicate dependent-wake / corrupt DAG json |
+| B11 | two concurrent `complete` on the same ready node | one wins; no duplicate dependent-wake / corrupt DAG json / **duplicate `node_completed` audit row** (TOCTOU — fixed, see §D#6) |
 | B12 | giant/garbage body on `complete` | parsed-or-ignored, never 500 |
 | B13 | `emit_signal` action with `DROPLIST_ATLAS_SIGNALS_URL` unreachable | fail-soft (retry-buffer/log), tick not killed |
 
@@ -152,6 +185,16 @@ to fix before "done."
 2. ~~Reopen lock untested~~ → **tested** (`do_not_reopen` 409 branch).
 3. ~~Reopen reimplements derivation~~ → **shared** `dag_update.recompute_states` is now the
    single source of truth for both `apply_review` and reopen.
+
+**CLOSED 2026-06-25 (TOCTOU on `complete`):**
+6. ~~B11 dup audit rows~~ → **serialized**. `complete_node` load-check-mutate-save was not
+   atomic: two concurrent completes on the same node both passed the not-done check and
+   each appended a `node_completed` row (final DAG json stayed correct — transitions are
+   idempotent — but the audit log double-counted and both requests returned `updates`
+   instead of one getting `already_done`). Fixed with a per-DAG `threading.Lock` around the
+   whole load→check→mutate→save→append in `_complete_node_core` (server.py); regression
+   `test_concurrent_completes_yield_exactly_one_event` (test_markoff.py) fires 2 real
+   threads and asserts exactly one audit row + one `already_done`. Suite 66.
 
 **Still open (hardening/posture — deliberate backlog, not inert-code bugs):**
 4. **Naive-UTC scheduler** — no DST/timezone handling or test.
@@ -184,3 +227,15 @@ live walkthrough, then hardening (auth, timezone) as warranted.
      to done before running chains. Reordered: chains before advance.
 - Still open from §D: scheduler `due_jobs`/`mark_run` not wired into the daemon; B6 reopen-lock
   untested; reopen reimplements complete-derivation; naive-UTC scheduler; open writes.
+
+**2026-06-25 — §B S1 made runnable-as-written.** The old S1 recipe `POST /api/drop`'d
+and then read the DAG back, but that path never yields a hand-markable plan: default
+env gives a clarify packet with no DAG (intake.py:78), and with
+`DROPLIST_ATLAS_SIGNALS_URL` set the DAG auto-advances to `complete`
+(graph_engine.py:269). Rewrote S1 to **seed** a `running` DAG with a `ready` head via
+`storage.save_dag` (the `test_markoff.py` shape), then drive it through the live API.
+Verified end to end against a live uvicorn server on a scratch `DROPLIST_DATA`:
+seed → `/api/dags` lists it `running` → `/checklist` shows 3 tasks with `blocked_by`
+→ complete N1 (`ready_now:["N2"]`) → N2 (`ready_now:["N3"]`) → N3
+(`dag_status:"complete"`, `ready_now:[]`) → `/api/brief` shows 0 ready for it. Also
+corrected the stale S0 count (62 → 65). No code changed; suite still 65/65.

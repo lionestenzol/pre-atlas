@@ -250,5 +250,59 @@ def test_reopen_under_do_not_reopen_lock_is_409():
     assert storage.load_dag("DAG-LOCK")["nodes"][0]["status"] == "done"
 
 
+# ---------------------------------------------------------------------------
+# Concurrency: TOCTOU on complete (the "one wins" contract)
+# ---------------------------------------------------------------------------
+
+def test_concurrent_completes_yield_exactly_one_event(monkeypatch):
+    """Two concurrent completes on the SAME node must produce exactly one
+    `node_completed` audit row: one request wins (does the real advance), the
+    other re-reads the done status and returns already_done=True.
+
+    Drives the serialized core (_complete_node_core) directly from two real OS
+    threads so the load->check->save window is genuinely overlapped — the
+    TestClient multiplexes onto a single event loop and would serialize on its
+    own. A small sleep is injected into the mutate step to widen the race
+    window; without the per-DAG lock both threads pass the not-done check and
+    append two rows, so this test fails on the pre-lock code and passes after.
+    """
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    from droplist import dag_update
+    from droplist.server import _complete_node_core
+
+    _chain_dag("DAG-RACE")
+
+    real_apply = dag_update.apply_review
+
+    def slow_apply(dag, node, result, review):
+        time.sleep(0.05)  # hold the check->save window open for the other thread
+        return real_apply(dag, node, result, review)
+
+    monkeypatch.setattr(dag_update, "apply_review", slow_apply)
+
+    def fire() -> dict:
+        return _complete_node_core("DAG-RACE", "N1", {})
+
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        bodies = [f.result() for f in (ex.submit(fire), ex.submit(fire))]
+
+    # exactly one winner (real updates) and one loser (already_done)
+    winners = [b for b in bodies if not b.get("already_done")]
+    losers = [b for b in bodies if b.get("already_done") is True]
+    assert len(winners) == 1, bodies
+    assert len(losers) == 1, bodies
+    assert losers[0]["updates"] == []
+
+    # exactly one audit row, despite two concurrent completes
+    rows = [e for e in storage.read_all(storage.DAG_EVENTS)
+            if e.get("event") == "node_completed" and e.get("dag_id") == "DAG-RACE"]
+    assert len(rows) == 1, f"expected exactly one node_completed row, got {len(rows)}"
+
+    # the node really landed done
+    assert storage.load_dag("DAG-RACE")["nodes"][0]["status"] == "done"
+
+
 def teardown_module(module):  # noqa: ARG001
     shutil.rmtree(_TMP, ignore_errors=True)

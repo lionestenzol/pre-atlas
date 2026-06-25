@@ -1186,49 +1186,56 @@ function saveSettings() {
   try { localStorage.setItem('lattice.settings', JSON.stringify(settings)); } catch (_) {}
 }
 
-// Derive graph from items[] + projects[] when server doesn't return nodes/edges.
+// Ghost-stub contract for a link endpoint we lack full data for. ONE definition
+// shared by the two producers (deriveNodes fallback + the Replicache onData
+// handler) so they can't drift (they had, on the `project` field). `project` is
+// included only when the caller knows the owning item (derive path); the sync
+// path omits it — an edge endpoint has no single owning item.
+// See ~/.claude/rules/common/code-as-furniture.md — dedupe, don't let it rot.
+function makeGhostStub(id, opts) {
+  const stub = {
+    id, type: 'item',
+    label: String(id).replace(/^canon_/, '#'),
+    status: 'open',
+    provenance: { source: 'cognitive-sensor.idea_registry', ghost: true },
+  };
+  if (opts && opts.project != null) stub.project = opts.project;
+  return stub;
+}
+
+// Build the FULL graph from items[] + projects[]. This is the documented
+// fallback for when the server projection carries items but no nodes/edges
+// (wired in the Replicache onData handler). It emits the complete superset with
+// NO settings filters — nodeVisible() is the single masking gate at render time,
+// matching the server-projection path so both feed exactly one filter.
 function deriveNodes() {
   const out = [];
   const seen = new Set();
   function add(n) { if (seen.has(n.id)) return; seen.add(n.id); out.push(n); }
-  if (settings.showProjects) {
-    for (const p of projects) {
-      add({ id: 'project:' + p.id, type: 'project', label: p.name, project: p.id });
-    }
+  for (const p of projects) {
+    add({ id: 'project:' + p.id, type: 'project', label: p.name, project: p.id });
   }
-  if (settings.showItems) {
-    for (const it of items) {
-      add({
-        id: it.id, type: 'item', label: it.title,
-        project: it.project, status: it.status, provenance: it.provenance,
-      });
-    }
-    // Ghost stubs for link targets we don't have full data for —
-    // keeps the graph from looking empty when canonical links point
-    // to items in unloaded tiers (next_up, backlog).
-    for (const it of items) {
-      for (const l of it.links) {
-        if (seen.has(l.to)) continue;
-        add({
-          id: l.to, type: 'item',
-          label: l.to.replace(/^canon_/, '#'),
-          project: it.project, status: 'open',
-          provenance: { source: 'cognitive-sensor.idea_registry', ghost: true },
-        });
-      }
+  for (const it of items) {
+    add({
+      id: it.id, type: 'item', label: it.title,
+      project: it.project, status: it.status, provenance: it.provenance,
+    });
+  }
+  // Ghost stubs for link targets we don't have full data for — keeps the graph
+  // from looking empty when canonical links point to items in unloaded tiers.
+  for (const it of items) {
+    for (const l of it.links) {
+      if (seen.has(l.to)) continue;
+      add(makeGhostStub(l.to, { project: it.project }));
     }
   }
   return out;
 }
 function deriveEdges() {
   const out = [];
-  if (settings.showProjects && settings.showItems) {
-    for (const it of items) out.push({ from: it.id, to: 'project:' + it.project, kind: 'belongs_to' });
-  }
-  if (settings.showItems) {
-    for (const it of items) {
-      for (const l of it.links) out.push({ from: it.id, to: l.to, kind: l.kind });
-    }
+  for (const it of items) out.push({ from: it.id, to: 'project:' + it.project, kind: 'belongs_to' });
+  for (const it of items) {
+    for (const l of it.links) out.push({ from: it.id, to: l.to, kind: l.kind });
   }
   return out;
 }
@@ -1586,6 +1593,12 @@ function cyStylesheet() {
   ];
 }
 
+// The neighborhood walk below is a hand-rolled BFS on purpose. It's a depth-N
+// graph traversal (bounded by settings.graphDepth); relational stores can't
+// express it — TinyBase/TinyQL has no recursive/transitive operator (verified
+// against tinybase.org). This is the deliberate hand-roll the graph view is
+// built around, so don't re-propose swapping it for a query store. Full
+// rationale (the rejected Week-3 TinyBase plan): apps/lattice/NEXT_SESSION_HANDOFF.md.
 function renderGraph(centerId) {
   centerId = centerId || graphCenter || (items[0] && items[0].id);
   graphCenter = centerId;
@@ -1718,48 +1731,6 @@ function renderGraph(centerId) {
     cy.add(elements);
     cy.layout(layoutCfg).run();
   }
-  return;
-  // ---- legacy SVG path below intentionally unreachable ----
-  /* unreachable: hand-rolled SVG kept only as reference until next cleanup pass
-  const allPos = [];
-  const pad = 0;
-  const minX = 0, minY = 0, maxX = 0, maxY = 0;
-  const vbW = 0, vbH = 0;
-  const viewBox = '';
-  root.innerHTML =
-    '<div class="graph-header">' +
-      '<div class="graph-title">' + escapeHtml(centerNode.label) + '</div>' +
-    '</div>' +
-    '<div class="graph-wrap">' +
-      '<svg viewBox="' + viewBox + '" preserveAspectRatio="xMidYMid meet">' +
-        '<defs>' +
-          '<marker id="arr-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
-            '<path d="M0 0L10 5L0 10z" fill="#E24B4A"/>' +
-          '</marker>' +
-          '<marker id="arr-w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
-            '<path d="M0 0L10 5L0 10z" fill="#BA7517"/>' +
-          '</marker>' +
-          '<marker id="arr-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
-            '<path d="M0 0L10 5L0 10z" fill="#888780"/>' +
-          '</marker>' +
-        '</defs>' +
-        edgeSvg +
-        nodesSvg +
-      '</svg>' +
-      '<div class="graph-legend">' +
-        '<div class="leg-row"><span class="leg-line blocks"></span>blocks</div>' +
-        '<div class="leg-row"><span class="leg-line spawned"></span>spawned</div>' +
-        '<div class="leg-row"><span class="leg-line relates"></span>relates</div>' +
-      '</div>' +
-    '</div>';
-
-  Array.from(root.querySelectorAll('.graph-node')).forEach(el => {
-    el.addEventListener('click', () => {
-      const id = el.dataset.itemId;
-      if (!idEq(id, graphCenter)) renderGraph(id);
-    });
-  });
-  */
 }
 
 /* ============================================================
@@ -2408,9 +2379,12 @@ function setupSettingsPanel() {
       settings.sources = Object.assign({}, settings.sources, { [t.dataset.source]: t.checked });
     }
     saveSettings();
-    // Re-derive locally and re-render the active view
-    nodes = deriveNodes();
-    edges = deriveEdges();
+    // Re-render only — do NOT re-derive nodes/edges here. The server projection
+    // (Replicache onData) is the single source of truth; re-deriving raced it
+    // (last-writer-wins until the next pull). Filters are applied at render by
+    // nodeVisible(), so a toggle just needs a re-render. See onData for the
+    // derive-only-as-fallback policy.
+    // ~/.claude/rules/common/code-as-furniture.md — fixed the seam, not documented around it.
     rerenderAll();
   });
 }
@@ -2737,12 +2711,13 @@ const readyTimer = setTimeout(() => {
 
 rep.subscribe(snapshotAll, { onData: (snap) => {
   // Ghost-stub nodes for link endpoints not present in the projection.
+  // Shared makeGhostStub() so this can't drift from the deriveNodes fallback;
+  // no owning item here (just an edge endpoint), so project is omitted.
   const have = new Set(snap.nodes.map(n => n.id));
   for (const e of snap.edges) for (const id of [e.from, e.to]) {
     if (have.has(id)) continue;
     have.add(id);
-    snap.nodes.push({ id, type: 'item', label: String(id).replace(/^canon_/, '#'),
-      status: 'open', provenance: { source: 'cognitive-sensor.idea_registry', ghost: true }});
+    snap.nodes.push(makeGhostStub(id));
   }
   window.events = snap.events; window.nodes = snap.nodes; window.edges = snap.edges;
   const baseProjects = snap.projects.length ? snap.projects : DEFAULT_PROJECTS;
@@ -2750,6 +2725,15 @@ rep.subscribe(snapshotAll, { onData: (snap) => {
   // recovery (which replaces these arrays) never drops it.
   window.items = (typeof window.mergeBackboneItems === 'function') ? window.mergeBackboneItems(snap.items) : snap.items;
   window.projects = (typeof window.mergeBackboneProjects === 'function') ? window.mergeBackboneProjects(baseProjects) : baseProjects;
+  // Single source of truth: the server projection feeds the graph. ONLY when it
+  // carried items but no nodes/edges do we fall back to client derivation — the
+  // one remaining reason deriveNodes/deriveEdges exist. The settings panel no
+  // longer re-derives (that raced this path, last-writer-wins until the next
+  // pull); filters are applied once at render by nodeVisible().
+  if (!window.nodes.length && !window.edges.length && window.items.length) {
+    window.nodes = deriveNodes();
+    window.edges = deriveEdges();
+  }
   if (snap.items.length && window.FOCUS_ITEM_ID == null) window.FOCUS_ITEM_ID = snap.items[0].id;
   if (typeof window.rerenderAll === 'function') { try { window.rerenderAll(); } catch (e) { console.warn('rerender:', e); } }
   // First subscribe fire happens with empty IDB on cold start; only resolve

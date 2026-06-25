@@ -6,6 +6,22 @@
 <title>lattice</title>
 <script src="cytoscape.min.js"></script>
 <script src="zod.umd.js"></script>
+<!-- Week 2 (assemble-first): official cytoscape layout extensions, vendored.
+     cose-bilkent dep chain must load in order: layout-base -> cose-base -> cose-bilkent.
+     cytoscape-dagre bundles dagre internally (no separate dagre.js needed). -->
+<script src="layout-base.js"></script>
+<script src="cose-base.js"></script>
+<script src="cytoscape-cose-bilkent.js"></script>
+<script src="cytoscape-dagre.js"></script>
+<script>
+  // Register layout extensions on the cytoscape singleton once, at load.
+  // Flags let buildLayoutCfg() degrade gracefully if a bundle failed to load.
+  window.__latticeLayouts = { coseBilkent: false, dagre: false };
+  if (typeof cytoscape === 'function') {
+    try { if (window.cytoscapeCoseBilkent) { cytoscape.use(window.cytoscapeCoseBilkent); window.__latticeLayouts.coseBilkent = true; } } catch (e) { console.warn('cose-bilkent register:', e); }
+    try { if (window.cytoscapeDagre) { cytoscape.use(window.cytoscapeDagre); window.__latticeLayouts.dagre = true; } } catch (e) { console.warn('dagre register:', e); }
+  }
+</script>
 <style>
 :root {
   --bg: #FAFAF7;
@@ -1059,6 +1075,13 @@ svg { display: block; }
         <label><input type="radio" name="depth" value="all"> everything connected</label>
       </div>
       <div class="settings-row">
+        <span class="settings-label" title="how nodes are arranged on the canvas">layout</span>
+        <label><input type="radio" name="layout" value="auto"> auto</label>
+        <label><input type="radio" name="layout" value="concentric"> rings</label>
+        <label><input type="radio" name="layout" value="force"> force</label>
+        <label><input type="radio" name="layout" value="hierarchy"> hierarchy</label>
+      </div>
+      <div class="settings-row">
         <span class="settings-label">node types</span>
         <label><input type="checkbox" data-knob="showItems"> items</label>
         <label><input type="checkbox" data-knob="showProjects"> projects</label>
@@ -1139,6 +1162,7 @@ let settings = (function() {
     showProjects: true,    // include project nodes in graph
     showItems: true,       // include item nodes in graph
     graphDepth: 1,         // 1 | 2 | Infinity (all). null in storage means Infinity (JSON round-trip).
+    graphLayout: 'auto',   // auto | concentric | force (cose-bilkent) | hierarchy (dagre)
     sources: { execute_now: true, next_up: false, backlog: false },
     visibleProjects: { lattice: true, optogon: true, atlas: true, inpact: true, property: true, music: true },
   };
@@ -1152,6 +1176,7 @@ let settings = (function() {
       showProjects: stored.showProjects ?? defaults.showProjects,
       showItems: stored.showItems ?? defaults.showItems,
       graphDepth: stored.graphDepth === null ? Infinity : (stored.graphDepth ?? defaults.graphDepth),
+      graphLayout: stored.graphLayout ?? defaults.graphLayout,
       sources: Object.assign({}, defaults.sources, stored.sources || {}),
       visibleProjects: Object.assign({}, defaults.visibleProjects, stored.visibleProjects || {}),
     };
@@ -1206,6 +1231,36 @@ function deriveEdges() {
     }
   }
   return out;
+}
+
+// Graph layout config. 'auto' keeps the original behavior (rings at depth 1,
+// force beyond); the other choices let the user pin a layout via the knobs.
+// 'force' prefers the vendored cose-bilkent extension, falling back to the
+// built-in cose if it didn't load; 'hierarchy' uses dagre (directional, good
+// for the blocks/spawned dependency edges) and falls back to breadthfirst.
+function buildLayoutCfg(depth) {
+  const choice = settings.graphLayout || 'auto';
+  const concentricCfg = {
+    name: 'concentric',
+    concentric: function(node) { return -node.data('depth'); },
+    levelWidth: function() { return 1; },
+    minNodeSpacing: 60, spacingFactor: 1.0, padding: 30, fit: false, animate: false,
+  };
+  const coseCfg = { name: 'cose', animate: false, idealEdgeLength: 110, nodeRepulsion: 10000, gravity: 0.15, padding: 40, fit: false };
+  const flags = window.__latticeLayouts || {};
+  if (choice === 'concentric') return concentricCfg;
+  if (choice === 'force') {
+    return flags.coseBilkent
+      ? { name: 'cose-bilkent', animate: false, idealEdgeLength: 110, nodeRepulsion: 8000, padding: 40, fit: false, randomize: false }
+      : coseCfg;
+  }
+  if (choice === 'hierarchy') {
+    return flags.dagre
+      ? { name: 'dagre', rankDir: 'TB', nodeSep: 28, rankSep: 60, padding: 30, fit: false, animate: false }
+      : { name: 'breadthfirst', directed: true, padding: 30, spacingFactor: 1.1, fit: false, animate: false };
+  }
+  // auto
+  return depth === 1 ? concentricCfg : coseCfg;
 }
 
 const TODAY_ISO = '2026-05-28';
@@ -1626,18 +1681,7 @@ function renderGraph(centerId) {
       '<span class="graph-hint">scroll to zoom · drag to pan · click a node to recenter</span>' +
     '</div>';
   // Init or update Cytoscape
-  const layoutCfg = depth === 1
-    ? {
-        name: 'concentric',
-        concentric: function(node) { return -node.data('depth'); },
-        levelWidth: function() { return 1; },
-        minNodeSpacing: 60,
-        spacingFactor: 1.0,
-        padding: 30,
-        fit: false,    // keep nodes at natural size; user scrolls/zooms if needed
-        animate: false,
-      }
-    : { name: 'cose', animate: false, idealEdgeLength: 110, nodeRepulsion: 10000, gravity: 0.15, padding: 40, fit: false };
+  const layoutCfg = buildLayoutCfg(depth);
   if (!cy) {
     cy = cytoscape({
       container: document.getElementById('cy-container'),
@@ -2345,6 +2389,8 @@ function setupSettingsPanel() {
   // Initialize controls from current settings
   const depthVal = settings.graphDepth === Infinity ? 'all' : String(settings.graphDepth || 1);
   Array.from(panel.querySelectorAll('input[name="depth"]')).forEach(r => { r.checked = r.value === depthVal; });
+  const layoutVal = settings.graphLayout || 'auto';
+  Array.from(panel.querySelectorAll('input[name="layout"]')).forEach(r => { r.checked = r.value === layoutVal; });
   Array.from(panel.querySelectorAll('input[data-knob]')).forEach(c => { c.checked = !!settings[c.dataset.knob]; });
   Array.from(panel.querySelectorAll('input[data-source]')).forEach(c => { c.checked = !!(settings.sources && settings.sources[c.dataset.source]); });
   // Toggle visibility
@@ -2354,6 +2400,8 @@ function setupSettingsPanel() {
     const t = e.target;
     if (t.name === 'depth') {
       settings.graphDepth = t.value === 'all' ? Infinity : parseInt(t.value, 10);
+    } else if (t.name === 'layout') {
+      settings.graphLayout = t.value;
     } else if (t.dataset.knob) {
       settings[t.dataset.knob] = t.checked;
     } else if (t.dataset.source) {

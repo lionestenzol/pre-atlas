@@ -2023,7 +2023,7 @@ async function atlasWriteToken() {
   if (!_atlasTokenPromise) {
     _atlasTokenPromise = (async () => {
       try {
-        const r = await fetch(ATLAS_MAP_API + '/admin/write-token');
+        const r = await fetch(ATLAS_MAP_API + '/admin/write-token?scope=items');
         if (!r.ok) return null;
         return (await r.json()).token || null;
       } catch (_) { return null; }

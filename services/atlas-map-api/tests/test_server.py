@@ -522,11 +522,86 @@ def test_post_with_valid_token_passes_guard():
     assert r.status_code == 422  # handler-level rejection, NOT 401
 
 
-def test_write_token_handout_endpoint_is_open_and_matches():
-    # GET handout has no auth (browser bootstrap) and returns the active token.
-    r = client.get("/admin/write-token")
-    assert r.status_code == 200
-    assert r.json()["token"] == auth.current_token()
+# ---------- scoped write-token handout (origin-gated, least-privilege) ----------
+
+_ALLOWED_ORIGIN = {"Origin": "http://localhost:8888"}  # atlas-shell, in ALLOWED_ORIGINS
+
+
+def test_handout_no_origin_is_403():
+    # The no-Origin curl that previously walked off with the root token is rejected.
+    r = client.get("/admin/write-token?scope=boot")
+    assert r.status_code == 403
+
+
+def test_handout_disallowed_origin_is_403():
+    r = client.get("/admin/write-token?scope=boot", headers={"Origin": "http://evil.example"})
+    assert r.status_code == 403
+
+
+def test_handout_missing_scope_is_400():
+    r = client.get("/admin/write-token", headers=_ALLOWED_ORIGIN)
+    assert r.status_code == 400
+
+
+def test_handout_unknown_scope_is_400():
+    r = client.get("/admin/write-token?scope=wat", headers=_ALLOWED_ORIGIN)
+    assert r.status_code == 400
+
+
+def test_handout_never_returns_root_token():
+    # Neither scope's token may equal the privileged root token.
+    boot = client.get("/admin/write-token?scope=boot", headers=_ALLOWED_ORIGIN).json()["token"]
+    items = client.get("/admin/write-token?scope=items", headers=_ALLOWED_ORIGIN).json()["token"]
+    assert boot != auth.current_token()
+    assert items != auth.current_token()
+    assert boot != items
+
+
+def test_handout_is_stable_per_scope():
+    # Same scope returns the SAME token across calls (minted once, reused).
+    a = client.get("/admin/write-token?scope=boot", headers=_ALLOWED_ORIGIN).json()["token"]
+    b = client.get("/admin/write-token?scope=boot", headers=_ALLOWED_ORIGIN).json()["token"]
+    assert a == b
+
+
+def test_boot_token_authorizes_map_but_not_items(monkeypatch):
+    from atlas_map_api import launcher
+    monkeypatch.setattr(launcher, "load_launch_configs", lambda root: [{"name": "lattice", "port": 3011}])
+    monkeypatch.setattr(launcher, "stop_on_port", lambda port: {"ok": True, "stopped": True, "port": port})
+    boot = client.get("/admin/write-token?scope=boot", headers=_ALLOWED_ORIGIN).json()["token"]
+    h = {"X-Atlas-Token": boot}
+    # boot token works on /map/*
+    assert client.post("/map/halt/lattice", headers=h).status_code == 200
+    # boot token is REJECTED on /items/* (different scope)
+    r = client.post("/items/bb:droplist:x/status", json={"status": "done"}, headers=h)
+    assert r.status_code == 401
+
+
+def test_items_token_authorizes_items_but_not_map():
+    items = client.get("/admin/write-token?scope=items", headers=_ALLOWED_ORIGIN).json()["token"]
+    h = {"X-Atlas-Token": items}
+    # items token is past the auth gate on /items/* (422 = handler rejection, not 401)
+    r = client.post("/items/bb:cycleboard:abc/status", json={"status": "done"}, headers=h)
+    assert r.status_code == 422
+    # items token is REJECTED on /map/*
+    assert client.post("/map/halt/lattice", headers=h).status_code == 401
+
+
+def test_scoped_tokens_cannot_touch_admin():
+    boot = client.get("/admin/write-token?scope=boot", headers=_ALLOWED_ORIGIN).json()["token"]
+    items = client.get("/admin/write-token?scope=items", headers=_ALLOWED_ORIGIN).json()["token"]
+    assert client.post("/admin/reload", headers={"X-Atlas-Token": boot}).status_code == 401
+    assert client.post("/admin/reload", headers={"X-Atlas-Token": items}).status_code == 401
+
+
+def test_root_token_still_authorizes_both(monkeypatch):
+    from atlas_map_api import launcher
+    monkeypatch.setattr(launcher, "load_launch_configs", lambda root: [{"name": "lattice", "port": 3011}])
+    monkeypatch.setattr(launcher, "stop_on_port", lambda port: {"ok": True, "stopped": True, "port": port})
+    # root authorizes /map/*, /items/* (gate-pass => 422 handler reject), and /admin/*
+    assert client.post("/map/halt/lattice", headers=_auth()).status_code == 200
+    assert client.post("/items/bb:cycleboard:abc/status", json={"status": "done"}, headers=_auth()).status_code == 422
+    assert client.post("/admin/reload", headers=_auth()).status_code == 200
 
 
 def test_load_or_create_token_is_idempotent(tmp_path):

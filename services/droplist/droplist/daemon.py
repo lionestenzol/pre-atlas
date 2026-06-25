@@ -132,6 +132,14 @@ def _advance_stored_dags() -> list[dict]:
     for dag in watcher._all_dags():  # reuse the dags-dir walk (watcher.py:49)
         if dag.get("status") not in _ADVANCEABLE_STATUSES:
             continue
+        # Per-plan autopilot (Bruke's call 2026-06-25): a hand-authored plan you
+        # mark off by hand sets `"autopilot": false` so the daemon NEVER auto-runs
+        # its ready nodes — it stays a track-only checklist. Pipeline DAGs (built
+        # from a drop / recurring materialize) carry no flag → default True →
+        # auto-advance as before (non-breaking). The future create-plan front door
+        # is where hand-authored plans get autopilot:false by default.
+        if not dag.get("autopilot", True):
+            continue
         if not dispatcher.get_ready_nodes(dag):
             continue
         delta = graph_engine.advance_dag(dag)

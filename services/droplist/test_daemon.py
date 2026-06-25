@@ -165,6 +165,36 @@ def test_once_cli_returns_zero(data_dir, monkeypatch):
     assert rc == 0
 
 
+def test_daemon_skips_autopilot_false_plan(data_dir, monkeypatch):
+    """Per-plan autopilot (Bruke 2026-06-25): a hand-authored plan with
+    `autopilot: false` is NOT advanced by the daemon even though it has a ready
+    node — the human marks it off. An identical plan without the flag (default
+    True) IS advanced, proving the gate is opt-out, not a behavior change."""
+    from droplist import daemon, storage
+
+    def _plan(dag_id, autopilot):
+        d = {"dag_id": dag_id, "source_drop": "drop_" + dag_id, "domain": "build_product",
+             "type": "task", "goal": "g", "status": "running", "created_at": "2026-06-01T00:00:00Z",
+             "nodes": [{"id": "N1", "status": "ready", "type": "field_check", "agent": "ops",
+                        "tool_type": "", "title": "step", "done_condition": "", "depends_on": [],
+                        "result": None, "evidence": [], "retry_count": 0, "max_retries": 2}],
+             "entity_refs": [], "links": []}
+        if autopilot is not None:
+            d["autopilot"] = autopilot
+        storage.save_dag(d)
+
+    _set_day(monkeypatch, dt.date(2026, 6, 25))
+    _plan("DAG-MANUAL", autopilot=False)
+    _plan("DAG-AUTO", autopilot=None)  # no flag → default True
+
+    daemon._run_once()
+
+    assert storage.load_dag("DAG-MANUAL")["nodes"][0]["status"] == "ready", \
+        "daemon auto-ran a plan marked autopilot:false"
+    assert storage.load_dag("DAG-AUTO")["nodes"][0]["status"] == "done", \
+        "daemon failed to advance a default (autopilot) plan"
+
+
 def test_daemon_fires_due_schedule_drop_and_dedups(data_dir, monkeypatch):
     """Brick 3 wiring (§D gap #1): a due schedules.json 'drop' entry fires via
     _run_once — creating a packet — and does NOT re-fire within the same cron

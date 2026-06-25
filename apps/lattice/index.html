@@ -437,18 +437,6 @@ svg { display: block; }
 }
 .settings-row input { cursor: pointer; }
 
-/* Graph node-type variants */
-.graph-node.node-project .graph-node-bg {
-  fill: var(--surface-2);
-  stroke: var(--text-3);
-  stroke-dasharray: 4 3;
-}
-.graph-node.node-project .graph-node-title {
-  font-weight: 500;
-  text-transform: lowercase;
-}
-.graph-node.ghost { opacity: 0.45; }
-.graph-node.ghost .graph-node-bg { stroke-dasharray: 2 3; fill: transparent; }
 .ctx-divider {
   height: 1px;
   background: var(--border);
@@ -568,25 +556,6 @@ svg { display: block; }
 }
 .graph-wrap svg { width: 100%; height: 100%; }
 
-.graph-node { cursor: pointer; }
-.graph-node-bg {
-  fill: var(--surface);
-  stroke: var(--border-strong);
-  stroke-width: 1;
-}
-.graph-node.active  .graph-node-bg { fill: var(--accent-bg); stroke: var(--accent); }
-.graph-node.blocked .graph-node-bg { fill: var(--danger-bg); stroke: var(--danger); }
-.graph-node.done    .graph-node-bg { fill: var(--success-bg); stroke: var(--success); }
-.graph-node.selected .graph-node-bg { stroke-width: 2; }
-.graph-node-title {
-  font-size: 12px;
-  font-weight: 500;
-  fill: var(--text);
-}
-.graph-node-meta {
-  font-size: 10px;
-  fill: var(--text-3);
-}
 .graph-edge { stroke-width: 1.4; fill: none; }
 .graph-edge.blocks  { stroke: var(--danger); }
 .graph-edge.spawned { stroke: var(--warn); }
@@ -956,8 +925,6 @@ svg { display: block; }
   .item-meta  { order: 4; flex-basis: 100%; padding-left: 16px; font-size: 10px; margin-top: 2px; }
 
   .graph-wrap { height: 460px; }
-  .graph-node-title { font-size: 13px; }
-  .graph-node-meta  { font-size: 10px; }
   .graph-edge-label { font-size: 10px; }
   .graph-legend {
     font-size: 9px;

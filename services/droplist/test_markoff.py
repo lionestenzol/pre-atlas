@@ -33,7 +33,12 @@ os.environ["DROPLIST_DATA"] = _TMP
 from fastapi.testclient import TestClient  # noqa: E402
 
 from droplist import storage  # noqa: E402
+from droplist.auth import require_write_token  # noqa: E402
 from droplist.server import app  # noqa: E402
+
+# Task B added an X-Atlas-Token guard to the write routes. This suite tests graph
+# behavior, not auth (see test_auth.py for the guard itself), so no-op it here.
+app.dependency_overrides[require_write_token] = lambda: None
 
 client = TestClient(app)
 

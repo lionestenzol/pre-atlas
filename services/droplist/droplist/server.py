@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
+import json
 import os
 import threading
+import urllib.error
+import urllib.request
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, AsyncIterator, Optional
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, Response
 
 from . import (  # noqa: F401 — atlas_signal/dag_builder kept for v2 mutation surface
     atlas_signal,
+    auth,
     clock,
     command_brief,
     dag_builder,
@@ -69,6 +75,7 @@ def _maybe_start_daemon() -> None:
 
 @asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    auth.load_or_create_token()  # resolve/persist the shared write secret at startup
     _maybe_start_daemon()
     yield
     # The daemon thread is a daemon=True thread; it dies with the interpreter.
@@ -76,12 +83,23 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="DropList API", version="0.1.0", lifespan=_lifespan)
+
+# CORS allowlist (Task B, 2026-06-25). Was allow_origins=["*"], which let a tab
+# at ANY origin read this API's responses — a DNS-rebind/foreign-origin write
+# vector. Now: localhost only by default, plus comma-separated deploy origins via
+# DROPLIST_ALLOWED_ORIGINS. The X-Atlas-Token guard (auth.py) is the real lock on
+# writes; this narrows who can even talk to the surface from a browser.
+# See ~/.claude/rules/common/code-as-furniture.md — open CORS fixed inline.
+_DEFAULT_ORIGINS = ["http://localhost:3073", "http://127.0.0.1:3073"]
+_ENV_ORIGINS = [
+    o.strip() for o in os.environ.get("DROPLIST_ALLOWED_ORIGINS", "").split(",") if o.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_DEFAULT_ORIGINS + _ENV_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "X-Atlas-Token"],
 )
 
 
@@ -91,6 +109,93 @@ def _packets_by_drop() -> dict:
 
 def _dag_dir() -> Path:
     return Path(storage.DATA_DIR) / "dags"
+
+
+# ---------------------------------------------------------------------------
+# UI front door (ship Task A, 2026-06-25). The built single-page UIs already
+# self-wire to THIS same origin (ui/line.html -> GET /api/now at line.html:1614;
+# ui/chain.html -> GET /api/dag/sample at chain.html:323), but the server only
+# ever exposed JSON — so the UI existed and was unreachable, the #1 ship blocker
+# from DROPLIST_SHIP_SPEC_2026-06-25.md. Serving them here closes that gap with
+# zero client config. See ~/.claude/rules/common/code-as-furniture.md.
+# ---------------------------------------------------------------------------
+_UI_DIR = Path(__file__).resolve().parent.parent / "ui"
+
+
+def _serve_ui(filename: str) -> HTMLResponse:
+    """Serve a UI page with the write token injected as ``window.__DL_TOKEN__``.
+
+    The same-origin page reads it to authenticate its calls to the Anthropic
+    proxy (Task B). A cross-origin (DNS-rebind) tab CANNOT read this response
+    body — CORS makes it opaque — so the token isn't leaked to an attacker tab;
+    a same-origin local process that can GET this page could already read the
+    gitignored token file, so the bar is unchanged. See auth.py and
+    ~/.claude/rules/common/code-as-furniture.md."""
+    html = (_UI_DIR / filename).read_text(encoding="utf-8")
+    inject = f"<script>window.__DL_TOKEN__={json.dumps(auth.current_token())};</script>"
+    if "</head>" in html:
+        html = html.replace("</head>", inject + "</head>", 1)
+    else:
+        html = inject + html
+    return HTMLResponse(html)
+
+
+@app.get("/", response_class=HTMLResponse)
+def ui_now() -> HTMLResponse:
+    """Serve the NOW screen (ui/line.html) — self-wires to GET /api/now."""
+    return _serve_ui("line.html")
+
+
+@app.get("/chain", response_class=HTMLResponse)
+def ui_chain() -> HTMLResponse:
+    """Serve the DAG/chain view (ui/chain.html) — self-wires to GET /api/dag/sample."""
+    return _serve_ui("chain.html")
+
+
+# ---------------------------------------------------------------------------
+# Server-side Anthropic proxy (Task B, 2026-06-25). The UIs used to POST straight
+# to api.anthropic.com from the browser — which both fails (CORS) and is a
+# client-side API-key path. This route holds the key server-side
+# (ANTHROPIC_API_KEY) and forwards the messages payload, so NO key ships to the
+# client (grep ui/ for sk-ant/api.anthropic.com comes back clean). Guarded by the
+# write token because it spends money. urllib in a threadpool = zero new deps and
+# never blocks the event loop. See ~/.claude/rules/common/code-as-furniture.md.
+# ---------------------------------------------------------------------------
+_ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
+_ANTHROPIC_VERSION = "2023-06-01"
+
+
+def _forward_anthropic(payload: bytes) -> tuple[int, bytes]:
+    """Blocking POST to Anthropic with the server-side key. Runs in a threadpool."""
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not key:
+        return 503, b'{"error":"ANTHROPIC_API_KEY is not set on the server"}'
+    req = urllib.request.Request(
+        _ANTHROPIC_URL, data=payload, method="POST",
+        headers={
+            "content-type": "application/json",
+            "x-api-key": key,
+            "anthropic-version": _ANTHROPIC_VERSION,
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            return resp.getcode(), resp.read()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read()
+    except Exception as e:  # noqa: BLE001 — network/timeout surfaces as 502
+        return 502, json.dumps({"error": f"anthropic proxy failed: {e}"}).encode()
+
+
+@app.post("/api/ai/anthropic", dependencies=[Depends(auth.require_write_token)])
+async def proxy_anthropic(request: Request) -> Response:
+    """Forward an Anthropic /v1/messages request using the server-side key. The
+    body is the same {model, max_tokens, system, messages} the UI already builds;
+    the upstream response is passed straight back so the UI's data.content parse
+    is unchanged."""
+    body = await request.body()
+    status, out = await run_in_threadpool(_forward_anthropic, body)
+    return Response(content=out, status_code=status, media_type="application/json")
 
 
 @app.get("/api/now")
@@ -120,6 +225,24 @@ def get_now() -> dict:
         },
         "after": after,
     }
+
+
+@app.get("/api/dag/sample")
+def get_dag_sample(dag_id: Optional[str] = None) -> dict:
+    """Alias the chain view expects (chain.html:323): a specific ?dag_id=, else
+    the most-recently-modified DAG. Declared before /api/dag/{dag_id} so the
+    literal 'sample' path wins over the path param."""
+    if dag_id:
+        d = storage.load_dag(dag_id)
+        if d is None:
+            raise HTTPException(status_code=404, detail=f"dag {dag_id} not found")
+        return d
+    files = sorted(_dag_dir().glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+    for p in files:
+        d = storage.load_dag(p.stem)
+        if d:
+            return d
+    return {"dag_id": None, "nodes": []}
 
 
 @app.get("/api/dag/{dag_id}")
@@ -195,7 +318,7 @@ def get_entities(type: Optional[str] = None) -> dict:
     return {"entities": ents}
 
 
-@app.post("/api/drop")
+@app.post("/api/drop", dependencies=[Depends(auth.require_write_token)])
 async def post_drop(request: Request) -> dict:
     """Intake valve: catch raw input, run the bouncer + chainer, secure or drop.
 
@@ -230,8 +353,9 @@ async def post_drop(request: Request) -> dict:
 # sets status->done, attaches the result, wakes waiting nodes whose deps are
 # satisfied, and flips dag.status to complete when nothing runnable remains.
 #
-# Auth mirrors POST /api/drop (server.py:148): that endpoint is open (no token
-# check), so these writes are open too. See PACKETS/011_markoff_and_checklist.md.
+# Auth mirrors POST /api/drop: all three writes now require the X-Atlas-Token
+# shared secret (Task B, 2026-06-25) via dependencies=[Depends(require_write_token)]
+# on the decorators below. See auth.py and PACKETS/011_markoff_and_checklist.md.
 # ---------------------------------------------------------------------------
 
 
@@ -344,7 +468,8 @@ def _complete_node_core(dag_id: str, node_id: str, body: dict) -> dict:
         }
 
 
-@app.post("/api/dag/{dag_id}/node/{node_id}/complete")
+@app.post("/api/dag/{dag_id}/node/{node_id}/complete",
+          dependencies=[Depends(auth.require_write_token)])
 async def complete_node(dag_id: str, node_id: str, request: Request) -> dict:
     """Mark a node done, unblock its dependents, and flip the DAG to complete
     when the last node lands. Idempotent on an already-done node; 409 if the
@@ -390,7 +515,8 @@ def get_checklist(dag_id: str) -> dict:
     }
 
 
-@app.post("/api/dag/{dag_id}/node/{node_id}/reopen")
+@app.post("/api/dag/{dag_id}/node/{node_id}/reopen",
+          dependencies=[Depends(auth.require_write_token)])
 async def reopen_node(dag_id: str, node_id: str) -> dict:
     """Set a done node back to ready, then re-derive the waiting/ready state of
     every node and the DAG status from scratch. Refused (409) if the node is

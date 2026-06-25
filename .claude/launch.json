@@ -137,6 +137,14 @@
       "runtimeArgs": ["tsx", "index.ts"],
       "port": 3011,
       "cwd": "services/ws-gateway"
+    },
+    {
+      "name": "droplist",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "droplist.server:app", "--host", "127.0.0.1", "--port", "3073"],
+      "env": { "DROPLIST_ATLAS_SIGNALS_URL": "http://localhost:3001/api/signals/ingest", "DROPLIST_DAEMON": "1" },
+      "port": 3073,
+      "cwd": "services/droplist"
     }
   ]
 }

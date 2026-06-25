@@ -101,7 +101,7 @@
   .closecard .verdict{font-weight:800;font-size:22px;letter-spacing:-.01em;margin-bottom:14px;line-height:1.1}
   .closecard p{font-family:'Space Mono',monospace;font-size:12.5px;line-height:1.6;color:#cfccc4;white-space:pre-wrap;margin-bottom:14px}
 
-  footer{font-family:'Space Mono',monospace;font-size:10.5px;color:#55555c;text-align:center;margin-top:34px;line-height:1.7}
+  footer{font-family:'Space Mono',monospace;font-size:10.5px;color:#7a7a80;text-align:center;margin-top:34px;line-height:1.7}
   .err{color:var(--fail);font-family:'Space Mono',monospace;font-size:12px;margin-top:10px}
 </style>
 </head>
@@ -114,17 +114,17 @@
   </header>
 
   <div class="dock">
-    <label>Raw Drop</label>
-    <textarea id="input" placeholder="Drop anything. An idea. A task. A rabbit breeding note. A half-formed product. A mess.&#10;&#10;The line will classify it, structure it, map it, decide the next move, check itself, and close it."></textarea>
+    <label for="input">Raw Drop</label>
+    <textarea id="input" aria-label="Raw drop — paste an idea, task, or note to run the line" placeholder="Drop anything. An idea. A task. A rabbit breeding note. A half-formed product. A mess.&#10;&#10;The line will classify it, structure it, map it, decide the next move, check itself, and close it."></textarea>
     <div class="controls">
       <button class="run" id="runBtn" onclick="runLine()">▶ Run the line</button>
       <button class="ghost" onclick="resetLine()">Reset</button>
     </div>
-    <span class="seed" onclick="seedExample()">load a sample drop ↩</span>
-    <div class="err" id="err"></div>
+    <span class="seed" role="button" tabindex="0" onclick="seedExample()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();seedExample();}">load a sample drop ↩</span>
+    <div class="err" id="err" role="alert" aria-live="assertive"></div>
   </div>
 
-  <div class="line" id="line"></div>
+  <div class="line" id="line" aria-live="polite" aria-label="Station output"></div>
 
   <div class="closecard" id="closecard">
     <h3>// Close</h3>
@@ -234,9 +234,9 @@ async function callStage(stage, rawDrop, contextSoFar){
     (contextSoFar ? `CONTEXT FROM EARLIER STATIONS ON THE LINE:\n${contextSoFar}\n\n` : '') +
     `Do your job as the ${stage.name} Agent now. Output only your station's result.`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/ai/anthropic", {
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
     body: JSON.stringify({
       model:"claude-sonnet-4-20250514",
       max_tokens:1000,

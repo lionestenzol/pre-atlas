@@ -69,11 +69,11 @@ def chatgpt_temporal() -> None:
 
 def _extract_first_user_text(content) -> str:
     if isinstance(content, str):
-        return content[:200]
+        return content[:2000]
     if isinstance(content, list):
         for b in content:
             if isinstance(b, dict) and b.get("type") == "text":
-                return (b.get("text") or "")[:200]
+                return (b.get("text") or "")[:2000]
     return ""
 
 

@@ -1,0 +1,564 @@
+{
+  "phase": "003_CROSS_REFERENCE_MATRIX",
+  "sequence": "era_3_heavy_cc",
+  "generated_at": "2026-05-28T03:06:56.782647+00:00",
+  "era": {
+    "label": "era_3_heavy_cc",
+    "start": "2026-04-01",
+    "end": "2026-05-15"
+  },
+  "method": "Substring match of cluster seed_terms (case-insensitive) against ChatGPT title and CC first_user_msg. Items filtered to era window by first_date (ChatGPT) / first_ts (CC). Samples sorted by date ascending, capped at 5 per cell. HOTL: substring warnings from Phase 2 (clusters_final.json) still apply and are not auto-filtered here.",
+  "samples_per_cell": 5,
+  "totals": {
+    "chatgpt_in_era": 550,
+    "cc_in_era": 277,
+    "chatgpt_matched_sum_over_clusters": 19,
+    "cc_matched_sum_over_clusters": 345,
+    "note": "matched_sum_over_clusters can exceed in_era because one item may match multiple clusters (e.g. an 'anatomy canvas' chat hits both anatomy and canvas_render)."
+  },
+  "substring_warnings_carried_forward": [
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "daw",
+        "length": 3,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "821",
+            "title": "Building Custom DAWs"
+          }
+        ],
+        "note": "v1-substring-rule FP detector. v2 uses word-boundary so these examples no longer match in production."
+      }
+    },
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "midi",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "889",
+            "title": "Dehumidifier vs AWG"
+          }
+        ],
+        "note": "v1-substring-rule FP detector. v2 uses word-boundary so these examples no longer match in production."
+      }
+    }
+  ],
+  "clusters": [
+    {
+      "name": "anatomy",
+      "seed_terms": [
+        "anatomy",
+        "anatomy-v1",
+        "anatomyv1",
+        "anatomy-extension",
+        "anatomy-research",
+        "anatomy-rewrite",
+        "anatomy-map",
+        "anatomy-frame",
+        "anatomy-sidecar"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 2,
+          "samples": [
+            {
+              "id": "316",
+              "date": "2026-04-26",
+              "preview": "Site Anatomy Engine"
+            },
+            {
+              "id": "171",
+              "date": "2026-05-06",
+              "preview": "UI Anatomy and Components"
+            }
+          ]
+        },
+        "cc": {
+          "count": 28,
+          "samples": [
+            {
+              "id": "8ed779dd-223f-4752-8b46-07fbc14cc921",
+              "date": "2026-04-25",
+              "preview": "ship anatomy patch 3 for SPEC 03 (canvas pre-capture) \u2014 reconsider firewall for that one."
+            },
+            {
+              "id": "agent-a02b76db8266ffeae",
+              "date": "2026-04-26",
+              "preview": "Review one new TypeScript file in isolation. It's a small CLI validator I wrote for a JSON Schema project.  File: `C:/Users/bruke/Pre Atlas/.claude/worktrees/ni"
+            },
+            {
+              "id": "agent-a56c0c972559ceae8",
+              "date": "2026-04-26",
+              "preview": "Read and report on two files thoroughly. Goal: I need to convert the Markdown spec into a formal JSON Schema (draft-07), so I need every field, type, required-n"
+            },
+            {
+              "id": "agent-a67f62918e9be4b29",
+              "date": "2026-04-26",
+              "preview": "Goal: I need to write a new JSON Schema file at `C:/Users/bruke/Pre Atlas/contracts/schemas/AnatomyV1.v1.json` that EXACTLY matches the style of the 47 existing"
+            },
+            {
+              "id": "agent-a6c8ce5b23c406661",
+              "date": "2026-04-26",
+              "preview": "Goal: I'm writing a JSON Schema for anatomy v1 captures and need to validate against 7 real production files. Help me understand their actual shape so my schema"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "mb3d_fractals",
+      "seed_terms": [
+        "mb3d",
+        "mb3d_anim_demo",
+        "mb3d-blender",
+        "mandelbulb",
+        "mandelbulb3d",
+        "mandelbulber",
+        "mandelbulber2",
+        "mandelbulber2_install",
+        "m3p",
+        "m3p-to-fract",
+        "m3f",
+        ".fract",
+        "fractal-machine",
+        "mandelbox",
+        "raymarcher",
+        "fragmentarium"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 3,
+          "samples": [
+            {
+              "id": "119",
+              "date": "2026-05-10",
+              "preview": "Mandelbulb3D as a Forge"
+            },
+            {
+              "id": "123",
+              "date": "2026-05-10",
+              "preview": "Mandelbulb3D Overview"
+            },
+            {
+              "id": "86",
+              "date": "2026-05-12",
+              "preview": "RGB Mandelbulb Generation"
+            }
+          ]
+        },
+        "cc": {
+          "count": 9,
+          "samples": [
+            {
+              "id": "45e337da-3400-4fb6-a65f-f7d72032e998",
+              "date": "2026-05-10",
+              "preview": "Good. \"Use it like it's native\" is the ambitious framing \u2014 that means the skill needs to give Claude operational fluency, not just reference knowledge. Let me l"
+            },
+            {
+              "id": "7ba2eb8c-c02a-44fb-8675-187fe9bb4529",
+              "date": "2026-05-10",
+              "preview": "ive been usin claude computer use with mandelbulb 3d its way too slowand using way too many tojens is there away we can examine the exe for bugs an see how the "
+            },
+            {
+              "id": "agent-a69bdf93fdc6f5d59",
+              "date": "2026-05-10",
+              "preview": "Audit the existing Mandelbulb3D (MB3D) skill scaffolding. Goal: tell the user what programmatic-control assets already exist, which work end-to-end, and which a"
+            },
+            {
+              "id": "agent-aa7b886131aa69506",
+              "date": "2026-05-10",
+              "preview": "Map the headless / programmatic / CLI / batch surface of Mandelbulb3D (MB3D), a Pascal/Delphi 3D-fractal renderer. Goal: tell the user what they can already inv"
+            },
+            {
+              "id": "agent-a108874b4fef7d87a",
+              "date": "2026-05-12",
+              "preview": "Assess how much Mandelbulb3D (MB3D) capability Mandelbulber 2 (Mb2) actually covers. The user is considering Mb2 as a substrate instead of reverse-engineering M"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "audio_music",
+      "seed_terms": [
+        "strudel",
+        "stemai",
+        "surge",
+        "surge-xt",
+        "nih-plug",
+        "airwindows",
+        "musescore",
+        "fl356",
+        "fl 3",
+        "fl3",
+        "vst3",
+        "vst",
+        "daw",
+        "midi",
+        "synth",
+        "sampler",
+        "audio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 4,
+          "samples": [
+            {
+              "id": "568",
+              "date": "2026-04-03",
+              "preview": "MuseScore 4 Plugins Guide"
+            },
+            {
+              "id": "553",
+              "date": "2026-04-04",
+              "preview": "Strudel music overview"
+            },
+            {
+              "id": "393",
+              "date": "2026-04-16",
+              "preview": "Pure Data vs Strudel"
+            },
+            {
+              "id": "97",
+              "date": "2026-05-11",
+              "preview": "Audio Visual Tools"
+            }
+          ]
+        },
+        "cc": {
+          "count": 9,
+          "samples": [
+            {
+              "id": "c2aafccd-7f99-4a34-9cd9-1a1d594bb831",
+              "date": "2026-04-29",
+              "preview": "<scheduled-task name=\"strudel-source-tracker\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-source-tracker\\SKILL.md\"> This is an automated run of a sched"
+            },
+            {
+              "id": "15e6d28a-7175-460e-97d1-8fc661d79cd7",
+              "date": "2026-05-04",
+              "preview": "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\"> This is an automated run of a scheduled"
+            },
+            {
+              "id": "9dd62733-7524-4bc2-be37-dd045bf0d9db",
+              "date": "2026-05-04",
+              "preview": "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> This is an automated run of a scheduled tas"
+            },
+            {
+              "id": "agent-a9c389d4e24b886b7",
+              "date": "2026-05-05",
+              "preview": "**TASK: Read these specific files end-to-end. Don't ask questions. Quote with file:line citations.**  **Pass 1 \u2014 All CLAUDE.md files at user repos. Read each fu"
+            },
+            {
+              "id": "ce2c76fb-adab-4cff-815f-d75e9e58761d",
+              "date": "2026-05-06",
+              "preview": "<scheduled-task name=\"strudel-source-tracker\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-source-tracker\\SKILL.md\"> This is an automated run of a sched"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "atlas_core",
+      "seed_terms": [
+        "atlas",
+        "pre atlas",
+        "pre-atlas",
+        "delta-kernel",
+        "delta kernel",
+        "cognitive-sensor",
+        "cognitive sensor",
+        "cycleboard",
+        "cortex",
+        "optogon",
+        "aegis",
+        "aegis-fabric",
+        "openclaw",
+        "mirofish",
+        "perception service",
+        "perception layer",
+        "perception module",
+        "triangulation",
+        "mosaic",
+        "inpact",
+        "in-pact",
+        "blueprint-generator",
+        "code-converter",
+        "ai-exec-pipeline",
+        "uasc",
+        "ws-gateway",
+        "polaris",
+        "crucix",
+        "governance"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 7,
+          "samples": [
+            {
+              "id": "600",
+              "date": "2026-04-01",
+              "preview": "Atlas Execution Orchestrator"
+            },
+            {
+              "id": "475",
+              "date": "2026-04-10",
+              "preview": "Atlas Development Challenges"
+            },
+            {
+              "id": "375",
+              "date": "2026-04-18",
+              "preview": "Logo Concepts for OPTOGON"
+            },
+            {
+              "id": "376",
+              "date": "2026-04-18",
+              "preview": "Optogon System Analysis"
+            },
+            {
+              "id": "339",
+              "date": "2026-04-23",
+              "preview": "OpenClaw Ecosystem Shift"
+            }
+          ]
+        },
+        "cc": {
+          "count": 163,
+          "samples": [
+            {
+              "id": "agent-a02b76db8266ffeae",
+              "date": "2026-04-26",
+              "preview": "Review one new TypeScript file in isolation. It's a small CLI validator I wrote for a JSON Schema project.  File: `C:/Users/bruke/Pre Atlas/.claude/worktrees/ni"
+            },
+            {
+              "id": "agent-a56c0c972559ceae8",
+              "date": "2026-04-26",
+              "preview": "Read and report on two files thoroughly. Goal: I need to convert the Markdown spec into a formal JSON Schema (draft-07), so I need every field, type, required-n"
+            },
+            {
+              "id": "agent-a67f62918e9be4b29",
+              "date": "2026-04-26",
+              "preview": "Goal: I need to write a new JSON Schema file at `C:/Users/bruke/Pre Atlas/contracts/schemas/AnatomyV1.v1.json` that EXACTLY matches the style of the 47 existing"
+            },
+            {
+              "id": "agent-aa0b2a7aa94f2297c",
+              "date": "2026-04-26",
+              "preview": "Review a JSON Schema addition and its integration. I added a new draft-07 schema to a contracts directory and wired it up.  Files to review (all in `C:/Users/br"
+            },
+            {
+              "id": "c9590916-4b42-4226-8289-ece8f5716855",
+              "date": "2026-04-26",
+              "preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 i"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "web_extract",
+      "seed_terms": [
+        "scrapling",
+        "scraping",
+        "sitepull",
+        "web-audit",
+        "web-extract",
+        "competitor-monitor",
+        "competitor monitor",
+        "brightdata",
+        "datadome",
+        "cloudflare",
+        "anti-bot",
+        "playwright",
+        "puppeteer",
+        "headless",
+        "humanize"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 31,
+          "samples": [
+            {
+              "id": "agent-a6c8ce5b23c406661",
+              "date": "2026-04-26",
+              "preview": "Goal: I'm writing a JSON Schema for anatomy v1 captures and need to validate against 7 real production files. Help me understand their actual shape so my schema"
+            },
+            {
+              "id": "c9590916-4b42-4226-8289-ece8f5716855",
+              "date": "2026-04-26",
+              "preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 i"
+            },
+            {
+              "id": "agent-a01d4e01e13ff1183",
+              "date": "2026-05-01",
+              "preview": "Find and read sitepull at `C:\\Users\\bruke\\web-audit\\` (a sibling repo, NOT inside Pre Atlas). Report under 350 words.  Goal: ground truth on what sitepull actua"
+            },
+            {
+              "id": "agent-a05ded370a41d2d49",
+              "date": "2026-05-01",
+              "preview": "Read `services/canvas-engine/` at the cwd `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pensive-sinoussi-eb4d9c` and report under 400 words. This is a fresh inves"
+            },
+            {
+              "id": "agent-a728dfd6bec07e329",
+              "date": "2026-05-01",
+              "preview": "Read `services/canvas-engine/` (relative to cwd `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pensive-sinoussi-eb4d9c`) and report under 400 words.  Goal: I need "
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "productivity_skills",
+      "seed_terms": [
+        "weapon",
+        "festival",
+        "mini-ship",
+        "miniship",
+        "autopilot",
+        "project-finisher",
+        "handoff",
+        "handoff-out",
+        "eval-harness",
+        "cookbook",
+        "search-first",
+        "security-review",
+        "strategic-compact",
+        "tdd-workflow",
+        "verification-loop",
+        "coding-standards",
+        "backend-patterns",
+        "frontend-patterns",
+        "wasp-patterns",
+        "codex-delegate",
+        "codex-partner",
+        "continuous-learning",
+        "slash command",
+        "/weapon",
+        "/fest",
+        "/mini-ship",
+        "/autopilot"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 53,
+          "samples": [
+            {
+              "id": "agent-a3294358ccb4da81d",
+              "date": "2026-04-28",
+              "preview": "I'm planning how to autonomously bring up + verify a closed MAPE-K loop in the Pre Atlas project. The user wants me to delegate work to codex and use the festiv"
+            },
+            {
+              "id": "agent-a61c2d0818b8fdb4e",
+              "date": "2026-04-28",
+              "preview": "Goal: I need to know what conversation-analysis infrastructure ALREADY exists in this project before I propose building anything new. The user wants an audit of"
+            },
+            {
+              "id": "agent-a9f714a9e4f616b58",
+              "date": "2026-04-28",
+              "preview": "Working dir: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\intelligent-payne-6fa7c6  Goal: Map the entire Codex-delegate surface so I stop reinventing it. The user"
+            },
+            {
+              "id": "agent-a03b7467cf2f38330",
+              "date": "2026-04-29",
+              "preview": "Audit Pre Atlas (`C:\\Users\\bruke\\Pre Atlas\\`) for existing **agent invocations, approval queues, and input ingestion endpoints** that would map to a proposed sa"
+            },
+            {
+              "id": "agent-ae633198c74931111",
+              "date": "2026-04-30",
+              "preview": "Survey the Optogon path runtime and the codex-partner delegate system in the Pre Atlas repo. I'm planning how to execute the remaining steps of the Atlas substr"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "canvas_render",
+      "seed_terms": [
+        "canvas-engine",
+        "canvas-demo",
+        "screenshot-to-code",
+        "three-js",
+        "three.js",
+        "threejs",
+        "three-stack",
+        "three-js-migrate",
+        "react-three-fiber",
+        "r3f",
+        "drei",
+        "anime-js",
+        "anime.js",
+        "animejs",
+        "anime-js-migrate",
+        "remotion",
+        "webgl",
+        "webgpu",
+        "shader",
+        "raymarch",
+        "virtualstudio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 3,
+          "samples": [
+            {
+              "id": "136",
+              "date": "2026-05-09",
+              "preview": "Babylon.js vs Three.js"
+            },
+            {
+              "id": "137",
+              "date": "2026-05-09",
+              "preview": "Anime.js Three.js Integration"
+            },
+            {
+              "id": "143",
+              "date": "2026-05-09",
+              "preview": "Anime.js and Emotion"
+            }
+          ]
+        },
+        "cc": {
+          "count": 52,
+          "samples": [
+            {
+              "id": "agent-a56c0c972559ceae8",
+              "date": "2026-04-26",
+              "preview": "Read and report on two files thoroughly. Goal: I need to convert the Markdown spec into a formal JSON Schema (draft-07), so I need every field, type, required-n"
+            },
+            {
+              "id": "agent-aa0b2a7aa94f2297c",
+              "date": "2026-04-26",
+              "preview": "Review a JSON Schema addition and its integration. I added a new draft-07 schema to a contracts directory and wired it up.  Files to review (all in `C:/Users/br"
+            },
+            {
+              "id": "c9590916-4b42-4226-8289-ece8f5716855",
+              "date": "2026-04-26",
+              "preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 i"
+            },
+            {
+              "id": "agent-a3876998f52a9a6fc",
+              "date": "2026-04-28",
+              "preview": "I need a thorough audit of the Optogon service to answer the question \"is Optogon OP?\" \u2014 meaning has it grown overpowered, over-scoped, or absorbed responsibili"
+            },
+            {
+              "id": "agent-ae69dc817e7aec2f4",
+              "date": "2026-04-29",
+              "preview": "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atlas \u2014 a personal behavioral governance sys"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

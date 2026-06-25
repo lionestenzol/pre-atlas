@@ -1,0 +1,455 @@
+{
+  "phase": "003_CROSS_REFERENCE_MATRIX",
+  "sequence": "era_4_now",
+  "generated_at": "2026-05-28T03:06:57.067207+00:00",
+  "era": {
+    "label": "era_4_now",
+    "start": "2026-05-16",
+    "end": "2099-01-01"
+  },
+  "method": "Substring match of cluster seed_terms (case-insensitive) against ChatGPT title and CC first_user_msg. Items filtered to era window by first_date (ChatGPT) / first_ts (CC). Samples sorted by date ascending, capped at 5 per cell. HOTL: substring warnings from Phase 2 (clusters_final.json) still apply and are not auto-filtered here.",
+  "samples_per_cell": 5,
+  "totals": {
+    "chatgpt_in_era": 71,
+    "cc_in_era": 97,
+    "chatgpt_matched_sum_over_clusters": 2,
+    "cc_matched_sum_over_clusters": 95,
+    "note": "matched_sum_over_clusters can exceed in_era because one item may match multiple clusters (e.g. an 'anatomy canvas' chat hits both anatomy and canvas_render)."
+  },
+  "substring_warnings_carried_forward": [
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "daw",
+        "length": 3,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "821",
+            "title": "Building Custom DAWs"
+          }
+        ],
+        "note": "v1-substring-rule FP detector. v2 uses word-boundary so these examples no longer match in production."
+      }
+    },
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "midi",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "889",
+            "title": "Dehumidifier vs AWG"
+          }
+        ],
+        "note": "v1-substring-rule FP detector. v2 uses word-boundary so these examples no longer match in production."
+      }
+    }
+  ],
+  "clusters": [
+    {
+      "name": "anatomy",
+      "seed_terms": [
+        "anatomy",
+        "anatomy-v1",
+        "anatomyv1",
+        "anatomy-extension",
+        "anatomy-research",
+        "anatomy-rewrite",
+        "anatomy-map",
+        "anatomy-frame",
+        "anatomy-sidecar"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 7,
+          "samples": [
+            {
+              "id": "agent-a8af0eeba0bd3a814",
+              "date": "2026-05-24",
+              "preview": "I'm planning to add a new \"static image \u2192 code\" (LLM vision) input path into an existing service called canvas-engine, which currently does \"live URL \u2192 faithful"
+            },
+            {
+              "id": "agent-a63658b120431ec7a",
+              "date": "2026-05-25",
+              "preview": "I need a COMPLETE, accurate map of the \"vision\" (screenshot \u2192 code) subsystem inside a TypeScript/Express service called canvas-engine. I'm comparing it against"
+            },
+            {
+              "id": "agent-abfc94117da3cc8ae",
+              "date": "2026-05-25",
+              "preview": "I need a COMPLETE, accurate map of the \"anatomy\" (live URL \u2192 deterministic React clone, plus region-based editing) subsystem inside a TypeScript/Express service"
+            },
+            {
+              "id": "agent-af642a8907c55f6e8",
+              "date": "2026-05-25",
+              "preview": "I need a COMPLETE, accurate map of a Chrome MV3 browser extension called the \"anatomy extension.\" It captures the structure of a live web page and emits an \"Ana"
+            },
+            {
+              "id": "8df46ce5-7a65-42da-b108-4fb491fbc2b5",
+              "date": "2026-05-26",
+              "preview": "Save this as a file or paste it into the new session:  ``` # Resume \u2014 Claude/ChatGPT Export Mining Project  You're picking up an in-flight project. Prior sessio"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "mb3d_fractals",
+      "seed_terms": [
+        "mb3d",
+        "mb3d_anim_demo",
+        "mb3d-blender",
+        "mandelbulb",
+        "mandelbulb3d",
+        "mandelbulber",
+        "mandelbulber2",
+        "mandelbulber2_install",
+        "m3p",
+        "m3p-to-fract",
+        "m3f",
+        ".fract",
+        "fractal-machine",
+        "mandelbox",
+        "raymarcher",
+        "fragmentarium"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 1,
+          "samples": [
+            {
+              "id": "43",
+              "date": "2026-05-18",
+              "preview": "Mandelbulb AudioVisual DAW"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "audio_music",
+      "seed_terms": [
+        "strudel",
+        "stemai",
+        "surge",
+        "surge-xt",
+        "nih-plug",
+        "airwindows",
+        "musescore",
+        "fl356",
+        "fl 3",
+        "fl3",
+        "vst3",
+        "vst",
+        "daw",
+        "midi",
+        "synth",
+        "sampler",
+        "audio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 1,
+          "samples": [
+            {
+              "id": "43",
+              "date": "2026-05-18",
+              "preview": "Mandelbulb AudioVisual DAW"
+            }
+          ]
+        },
+        "cc": {
+          "count": 8,
+          "samples": [
+            {
+              "id": "c008a665-edac-4e8e-80e6-c354322cd739",
+              "date": "2026-05-17",
+              "preview": "Concrete steps, in order. Do them on the machine you build on. 1. Install Rust. Go to rustup.rs, run the installer. Open a new terminal, run `rustc --version`. "
+            },
+            {
+              "id": "84b9c8a1-a26c-439a-bce6-f218ae45859e",
+              "date": "2026-05-18",
+              "preview": "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> This is an automated run of a scheduled tas"
+            },
+            {
+              "id": "47cc076b-f51c-4443-9871-8898434a1e56",
+              "date": "2026-05-21",
+              "preview": "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\"> This is an automated run of a scheduled"
+            },
+            {
+              "id": "942c280a-138f-4ebb-94d7-d70254cf7b68",
+              "date": "2026-05-21",
+              "preview": "<scheduled-task name=\"strudel-source-tracker\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-source-tracker\\SKILL.md\"> This is an automated run of a sched"
+            },
+            {
+              "id": "129f0546-60d3-4d54-83d8-d1da8fc7e99c",
+              "date": "2026-05-25",
+              "preview": "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> This is an automated run of a scheduled tas"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "atlas_core",
+      "seed_terms": [
+        "atlas",
+        "pre atlas",
+        "pre-atlas",
+        "delta-kernel",
+        "delta kernel",
+        "cognitive-sensor",
+        "cognitive sensor",
+        "cycleboard",
+        "cortex",
+        "optogon",
+        "aegis",
+        "aegis-fabric",
+        "openclaw",
+        "mirofish",
+        "perception service",
+        "perception layer",
+        "perception module",
+        "triangulation",
+        "mosaic",
+        "inpact",
+        "in-pact",
+        "blueprint-generator",
+        "code-converter",
+        "ai-exec-pipeline",
+        "uasc",
+        "ws-gateway",
+        "polaris",
+        "crucix",
+        "governance"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 56,
+          "samples": [
+            {
+              "id": "55a5dc3b-c43a-47c4-be90-c973d2ab7908",
+              "date": "2026-05-16",
+              "preview": "<scheduled-task name=\"atlas-midday\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-midday\\SKILL.md\"> This is an automated run of a scheduled task. The user "
+            },
+            {
+              "id": "d46d96c5-588f-48c7-b817-3d6ec5011a1a",
+              "date": "2026-05-16",
+              "preview": "<scheduled-task name=\"atlas-morning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-morning\\SKILL.md\"> This is an automated run of a scheduled task. The use"
+            },
+            {
+              "id": "dd48f4cf-f74c-4731-b711-c08120622082",
+              "date": "2026-05-16",
+              "preview": "<scheduled-task name=\"atlas-evening\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-evening\\SKILL.md\"> This is an automated run of a scheduled task. The use"
+            },
+            {
+              "id": "ad3cb0f8-3dfc-48f7-a1af-8ca99a91df57",
+              "date": "2026-05-17",
+              "preview": "<scheduled-task name=\"atlas-evening\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-evening\\SKILL.md\"> This is an automated run of a scheduled task. The use"
+            },
+            {
+              "id": "e6ddf4ea-fafc-47f1-a657-8dd5fcb9074a",
+              "date": "2026-05-17",
+              "preview": "<scheduled-task name=\"atlas-morning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-morning\\SKILL.md\"> This is an automated run of a scheduled task. The use"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "web_extract",
+      "seed_terms": [
+        "scrapling",
+        "scraping",
+        "sitepull",
+        "web-audit",
+        "web-extract",
+        "competitor-monitor",
+        "competitor monitor",
+        "brightdata",
+        "datadome",
+        "cloudflare",
+        "anti-bot",
+        "playwright",
+        "puppeteer",
+        "headless",
+        "humanize"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 4,
+          "samples": [
+            {
+              "id": "agent-a3629aa9614cb3e4f",
+              "date": "2026-05-17",
+              "preview": "I'm giving Bruke a guided tour of his binre RE/debug pipeline at `C:\\Users\\bruke\\binre\\`. It orchestrates 5 reverse-engineering tools and merges into `report.js"
+            },
+            {
+              "id": "agent-ab53a14ce78e18e5c",
+              "date": "2026-05-17",
+              "preview": "I'm giving Bruke a guided tour of his binre RE/debug pipeline at `C:\\Users\\bruke\\binre\\`. This is a personal project that orchestrates DiE (Detect It Easy) + De"
+            },
+            {
+              "id": "ce620957-e4e5-4d91-9d49-39c72fb08108",
+              "date": "2026-05-18",
+              "preview": "<scheduled-task name=\"pester-3-accountability-check\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-3-accountability-check\\SKILL.md\"> This is an automated "
+            },
+            {
+              "id": "agent-abfc94117da3cc8ae",
+              "date": "2026-05-25",
+              "preview": "I need a COMPLETE, accurate map of the \"anatomy\" (live URL \u2192 deterministic React clone, plus region-based editing) subsystem inside a TypeScript/Express service"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "productivity_skills",
+      "seed_terms": [
+        "weapon",
+        "festival",
+        "mini-ship",
+        "miniship",
+        "autopilot",
+        "project-finisher",
+        "handoff",
+        "handoff-out",
+        "eval-harness",
+        "cookbook",
+        "search-first",
+        "security-review",
+        "strategic-compact",
+        "tdd-workflow",
+        "verification-loop",
+        "coding-standards",
+        "backend-patterns",
+        "frontend-patterns",
+        "wasp-patterns",
+        "codex-delegate",
+        "codex-partner",
+        "continuous-learning",
+        "slash command",
+        "/weapon",
+        "/fest",
+        "/mini-ship",
+        "/autopilot"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 8,
+          "samples": [
+            {
+              "id": "567642ee-dbb8-4061-b572-96de01bca697",
+              "date": "2026-05-18",
+              "preview": "i need you to help me plan. I want o use es tool to plan a fest /project-finisher /mini-ship /weapon"
+            },
+            {
+              "id": "24fe9c3a-cdbf-42b8-aa1e-9134f670d312",
+              "date": "2026-05-26",
+              "preview": "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Users\\bruke\\OneDrive\\Desktop\\newfiles.zip\" "
+            },
+            {
+              "id": "4c7b8149-57e9-4f8f-a996-bf09cca9f0f8",
+              "date": "2026-05-26",
+              "preview": "# Resume \u2014 Claude/ChatGPT Mining Project (Post-Fest)  You're picking up an in-flight project. Prior session **closed the festival /sharded-soaring-castle**. Com"
+            },
+            {
+              "id": "2ffbf12e-4008-4472-af6d-f59ff005e6ad",
+              "date": "2026-05-27",
+              "preview": "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /jargonize /weapon  /fest  my custom instr"
+            },
+            {
+              "id": "03ecdc95-5bed-4b98-9024-b109adc56248",
+              "date": "2026-05-28",
+              "preview": "Resume corpus-archaeology festival, Phase 3 of 5.  Repo: C:\\Users\\bruke\\Pre Atlas (branch: claude/main-triage-26f4a5) Master plan: tools/fest-reconcile/FESTIVAL"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "canvas_render",
+      "seed_terms": [
+        "canvas-engine",
+        "canvas-demo",
+        "screenshot-to-code",
+        "three-js",
+        "three.js",
+        "threejs",
+        "three-stack",
+        "three-js-migrate",
+        "react-three-fiber",
+        "r3f",
+        "drei",
+        "anime-js",
+        "anime.js",
+        "animejs",
+        "anime-js-migrate",
+        "remotion",
+        "webgl",
+        "webgpu",
+        "shader",
+        "raymarch",
+        "virtualstudio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 12,
+          "samples": [
+            {
+              "id": "7708126a-5eb6-4df6-bc90-97e941ee67c6",
+              "date": "2026-05-24",
+              "preview": "Read the image at C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine\\scripts\\fixtures\\sample-ui.png and reply with ONE short sentence describing what UI it shows. "
+            },
+            {
+              "id": "agent-a8af0eeba0bd3a814",
+              "date": "2026-05-24",
+              "preview": "I'm planning to add a new \"static image \u2192 code\" (LLM vision) input path into an existing service called canvas-engine, which currently does \"live URL \u2192 faithful"
+            },
+            {
+              "id": "efc6eb4a-1c73-4d9c-974f-30d90f4b6862",
+              "date": "2026-05-24",
+              "preview": "Read the image at C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine\\scripts\\fixtures\\sample-ui.png and reply with ONE short sentence describing what UI it shows. "
+            },
+            {
+              "id": "facbfca6-65b8-4fed-bf87-94fa23bb9c7b",
+              "date": "2026-05-24",
+              "preview": "cd services/canvas-engine && npm run start'"
+            },
+            {
+              "id": "4328aa45-60dd-41f3-9c13-21cfc81e4da0",
+              "date": "2026-05-25",
+              "preview": "In C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine, the helper that converts a region name to a PascalCase component name now exists in THREE places and must no"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

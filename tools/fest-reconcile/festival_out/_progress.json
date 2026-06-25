@@ -9,7 +9,7 @@
       },
       "cc": {
         "status": "complete",
-        "finished_at": "2026-05-27T19:25:49.200364",
+        "finished_at": "2026-05-27T21:57:21.608777",
         "artifact": "festival_out/cc_temporal.json"
       },
       "fs": {
@@ -17,6 +17,470 @@
         "finished_at": "2026-05-27T19:25:49.200366",
         "artifact": "festival_out/fs_temporal.json"
       }
+    },
+    "002_KEYWORD_CLUSTERS": {
+      "seq_01_seed_clusters_from_portfolio": {
+        "status": "complete",
+        "finished_at": "2026-05-28T00:35:00",
+        "artifact": "festival_out/clusters_v0.json",
+        "script": "tools/fest-reconcile/seed_clusters.py",
+        "summary": {
+          "portfolio_total": 140,
+          "categorized": 85,
+          "uncategorized": 45,
+          "clusters": {
+            "anatomy": 4,
+            "mb3d_fractals": 7,
+            "audio_music": 10,
+            "atlas_core": 25,
+            "web_extract": 10,
+            "productivity_skills": 22,
+            "canvas_render": 17
+          }
+        }
+      },
+      "seq_02_expand_clusters_from_corpus": {
+        "status": "complete",
+        "finished_at": "2026-05-28T00:45:00",
+        "artifact": "festival_out/clusters_v1.json",
+        "script": "tools/fest-reconcile/expand_clusters.py",
+        "summary": {
+          "method": "substring-match seed terms against chatgpt titles + cc first_user_msgs, top 30 co-occurring tokens per cluster after stopword + path-noise + scaffold filter",
+          "corpus_match_counts": {
+            "anatomy": {
+              "chatgpt": 2,
+              "cc": 13
+            },
+            "mb3d_fractals": {
+              "chatgpt": 8,
+              "cc": 8
+            },
+            "audio_music": {
+              "chatgpt": 209,
+              "cc": 323
+            },
+            "atlas_core": {
+              "chatgpt": 93,
+              "cc": 330
+            },
+            "web_extract": {
+              "chatgpt": 1,
+              "cc": 14
+            },
+            "productivity_skills": {
+              "chatgpt": 15,
+              "cc": 40
+            },
+            "canvas_render": {
+              "chatgpt": 12,
+              "cc": 79
+            }
+          }
+        }
+      },
+      "seq_03_validate_clusters": {
+        "status": "complete",
+        "finished_at": "2026-05-28T00:55:00",
+        "artifact": "festival_out/clusters_final.json",
+        "script": "tools/fest-reconcile/validate_clusters.py",
+        "summary": {
+          "method": "coverage + pairwise term-overlap distinctness matrix + short-seed substring warnings + deterministic 5-sample FP eyeball per channel, HOTL gate",
+          "max_overlap_per_cluster": {
+            "anatomy": {
+              "with": "web_extract",
+              "shared_terms": 7
+            },
+            "mb3d_fractals": {
+              "with": "web_extract",
+              "shared_terms": 2
+            },
+            "audio_music": {
+              "with": "atlas_core",
+              "shared_terms": 13
+            },
+            "atlas_core": {
+              "with": "audio_music",
+              "shared_terms": 13
+            },
+            "web_extract": {
+              "with": "anatomy",
+              "shared_terms": 7
+            },
+            "productivity_skills": {
+              "with": "audio_music",
+              "shared_terms": 7
+            },
+            "canvas_render": {
+              "with": "audio_music",
+              "shared_terms": 5
+            }
+          },
+          "substring_warnings_flagged": [
+            "audio_music seed 'stem' matched 'system'/'ecosystem' in chatgpt titles",
+            "productivity_skills seed 'fest' matched 'manifesting'/'lifestyle' in chatgpt titles"
+          ]
+        }
+      }
     }
+  },
+  "phase_2_status": "complete",
+  "next_phase": "003_CROSS_REFERENCE_MATRIX",
+  "next_phase_input": "festival_out/clusters_final.json + chatgpt_temporal + cc_temporal + fs_temporal",
+  "next_phase_sequences": [
+    "01_era_1_pre_cc_matrix",
+    "02_era_2_early_cc_matrix",
+    "03_era_3_heavy_cc_matrix",
+    "04_fs_overlay",
+    "05_merge_matrices"
+  ],
+  "phases_003": {
+    "seq_01_era_1_pre_cc_matrix": {
+      "status": "complete",
+      "finished_at": "2026-05-28T00:55:00",
+      "artifact": "festival_out/era_1_matrix.json",
+      "script": "tools/fest-reconcile/build_era_matrix.py",
+      "window": "2024-08-21 -> 2026-02-08",
+      "summary": {
+        "chatgpt_in_era": 4989,
+        "cc_in_era": 0,
+        "per_cluster_chatgpt": {
+          "anatomy": 0,
+          "mb3d_fractals": 2,
+          "audio_music": 89,
+          "atlas_core": 64,
+          "web_extract": 1,
+          "productivity_skills": 10,
+          "canvas_render": 1
+        },
+        "per_cluster_cc": {
+          "anatomy": 0,
+          "mb3d_fractals": 0,
+          "audio_music": 0,
+          "atlas_core": 0,
+          "web_extract": 0,
+          "productivity_skills": 0,
+          "canvas_render": 0
+        }
+      }
+    },
+    "seq_02_era_2_early_cc_matrix": {
+      "status": "complete",
+      "finished_at": "2026-05-28T00:58:00",
+      "artifact": "festival_out/era_2_matrix.json",
+      "script": "tools/fest-reconcile/build_era_matrix.py",
+      "window": "2026-02-09 -> 2026-03-31",
+      "summary": {
+        "chatgpt_in_era": 924,
+        "cc_in_era": 646,
+        "per_cluster_chatgpt": {
+          "anatomy": 0,
+          "mb3d_fractals": 2,
+          "audio_music": 89,
+          "atlas_core": 17,
+          "web_extract": 0,
+          "productivity_skills": 4,
+          "canvas_render": 8
+        },
+        "per_cluster_cc": {
+          "anatomy": 0,
+          "mb3d_fractals": 0,
+          "audio_music": 262,
+          "atlas_core": 151,
+          "web_extract": 0,
+          "productivity_skills": 10,
+          "canvas_render": 27
+        }
+      }
+    },
+    "seq_03_era_3_heavy_cc_matrix": {
+      "status": "complete",
+      "finished_at": "2026-05-28T01:00:00",
+      "artifact": "festival_out/era_3_matrix.json",
+      "script": "tools/fest-reconcile/build_era_matrix.py",
+      "window": "2026-04-01 -> 2026-05-15",
+      "summary": {
+        "chatgpt_in_era": 550,
+        "cc_in_era": 278,
+        "per_cluster_chatgpt": {
+          "anatomy": 2,
+          "mb3d_fractals": 3,
+          "audio_music": 28,
+          "atlas_core": 12,
+          "web_extract": 0,
+          "productivity_skills": 1,
+          "canvas_render": 3
+        },
+        "per_cluster_cc": {
+          "anatomy": 11,
+          "mb3d_fractals": 8,
+          "audio_music": 55,
+          "atlas_core": 138,
+          "web_extract": 13,
+          "productivity_skills": 27,
+          "canvas_render": 44
+        }
+      }
+    },
+    "seq_04_fs_overlay": {
+      "status": "complete",
+      "finished_at": "2026-05-28T01:02:00",
+      "artifact": "festival_out/fs_overlay.json",
+      "script": "tools/fest-reconcile/fs_overlay.py",
+      "summary": {
+        "method": "Join cluster.portfolio_hits against fs_temporal by (name, surface). Bucket ctime + mtime into 4 eras. No re-classification; Phase 2 is authoritative.",
+        "unmatched_hits": 0,
+        "ctime_distribution_per_cluster": {
+          "anatomy": {
+            "era_1": 0,
+            "era_2": 0,
+            "era_3": 4,
+            "era_4": 0,
+            "unknown": 0
+          },
+          "mb3d_fractals": {
+            "era_1": 0,
+            "era_2": 0,
+            "era_3": 7,
+            "era_4": 0,
+            "unknown": 0
+          },
+          "audio_music": {
+            "era_1": 0,
+            "era_2": 2,
+            "era_3": 2,
+            "era_4": 3,
+            "unknown": 3
+          },
+          "atlas_core": {
+            "era_1": 3,
+            "era_2": 7,
+            "era_3": 11,
+            "era_4": 0,
+            "unknown": 4
+          },
+          "web_extract": {
+            "era_1": 0,
+            "era_2": 0,
+            "era_3": 8,
+            "era_4": 0,
+            "unknown": 2
+          },
+          "productivity_skills": {
+            "era_1": 0,
+            "era_2": 5,
+            "era_3": 16,
+            "era_4": 1,
+            "unknown": 0
+          },
+          "canvas_render": {
+            "era_1": 0,
+            "era_2": 0,
+            "era_3": 13,
+            "era_4": 1,
+            "unknown": 3
+          }
+        }
+      }
+    },
+    "seq_04b_era_4_now_matrix_bonus": {
+      "status": "complete",
+      "finished_at": "2026-05-28T01:03:00",
+      "artifact": "festival_out/era_4_matrix.json",
+      "script": "tools/fest-reconcile/build_era_matrix.py",
+      "window": "2026-05-16 -> 2099-01-01",
+      "note": "Not a listed Phase 3 sequence; computed at merge time so era_cluster_matrix.json is self-consistent and Phase 4 can look up Era 4 ship events.",
+      "summary": {
+        "chatgpt_in_era": 71,
+        "cc_in_era": 93,
+        "per_cluster_chatgpt": {
+          "anatomy": 0,
+          "mb3d_fractals": 1,
+          "audio_music": 3,
+          "atlas_core": 0,
+          "web_extract": 0,
+          "productivity_skills": 0,
+          "canvas_render": 0
+        },
+        "per_cluster_cc": {
+          "anatomy": 2,
+          "mb3d_fractals": 0,
+          "audio_music": 6,
+          "atlas_core": 41,
+          "web_extract": 1,
+          "productivity_skills": 3,
+          "canvas_render": 8
+        }
+      }
+    },
+    "seq_05_merge_matrices": {
+      "status": "complete",
+      "finished_at": "2026-05-28T01:04:00",
+      "artifact": "festival_out/era_cluster_matrix.json",
+      "script": "tools/fest-reconcile/merge_matrices.py",
+      "summary": {
+        "shape": "cluster -> channels {chatgpt, cc, fs_ctime, fs_mtime} -> era_label -> count/samples/items",
+        "eras_included": [
+          "era_1_pre_cc",
+          "era_2_early_cc",
+          "era_3_heavy_cc",
+          "era_4_now"
+        ],
+        "clusters_count": 7,
+        "totals_by_era": {
+          "era_1_pre_cc": {
+            "chatgpt_in_era": 4989,
+            "cc_in_era": 0
+          },
+          "era_2_early_cc": {
+            "chatgpt_in_era": 924,
+            "cc_in_era": 646
+          },
+          "era_3_heavy_cc": {
+            "chatgpt_in_era": 550,
+            "cc_in_era": 278
+          },
+          "era_4_now": {
+            "chatgpt_in_era": 71,
+            "cc_in_era": 93
+          }
+        },
+        "headline_findings_eyeball": [
+          "anatomy is purely Era 3+ (0,0,11,2 on CC; 0,0,4,0 on fs_ctime) \u2014 no Pre-CC presence at all.",
+          "web_extract has no ChatGPT chatter before Era 3 build (1,0,0,0); ship-first, talk-after.",
+          "audio_music has 89 ChatGPT items in Era 1 + 89 in Era 2 (sustained), but only 2 fs_ctime ships in Era 2 and 2 in Era 3 \u2014 long talk, slow ship.",
+          "atlas_core fs_ctime stages 3->7->11 across Era 1->Era 3, matching steady build narrative.",
+          "audio_music CC=262 in Era 2 is likely inflated by 'stem'/'system' substring false positives (Phase 2 warning) \u2014 Phase 4 should sample-verify before treating it as ship signal.",
+          "productivity_skills CC=27 in Era 3 is likely inflated by 'fest'/'manifesting'/'lifestyle' substring false positives \u2014 same caveat."
+        ]
+      }
+    },
+    "phase_3_status": "complete",
+    "next_phase": "004_CHANNEL_FLOW_ANALYSIS",
+    "next_phase_input": "festival_out/era_cluster_matrix.json + portfolio_evidence.json (band=strong items)"
+  },
+  "phases_005": {
+    "seq_01_ship_corpus_map_md": {
+      "status": "complete",
+      "finished_at": "2026-05-28T02:30:00",
+      "artifact": "festival_out/CORPUS_MAP.md",
+      "script": "manual",
+      "summary": {
+        "method": "Aggregate ship_flow.json + era_cluster_matrix.json + clusters_final.json into a human-readable narrative. Hard rule: every finding cites a specific record (convo_id, session_id, path, or item name). Where evidence is title-language only, finding says so. No claims about convo body content.",
+        "sections": [
+          "1 Era x cluster heatmap (chatgpt, cc, fs_ctime per cluster x era; era totals)",
+          "2 Channel-flow patterns (pattern dist, idea_via dist, cluster_fallback anchor collapse, items per cluster)",
+          "3 Counter-narrative findings (F1-F9, each grounded with >=5 spot-check records where applicable)",
+          "4 Open questions for follow-up (10 items, structural gaps)",
+          "5 What this report does NOT claim",
+          "6 Index of records cited"
+        ],
+        "findings_count": 9,
+        "open_questions_count": 10,
+        "spot_check_records_per_finding": "5+ for F1, F2, F4, F5, F6, F8, F9 (with explicit convo_ids and item names); F3 quotes 6 sample titles; F7 names both no_talk items with provenance",
+        "explicit_disclaimer_present": true,
+        "downstream_dependency": "AUDIT_FINDINGS.md (Phase 4 anchor verification gate)"
+      }
+    },
+    "phase_5_status": "complete_pending_audit_gate",
+    "next_action": "Audit done. AUDIT_FINDINGS.md written with verdicts on 7 cluster anchors (4 REJECT, 2 WEAK, 1 ACCEPT-but-late) + 5 spot-checked name_match anchors (1 REJECT, 4 ACCEPT). Section 7 contains full Phase 1-5 re-run plan (option A) with corrected rules. Awaiting Bruke's call: (A) full re-run, (B) Phase 4-only re-run, or (C) annotate-and-park."
+  },
+  "phases_rerun_v2": {
+    "status": "complete",
+    "finished_at": "2026-05-28T03:30:00Z",
+    "method": "Weapon-mode 11-task execution against the audit findings. Replaced literal substring rule with word-boundary regex (re.search(rf'(?<![a-z0-9_]){re.escape(s)}(?![a-z0-9_])', text)) across all 4 phase scripts + portfolio cluster assignment in seed_clusters.py. Lifted Phase 1 first_user_msg cap 200->2000. Lifted Phase 2 validator 2000-item scan cap. Switched Phase 4 FP_RISK_CLUSTERS to dynamic load from validator output. Dropped substring-FP seeds (stem, fest, scrape, fractal, comfyui, perception, mode names). Added explicit forms for word-boundary requirements (mandelbulb3d, mandelbulber2, m3p-to-fract, fractal-machine, etc).",
+    "artifacts": [
+      "_match.py",
+      "festival_out/clusters_v0_v2.json",
+      "festival_out/clusters_v1_v2.json",
+      "festival_out/clusters_final_v2.json",
+      "festival_out/era_1_matrix_v2.json",
+      "festival_out/era_2_matrix_v2.json",
+      "festival_out/era_3_matrix_v2.json",
+      "festival_out/era_4_matrix_v2.json",
+      "festival_out/fs_overlay_v2.json",
+      "festival_out/era_cluster_matrix_v2.json",
+      "festival_out/ship_flow_v2.json",
+      "festival_out/CORPUS_MAP_v2.md"
+    ],
+    "audit_anchor_status": {
+      "rejected_eliminated_in_cluster_fallback": ["6321","2530","6289","1705","4986"],
+      "rejected_retained_via_name_match_only": ["6521 (1 item: perception service)", "3191 (1 item: wasp framework)"],
+      "accept_but_late_unchanged": ["316 (4 anatomy items, still post-dates ship ctimes)"]
+    },
+    "headline_metric_v1_to_v2": {
+      "audio_music_chatgpt": "209 -> 49 (-76%)",
+      "atlas_core_chatgpt": "93 -> 14 (-85%)",
+      "productivity_skills_chatgpt": "15 -> 3 (-80%)",
+      "no_build_flow_pattern": "27 -> 11 (-59%)",
+      "cluster_fallback_idea_via": "45 -> 36"
+    },
+    "side_effect_caught_and_fixed_during_rerun": "Initial v2 run with mode names still in atlas_core seeds collapsed 15 items onto convo 6152 'USAA Thanksgiving Closure Notice' via seed 'closure'. Mitigated by dropping RECOVER/CLOSURE/MAINTENANCE/COMPOUND/SCALE from seeds.",
+    "open_questions_for_v3": "See CORPUS_MAP_v2.md Section 4. 7 OQs: anatomy negative-lag persists, v2 anchors unaudited, portfolio-membership diff verification, generic seeds remain (audio, midi, etc), wasp/insect, atlas_core CC inflation, expanded null idea_via cohort."
+  },
+  "audit_phases_1_through_4": {
+    "status": "complete",
+    "finished_at": "2026-05-28T02:50:00",
+    "artifact": "festival_out/AUDIT_FINDINGS.md",
+    "method": "Mechanical count verification of every phase artifact against _progress.json. Semantic verification: read 7 cluster_fallback anchor convo bodies from services/cognitive-sensor/memory_db.json + 5 spot-check name_match anchors.",
+    "headline": "Mechanical: PASS (no miscounts). Semantic: 4 of 7 cluster anchors are pure substring FPs (REJECT); 2 of 7 are domain-mismatched (WEAK); 1 of 7 is topically real but post-dates the items it anchors (LATE). 1 of 5 audited name_match anchors is FP (wasp). At least 46 of 60 strong items have suspect idea_at attributions.",
+    "rejected_anchors": [
+      "6521 atlas_core/perception",
+      "2530 web_extract/scrape",
+      "6321 audio_music/stem",
+      "6289 productivity_skills/fest"
+    ],
+    "weak_anchors": [
+      "1705 canvas_render/comfyui",
+      "4986 mb3d_fractals/fractal"
+    ],
+    "late_anchor": [
+      "316 anatomy/anatomy"
+    ],
+    "rejected_name_match": [
+      "3191 wasp (Tarantula Hawk Wasp insect, not framework)"
+    ],
+    "rerun_plan_location": "AUDIT_FINDINGS.md Section 7"
+  },
+  "phases_004": {
+    "seq_01_ship_flow_per_item": {
+      "status": "complete",
+      "finished_at": "2026-05-28T01:55:00",
+      "artifact": "festival_out/ship_flow.json",
+      "script": "tools/fest-reconcile/ship_flow.py",
+      "summary": {
+        "method": "Per strong-band portfolio item, join ChatGPT idea_at (earliest convo title-substring match; cluster seed-term fallback w/ idea_via tag) + CC build_at (earliest session first_user_msg substring) + fs ship_at (ctime by name+surface) + fs last_active_at (mtime). Lags in days. Deterministic flow_pattern: parallel if |lag_idea_to_build| <= 7d, else talk_leads/build_leads by sign, no_talk if no ChatGPT, no_build if ChatGPT-only. Caveat 'substring_fp_risk' on cluster_fallback ideas in audio_music or productivity_skills.",
+        "input_strong_count": 60,
+        "output_record_count": 60,
+        "flow_pattern_counts": {
+          "talk_leads": 27,
+          "no_build": 27,
+          "parallel": 4,
+          "no_talk": 2
+        },
+        "caveat_substring_fp_risk_count": 7,
+        "caveat_items": [
+          "airwindows (audio_music, matched 'stem')",
+          "nih-plug (audio_music, matched 'stem')",
+          "operator-system (audio_music, matched 'stem' in 'system')",
+          "STEMai (audio_music, matched 'stem')",
+          "surge-xt (audio_music, matched 'stem')",
+          "continuous-learning-v2 (productivity_skills, matched 'fest')",
+          "codex-partner (productivity_skills, matched 'fest')"
+        ],
+        "headline_findings_eyeball": [
+          "talk_leads == no_build (27 vs 27): for every item where ChatGPT precedes CC by >7d, there's another where ChatGPT chatter exists but no CC session ever named the item in its first user message.",
+          "parallel cluster (4 items) all post-2026-02 (POLARIS, STRUDEL, mandelbulb3d, anatomy-extension) \u2014 once CC was online, talk+build genuinely co-arose.",
+          "no_talk = 2 (binre, everything-claude-code) \u2014 both 2026-05 CC-era builds with no cluster match in portfolio_evidence.json clusters; pure build_leads signal.",
+          "audio_music FP-risk caveats (5/7) all rely on substring 'stem' matching 'system'/'ecosystem' in 2024 ChatGPT titles \u2014 idea_at dates for airwindows/nih-plug/operator-system/STEMai/surge-xt are NOT trustworthy without verifying the convo content.",
+          "STEMai matched its own name via 'stem' seed \u2014 genuine but still flagged because cluster_fallback path can't distinguish name-collision from category match."
+        ]
+      }
+    },
+    "phase_4_status": "complete",
+    "next_phase": "005_NARRATIVE_REPORT",
+    "next_phase_input": "festival_out/ship_flow.json + festival_out/era_cluster_matrix.json + festival_out/clusters_final.json",
+    "next_phase_sequences": [
+      "01_corpus_map_md"
+    ]
   }
 }

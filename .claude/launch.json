@@ -380,23 +380,11 @@
         "3073"
       ],
       "env": {
-        "DROPLIST_ATLAS_SIGNALS_URL": "http://localhost:3001/api/signals/ingest"
+        "DROPLIST_ATLAS_SIGNALS_URL": "http://localhost:3001/api/signals/ingest",
+        "DROPLIST_DAEMON": "1"
       },
       "port": 3073,
       "cwd": "services/droplist"
-    },
-    {
-      "name": "droplist-ui",
-      "runtimeExecutable": "node",
-      "runtimeArgs": [
-        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
-        "services/droplist/ui",
-        "-p",
-        "3074",
-        "-c-1",
-        "--cors"
-      ],
-      "port": 3074
     },
     {
       "name": "audit-map",

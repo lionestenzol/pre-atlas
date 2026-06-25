@@ -37,7 +37,12 @@ os.environ.setdefault("DROPLIST_LLM", "heuristic")
 
 import uvicorn  # noqa: E402
 from droplist import intake, storage  # noqa: E402
+from droplist.auth import require_write_token  # noqa: E402
 from droplist.server import app  # noqa: E402
+
+# Task B added an X-Atlas-Token guard to /api/drop. This standalone gate exercises
+# the intake chainer behind it, not auth (see test_auth.py), so no-op the guard.
+app.dependency_overrides[require_write_token] = lambda: None
 
 
 def _free_port() -> int:

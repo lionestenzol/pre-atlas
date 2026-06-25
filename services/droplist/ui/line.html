@@ -10,7 +10,7 @@
 <style>
   :root{
     --bg:#0c0e0d; --bg2:#101413; --panel:#161b19; --panel2:#1c2220;
-    --line:#2a322f; --line2:#39433f; --text:#e9e7e0; --muted:#8b918c; --faint:#5c635e;
+    --line:#2a322f; --line2:#39433f; --text:#e9e7e0; --muted:#8b918c; --faint:#7a807c;
     --signal:#ffaa33; --signal-press:#e8951c; --done:#5fd97a; --stuck:#ff5d5d; --skip:#8a8f8c; --carry:#69b4ff;
     --shadow:0 18px 50px -18px rgba(0,0,0,.85);
   }
@@ -429,7 +429,7 @@ function shell(inner){
   if(MODE==='min'){
     return `
   <header class="min-header"><div class="brand display">DROP<b>LIST</b></div></header>
-  <main>${inner}</main>`;
+  <main aria-live="polite" aria-atomic="false">${inner}</main>`;
   }
   const navBtn = (id,ic,label)=>`<button data-nav="${id}" class="${view===id?'on':''}"><span class="ic">${ic}</span>${label}</button>`;
   return `
@@ -437,8 +437,8 @@ function shell(inner){
     <div class="brand display">DROP<b>LIST</b></div>
     <div class="clock"><span class="dot"></span>${fmtDate(S.day)}<br>${t}</div>
   </header>
-  <main>${inner}</main>
-  ${view==='now'||view==='today' ? `<button class="fab" data-act="quickdrop">+</button>`:''}
+  <main aria-live="polite" aria-atomic="false">${inner}</main>
+  ${view==='now'||view==='today' ? `<button class="fab" data-act="quickdrop" aria-label="Quick drop a thought">+</button>`:''}
   <nav>
     ${navBtn('now','&#9635;','Now')}
     ${navBtn('today','&#8803;','Today')}
@@ -544,9 +544,9 @@ function scrNow(){
   const si = activeStepIndex(j);
   const stepTxt = si>=0 ? j.steps[si].text : j.title;
   const stepsHTML = (j.steps&&j.steps.length) ? `
-    <div class="field"><div class="flabel">Steps</div><div class="steps">
-      ${j.steps.map((s,i)=>`<div class="step ${s.done?'done':''} ${i===si?'active':''}">
-        <span class="box">&#10003;</span><span>${esc(s.text)}</span>${i===si?'<span class="marker">&#9666; Active</span>':''}
+    <div class="field"><div class="flabel">Steps</div><div class="steps" role="list" aria-label="Steps to done">
+      ${j.steps.map((s,i)=>`<div class="step ${s.done?'done':''} ${i===si?'active':''}" role="listitem" aria-label="${s.done?'Done':(i===si?'Active step':'To do')}: ${esc(s.text)}">
+        <span class="box" aria-hidden="true">&#10003;</span><span>${esc(s.text)}</span>${i===si?'<span class="marker">&#9666; Active</span>':''}
       </div>`).join('')}
     </div></div>` : '';
   const nm = j.nextMove ? esc(j.nextMove) : (si>=0?`Do: ${esc(j.steps[si].text)}`:`Start: ${esc(j.title)}`);
@@ -621,7 +621,7 @@ function scrDrop(){
     <div class="lead display">Brain Drop</div>
     <div class="sub">One box. Slide how hard the system should think before it lands.</div>
     ${dial}
-    <textarea id="dropbox" rows="${lvl===0?9:5}" placeholder="${placeholder}">${esc(LINE.raw||'')}</textarea>
+    <textarea id="dropbox" rows="${lvl===0?9:5}" placeholder="${placeholder}" aria-label="Capture box — drop a thought to triage">${esc(LINE.raw||'')}</textarea>
     <div class="hint">${hint}</div>
     ${LINE.err?`<div class="ln-err" style="margin:-6px 0 12px">${esc(LINE.err)}</div>`:''}
     ${control}
@@ -823,8 +823,8 @@ function openStuck(){
         try{
           const blk = j._block ? ('Block type: '+j._block+'. ') : '';
           const wh = (el.querySelector('#s_where')?.value || j._where || '');
-          const res = await fetch("https://api.anthropic.com/v1/messages",{
-            method:"POST", headers:{"Content-Type":"application/json"},
+          const res = await fetch("/api/ai/anthropic",{
+            method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
             body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:200,
               system:'A task is stuck. Given the task, where it stalled, and the block type, return ONLY the single smallest concrete next physical action that breaks the block. One imperative line. No preamble, no quotes, no explanation.',
               messages:[{role:"user", content:'TASK: '+j.title+'\n'+blk+(wh?('Stalled at: '+wh):'')}] })
@@ -1463,8 +1463,8 @@ async function lineCall(stage, raw, ctx){
   const userMsg = `RAW DROP FROM USER:\n"""\n${raw}\n"""\n\n` +
     (ctx ? `CONTEXT FROM EARLIER STATIONS:\n${ctx}\n\n` : '') +
     `Do your job as the ${stage.name} Agent now. Output only your station's result.`;
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST", headers:{"Content-Type":"application/json"},
+  const res = await fetch("/api/ai/anthropic", {
+    method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
     body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000,
       system: stage.sys, messages:[{role:"user", content:userMsg}] })
   });
@@ -1514,8 +1514,8 @@ async function dropReroute(){
   if(tgt){
     let move=null;
     try{
-      const res = await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST", headers:{"Content-Type":"application/json"},
+      const res = await fetch("/api/ai/anthropic",{
+        method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
         body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:220,
           system:'A task is stalled. Given the task and what the user tried, return ONLY a JSON object, no markdown: {"nextMove": the single smallest concrete next physical action, "doneMeans": the observable done condition}. Keep both tight.',
           messages:[{role:"user", content:'TASK: '+tgt.title+(note?('\nTRIED / STALLED AT: '+note):'')}] })
@@ -1537,8 +1537,8 @@ async function dropReroute(){
   LINE.raw = note;
   let job=null;
   try{
-    const res = await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST", headers:{"Content-Type":"application/json"},
+    const res = await fetch("/api/ai/anthropic",{
+      method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
       body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:300,
         system:'The user dropped ONE thing they are stuck on or unsure how to start. Return ONLY a JSON object, no markdown, no prose: {"title": short imperative task name, "nextMove": the single smallest concrete next physical action, "doneMeans": the observable done condition}. Keep every value tight.',
         messages:[{role:"user", content:LINE.raw}] })
@@ -1564,8 +1564,8 @@ async function lineFire(){
   let job=null;
   try{
     const ctx = LINE_STAGES.map(s=>LINE.outputs[s.id]?('### '+s.name+'\n'+LINE.outputs[s.id]):'').filter(Boolean).join('\n\n');
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method:"POST", headers:{"Content-Type":"application/json"},
+    const res = await fetch("/api/ai/anthropic", {
+      method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
       body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:600,
         system:'You convert a finished triage into ONE actionable task for a do-one-thing app. Return ONLY a JSON object, no markdown fences, no prose: {"title": short imperative task name, "nextMove": the single concrete next physical action, "doneMeans": the observable done condition, "why": one tight line on why it matters}. Keep every value short.',
         messages:[{role:"user", content:'RAW DROP:\n'+LINE.raw+'\n\nTRIAGE OUTPUT:\n'+ctx+'\n\nEmit the job JSON only.'}] })

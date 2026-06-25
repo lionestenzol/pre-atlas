@@ -86,6 +86,19 @@ def _get_json(base: str, path: str) -> tuple[int, object | None, str | None]:
         return status, None, f"json decode: {e}"
 
 
+def _get_raw(base: str, path: str) -> tuple[int, str, str, str | None]:
+    """GET base+path raw. Returns (status, content_type, text, error_or_None)."""
+    try:
+        req = urllib.request.Request(base + path, method="GET")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return (resp.getcode(), resp.headers.get("content-type", ""),
+                    resp.read().decode("utf-8"), None)
+    except urllib.error.HTTPError as e:
+        return e.code, "", "", f"http {e.code}"
+    except Exception as e:  # noqa: BLE001
+        return 0, "", "", f"{type(e).__name__}: {e}"
+
+
 # ---------------------------------------------------------------------------
 # Seed: 2 DAGs (different domains), 1 lock_ref, 1 entity
 # ---------------------------------------------------------------------------
@@ -172,6 +185,22 @@ def run() -> int:
                     detail = f"keys {sorted(expected)} ok"
                     ok = True
             rows.append((label, str(status), detail, ok))
+
+        # ---- UI front door (ship Task A 2026-06-25): served HTML + sample alias ----
+        for label, path, marker in [
+            ("GET /", "/", "DropList"),
+            ("GET /chain", "/chain", "<html"),
+        ]:
+            st, ctype, text, err = _get_raw(base, path)
+            ok = st == 200 and "text/html" in ctype and marker.lower() in text.lower()
+            detail = err or (f"html+'{marker}' ok" if ok
+                             else f"ctype={ctype!r} marker={marker in text}")
+            rows.append((label, str(st), detail, ok))
+        # /api/dag/sample must resolve to a real DAG (chain.html:323 depends on it)
+        st, body, err = _get_json(base, "/api/dag/sample")
+        ok = st == 200 and isinstance(body, dict) and "nodes" in body
+        rows.append(("GET /api/dag/sample", str(st),
+                     err or (f"keys ok ({body.get('dag_id')})" if ok else "no dag"), ok))
 
         # ---- table ----
         ep_w = max(len("endpoint"), max(len(r[0]) for r in rows))

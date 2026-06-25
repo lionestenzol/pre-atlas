@@ -130,14 +130,30 @@ The sync block is `<script type="module">` near the end of `<body>`; it `import`
 
 ---
 
-## week 2 · view primitives ⛔ NOT STARTED ← resume here
+## week 2 · view primitives 🟡 PARTIAL — layouts DONE, ctx-menu/Zustand intentionally skipped
 
 **Goal:** replace hand-rolled ctx menu + settings state with official Cytoscape extensions + Zustand.
 
-**Verified still hand-rolled (2026-06-25):** `openCtxMenu`/`renderCtxMenuBody`/`bindCtxMenuActions`
-live at `index.html:2099-2194` (no cxtmenu). None of `cytoscape-cxtmenu`, `cytoscape-popper`,
-`cytoscape-dagre`, or `zustand` are vendored in `apps/lattice/`. Settings still use the hand-rolled
-`settings` object + `saveSettings` (localStorage) at `index.html:1160`.
+**✅ DONE (2026-06-25, commit `7289051`): selectable graph layouts.** Added a `layout` knob
+(auto / rings / force / hierarchy) backed by official extensions instead of hand-rolled positioning:
+- `force` = **cose-bilkent** (was vendored but never loaded — now wired via `<script>` tags + `cytoscape.use`)
+- `hierarchy` = **cytoscape-dagre** (newly vendored at `apps/lattice/cytoscape-dagre.js`; bundles dagre internally, no separate dagre.js)
+- `auto`/`rings` preserve prior concentric@depth1 / cose behavior
+- Selection centralized in `buildLayoutCfg(depth)` (index.html), persisted in `settings.graphLayout`.
+  Extensions registered once at load with `window.__latticeLayouts` flags for graceful degrade.
+- Verified live on :3011: both register, all 4 layouts produce distinct correct geometry, persists, no console errors.
+
+**⛔ INTENTIONALLY SKIPPED (assemble-first "worse vs later" + escape hatches below):**
+- **cxtmenu** — the ctx menu serves BOTH tree rows (`openCtxMenu` from `sourceEl`) AND graph nodes
+  (`cxttap` at index.html:1653-1660); cxtmenu is graph-nodes-only, so it can't replace it. It's also a
+  rich panel (compact/expanded toggle, project pips w/ hover-preview, cross-surface nav, delete) a
+  radial pie can't host. **Library makes it worse, not just later → kept hand-rolled** (2099-2194).
+- **Zustand** — vanilla single-file app, one global `settings` object read directly everywhere; only
+  `persist` is a real win (~3 lines). **Kept the localStorage IIFE** (index.html:1160).
+- **popper** hover tooltips — marginal/additive (provenance already in the menu); deferred.
+
+If you want these forced anyway despite the above, that's a product call — flag it. Otherwise Week 2's
+defensible assemble-first content is shipped.
 
 ### install
 ```bash

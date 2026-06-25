@@ -14,18 +14,46 @@ const _expandedRoutines = new Set();
 // Atlas governance data cache (60s TTL)
 let _atlasCache = { data: null, fetchedAt: 0 };
 
-function _renderAtlasCard(data) {
-  if (!data) return '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">Loading Atlas data...</div>';
-  const u = data.unified;
-  const b = data.brief;
-  if (!u && !b) return '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">No governance data available.</div>';
+// Projects data cache (60s TTL) - read from inPACT's same-origin projects.json (written by atlas/gen_github.py)
+let _projectsCache = { data: null, fetchedAt: 0 };
 
-  const mode = u?.mode || u?.data?.mode || 'UNKNOWN';
-  const risk = u?.risk_level || u?.data?.risk_level || u?.data?.riskLevel || '--';
-  const openLoops = u?.open_loops ?? u?.data?.open_loops ?? u?.data?.openLoops ?? '--';
-  const closureRatio = u?.closure_ratio ?? u?.data?.closure_ratio ?? u?.data?.closureRatio ?? '--';
-  const streak = u?.streak ?? u?.data?.streak ?? '--';
-  const directive = b?.directive || b?.data?.directive || b?.data?.daily_directive || '';
+function _renderProjectsCard(projects) {
+  if (!projects) return '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">Loading projects...</div>';
+  const active = projects.filter(p => p.band === 0);
+  const list = (active.length ? active : projects).slice(0, 8);
+  if (!list.length) return '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">No recent projects found.</div>';
+  return list.map(p => `
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.45rem 0;border-bottom:1px solid var(--ip-gray-100);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${UI.sanitize(p.name)}</div>
+        <div style="font-size:0.75rem;color:var(--ip-gray-600);">${UI.sanitize(p.lang || '')} . ${UI.sanitize(p.updated || '')}</div>
+      </div>
+      <button class="td-btn" style="padding:0.25rem 0.625rem;font-size:0.75rem;flex-shrink:0;" data-name="${UI.sanitize(p.name)}" onclick="addProjectTask(this.dataset.name)">Add as task</button>
+    </div>
+  `).join('');
+}
+
+// Strategic HUD: command-center strip at the top of Home.
+// Governance tiles (mode/risk/open-loops/closure/streak) come from the live Atlas
+// backend via _atlasCache; execution tiles come from local state. Ported from
+// CycleBoard's Strategic HUD, kept honest: only real, data-backed signals are shown.
+function _renderStrategicHud() {
+  // --- Governance (from Atlas cache, if loaded) ---
+  const data = _atlasCache.data;
+  const u = data && data.unified;
+  const b = data && data.brief;
+  const online = typeof AtlasAPI !== 'undefined' && AtlasAPI.online;
+
+  // Governance lives in unified.derived: { mode, risk, open_loops, closure_ratio, streak_days, primary_order }.
+  const d = u ? (u.derived || u.data?.derived || null) : null;
+  const mode = d ? (d.mode || 'UNKNOWN') : null;
+  const risk = d ? (d.risk || d.risk_level || null) : null;
+  const openLoops = d ? (d.open_loops ?? null) : null;
+  const closureRaw = d ? (d.closure_ratio ?? null) : null;
+  // closure_ratio is a 0-1 ratio in derived; normalize to a percentage for display.
+  const closurePct = closureRaw == null ? null : Math.round(closureRaw <= 1 ? closureRaw * 100 : closureRaw);
+  const streak = d ? (d.streak_days ?? d.streak ?? null) : null;
+  const directive = (d && d.primary_order) || (b ? (b.directive || b.data?.directive || b.data?.daily_directive || '') : '');
 
   const modeColors = {
     RECOVER: '#ef4444', CLOSURE: '#f59e0b', MAINTENANCE: '#6b7280',
@@ -33,17 +61,167 @@ function _renderAtlasCard(data) {
   };
   const modeColor = modeColors[mode] || 'var(--ip-gray-600)';
 
+  const riskKey = (risk || '').toString().toUpperCase();
+  const riskColor = riskKey === 'HIGH' ? '#ef4444'
+    : (riskKey === 'MEDIUM' || riskKey === 'MED') ? '#f59e0b'
+    : riskKey === 'LOW' ? '#22c55e' : 'var(--ip-black)';
+  const redAlert = riskKey === 'HIGH';
+
+  // --- Execution (always available from local state) ---
+  const azDone = state.AZTask.filter(t => t.status === 'Completed').length;
+  const azTotal = state.AZTask.length;
+  const weekly = Helpers.getWeeklyStats();
+  const todayDate = stateManager.getTodayDate();
+  const todayData = state.Today?.daily?.[todayDate] || {};
+  const winSet = !!todayData.winTarget;
+
+  const tile = (label, value, color) => `
+    <div style="text-align:center;padding:0.625rem 0.5rem;border-radius:0.625rem;background:var(--ip-gray-50);border:1px solid var(--ip-gray-100);">
+      <div style="font-size:1.25rem;font-weight:800;line-height:1;color:${color || 'var(--ip-black)'};">${value}</div>
+      <div style="font-size:0.625rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin-top:0.375rem;">${label}</div>
+    </div>`;
+
+  const govTiles = d ? [
+    tile('Risk', riskKey || '--', riskColor),
+    tile('Open loops', openLoops != null ? openLoops : '--'),
+    tile('Closure', closurePct != null ? closurePct + '%' : '--'),
+    tile('Streak', streak != null ? streak + 'd' : '--'),
+  ].join('') : '';
+
+  const execTiles = [
+    tile('A-Z done', azTotal ? (azDone + '/' + azTotal) : '0'),
+    tile('Week base', weekly.completed + '/' + weekly.total),
+    tile('Today win', winSet ? 'set' : '—', winSet ? '#22c55e' : 'var(--ip-gray-300)'),
+  ].join('');
+
+  const statusNote = d ? '' : (online
+    ? '<div style="font-size:0.75rem;color:var(--ip-gray-600);margin-top:0.75rem;">Syncing governance from Atlas...</div>'
+    : '<div style="font-size:0.75rem;color:var(--ip-gray-600);margin-top:0.75rem;">Governance: local only (Atlas not connected). Execution metrics are live.</div>');
+
   return `
-    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
-      <span style="background:${modeColor};color:#fff;font-size:0.6875rem;font-weight:700;padding:0.125rem 0.5rem;border-radius:9999px;letter-spacing:0.05em;">${mode}</span>
-      <span style="font-size:0.8125rem;color:var(--ip-gray-600);">Risk: <strong>${risk}</strong></span>
-      ${streak !== '--' ? `<span style="font-size:0.8125rem;color:var(--ip-gray-600);">Streak: <strong>${streak}d</strong></span>` : ''}
+    <div style="border:1px solid ${redAlert ? 'rgba(239,68,68,0.5)' : 'var(--ip-gray-200)'};border-radius:0.875rem;padding:1.125rem;margin-bottom:2rem;${redAlert ? 'box-shadow:0 0 0 3px rgba(239,68,68,0.08);' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;">
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <i class="fas fa-satellite-dish" style="color:var(--ip-gray-600);font-size:0.8125rem;"></i>
+          <span style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-gray-600);">Strategic HUD</span>
+        </div>
+        ${mode ? `<span style="background:${modeColor};color:#fff;font-size:0.6875rem;font-weight:700;padding:0.1875rem 0.625rem;border-radius:9999px;letter-spacing:0.05em;">${mode}</span>` : '<span style="font-size:0.6875rem;color:var(--ip-gray-300);">no mode</span>'}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(4.5rem,1fr));gap:0.5rem;">
+        ${govTiles}${execTiles}
+      </div>
+      ${directive ? `<div style="font-size:0.8125rem;line-height:1.4;margin-top:0.875rem;padding-top:0.75rem;border-top:1px solid var(--ip-gray-100);"><strong>Directive:</strong> ${typeof UI !== 'undefined' ? UI.sanitize(directive) : directive}</div>` : ''}
+      ${redAlert ? '<div style="font-size:0.75rem;color:#b91c1c;margin-top:0.75rem;font-weight:600;"><i class="fas fa-triangle-exclamation" style="margin-right:0.375rem;"></i>Risk is HIGH. Close loops before opening new ones.</div>' : ''}
+      ${statusNote}
+    </div>`;
+}
+
+// Statistics section for the History screen. Pure views over local data
+// (A-Z tasks, day plans, weekly stats, 7-day progress). No backend needed.
+function _renderStatsSection() {
+  const az = state.AZTask || [];
+  const done = az.filter(t => t.status === 'Completed').length;
+  const prog = az.filter(t => t.status === 'In Progress').length;
+  const todo = az.filter(t => t.status === 'Not Started').length;
+  const total = az.length;
+  const weekly = Helpers.getWeeklyStats();
+  const streak = Helpers.getProgressStreak();
+  const planned = Object.keys(state.DayPlans || {}).length;
+  const dayTypes = { A: 0, B: 0, C: 0 };
+  Object.values(state.DayPlans || {}).forEach(p => { if (p && dayTypes[p.day_type] != null) dayTypes[p.day_type]++; });
+  const hist = Helpers.getProgressHistory(7);
+
+  const tile = (label, value) => `
+    <div style="text-align:center;padding:0.75rem 0.5rem;border-radius:0.625rem;background:var(--ip-gray-50);border:1px solid var(--ip-gray-100);">
+      <div style="font-size:1.375rem;font-weight:800;line-height:1;">${value}</div>
+      <div style="font-size:0.625rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin-top:0.375rem;">${label}</div>
+    </div>`;
+
+  const bar = (label, value, max, color) => {
+    const pct = max ? Math.round((value / max) * 100) : 0;
+    return `
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+        <span style="width:6.5rem;font-size:0.8125rem;color:var(--ip-gray-700);">${label}</span>
+        <div style="flex:1;height:0.5rem;background:var(--ip-gray-100);border-radius:9999px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${color};border-radius:9999px;"></div>
+        </div>
+        <span style="width:2.5rem;text-align:right;font-size:0.8125rem;font-weight:700;">${value}</span>
+      </div>`;
+  };
+
+  const maxP = Math.max(10, ...hist.map(h => h.progress));
+  const spark = hist.map(h => {
+    const hpx = Math.max(2, Math.round((h.progress / maxP) * 36));
+    return `<div title="${h.dateFormatted}: ${h.progress}%" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:0.25rem;">
+      <div style="width:100%;max-width:1.75rem;height:${hpx}px;background:${h.hasData ? 'var(--ip-black)' : 'var(--ip-gray-200)'};border-radius:0.25rem;"></div>
+      <span style="font-size:0.5625rem;color:var(--ip-gray-600);">${h.date.slice(8)}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="td-chapter" style="margin-top:0;">
+      <span class="td-chapter-title">Statistics</span>
+      <span class="td-chapter-sub">How you're trending.</span>
     </div>
-    ${directive ? `<div style="font-size:0.875rem;line-height:1.4;margin-bottom:0.5rem;"><strong>Directive:</strong> ${typeof UI !== 'undefined' ? UI.sanitize(directive) : directive}</div>` : ''}
-    <div style="font-size:0.8125rem;color:var(--ip-gray-600);">
-      Open loops: <strong>${openLoops}</strong> . Closure ratio: <strong>${closureRatio}</strong>
+    <div class="td-section">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(5rem,1fr));gap:0.5rem;margin-bottom:1.25rem;">
+        ${tile('A-Z done', total ? done + '/' + total : '0')}
+        ${tile('This week', weekly.completed + '/' + weekly.total)}
+        ${tile('Streak', streak + 'd')}
+        ${tile('Days planned', planned)}
+      </div>
+      <div style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin-bottom:0.5rem;">Task status</div>
+      ${bar('Completed', done, total, '#22c55e')}
+      ${bar('In progress', prog, total, 'var(--ip-gray-600)')}
+      ${bar('Not started', todo, total, 'var(--ip-gray-300)')}
+      <div style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin:1.25rem 0 0.5rem;">Day type usage</div>
+      ${bar('A days', dayTypes.A, planned, 'var(--ip-black)')}
+      ${bar('B days', dayTypes.B, planned, 'var(--ip-gray-600)')}
+      ${bar('C days', dayTypes.C, planned, 'var(--ip-gray-300)')}
+      <div style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin:1.25rem 0 0.5rem;">Last 7 days</div>
+      <div style="display:flex;align-items:flex-end;gap:0.375rem;height:3rem;">${spark}</div>
+    </div>`;
+}
+
+// Activity timeline for the History screen. Reads state.History.timeline
+// (populated by Helpers.logActivity, including AI actions).
+function _renderTimelineSection() {
+  const tl = (state.History && state.History.timeline) || [];
+  const recent = tl.slice().reverse().slice(0, 20);
+  const iconFor = (type) => {
+    type = String(type || '');
+    if (/complete/i.test(type)) return 'fa-check';
+    if (/create|add/i.test(type)) return 'fa-plus';
+    if (/ai_/i.test(type)) return 'fa-robot';
+    if (/status/i.test(type)) return 'fa-arrows-rotate';
+    return 'fa-circle';
+  };
+  const relTime = (iso) => {
+    const d = new Date(iso); const now = new Date();
+    const mins = Math.round((now - d) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.round(hrs / 24);
+    if (days < 7) return days + 'd ago';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  const rows = recent.length ? recent.map(a => `
+    <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--ip-gray-100);">
+      <div style="flex-shrink:0;width:1.75rem;height:1.75rem;border-radius:50%;background:var(--ip-gray-100);display:flex;align-items:center;justify-content:center;color:var(--ip-gray-600);font-size:0.6875rem;"><i class="fas ${iconFor(a.type)}"></i></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.875rem;line-height:1.4;">${UI.sanitize(a.description || a.type || 'activity')}</div>
+        <div style="font-size:0.6875rem;color:var(--ip-gray-600);">${relTime(a.timestamp)}</div>
+      </div>
+    </div>`).join('') : '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">No activity yet. Actions you and Atlas take will appear here.</div>';
+
+  return `
+    <div class="td-chapter">
+      <span class="td-chapter-title">Activity Timeline</span>
+      <span class="td-chapter-sub">What you and Atlas have done${recent.length ? ' (recent ' + recent.length + ')' : ''}.</span>
     </div>
-  `;
+    <div class="td-section">${rows}</div>`;
 }
 
 function toggleRoutineDropdown(blockId) {
@@ -69,7 +247,12 @@ function renderNav() {
       <i class="fas ${s.icon}"></i>
       <span>${s.label}</span>
     </button>
-  `).join('');
+  `).join('') + `
+    <a href="http://127.0.0.1:8887/pages/github.html" class="sb-nav-item" aria-label="Go to Projects">
+      <i class="fas fa-folder-open"></i>
+      <span>Projects</span>
+    </a>
+  `;
 
   // Atlas connection status
   const statusEl = document.getElementById('atlas-status');
@@ -173,6 +356,8 @@ const ScreenRenderers = {
 
         <div class="td-pill" style="margin-bottom:2rem;">${yesterdayHtml}</div>
 
+        <div id="strategic-hud">${_renderStrategicHud()}</div>
+
         <div class="td-chapter" style="margin-top:1.5rem;">
           <span class="td-chapter-title">At a Glance</span>
           <span class="td-chapter-sub">Where things stand right now.</span>
@@ -190,6 +375,7 @@ const ScreenRenderers = {
         </div>
 
         ${(() => {
+          // Strategic HUD data source: fetch live governance, then refresh the HUD in place.
           const atlasOnline = typeof AtlasAPI !== 'undefined' && AtlasAPI.online;
           if (atlasOnline && Date.now() - _atlasCache.fetchedAt > 60000) {
             Promise.all([
@@ -197,20 +383,32 @@ const ScreenRenderers = {
               AtlasAPI.getDailyBrief(),
             ]).then(([unified, brief]) => {
               _atlasCache = { data: { unified, brief }, fetchedAt: Date.now() };
-              const el = document.getElementById('atlas-context-card');
-              if (el) el.innerHTML = _renderAtlasCard(_atlasCache.data);
-            });
+              const el = document.getElementById('strategic-hud');
+              if (el) el.innerHTML = _renderStrategicHud();
+            }).catch(() => {});
           }
-          const cached = _atlasCache.data ? _renderAtlasCard(_atlasCache.data) : '';
-          return atlasOnline ? `
+          return '';
+        })()}
+
+        ${(() => {
+          if (Date.now() - _projectsCache.fetchedAt > 60000) {
+            fetch('projects.json').then(r => r.ok ? r.json() : null).then(data => {
+              if (!data) return;
+              _projectsCache = { data, fetchedAt: Date.now() };
+              const el = document.getElementById('projects-card');
+              if (el) el.innerHTML = _renderProjectsCard(_projectsCache.data);
+            }).catch(() => {});
+          }
+          const cached = _projectsCache.data ? _renderProjectsCard(_projectsCache.data) : '';
+          return `
             <div class="td-chapter">
-              <span class="td-chapter-title">Atlas Context</span>
-              <span class="td-chapter-sub">Live governance state from your system.</span>
+              <span class="td-chapter-title">Active Projects</span>
+              <span class="td-chapter-sub">Recent work from your machine. Add one to your tasks.</span>
             </div>
-            <div class="td-section" id="atlas-context-card">
-              ${cached || '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">Loading Atlas data...</div>'}
+            <div class="td-section" id="projects-card">
+              ${cached || '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">Loading projects...</div>'}
             </div>
-          ` : '';
+          `;
         })()}
 
         ${(() => {
@@ -773,6 +971,9 @@ const ScreenRenderers = {
       <div style="max-width:56rem;">
         <h1 style="font-size:2.25rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.25rem;">History</h1>
         <div class="td-help" style="margin-bottom:1.75rem;">What happened. What you learned.</div>
+
+        ${_renderStatsSection()}
+        ${_renderTimelineSection()}
 
         <!-- Calendar -->
         <div class="td-chapter" style="margin-top:0;">

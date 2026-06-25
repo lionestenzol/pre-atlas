@@ -661,6 +661,32 @@ function createTask() {
   UI.showToast('Task Created', `${letter} – ${task}`, 'success');
 }
 
+function addProjectTask(name) {
+  if (!name) return;
+  const used = new Set((state.AZTask || []).map(t => t.letter));
+  let letter = 'Z';
+  for (let i = 0; i < 26; i++) {
+    const L = String.fromCharCode(65 + i);
+    if (!used.has(L)) { letter = L; break; }
+  }
+  const newTask = {
+    id: stateManager.generateId(),
+    letter,
+    task: `Work on ${name}`,
+    notes: 'Added from Projects',
+    status: 'Not Started',
+    createdAt: new Date().toISOString()
+  };
+  state.AZTask.push(newTask);
+  state.AZTask.sort((a, b) => a.letter.localeCompare(b.letter));
+  if (typeof Helpers !== 'undefined' && Helpers.logActivity) {
+    Helpers.logActivity('task_created', `Created A-Z Task from project: ${name}`, { taskId: newTask.id });
+  }
+  stateManager.update({ AZTask: state.AZTask });
+  render();
+  UI.showToast('Task Created', `${letter} - Work on ${name}`, 'success');
+}
+
 function updateTask(id) {
   const task = state.AZTask.find(t => t.id === id);
   if (!task) return;
@@ -1915,7 +1941,16 @@ async function init() {
     document.body.classList.add('bg-gray-900', 'text-white');
     document.body.classList.remove('bg-slate-50');
   }
-  
+
+  // Deep-link support: ?screen=Tasks lets other surfaces (e.g. the Projects tab) open inPACT on a specific screen
+  try {
+    const want = new URLSearchParams(location.search).get('screen');
+    if (want && screens.some(s => s.id === want)) {
+      state.screen = want;
+      stateManager.update({ screen: want });
+    }
+  } catch (e) { /* deep-link is best-effort */ }
+
   render();
 
   // Periodic backup save every 5 minutes (in case debounce fails)

@@ -104,10 +104,12 @@ async def root() -> dict[str, Any]:
             "/describe",
             "/describe/{surface}?role=R&format=json|text",
             "/map/viewer?probe=true",
+            "/map/launchables?probe=true",
             "POST /map/start/{name}",
             "POST /map/stop/{name}",
             "POST /map/restart/{name}",
             "POST /map/launch/{name}",
+            "POST /map/halt/{name}",
             "POST /items/{item_id}/status",
             "GET /admin/write-token",
             "POST /admin/reload",
@@ -324,6 +326,64 @@ async def viewer(
     }
 
 
+def _as_int(p: Any) -> int | None:
+    """Coerce a launch.json port to int, or None if it isn't numeric. Keeps the
+    listing fail-soft (matches launcher.port_alive) — one malformed entry degrades
+    to a port-less row instead of 500-ing the whole list."""
+    try:
+        return int(p)
+    except (ValueError, TypeError):
+        return None
+
+
+@app.get("/map/launchables")
+async def launchables(
+    probe: bool = Query(True, description="Live TCP-probe each port for running state"),
+) -> dict[str, Any]:
+    """Everything that can be booted, straight from .claude/launch.json — the
+    authoritative allowlist the setup UI boots from.
+
+    Unlike /map/viewer (which only covers ported subsystems present in the
+    snapshot) this includes the UI-only servers — lattice, cycleboard, hydra,
+    droplist-ui, … — that the setup page must be able to start. Each item is
+    keyed by its launch.json NAME, the exact key POST /map/launch/{name} and
+    POST /map/halt/{name} take. `running` is a live loopback probe when
+    probe=true, else null. `shared_with` lists OTHER launch names bound to the
+    same port (a TCP probe can't tell them apart, and halting one halts both —
+    the UI surfaces this). Read-only; no auth.
+    """
+    snap, _ = _ensure_loaded()
+    cfgs = launcher.load_launch_configs(snap.repo_root)
+    ports = sorted({p for c in cfgs if (p := _as_int(c.get("port"))) is not None})
+    names_by_port: dict[int, list[str]] = {}
+    for c in cfgs:
+        p = _as_int(c.get("port"))
+        if p is not None:
+            names_by_port.setdefault(p, []).append(str(c.get("name")))
+    running_by_port: dict[int, bool] = {}
+    if probe and ports:
+        results = await asyncio.gather(*[_probe_port(p) for p in ports])
+        running_by_port = dict(zip(ports, results))
+    items = []
+    for c in cfgs:
+        p = _as_int(c.get("port"))
+        name = c.get("name")
+        running = running_by_port.get(p, False) if (probe and p is not None) else None
+        shared = [n for n in names_by_port.get(p, []) if n != name] if p is not None else []
+        items.append(
+            {
+                "name": name,
+                "port": c.get("port"),  # raw value preserved (degraded row keeps its label)
+                "running": running,
+                "self": p is not None and p == launcher.SELF_PORT,
+                "shared_with": shared,
+            }
+        )
+    # Running first, then alphabetical — so the UI shows what's live up top.
+    items.sort(key=lambda x: (x["running"] is not True, str(x["name"] or "")))
+    return {"count": len(items), "items": items, "probed": probe}
+
+
 def _require_subsystem(name: str) -> Any:
     snap, _ = _ensure_loaded()
     sub = snap.subsystems.get(name)
@@ -379,6 +439,35 @@ async def restart_service(name: str) -> dict[str, Any]:
         await asyncio.sleep(0.15)
     start_result = launcher.start_from_config(cfg, snap.repo_root)
     return {"action": "restart", "subsystem": name, "stop": stop_result, "start": start_result}
+
+
+@app.post("/map/halt/{name}", dependencies=[Depends(auth.require_write_token)])
+async def halt_launch(name: str) -> dict[str, Any]:
+    """Stop a launch.json entry BY NAME — the symmetric partner to /map/launch.
+
+    /map/stop/{name} is keyed by snapshot *subsystem*, so it can't stop the
+    UI-only servers (lattice, hydra, droplist-ui, …) that aren't in the snapshot.
+    This resolves name -> port via launch.json and stops whatever holds that
+    port. SELF_PORT is refused inside stop_on_port. Allowlist = launch.json
+    (404 for unknown names)."""
+    snap, _ = _ensure_loaded()
+    cfgs = launcher.load_launch_configs(snap.repo_root)
+    cfg = next((c for c in cfgs if c.get("name") == name), None)
+    if cfg is None:
+        raise HTTPException(404, f"no launch.json entry named '{name}'")
+    port = cfg.get("port")
+    pi = _as_int(port)
+    # stop_on_port kills every PID on the port; if another launch entry shares it
+    # (e.g. droplist-ui & triangulation both on 3074) that one dies too. Surface
+    # it rather than silently collateral-killing. NOTE: a name-scoped kill (match
+    # by cwd/cmdline) is the deeper fix — deferred until the launch.json port
+    # collision itself is resolved (owner: Bruke). See code-as-furniture.md.
+    shared = [c.get("name") for c in cfgs if c.get("name") != name and pi is not None and _as_int(c.get("port")) == pi]
+    result = launcher.stop_on_port(port)
+    if shared:
+        result["shared_with"] = shared
+        result["warning"] = f"port {port} is shared — also stopped: {', '.join(shared)}"
+    return {"action": "halt", "name": name, **result}
 
 
 @app.get("/map/surfaces")

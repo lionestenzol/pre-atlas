@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas Setup — boot Atlas your way</title>
+<link rel="icon" href="data:," />
+<meta name="robots" content="noindex" />
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #1c2330; --line: #2a3343;
+    --ink: #e6edf3; --dim: #8b98a9; --accent: #4cc2ff; --accent2: #7ee787;
+    --green: #3fb950; --red: #f85149; --amber: #d29922; --radius: 10px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+  header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+  h1 { font-size: 22px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+  h1 .sub { color: var(--dim); font-weight: 400; font-size: 14px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; background: var(--panel2); border: 1px solid var(--line); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); flex: 0 0 auto; }
+  .dot.up { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot.down { background: var(--red); }
+  .dot.unknown { background: var(--amber); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 18px; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin: 0 0 12px; font-weight: 600; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  button { font-family: var(--sans); font-size: 13px; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--ink); padding: 8px 14px; transition: .12s; }
+  button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #04121c; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { filter: brightness(1.1); color: #04121c; }
+  button.danger:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+  button.sm { padding: 5px 10px; font-size: 12px; }
+  input, select, textarea { font-family: var(--sans); font-size: 13px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { width: 100%; resize: vertical; min-height: 64px; font-family: var(--sans); }
+  label { font-size: 12px; color: var(--dim); display: block; margin-bottom: 4px; }
+  .field { flex: 1 1 auto; min-width: 160px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .svc { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .svc .top { display: flex; align-items: center; gap: 8px; }
+  .svc .nm { font-weight: 600; font-family: var(--mono); font-size: 13px; }
+  .svc .port { color: var(--dim); font-size: 12px; margin-left: auto; font-family: var(--mono); }
+  .svc .acts { display: flex; gap: 6px; }
+  .muted { color: var(--dim); font-size: 12px; }
+  .warn { color: var(--amber); }
+  #log { font-family: var(--mono); font-size: 12px; max-height: 180px; overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; white-space: pre-wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-family: var(--mono); border: 1px solid var(--line); background: var(--panel2); }
+  .chip.start { border-color: var(--green); color: var(--accent2); }
+  .chip.stop { border-color: var(--red); color: var(--red); }
+  details summary { cursor: pointer; color: var(--dim); font-size: 12px; }
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Atlas Setup <span class="sub">— boot Atlas your way</span></h1>
+    <span class="pill"><span id="connDot" class="dot unknown"></span><span id="connText">connecting…</span></span>
+    <span class="pill"><span id="tokDot" class="dot unknown"></span><span id="tokText">token…</span></span>
+  </header>
+  <p class="muted">No terminal. Click a preset, talk to it, or flip services one by one. The hub at
+    <span class="chip" id="hubLabel">:3072</span> does the rest.</p>
+
+  <!-- QUICK BOOT -->
+  <div class="panel">
+    <h2>Quick boot</h2>
+    <div class="row" id="presets">
+      <button class="primary" data-preset="core">▶ Boot core</button>
+      <button data-preset="surfaces">▶ Boot core + all surfaces</button>
+      <button class="danger" data-preset="stopall">■ Stop everything</button>
+      <button id="refreshBtn" class="sm" style="margin-left:auto">↻ Refresh</button>
+      <label class="row" style="gap:6px;margin:0"><input type="checkbox" id="autoPoll" style="width:auto" /> auto</label>
+    </div>
+    <p class="muted" style="margin:10px 0 0" id="presetHint"></p>
+  </div>
+
+  <!-- TALK TO IT (LLM) -->
+  <div class="panel">
+    <h2>Tell it what you want</h2>
+    <div class="row">
+      <div class="field" style="flex:0 0 160px">
+        <label for="provider">Provider</label>
+        <select id="provider" style="width:100%">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="openai">OpenAI</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="apiKey">API key <span class="muted">(stored only in this browser)</span></label>
+        <input id="apiKey" type="password" placeholder="sk-… / leave blank to skip the LLM" style="width:100%" autocomplete="off" />
+      </div>
+      <div class="field" style="flex:0 0 220px">
+        <label for="model">Model</label>
+        <input id="model" type="text" style="width:100%" />
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <label for="freeform">What should I start or stop?</label>
+      <textarea id="freeform" placeholder="e.g. start the map, droplist and lattice — and shut the snake game down"></textarea>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="interpretBtn" class="primary">✦ Interpret &amp; plan</button>
+      <span class="muted">Nothing runs until you confirm. The model can only pick from the boot list below.</span>
+    </div>
+    <div id="plan" class="hidden" style="margin-top:14px">
+      <div class="muted" id="planReason" style="margin-bottom:8px"></div>
+      <div class="row" id="planChips" style="margin-bottom:10px"></div>
+      <div class="row">
+        <button id="applyPlan" class="primary">Run this plan</button>
+        <button id="cancelPlan">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <div class="panel">
+    <h2>Services <span class="muted" id="svcCount"></span></h2>
+    <div class="grid" id="services"><p class="muted">loading…</p></div>
+  </div>
+
+  <!-- ADVANCED -->
+  <div class="panel">
+    <details>
+      <summary>Advanced — hub &amp; write token</summary>
+      <div class="row" style="margin-top:12px">
+        <div class="field">
+          <label for="hubUrl">Hub base URL</label>
+          <input id="hubUrl" type="text" style="width:100%" />
+        </div>
+        <div class="field">
+          <label for="tokenOverride">X-Atlas-Token override <span class="muted">(blank = auto-fetch from hub)</span></label>
+          <input id="tokenOverride" type="password" style="width:100%" autocomplete="off" />
+        </div>
+        <button id="saveAdvanced" class="sm" style="align-self:flex-end">Save &amp; reconnect</button>
+      </div>
+      <p class="muted" style="margin-top:8px">The write token authorizes start/stop calls. It's auto-fetched from the hub's
+        <span class="chip">/admin/write-token</span> when this page is served from a CORS-trusted origin (e.g. atlas-shell :8888).</p>
+    </details>
+  </div>
+
+  <!-- LOG -->
+  <div class="panel">
+    <h2>Activity</h2>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(() => {
+  // ---- config / state ---------------------------------------------------
+  const LS = {
+    hub: "atlas.setup.hub",
+    tokenOverride: "atlas.setup.tokenOverride",
+    provider: "atlas.setup.llm.provider",
+    apiKey: "atlas.setup.llm.key",
+    model: "atlas.setup.llm.model",
+  };
+  const DEFAULT_MODELS = { anthropic: "claude-haiku-4-5-20251001", openai: "gpt-4o-mini" };
+  // Curated presets reference launch.json NAMES; missing ones are filtered out.
+  const PRESETS = {
+    core: ["atlas-map-api", "delta-api", "droplist", "lattice"],
+    surfaces: ["atlas-map-api", "delta-api", "droplist", "droplist-ui", "lattice",
+               "cycleboard", "inpact", "hydra", "hydra-engine", "audit-map", "atlas-shell"],
+  };
+
+  let HUB = localStorage.getItem(LS.hub) || "http://localhost:3072";
+  let writeToken = null;            // resolved at runtime, kept in memory only
+  let catalog = [];                 // [{name, port, running, self, shared_with}]
+  let lastPlan = null;              // {launch:[], stop:[], reason}
+  let refreshSeq = 0;               // monotonic — only the newest probe may commit
+  let refreshing = false;           // single-flight guard
+  let refreshPending = false;       // coalesce calls that arrive mid-flight
+  let refreshTimer = null;          // debounce handle
+  let autoPollOn = false;           // recursive re-arm flag (replaces setInterval)
+  let lastOfflineLog = false;       // suppress repeated offline-spam in the log
+  const optimistic = new Map();     // name -> "starting"|"stopping" until a probe confirms
+
+  const $ = (id) => document.getElementById(id);
+  const hubLabel = $("hubLabel");
+
+  // ---- tiny safe DOM helpers (no innerHTML with dynamic data) ------------
+  function el(tag, props = {}, kids = []) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v);
+    }
+    for (const kid of [].concat(kids)) if (kid) n.appendChild(kid);
+    return n;
+  }
+  function log(msg, kind = "") {
+    const t = new Date().toLocaleTimeString();
+    const line = el("div", { text: `[${t}] ${msg}` });
+    if (kind === "err") line.style.color = "var(--red)";
+    if (kind === "ok") line.style.color = "var(--accent2)";
+    const box = $("log");
+    box.appendChild(line);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // ---- hub fetch helpers ------------------------------------------------
+  async function hubGet(path) {
+    const r = await fetch(HUB + path, { headers: { "Accept": "application/json" } });
+    if (!r.ok) throw new Error(`${path} → ${r.status}`);
+    return r.json();
+  }
+  async function hubPost(path) {
+    if (!writeToken) throw new Error("no write token — cannot authorize");
+    const r = await fetch(HUB + path, { method: "POST", headers: { "X-Atlas-Token": writeToken } });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.detail || `${path} → ${r.status}`);
+    return body;
+  }
+
+  // ---- connection + token ----------------------------------------------
+  function setConn(state, text) {
+    $("connDot").className = "dot " + state;
+    $("connText").textContent = text;
+  }
+  function setTok(state, text) {
+    $("tokDot").className = "dot " + state;
+    $("tokText").textContent = text;
+  }
+  async function resolveToken() {
+    const override = (localStorage.getItem(LS.tokenOverride) || "").trim();
+    if (override) { writeToken = override; setTok("up", "token: manual"); return; }
+    try {
+      const { token } = await hubGet("/admin/write-token");
+      if (!token || typeof token !== "string") {   // 200 with an unexpected body => not usable
+        writeToken = null;
+        setTok("down", "token: empty");
+        log("hub returned no usable write token", "err");
+        return;
+      }
+      writeToken = token;
+      setTok("up", "token: auto");
+    } catch (e) {
+      writeToken = null;
+      setTok("down", "token: unavailable");
+      log("Could not auto-fetch write token (serve this page from a CORS-trusted origin like :8888, or paste one in Advanced). " + e.message, "err");
+    }
+  }
+
+  // ---- services rendering ----------------------------------------------
+  function svcCard(s) {
+    const pend = optimistic.get(s.name);   // "starting" | "stopping" | undefined
+    const dotState = pend ? "unknown" : (s.running === true ? "up" : s.running === false ? "down" : "unknown");
+    const kids = [el("span", { class: "dot " + dotState }), el("span", { class: "nm", text: s.name || "?" })];
+    if (s.shared_with && s.shared_with.length) {
+      kids.push(el("span", { class: "muted", title: "shares this port with " + s.shared_with.join(", ") + " — stopping one stops both", text: "⚯" }));
+    }
+    kids.push(el("span", { class: "port", text: s.port ? ":" + s.port : "—" }));
+    const top = el("div", { class: "top" }, kids);
+    const startB = el("button", { class: "sm", text: pend === "starting" ? "starting…" : "Start" });
+    const stopB = el("button", { class: "sm danger", text: pend === "stopping" ? "stopping…" : "Stop" });
+    startB.addEventListener("click", () => act("launch", s.name, { btn: startB }));
+    stopB.addEventListener("click", () => act("halt", s.name, { btn: stopB }));
+    if (s.self) { stopB.disabled = true; stopB.title = "the hub can't stop itself"; }
+    if (pend) { startB.disabled = true; stopB.disabled = true; }   // freeze while an action is in flight
+    else { if (s.running === true) startB.disabled = true; if (s.running === false) stopB.disabled = true; }
+    return el("div", { class: "svc" }, [top, el("div", { class: "acts" }, [startB, stopB])]);
+  }
+  function renderServices() {
+    const host = $("services");
+    host.textContent = "";
+    if (!catalog.length) { host.appendChild(el("p", { class: "muted", text: "no services found" })); return; }
+    for (const s of catalog) host.appendChild(svcCard(s));
+    const up = catalog.filter((s) => s.running === true).length;
+    $("svcCount").textContent = `· ${up}/${catalog.length} running`;
+  }
+
+  async function refresh() {
+    if (refreshing) { refreshPending = true; return; }  // single-flight; remember we wanted one
+    refreshing = true;
+    const seq = ++refreshSeq;
+    try {
+      const data = await hubGet("/map/launchables?probe=true");
+      if (seq !== refreshSeq) return;                   // a newer refresh already committed
+      catalog = data.items || [];
+      lastOfflineLog = false;
+      setConn("up", `hub online · ${catalog.length} bootable`);
+      renderServices();
+    } catch (e) {
+      if (seq !== refreshSeq) return;
+      setConn("down", "hub offline");
+      if (!lastOfflineLog) {                             // log the transition once, not every tick
+        log("Hub unreachable at " + HUB + " — is atlas-map-api running on :3072? " + e.message, "err");
+        lastOfflineLog = true;
+      }
+      $("services").textContent = "";
+      $("services").appendChild(el("p", { class: "warn",
+        text: "Hub offline. Start it: services/atlas-map-api → uvicorn atlas_map_api.server:app --port 3072" }));
+    } finally {
+      refreshing = false;
+      if (refreshPending) { refreshPending = false; refresh(); }  // run the latest request we coalesced
+    }
+  }
+  // Coalesce bursts of action-triggered refreshes into a single debounced call.
+  function scheduleRefresh(delay = 400) {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(refresh, delay);
+  }
+  async function pollLoop() {
+    if (!autoPollOn) return;
+    await refresh();
+    if (autoPollOn) setTimeout(pollLoop, 5000);   // re-arm only after the prior probe settles
+  }
+
+  // ---- actions ----------------------------------------------------------
+  function knownName(name) { return catalog.some((s) => s.name === name); }
+
+  async function act(kind, name, opts = {}) {
+    if (!knownName(name)) { log(`refused: "${name}" is not in the boot list`, "err"); return; }
+    const btn = opts.btn || null;
+    if (btn) btn.disabled = true;                    // block double-click double-POST
+    optimistic.set(name, kind === "launch" ? "starting" : "stopping");
+    renderServices();
+    try {
+      log(`${kind === "launch" ? "starting" : "stopping"} ${name}…`);
+      const res = await hubPost(`/map/${kind}/${encodeURIComponent(name)}`);
+      const ok = res.ok !== false;
+      log(`${name}: ${kind} → ${ok ? "ok" : "no-op"} ${res.reason ? "(" + res.reason + ")" : ""}`, ok ? "ok" : "");
+      if (res.warning) log(`${name}: ${res.warning}`, "");   // shared-port collateral notice
+    } catch (e) {
+      log(`${name}: ${kind} failed — ${e.message}`, "err");
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+    if (!opts.fromBatch) await confirmState(name, kind);     // single action: poll until it settles
+  }
+
+  // Poll until `name` reaches the desired running state (a freshly spawned port
+  // takes ~1-5s to bind — a 400ms refresh would otherwise flash 'down'). The
+  // optimistic 'starting…' badge holds until then.
+  async function confirmState(name, kind) {
+    const want = kind === "launch";
+    for (let i = 0; i < 10; i++) {
+      await new Promise((r) => setTimeout(r, 500));
+      await refresh();
+      const s = catalog.find((x) => x.name === name);
+      if (s && s.running === want) { optimistic.delete(name); renderServices(); return; }
+    }
+    optimistic.delete(name);   // give up the hint; show whatever the real state is
+    renderServices();
+  }
+
+  async function runMany(launch, stop) {
+    for (const n of stop) await act("halt", n, { fromBatch: true });
+    for (const n of launch) await act("launch", n, { fromBatch: true });
+    // Settle: poll a few times so freshly spawned ports have time to bind before
+    // we drop the optimistic 'starting…' badges.
+    for (let i = 0; i < 8; i++) {
+      await new Promise((r) => setTimeout(r, 600));
+      await refresh();
+      const pending = launch.some((n) => { const s = catalog.find((x) => x.name === n); return !(s && s.running === true); });
+      if (!pending) break;
+    }
+    optimistic.clear();
+    renderServices();
+  }
+
+  // ---- presets ----------------------------------------------------------
+  async function runPreset(which) {
+    if (which === "stopall") {
+      const running = catalog.filter((s) => s.running === true && !s.self).map((s) => s.name);
+      if (!running.length) { log("nothing running to stop"); return; }
+      log(`stopping ${running.length}: ${running.join(", ")}`);
+      await runMany([], running);
+      return;
+    }
+    const wanted = (PRESETS[which] || []).filter(knownName);
+    const skipped = (PRESETS[which] || []).filter((n) => !knownName(n));
+    if (skipped.length) log(`preset "${which}": skipping unknown ${skipped.join(", ")}`, "");
+    const toStart = wanted.filter((n) => {
+      const s = catalog.find((x) => x.name === n);
+      return !(s && s.running === true);
+    });
+    if (!toStart.length) { log(`preset "${which}": all already running`); return; }
+    log(`booting ${toStart.length}: ${toStart.join(", ")}`);
+    await runMany(toStart, []);
+  }
+
+  // ---- LLM interpret ----------------------------------------------------
+  function buildPrompt(text) {
+    const list = catalog.map((s) => ({ name: s.name, port: s.port, running: s.running }));
+    return [
+      "You map a user's request to Atlas services to START or STOP.",
+      "ONLY choose names from this exact list (the boot allowlist):",
+      JSON.stringify(list),
+      "",
+      "User request: " + text,
+      "",
+      'Respond with ONLY a JSON object, no prose: {"launch":[names...],"stop":[names...],"reason":"one short sentence"}.',
+      "Use names verbatim from the list. If a service is already running and they want it up, omit it. Empty arrays are fine.",
+    ].join("\n");
+  }
+  function extractJson(s) {
+    // Prefer a fenced ```json block; else scan for the first BALANCED {...}
+    // (first-brace-to-last-brace breaks when the reply contains extra braces).
+    const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    const text = fence ? fence[1] : s;
+    const start = text.indexOf("{");
+    if (start === -1) throw new Error("model reply was not valid JSON");
+    let depth = 0, inStr = false, esc = false;
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (ch === "\\") esc = true;
+        else if (ch === '"') inStr = false;
+      } else if (ch === '"') inStr = true;
+      else if (ch === "{") depth++;
+      else if (ch === "}" && --depth === 0) return JSON.parse(text.slice(start, i + 1));
+    }
+    throw new Error("model reply was not valid JSON");
+  }
+  async function callAnthropic(key, model, prompt) {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      // System instruction + assistant prefill "{" force a bare JSON object,
+      // mirroring the json_object guarantee the OpenAI path already has.
+      body: JSON.stringify({
+        model, max_tokens: 512,
+        system: "Respond with ONLY a single JSON object — no prose, no code fences.",
+        messages: [{ role: "user", content: prompt }, { role: "assistant", content: "{" }],
+      }),
+    });
+    const body = await r.json();
+    if (!r.ok) throw new Error(body.error?.message || `Anthropic ${r.status}`);
+    const text = body.content?.map((c) => c.text || "").join("") || "";
+    return "{" + text;   // re-attach the prefilled brace so the object is complete
+  }
+  async function callOpenAI(key, model, prompt) {
+    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "content-type": "application/json", "Authorization": "Bearer " + key },
+      body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" } }),
+    });
+    const body = await r.json();
+    if (!r.ok) throw new Error(body.error?.message || `OpenAI ${r.status}`);
+    return body.choices?.[0]?.message?.content || "";
+  }
+  async function interpret() {
+    const text = $("freeform").value.trim();
+    if (!text) { log("type what you want first"); return; }
+    const provider = $("provider").value;
+    const key = $("apiKey").value.trim();
+    const model = $("model").value.trim() || DEFAULT_MODELS[provider];
+    if (!key) { log("paste an API key to use the LLM, or just click services / a preset", "err"); return; }
+    const btn = $("interpretBtn");
+    btn.disabled = true; btn.textContent = "thinking…";
+    try {
+      const prompt = buildPrompt(text);
+      const raw = provider === "openai" ? await callOpenAI(key, model, prompt) : await callAnthropic(key, model, prompt);
+      const parsed = extractJson(raw);
+      // VALIDATE against the live allowlist — the model never gets to name anything off-list.
+      const launch = (parsed.launch || []).filter(knownName);
+      const stop = (parsed.stop || []).filter(knownName);
+      const dropped = [...(parsed.launch || []), ...(parsed.stop || [])].filter((n) => !knownName(n));
+      lastPlan = { launch, stop, reason: String(parsed.reason || "") };
+      showPlan(lastPlan, dropped);
+    } catch (e) {
+      log("interpret failed — " + e.message, "err");
+    } finally {
+      btn.disabled = false; btn.textContent = "✦ Interpret & plan";
+    }
+  }
+  function showPlan(plan, dropped) {
+    const chips = $("planChips");
+    chips.textContent = "";
+    for (const n of plan.launch) chips.appendChild(el("span", { class: "chip start", text: "▶ " + n }));
+    for (const n of plan.stop) chips.appendChild(el("span", { class: "chip stop", text: "■ " + n }));
+    if (!plan.launch.length && !plan.stop.length) chips.appendChild(el("span", { class: "muted", text: "nothing to do" }));
+    let reason = plan.reason;
+    if (dropped && dropped.length) reason += `  (ignored off-list: ${dropped.join(", ")})`;
+    $("planReason").textContent = reason;
+    $("applyPlan").disabled = !(plan.launch.length || plan.stop.length);
+    $("plan").classList.remove("hidden");
+  }
+
+  // ---- wiring -----------------------------------------------------------
+  function syncModelPlaceholder() {
+    const p = $("provider").value;
+    const saved = localStorage.getItem(LS.model);
+    $("model").value = (saved && localStorage.getItem(LS.provider) === p) ? saved : DEFAULT_MODELS[p];
+  }
+  function init() {
+    hubLabel.textContent = HUB.replace(/^https?:\/\//, "");
+    $("hubUrl").value = HUB;
+    $("tokenOverride").value = localStorage.getItem(LS.tokenOverride) || "";
+    $("provider").value = localStorage.getItem(LS.provider) || "anthropic";
+    $("apiKey").value = localStorage.getItem(LS.apiKey) || "";
+    syncModelPlaceholder();
+
+    $("provider").addEventListener("change", () => { localStorage.setItem(LS.provider, $("provider").value); syncModelPlaceholder(); });
+    $("apiKey").addEventListener("change", () => localStorage.setItem(LS.apiKey, $("apiKey").value.trim()));
+    $("model").addEventListener("change", () => localStorage.setItem(LS.model, $("model").value.trim()));
+
+    document.querySelectorAll("#presets [data-preset]").forEach((b) =>
+      b.addEventListener("click", () => runPreset(b.dataset.preset)));
+    $("refreshBtn").addEventListener("click", refresh);
+    $("autoPoll").addEventListener("change", (e) => {
+      autoPollOn = e.target.checked;
+      if (autoPollOn) { log("auto-refresh on (5s)"); pollLoop(); }
+      else log("auto-refresh off");
+    });
+    $("interpretBtn").addEventListener("click", interpret);
+    $("applyPlan").addEventListener("click", async () => {
+      if (!lastPlan) return;
+      // Re-validate against the LIVE catalog — it may have drifted since interpret().
+      const launch = lastPlan.launch.filter((n) => { const s = catalog.find((x) => x.name === n); return knownName(n) && !(s && s.running === true); });
+      const stop = lastPlan.stop.filter(knownName);
+      $("plan").classList.add("hidden");
+      lastPlan = null;
+      if (!launch.length && !stop.length) { log("plan no longer applicable — catalog changed since it was built"); return; }
+      await runMany(launch, stop);
+    });
+    $("cancelPlan").addEventListener("click", () => { $("plan").classList.add("hidden"); lastPlan = null; });
+    $("saveAdvanced").addEventListener("click", async () => {
+      const newHub = $("hubUrl").value.trim().replace(/\/$/, "");
+      const tok = $("tokenOverride").value.trim();
+      if (newHub) {
+        // The hub (and the write token it hands out) is loopback-only by design —
+        // reject anything that isn't, so the token is never sent off-machine.
+        try {
+          const u = new URL(newHub);
+          if (!/^https?:$/.test(u.protocol) || !["localhost", "127.0.0.1", "[::1]", "::1"].includes(u.hostname))
+            throw new Error("must be a loopback http(s) URL");
+        } catch (e) { log("invalid hub URL: " + e.message, "err"); return; }
+        HUB = newHub; localStorage.setItem(LS.hub, HUB); hubLabel.textContent = HUB.replace(/^https?:\/\//, "");
+      }
+      if (tok) localStorage.setItem(LS.tokenOverride, tok); else localStorage.removeItem(LS.tokenOverride);
+      log("reconnecting to " + HUB + "…");
+      await resolveToken();
+      await refresh();
+    });
+
+    $("presetHint").textContent =
+      `core = ${PRESETS.core.join(", ")}.  Anything in the list below can be flipped individually.`;
+
+    boot();
+  }
+  async function boot() {
+    setConn("unknown", "connecting…");
+    await resolveToken();
+    await refresh();
+  }
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>

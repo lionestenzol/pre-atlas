@@ -158,6 +158,120 @@ def test_launch_allowlist_loads():
     assert all("name" in c for c in cfgs)
 
 
+def test_launchables_shape_and_keys():
+    # The setup-UI's authoritative boot list: every launch.json entry by NAME,
+    # with a per-port live-probe result and a self flag for atlas-map-api itself.
+    r = client.get("/map/launchables?probe=false")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["probed"] is False
+    assert body["count"] == len(body["items"]) > 0
+    names = {i["name"] for i in body["items"]}
+    # Covers UI-only entries that /map/viewer (snapshot-only) misses.
+    assert "lattice" in names
+    assert "atlas-map-api" in names
+    for item in body["items"]:
+        assert set(item.keys()) == {"name", "port", "running", "self", "shared_with"}
+        assert item["running"] is None  # probe=false => no probing
+        assert isinstance(item["shared_with"], list)
+    # atlas-map-api is flagged self (never stoppable) and every other isn't.
+    self_flagged = [i["name"] for i in body["items"] if i["self"]]
+    assert self_flagged == ["atlas-map-api"]
+
+
+def test_launchables_failsoft_on_malformed_port(monkeypatch):
+    # A non-numeric port must degrade ONE row (port preserved, running null), not
+    # 500 the whole list. Guards the _as_int fail-soft posture.
+    from atlas_map_api import launcher, server
+    monkeypatch.setattr(launcher, "load_launch_configs", lambda root: [
+        {"name": "good", "port": 9991},
+        {"name": "bad", "port": "auto"},   # non-numeric
+        {"name": "portless"},               # missing
+    ])
+    r = client.get("/map/launchables?probe=false")
+    assert r.status_code == 200
+    by = {i["name"]: i for i in r.json()["items"]}
+    assert by["bad"]["port"] == "auto" and by["bad"]["running"] is None and by["bad"]["self"] is False
+    assert by["portless"]["port"] is None
+    assert by["good"]["port"] == 9991
+
+
+def test_launchables_shared_port_dedups_probe_and_annotates(monkeypatch):
+    # Two names on one port: probe runs ONCE per distinct port (dedup), both names
+    # report the same running value, and each names the other in shared_with.
+    from atlas_map_api import launcher, server
+    monkeypatch.setattr(launcher, "load_launch_configs", lambda root: [
+        {"name": "a", "port": 3099},
+        {"name": "b", "port": 3099},   # collision
+        {"name": "c", "port": 3100},
+    ])
+    calls: list[int] = []
+
+    async def fake_probe(port, timeout=0.2):
+        calls.append(port)
+        return port == 3099  # pretend 3099 is up
+
+    monkeypatch.setattr(server, "_probe_port", fake_probe)
+    r = client.get("/map/launchables?probe=true")
+    assert r.status_code == 200
+    by = {i["name"]: i for i in r.json()["items"]}
+    assert sorted(calls) == [3099, 3100]           # 3099 probed once, not twice
+    assert by["a"]["running"] is True and by["b"]["running"] is True
+    assert by["a"]["shared_with"] == ["b"] and by["b"]["shared_with"] == ["a"]
+    assert by["c"]["shared_with"] == []
+
+
+def test_halt_warns_on_shared_port(monkeypatch):
+    # Halting one of a shared-port pair must surface that the other went down too.
+    from atlas_map_api import launcher
+    monkeypatch.setattr(launcher, "load_launch_configs", lambda root: [
+        {"name": "droplist-ui", "port": 3074},
+        {"name": "triangulation", "port": 3074},
+    ])
+    monkeypatch.setattr(launcher, "stop_on_port", lambda port: {"ok": True, "stopped": True, "port": port})
+    r = client.post("/map/halt/droplist-ui", headers=_auth())
+    assert r.status_code == 200
+    body = r.json()
+    assert body["shared_with"] == ["triangulation"]
+    assert "also stopped" in body["warning"]
+
+
+def test_launchables_probe_returns_bool_running():
+    r = client.get("/map/launchables?probe=true")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["probed"] is True
+    assert all(isinstance(i["running"], bool) for i in body["items"])
+    # Running entries sort ahead of stopped ones (UI shows live up top).
+    runs = [i["running"] for i in body["items"]]
+    assert runs == sorted(runs, reverse=True)
+
+
+def test_halt_unknown_launch_name_404():
+    r = client.post("/map/halt/__nonexistent__", headers=_auth())
+    assert r.status_code == 404
+
+
+def test_halt_resolves_launch_name_to_port(monkeypatch):
+    # halt is keyed by launch.json NAME (covers UI-only servers); it must resolve
+    # name -> port and stop that port — NOT require the name be a snapshot subsystem.
+    from atlas_map_api import launcher
+
+    captured: dict[str, int] = {}
+
+    def fake_stop(port):
+        captured["port"] = port
+        return {"ok": True, "stopped": True, "port": port, "pids": [999]}
+
+    monkeypatch.setattr(launcher, "stop_on_port", fake_stop)
+    r = client.post("/map/halt/lattice", headers=_auth())  # lattice is UI-only, not a subsystem
+    assert r.status_code == 200
+    body = r.json()
+    assert body["action"] == "halt"
+    assert body["name"] == "lattice"
+    assert captured["port"] == 3011  # resolved from launch.json, not the snapshot
+
+
 def test_config_resolves_by_port():
     from atlas_map_api import launcher
     from atlas_map_api.loader import load_snapshot
@@ -383,6 +497,7 @@ _GUARDED_POSTS = [
     ("/map/start/delta-kernel", None),
     ("/map/stop/delta-kernel", None),
     ("/map/restart/delta-kernel", None),
+    ("/map/halt/lattice", None),
     ("/items/bb:droplist:DAG-x/status", {"status": "done"}),
 ]
 

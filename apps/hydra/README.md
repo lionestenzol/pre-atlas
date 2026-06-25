@@ -58,6 +58,36 @@ and find fresh ground; if nothing fresh remains anywhere, it stops.
   otherwise hang mid-hop).
 - Tick **auto→DropList** to have every auto-eaten stone fed to DropList hands-free.
 
+## Eating for real — digest through delta-scp (the throughput)
+
+A stone is no longer just a note. When you eat a repo (and **🧬 digest** is on), HYDRA sends it
+to the **HYDRA engine** (`apps/hydra/engine.py`, :8899), which calls **delta-scp** (:3012) to
+clone + symbol-extract the repo. A real structural map lands on the stone and the full digest
+is cached to `apps/hydra/vault/`:
+
+```
+🧬 digested · 461 files · 2808 symbols · graph 2821/979
+  merge-deep.d.ts · 59 sym · Writable, ArrayTail, SimplifyDeepExcludeArray…
+```
+
+That's the difference between read-only and Pac-Man: **bytes move.** GitHub repo → cloned →
+digested → a map of its actual types/functions on your disk.
+
+**To run the eating chain (3 services):**
+```
+# 1. delta-scp demo gateway (Supabase-free, synchronous digest engine)
+preview_start delta-scp-demo          # or: cd ~/pre-atlas/services/delta-scp && npx tsx src/demo-server.ts
+# 2. HYDRA engine (holds delta-scp's key, serves the browser with CORS)
+preview_start hydra-engine            # or: python apps/hydra/engine.py
+# 3. the game
+preview_start hydra                   # http://127.0.0.1:8898/hydra.html
+```
+
+The engine reads delta-scp's Bearer key from its `.env` server-side — **the key never touches
+the browser.** delta-scp clones via `git`, so big repos are slow; eat small/medium repos first.
+If the engine or delta-scp is down, the stone shows a `⚠ engine offline` note and nothing else
+breaks.
+
 ## DropList pairing
 
 Every stone can flow into **DropList** (`services/droplist`, `POST /api/drop`) as a drop —

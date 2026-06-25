@@ -131,6 +131,15 @@
     .badge.secured { background: rgba(59,255,122,0.18); color: var(--t-component); }
     .badge.dropped { background: rgba(255,255,255,0.10); color: var(--dim); }
     .badge.err, .badge.offline { background: rgba(255,107,107,0.18); color: #ff8c8c; }
+    .stone .digest { margin-top: 7px; padding: 7px 9px; border-radius: 8px; background: rgba(59,255,122,0.07); border: 1px solid rgba(59,255,122,0.22); font-size: 11px; }
+    .stone .digest .hd { color: var(--t-component); font-weight: 700; letter-spacing: .3px; }
+    .stone .digest .langs { color: var(--dim); margin-top: 2px; }
+    .stone .digest .file { color: var(--text); margin-top: 3px; }
+    .stone .digest .file b { color: var(--t-component); font-weight: 700; }
+    .stone .digest .sym { color: var(--dim); }
+    .stone .digesting { margin-top: 7px; font-size: 11px; color: var(--t-component); }
+    .stone .digesting::before { content: "🧬 "; }
+    .stone .digestErr { margin-top: 7px; font-size: 11px; color: #ff8c8c; }
     .stone .what { font-size: 11px; color: var(--dim); margin-top: 4px; line-height: 1.4; }
     .stone .pairs {
       font-size: 11px; margin-top: 6px; width: 100%;
@@ -176,6 +185,10 @@
     <div class="row" style="margin-top:8px; align-items:center;">
       <button class="btn ghost" id="auto" style="flex:1">▶ Auto-explore</button>
       <label class="chk"><input type="checkbox" id="autoDrop" /> auto&rarr;DropList</label>
+    </div>
+    <div class="row" style="margin-top:8px; align-items:center;">
+      <input id="engineUrl" placeholder="HYDRA engine URL" value="http://127.0.0.1:8899" />
+      <label class="chk" title="On each eat, digest the repo through delta-scp"><input type="checkbox" id="digestOnEat" checked /> 🧬 digest</label>
     </div>
     <div class="row" style="margin-top:8px;">
       <input id="dropUrl" placeholder="DropList /api/drop URL" value="http://127.0.0.1:3073/api/drop" />
@@ -262,6 +275,8 @@
         visited: [...visited],
         dropUrl: $("dropUrl").value,
         autoDrop: $("autoDrop").checked,
+        engineUrl: $("engineUrl").value,
+        digestOnEat: $("digestOnEat").checked,
       }));
     } catch (e) {}
   }
@@ -277,6 +292,8 @@
       visited = new Set(d.visited || []);
       if (d.dropUrl) $("dropUrl").value = d.dropUrl;
       if (d.autoDrop) $("autoDrop").checked = true;
+      if (d.engineUrl) $("engineUrl").value = d.engineUrl;
+      if (d.digestOnEat === false) $("digestOnEat").checked = false;
       return !!current;
     } catch (e) { return false; }
   }
@@ -430,7 +447,10 @@
     // wander/tour overlaps); auto-explore can't (pickAuto filters visited).
     // Dedupe by id; the head still hops either way. (web review 2026-06-25)
     const stone = makeStone(target.repo);
-    if (!stones.some(s => s.id === stone.id)) { stones.push(stone); renderStones(); }
+    if (!stones.some(s => s.id === stone.id)) {
+      stones.push(stone); renderStones();
+      if ($("digestOnEat").checked) digestRepo(stone);  // real bite: digest through delta-scp (non-blocking)
+    }
     // animate head slithering to the dot (time-based, not rAF-gated)
     hopAnim = { from: { x: current.x, y: current.y }, to: { x: target.x, y: target.y }, start: performance.now(), dur: 520 };
     await waitAnim();
@@ -605,6 +625,41 @@
       `<span><a href="${r.html_url}" target="_blank" style="color:var(--t-technique)">open ↗</a></span>`;
   }
 
+  // The real bite: send the eaten repo to the HYDRA engine → delta-scp digests
+  // it (clone + symbol-extract) and a structural map lands on the stone. This is
+  // the throughput — bytes actually move, GitHub repo → digested map on disk.
+  async function digestRepo(stone) {
+    if (!stone || stone.digest || stone.digesting) return;
+    const url = ($("engineUrl").value.trim() || "http://127.0.0.1:8899") + "/eat";
+    stone.digesting = true; stone.digestErr = null; renderStones();
+    try {
+      const res = await fetch(url, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo_url: stone.from_repo }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.ok) { stone.digest = j.digest; }
+      else { stone.digestErr = j.error || ("engine " + res.status); }
+    } catch (e) {
+      stone.digestErr = "engine offline (" + (($("engineUrl").value || "").replace(/^https?:\/\//, "")) + ")";
+    }
+    stone.digesting = false; renderStones(); save();
+  }
+
+  function renderDigest(s) {
+    if (s.digesting) return `<div class="digesting">digesting through delta-scp…</div>`;
+    if (s.digestErr) return `<div class="digestErr">⚠ ${escapeHtml(s.digestErr)}</div>`;
+    const d = s.digest; if (!d) return "";
+    const langs = Object.entries(d.languages || {}).sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => `${k} ${v}`).join(" · ");
+    const files = (d.top_files || []).filter(f => f.symbols > 0).slice(0, 4).map(f =>
+      `<div class="file"><b>${escapeHtml((f.path || "").split("/").pop())}</b> <span class="sym">${f.symbols} sym${f.names && f.names.length ? " · " + f.names.slice(0,4).map(escapeHtml).join(", ") : ""}</span></div>`
+    ).join("");
+    return `<div class="digest">
+      <div class="hd">🧬 digested · ${d.file_count} files · ${d.symbol_count} symbols${d.graph && d.graph.nodes ? " · graph " + d.graph.nodes + "/" + d.graph.edges : ""}</div>
+      <div class="langs">${langs}</div>${files}</div>`;
+  }
+
   function renderStones() {
     $("tailCount").textContent = stones.length + (stones.length === 1 ? " stone" : " stones");
     const box = $("stones");
@@ -626,6 +681,7 @@
           <span class="send" data-i="${i}" title="send this stone to DropList">⇪</span>
         </div>
         <div class="what">${escapeHtml(s.what)}</div>
+        ${renderDigest(s)}
         <textarea class="pairs" data-i="${i}" placeholder="pairs with… (what in your stack does this slot into?)">${escapeHtml(s.pairs_with)}</textarea>`;
       box.appendChild(el);
     }
@@ -761,6 +817,8 @@
   $("auto").addEventListener("click", () => auto ? stopAuto() : startAuto());
   $("autoDrop").addEventListener("change", save);
   $("dropUrl").addEventListener("change", save);
+  $("engineUrl").addEventListener("change", save);
+  $("digestOnEat").addEventListener("change", save);
   $("dropAll").addEventListener("click", sendAllToDropList);
 
   $("export").addEventListener("click", () => {

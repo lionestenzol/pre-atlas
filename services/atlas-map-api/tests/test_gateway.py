@@ -7,6 +7,9 @@ proxy/exec paths are proven separately (manual curl vs a running service).
 
 from __future__ import annotations
 
+import asyncio
+
+import httpx
 from fastapi.testclient import TestClient
 
 from atlas_map_api import auth
@@ -137,6 +140,47 @@ def test_authorized_write_with_flag_reaches_invocation(monkeypatch):
     r = client.post("/call", json={"surface": "droplist", "capability": "drop", "args": {"text": "x"}}, headers=_root())
     assert r.status_code == 200
     assert r.json()["kind"] == "http" and r.json()["capability"] == "drop"
+
+
+# ---- mutating proxied calls forward the shared secret (one-token trust domain) ---
+def _capture_proxy(monkeypatch) -> dict:
+    """Patch httpx so _invoke_http hits no network; record the outgoing request's
+    verb + headers for both the GET and the request() (mutating) paths."""
+    seen: dict = {}
+
+    async def fake_request(self, method, url, **kwargs):
+        seen["method"], seen["headers"] = method, kwargs.get("headers")
+        return httpx.Response(200, json={"ok": True})
+
+    async def fake_get(self, url, **kwargs):
+        seen["method"], seen["headers"] = "GET", kwargs.get("headers")
+        return httpx.Response(200, json={"ok": True})
+
+    monkeypatch.setattr(httpx.AsyncClient, "request", fake_request)
+    monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
+    return seen
+
+
+def test_mutating_proxied_call_forwards_shared_secret(monkeypatch):
+    # Without the X-Atlas-Token header a proxied write 401s once droplist's guard is
+    # live (PR #25). The gateway must forward the root token for mutating verbs.
+    snap = load_snapshot()
+    seen = _capture_proxy(monkeypatch)
+    drop = next(c for c in d.load_overlay(snap.repo_root, "droplist").capabilities if c.id == "drop")
+    res = asyncio.run(gateway._invoke_http(snap, "droplist", drop, d.resolve_role("root"), {"text": "x"}))
+    assert seen["method"] == "POST"
+    assert seen["headers"] == {"X-Atlas-Token": auth.current_token()}
+    assert res["ok"] is True
+
+
+def test_read_proxied_call_carries_no_token(monkeypatch):
+    # Reads stay open end-to-end — a GET must NOT carry the write secret.
+    snap = load_snapshot()
+    seen = _capture_proxy(monkeypatch)
+    health = next(c for c in d.load_overlay(snap.repo_root, "delta-kernel").capabilities if c.id == "health")
+    asyncio.run(gateway._invoke_http(snap, "delta-kernel", health, d.resolve_role("anon"), None))
+    assert seen["method"] == "GET"
+    assert seen["headers"] is None
 
 
 def test_low_clearance_meta_does_not_leak_resolved_url():

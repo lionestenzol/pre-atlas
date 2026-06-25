@@ -212,9 +212,20 @@ async def _invoke_http(snap, surface, cap, role, args) -> dict[str, Any]:
     if base is None:
         return _refusal(422, f"'{surface}' has no resolvable port — cannot be reached")
     method, url, body = build_target(base, cap.invoke, args or {})
+    # Local trust domain speaks ONE shared secret end-to-end: mutating proxied calls
+    # forward the root X-Atlas-Token so downstream surfaces that guard their write
+    # routes (e.g. droplist's auth.py, reading the same repo-root .atlas-write-token)
+    # accept them instead of 401-ing. Reads carry no token. Without this, any droplist
+    # write driven through this gateway 401s once PR #25 lands.
+    # See ~/.claude/rules/common/code-as-furniture.md — bug fixed inline, not documented-and-left.
+    headers = {"X-Atlas-Token": auth.current_token()} if method in _MUTATING_VERBS else None
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await (client.get(url) if method == "GET" else client.request(method, url, json=body or None))
+            resp = await (
+                client.get(url)
+                if method == "GET"
+                else client.request(method, url, json=body or None, headers=headers)
+            )
     except httpx.HTTPError:
         return _envelope(
             ok=False, code=502, surface=surface, capability=cap.id, kind="http", status=None,

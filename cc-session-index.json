@@ -1,0 +1,831 @@
+{
+  "generated_utc": "2026-05-28T12:29:08.857178Z",
+  "source_root": "C:\\Users\\bruke\\.claude\\projects",
+  "totals": {
+    "project_dirs": 69,
+    "sessions_main": 206,
+    "sessions_subagent": 793,
+    "sessions_total": 999,
+    "size_bytes": 894732456,
+    "date_first": "2026-02-08",
+    "date_last": "2026-05-28"
+  },
+  "projects": [
+    {
+      "slug": "C--Users-bruke-STRUDEL",
+      "cwd": "C:\\Users\\bruke\\STRUDEL",
+      "sessions_main": 9,
+      "sessions_subagent": 336,
+      "size_bytes": 98567814,
+      "first_mtime": 1771896364.748886,
+      "last_mtime": 1779891115.0822065,
+      "sample_session_ids": [
+        "129f0546-60d3-4d54-83d8-d1da8fc7e99c",
+        "52f878f7-f098-4c54-ac0c-582cb85dc1fa",
+        "84b9c8a1-a26c-439a-bce6-f218ae45859e"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas",
+      "sessions_main": 123,
+      "sessions_subagent": 111,
+      "size_bytes": 214697636,
+      "first_mtime": 1770613640.0509813,
+      "last_mtime": 1779971347.4044676,
+      "sample_session_ids": [
+        "02a53c43-861c-4d4d-bd5d-5d2bcf451a58",
+        "03ecdc95-5bed-4b98-9024-b109adc56248",
+        "052d068d-ed66-43d6-83f0-25fb8d1cb83f"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas-services-aegis-fabric",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\services\\aegis-fabric",
+      "sessions_main": 0,
+      "sessions_subagent": 47,
+      "size_bytes": 9216116,
+      "first_mtime": 1771806572.7803707,
+      "last_mtime": 1773260716.1140258,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-STEMai",
+      "cwd": "C:\\Users\\bruke\\STEMai",
+      "sessions_main": 0,
+      "sessions_subagent": 47,
+      "size_bytes": 5832529,
+      "first_mtime": 1772418011.350795,
+      "last_mtime": 1773253179.7553706,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-Downloads-ComfyUI",
+      "cwd": "C:\\Users\\bruke\\Downloads\\ComfyUI",
+      "sessions_main": 0,
+      "sessions_subagent": 35,
+      "size_bytes": 4298797,
+      "first_mtime": 1771297384.5226989,
+      "last_mtime": 1771629520.6159825,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-POLARIS",
+      "cwd": "C:\\Users\\bruke\\POLARIS",
+      "sessions_main": 0,
+      "sessions_subagent": 27,
+      "size_bytes": 4052069,
+      "first_mtime": 1771788866.1643274,
+      "last_mtime": 1773034098.3793778,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-hardcore-poitras-422c09",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\hardcore-poitras-422c09",
+      "sessions_main": 1,
+      "sessions_subagent": 21,
+      "size_bytes": 12188354,
+      "first_mtime": 1778016420.7337284,
+      "last_mtime": 1778106879.1844103,
+      "sample_session_ids": [
+        "414d306c-0436-418d-b925-5d9f35116de0"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-nervous-dijkstra-c03389",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\nervous-dijkstra-c03389",
+      "sessions_main": 1,
+      "sessions_subagent": 18,
+      "size_bytes": 26539777,
+      "first_mtime": 1778418284.3556418,
+      "last_mtime": 1779590522.617,
+      "sample_session_ids": [
+        "5b5cecf0-ad9b-4534-a72f-6facf88f7357"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-adoring-rubin-7f09bf",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\adoring-rubin-7f09bf",
+      "sessions_main": 1,
+      "sessions_subagent": 16,
+      "size_bytes": 25877105,
+      "first_mtime": 1777768504.1135535,
+      "last_mtime": 1778108621.7099652,
+      "sample_session_ids": [
+        "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-android",
+      "cwd": "C:\\Users\\bruke\\android",
+      "sessions_main": 0,
+      "sessions_subagent": 15,
+      "size_bytes": 1531050,
+      "first_mtime": 1772463542.8978343,
+      "last_mtime": 1772605067.4546187,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-Downloads-ai-fashion-prompt-console",
+      "cwd": "C:\\Users\\bruke\\Downloads\\ai-fashion-prompt-console",
+      "sessions_main": 0,
+      "sessions_subagent": 10,
+      "size_bytes": 1526984,
+      "first_mtime": 1771632953.713492,
+      "last_mtime": 1771706045.5483875,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-clever-gauss-a9970a",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\clever-gauss-a9970a",
+      "sessions_main": 1,
+      "sessions_subagent": 9,
+      "size_bytes": 8982618,
+      "first_mtime": 1777733785.596873,
+      "last_mtime": 1777767578.5452917,
+      "sample_session_ids": [
+        "e2f3f422-5488-4ee2-8f57-38590666d5af"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas-services-canvas-engine",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine",
+      "sessions_main": 10,
+      "sessions_subagent": 0,
+      "size_bytes": 302016,
+      "first_mtime": 1779604315.8943956,
+      "last_mtime": 1779742752.0387747,
+      "sample_session_ids": [
+        "0cd437fc-570d-45b4-99c0-7ca162f46aa5",
+        "38f450cb-6e86-4cf1-b4ba-45fefd1425e1",
+        "7708126a-5eb6-4df6-bc90-97e941ee67c6"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-pensive-sinoussi-eb4d9c",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pensive-sinoussi-eb4d9c",
+      "sessions_main": 1,
+      "sessions_subagent": 8,
+      "size_bytes": 13191641,
+      "first_mtime": 1777659178.0586357,
+      "last_mtime": 1777695378.3471386,
+      "sample_session_ids": [
+        "654eff1d-e7ed-4c3a-ad81-54e5f66077e6"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-zealous-mclean-a9b079",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\zealous-mclean-a9b079",
+      "sessions_main": 1,
+      "sessions_subagent": 8,
+      "size_bytes": 26840848,
+      "first_mtime": 1777368196.8911371,
+      "last_mtime": 1777466044.333238,
+      "sample_session_ids": [
+        "788e9df8-3633-4d82-a710-0d3b7e467024"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-OneDrive-Desktop-Kimi-Agent-VirtualStudio-Cinematic-Hero",
+      "cwd": "C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero",
+      "sessions_main": 0,
+      "sessions_subagent": 8,
+      "size_bytes": 1245107,
+      "first_mtime": 1771194970.261626,
+      "last_mtime": 1771196901.127298,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-goofy-shockley-9df446",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\goofy-shockley-9df446",
+      "sessions_main": 1,
+      "sessions_subagent": 7,
+      "size_bytes": 11192801,
+      "first_mtime": 1778443253.9309754,
+      "last_mtime": 1778524664.5434442,
+      "sample_session_ids": [
+        "32c0bfed-567f-4164-b5fa-95d82d2f6cb2"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-OneDrive-Desktop-BlenderShyt",
+      "cwd": "C:\\Users\\bruke\\OneDrive\\Desktop\\BlenderShyt",
+      "sessions_main": 0,
+      "sessions_subagent": 7,
+      "size_bytes": 2307848,
+      "first_mtime": 1771227114.6451683,
+      "last_mtime": 1771241598.1255822,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-hopeful-rosalind-ca57c4",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\hopeful-rosalind-ca57c4",
+      "sessions_main": 1,
+      "sessions_subagent": 6,
+      "size_bytes": 4748603,
+      "first_mtime": 1777912617.704351,
+      "last_mtime": 1778005508.6029234,
+      "sample_session_ids": [
+        "a0105357-f430-44ad-a96a-6b828b20cf97"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-musing-morse-9186cf",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\musing-morse-9186cf",
+      "sessions_main": 1,
+      "sessions_subagent": 6,
+      "size_bytes": 17065218,
+      "first_mtime": 1778413558.5309234,
+      "last_mtime": 1778449111.1144557,
+      "sample_session_ids": [
+        "fc533448-ee05-4dbb-b208-bed71f8ec627"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Downloads-files",
+      "cwd": "C:\\Users\\bruke\\Downloads\\files",
+      "sessions_main": 0,
+      "sessions_subagent": 6,
+      "size_bytes": 608584,
+      "first_mtime": 1771303802.7327359,
+      "last_mtime": 1771306036.6838422,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-pedantic-fermi-e58d26",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pedantic-fermi-e58d26",
+      "sessions_main": 6,
+      "sessions_subagent": 0,
+      "size_bytes": 5095853,
+      "first_mtime": 1777732977.5915618,
+      "last_mtime": 1779655721.179,
+      "sample_session_ids": [
+        "00f5e799-21cf-43bc-9264-98b14bff412e",
+        "562676a9-e0a6-403b-8402-be85e1d4db9c",
+        "71e52693-aa3a-42e3-9789-367208e3b786"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-busy-haslett-8265be",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be",
+      "sessions_main": 1,
+      "sessions_subagent": 4,
+      "size_bytes": 1975903,
+      "first_mtime": 1777505419.6000197,
+      "last_mtime": 1777508419.8319387,
+      "sample_session_ids": [
+        "d482f7dc-6e00-4718-b479-5be133d3330a"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-interesting-chaum-2944a8",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\interesting-chaum-2944a8",
+      "sessions_main": 1,
+      "sessions_subagent": 4,
+      "size_bytes": 6163555,
+      "first_mtime": 1777858121.8352127,
+      "last_mtime": 1777867571.2807758,
+      "sample_session_ids": [
+        "7560ad97-4578-4cf9-bcab-8cae01f0f608"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-stoic-noether-96bea8",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\stoic-noether-96bea8",
+      "sessions_main": 1,
+      "sessions_subagent": 4,
+      "size_bytes": 1726866,
+      "first_mtime": 1777449085.5362513,
+      "last_mtime": 1777470680.299721,
+      "sample_session_ids": [
+        "9c677357-020f-4743-8981-de9c778d0972"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-trusting-booth-4ca491",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\trusting-booth-4ca491",
+      "sessions_main": 1,
+      "sessions_subagent": 4,
+      "size_bytes": 4945341,
+      "first_mtime": 1777469180.584868,
+      "last_mtime": 1777504951.357861,
+      "sample_session_ids": [
+        "f5b6edca-21e6-4bc1-aaef-357d803524da"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke",
+      "cwd": "C:\\Users\\bruke",
+      "sessions_main": 4,
+      "sessions_subagent": 0,
+      "size_bytes": 2715633,
+      "first_mtime": 1777383959.3782663,
+      "last_mtime": 1779742802.1779633,
+      "sample_session_ids": [
+        "62a36483-4c6b-4792-9d34-80deef4115b8",
+        "8b6859df-c597-409b-a483-cbf377e27cd6",
+        "b1486df3-616c-43e1-8462-b18471cbb324"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-affectionate-bell-ee2a30",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\affectionate-bell-ee2a30",
+      "sessions_main": 1,
+      "sessions_subagent": 3,
+      "size_bytes": 27797853,
+      "first_mtime": 1778597644.660297,
+      "last_mtime": 1779743065.41,
+      "sample_session_ids": [
+        "58ec4c6b-ec29-4b8f-abef-dcf9d05ffa83"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-goofy-jones-8383d3",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\goofy-jones-8383d3",
+      "sessions_main": 1,
+      "sessions_subagent": 3,
+      "size_bytes": 5804094,
+      "first_mtime": 1778557554.0983357,
+      "last_mtime": 1778604135.1961043,
+      "sample_session_ids": [
+        "98406d52-ef07-485f-a331-8ea9f6f4eede"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-angry-benz-c50279",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\angry-benz-c50279",
+      "sessions_main": 1,
+      "sessions_subagent": 2,
+      "size_bytes": 19909946,
+      "first_mtime": 1778890075.358386,
+      "last_mtime": 1779583025.051,
+      "sample_session_ids": [
+        "854e5df3-a359-40a7-a194-03eb5aab7201"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-cool-sutherland-df631f",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\cool-sutherland-df631f",
+      "sessions_main": 1,
+      "sessions_subagent": 2,
+      "size_bytes": 8443991,
+      "first_mtime": 1777869489.0567775,
+      "last_mtime": 1777885113.6770718,
+      "sample_session_ids": [
+        "0b8f16d6-ba2e-4e22-9cea-a9045f5d08af"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-heuristic-buck-35f73f",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\heuristic-buck-35f73f",
+      "sessions_main": 1,
+      "sessions_subagent": 2,
+      "size_bytes": 12353793,
+      "first_mtime": 1777663109.7468376,
+      "last_mtime": 1777675957.050327,
+      "sample_session_ids": [
+        "b374e28d-9b62-40d3-8b5d-194a1b096fa0"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-modest-shaw-257077",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\modest-shaw-257077",
+      "sessions_main": 1,
+      "sessions_subagent": 2,
+      "size_bytes": 39304095,
+      "first_mtime": 1778590176.9541879,
+      "last_mtime": 1779590520.768,
+      "sample_session_ids": [
+        "0ac78a43-4854-41b7-b6b6-d8271fe09e66"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-peaceful-wilson-509a3e",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\peaceful-wilson-509a3e",
+      "sessions_main": 1,
+      "sessions_subagent": 2,
+      "size_bytes": 11998987,
+      "first_mtime": 1777395318.823239,
+      "last_mtime": 1777446204.3632183,
+      "sample_session_ids": [
+        "f104ce84-c4ab-452c-a352-927a8e2f7c11"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-pensive-newton-d0f9e0",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pensive-newton-d0f9e0",
+      "sessions_main": 1,
+      "sessions_subagent": 2,
+      "size_bytes": 1471059,
+      "first_mtime": 1777684091.0579145,
+      "last_mtime": 1777694224.76894,
+      "sample_session_ids": [
+        "17cc9e91-8890-4f33-90b1-502721e635e8"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-relaxed-buck-c5c0cc",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\relaxed-buck-c5c0cc",
+      "sessions_main": 1,
+      "sessions_subagent": 2,
+      "size_bytes": 6297811,
+      "first_mtime": 1778979480.989239,
+      "last_mtime": 1779801670.941,
+      "sample_session_ids": [
+        "fa4dece2-f4a7-4b78-93a7-a48ca5ce6a20"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-stupefied-tesla-12b4af",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\stupefied-tesla-12b4af",
+      "sessions_main": 1,
+      "sessions_subagent": 2,
+      "size_bytes": 7441630,
+      "first_mtime": 1778455336.2345665,
+      "last_mtime": 1778466487.0667791,
+      "sample_session_ids": [
+        "7ba2eb8c-c02a-44fb-8675-187fe9bb4529"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-wizardly-hellman-8bf71b",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\wizardly-hellman-8bf71b",
+      "sessions_main": 1,
+      "sessions_subagent": 2,
+      "size_bytes": 6101407,
+      "first_mtime": 1777510507.4393606,
+      "last_mtime": 1777558628.6449516,
+      "sample_session_ids": [
+        "ab0a2185-f338-4334-a2b8-0ce5d7770376"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Downloads-LANGUAGE",
+      "cwd": "C:\\Users\\bruke\\Downloads\\LANGUAGE",
+      "sessions_main": 0,
+      "sessions_subagent": 2,
+      "size_bytes": 193593,
+      "first_mtime": 1771308731.6547425,
+      "last_mtime": 1771308924.8090472,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-lucid-bohr-24156a",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\lucid-bohr-24156a",
+      "sessions_main": 1,
+      "sessions_subagent": 1,
+      "size_bytes": 2321966,
+      "first_mtime": 1777566262.9973135,
+      "last_mtime": 1779635761.669,
+      "sample_session_ids": [
+        "0d4b9590-39ce-4e73-bc4b-a9c233286c89"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-wt-result-signal",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\wt-result-signal",
+      "sessions_main": 2,
+      "sessions_subagent": 0,
+      "size_bytes": 490432,
+      "first_mtime": 1777381944.0235965,
+      "last_mtime": 1777383120.806895,
+      "sample_session_ids": [
+        "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4",
+        "d4272f32-2388-4621-bf52-4c8e960a3d7d"
+      ]
+    },
+    {
+      "slug": "C--WINDOWS-system32",
+      "cwd": "C:\\WINDOWS\\system32",
+      "sessions_main": 2,
+      "sessions_subagent": 0,
+      "size_bytes": 33695464,
+      "first_mtime": 1777733847.9807968,
+      "last_mtime": 1778758904.853621,
+      "sample_session_ids": [
+        "0fdb0634-00c2-491b-8b8e-9414574ca7d8",
+        "a913d2e7-983c-43bf-b3a3-c1088ca90a6f"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Downloads-Visualstudio",
+      "cwd": "C:\\Users\\bruke\\Downloads\\Visualstudio",
+      "sessions_main": 0,
+      "sessions_subagent": 1,
+      "size_bytes": 103981,
+      "first_mtime": 1771210843.7396138,
+      "last_mtime": 1771210843.7396138,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-OneDrive-Desktop-blender-mcp-main-blender-mcp-main",
+      "cwd": "C:\\Users\\bruke\\OneDrive\\Desktop\\blender-mcp-main\\blender-mcp-main",
+      "sessions_main": 0,
+      "sessions_subagent": 1,
+      "size_bytes": 209229,
+      "first_mtime": 1771176626.7631814,
+      "last_mtime": 1771176626.7631814,
+      "sample_session_ids": []
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-admiring-lamport-ba9edc",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\admiring-lamport-ba9edc",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 66634,
+      "first_mtime": 1779580315.939,
+      "last_mtime": 1779580315.939,
+      "sample_session_ids": [
+        "0ead0c60-503c-47a1-ae31-715cebc7ca4c"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-bold-franklin-cead5d",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\bold-franklin-cead5d",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 2568945,
+      "first_mtime": 1777564393.7805476,
+      "last_mtime": 1777564393.7805476,
+      "sample_session_ids": [
+        "6b656a12-dfb3-4c06-875e-7933e85eb975"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-bold-meitner-84f448",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\bold-meitner-84f448",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 3419360,
+      "first_mtime": 1779485644.9265447,
+      "last_mtime": 1779485644.9265447,
+      "sample_session_ids": [
+        "c008a665-edac-4e8e-80e6-c354322cd739"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-clever-goldwasser-2c32cd",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\clever-goldwasser-2c32cd",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 876210,
+      "first_mtime": 1777749529.516475,
+      "last_mtime": 1777749529.516475,
+      "sample_session_ids": [
+        "92b822ec-a3d6-4654-8d5d-93009c851ae6"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-clever-solomon-d1f04c",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\clever-solomon-d1f04c",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 5291862,
+      "first_mtime": 1777637218.1041718,
+      "last_mtime": 1777637218.1041718,
+      "sample_session_ids": [
+        "205b0f14-86aa-40eb-8350-82ffeecf8abd"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-competent-mahavira-1145f7",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\competent-mahavira-1145f7",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 22661408,
+      "first_mtime": 1778469064.6735246,
+      "last_mtime": 1778469064.6735246,
+      "sample_session_ids": [
+        "45e337da-3400-4fb6-a65f-f7d72032e998"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-confident-kilby-f0d490",
+      "cwd": null,
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 8038811,
+      "first_mtime": 1778113453.222277,
+      "last_mtime": 1778113453.222277,
+      "sample_session_ids": [
+        "7acf95ae-73ce-4952-84f2-0d7a2f178856"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-distracted-robinson-d9e30f",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\distracted-robinson-d9e30f",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 1999432,
+      "first_mtime": 1778593285.9160507,
+      "last_mtime": 1778593285.9160507,
+      "sample_session_ids": [
+        "545d4a2f-a0f1-473c-a8fc-c64bd8423ad3"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-ecstatic-feistel-e39b63",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\ecstatic-feistel-e39b63",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 1158233,
+      "first_mtime": 1777516452.347547,
+      "last_mtime": 1777516452.347547,
+      "sample_session_ids": [
+        "5eb4a7e0-4dd7-4ab0-8fcf-7537073adb2f"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-elegant-black-71ab26",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\elegant-black-71ab26",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 10174369,
+      "first_mtime": 1777760643.5606902,
+      "last_mtime": 1777760643.5606902,
+      "sample_session_ids": [
+        "9b46ca86-94c5-41d9-b143-7d03c92b8464"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-exciting-pascal-fbab1a",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\exciting-pascal-fbab1a",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 12355371,
+      "first_mtime": 1779582372.744,
+      "last_mtime": 1779582372.744,
+      "sample_session_ids": [
+        "16ca4315-d57d-4187-9a00-2787a0867ffc"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-funny-bouman-0515db",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\funny-bouman-0515db",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 912164,
+      "first_mtime": 1779655709.826,
+      "last_mtime": 1779655709.826,
+      "sample_session_ids": [
+        "cb0a0bad-f6b5-40a9-8e62-793e77ff3364"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-gallant-spence-4d78cd",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\gallant-spence-4d78cd",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 99447,
+      "first_mtime": 1779750687.8,
+      "last_mtime": 1779750687.8,
+      "sample_session_ids": [
+        "567642ee-dbb8-4061-b572-96de01bca697"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-heuristic-shirley-4973c3",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\heuristic-shirley-4973c3",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 3462611,
+      "first_mtime": 1779653838.673,
+      "last_mtime": 1779653838.673,
+      "sample_session_ids": [
+        "6e9cbeda-7acd-4738-8e86-249ef632f688"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-magical-jang-7f9762",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\magical-jang-7f9762",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 15747854,
+      "first_mtime": 1777655438.9833083,
+      "last_mtime": 1777655438.9833083,
+      "sample_session_ids": [
+        "b065c9c9-73cb-4192-8fe0-ffb2fa5b9571"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-musing-antonelli-197644",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\musing-antonelli-197644",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 33875377,
+      "first_mtime": 1779582373.03,
+      "last_mtime": 1779582373.03,
+      "sample_session_ids": [
+        "535bdfa6-e20b-49bd-a866-3ba87bc9c3b6"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-musing-diffie-7cc117",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\musing-diffie-7cc117",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 578241,
+      "first_mtime": 1777693439.4613278,
+      "last_mtime": 1777693439.4613278,
+      "sample_session_ids": [
+        "3e9f1b41-1e1a-47dc-a80b-fad0c8edccd4"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-pedantic-cartwright-3e8227",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pedantic-cartwright-3e8227",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 2023006,
+      "first_mtime": 1779755544.137,
+      "last_mtime": 1779755544.137,
+      "sample_session_ids": [
+        "b86c7469-9815-41aa-8ddd-10f953157dc2"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-pedantic-chatterjee-433358",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pedantic-chatterjee-433358",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 1832157,
+      "first_mtime": 1778524976.404902,
+      "last_mtime": 1778524976.404902,
+      "sample_session_ids": [
+        "40671115-90dd-4b95-9456-624db846f2bb"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-serene-curran-aaa334",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\serene-curran-aaa334",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 2046913,
+      "first_mtime": 1779582848.406,
+      "last_mtime": 1779582848.406,
+      "sample_session_ids": [
+        "72930761-85ec-4e12-9c49-cc30cfa11908"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-silly-thompson-1a5e28",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\silly-thompson-1a5e28",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 29675771,
+      "first_mtime": 1777822646.7578425,
+      "last_mtime": 1777822646.7578425,
+      "sample_session_ids": [
+        "389cfd11-c7fa-418a-a66f-4fedf8589309"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-tender-boyd-8f33d5",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\tender-boyd-8f33d5",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 932525,
+      "first_mtime": 1778363358.2223005,
+      "last_mtime": 1778363358.2223005,
+      "sample_session_ids": [
+        "d18724aa-2edc-4939-a789-209af569a60b"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-trusting-germain-a57cb0",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\trusting-germain-a57cb0",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 5762400,
+      "first_mtime": 1779655736.943,
+      "last_mtime": 1779655736.943,
+      "sample_session_ids": [
+        "f7fe8ab5-efb1-4ea3-90ce-d7dcc22a65d2"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-Pre-Atlas--claude-worktrees-unruffled-borg-6152d5",
+      "cwd": "C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\unruffled-borg-6152d5",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 800727,
+      "first_mtime": 1778599582.1440425,
+      "last_mtime": 1778599582.1440425,
+      "sample_session_ids": [
+        "37e0c71d-3e05-42ae-93dc-70289100787d"
+      ]
+    },
+    {
+      "slug": "C--Users-bruke-STRUDEL--claude-worktrees-friendly-borg-fe3af2",
+      "cwd": "C:\\Users\\bruke\\STRUDEL\\.claude\\worktrees\\friendly-borg-fe3af2",
+      "sessions_main": 1,
+      "sessions_subagent": 0,
+      "size_bytes": 30996631,
+      "first_mtime": 1779486096.7126243,
+      "last_mtime": 1779486096.7126243,
+      "sample_session_ids": [
+        "244d5e79-26a9-4470-9cae-99f0c3178701"
+      ]
+    }
+  ]
+}

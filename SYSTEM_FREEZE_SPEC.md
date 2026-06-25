@@ -289,7 +289,7 @@ Pre Atlas/                              # Root (federated monorepo)
 | `src/cli/index.ts` | TypeScript | CLI entry point. Launches DeltaApp. | `app.ts` | main() |
 | `src/cli/renderer.ts` | TypeScript | Terminal rendering. ANSI colors, box drawing, mode color mapping. | `types.ts` | `render` |
 | `src/cli/storage.ts` | TypeScript | JSON file persistence. Sync file I/O. Entities, deltas, dictionary stored as JSON. | `types.ts` | `saveEntity`, `loadEntity`, `appendDelta`, `saveDictionary` |
-| `src/governance/governance_daemon.ts` | TypeScript | Autonomous scheduler. 6 cron jobs (heartbeat/5min, refresh/1hr, day_start/6am, day_end/10pm, mode_recalc/15min, work_queue/1min). | `types.ts`, `node-cron` | `startDaemon`, `DaemonState` |
+| `src/governance/governance_daemon.ts` | TypeScript | Autonomous scheduler. 9 cron jobs (heartbeat/5min, refresh/1hr, day_start/6am, day_end/10pm, mode_recalc/15min, work_queue/1min, agent_pipeline/Sun-6am, preparation/5min, stall_check/9pm). | `types.ts`, `node-cron` | `startDaemon`, `DaemonState` |
 | `web/src/App.tsx` | TypeScript/React | Browser dashboard. Mode display, task management, signal input. Fetches from API, falls back to localStorage. | `react` | React component |
 
 ### cognitive-sensor — Python Analysis Pipeline

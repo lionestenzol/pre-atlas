@@ -1,13 +1,16 @@
 # lattice/Atlas · 3-week assemble-first plan
 
-**Status:** Week 1 SHIPPED · Weeks 2-3 NOT started
+**Status:** Week 1 SHIPPED · Week 2 PARTIAL (layouts shipped) · Week 3 DONE (TinyBase rejected, refactored)
 **Created:** 2026-05-30
-**Updated:** 2026-06-25 (reconciled doc to shipped code)
+**Updated:** 2026-06-25 (all 3 weeks resolved; doc reflects shipped code)
 **Project:** Pre Atlas / apps/lattice + services/delta-kernel
 **Posture:** compose-from-primitives (per `~/.claude/rules/common/assemble-first.md`)
 
-> **Resume here:** Week 1 (Replicache + Zod sync seam) is live in `index.html`. Do NOT redo it.
-> Next session starts at **Week 2 · GO** (cxtmenu/popper/dagre + Zustand). Week 3 (TinyBase) after that.
+> **The 3-week plan is resolved.** W1 (Replicache+Zod sync) shipped; W2 shipped the layout
+> extensions and escape-hatched cxtmenu/Zustand (wrong-fit); W3 rejected TinyBase after a verified
+> recon and did the refactor the code actually needed (single source of truth + dedupe). See each
+> section. Open product calls left for Bruke: force cxtmenu/Zustand anyway? wire the inert `sources`
+> filter? (both are net-new behavior, not plan debt). Remaining cleanup: dead `.graph-node*` CSS.
 
 ---
 
@@ -212,14 +215,36 @@ cytoscape.use(cytoscapeDagre);
 
 ---
 
-## week 3 · substrate-side query ⛔ NOT STARTED
+## week 3 · substrate-side query ✅ DONE — TinyBase REJECTED, refactored instead (2026-06-25, commit `0df6d01`)
 
-**Goal:** replace hand-rolled `deriveNodes` / `deriveEdges` / BFS-over-edges with TinyBase reactive store.
+**Original goal:** replace hand-rolled `deriveNodes`/`deriveEdges`/BFS with a TinyBase reactive store.
 
-**Verified still hand-rolled (2026-06-25):** `deriveNodes`/`deriveEdges` (incl. ghost-stub augmentation)
-live at `index.html:1164-1209`. `tinybase` is not vendored in `apps/lattice/`. NOTE: the Week-1
-Replicache `subscribe` snapshot (index.html:2690) now feeds graph state on every pull and does its own
-ghost-stub pass — so when this lands, reconcile it with that path, not just the old `deriveNodes`.
+**Verdict: REJECTED TinyBase.** A 28-agent verified-recon workflow (22 claims confirmed with file:line,
+1 busted) showed the plan was written before Week 1 and no longer fits:
+- **Replicache is already the reactive store** (the W1 `onData` subscribe feeds the graph every pull).
+  TinyBase would be a *second* store + hydration bridge, not a replacement.
+- **The graph query is depth-N BFS, not relational.** TinyQL has no recursive/transitive operator
+  (verified vs tinybase.org), so the BFS survives adoption unchanged — TinyBase makes the product no
+  better at the one query the graph view is built around. (assemble-first: library would be *worse*, not later.)
+- **The real debt was a dual-write race + drifted duplication**, not a missing store.
+
+**What shipped instead (the refactor that actually fixes the seams):**
+- **One ghost-stub definition** — `makeGhostStub(id, {project})`. The two sites had drifted (deriveNodes
+  set `project`, onData omitted it); both now call the helper.
+- **One source of truth** — the server projection (Replicache `onData`) feeds the graph. The settings
+  handler no longer re-derives (that raced the projection, last-writer-wins until next pull); it just
+  `rerenderAll()`. `deriveNodes`/`deriveEdges` now run ONLY as the genuine fallback (server sent items but
+  no nodes/edges), wired in `onData`.
+- **One masking gate** — `deriveNodes`/`deriveEdges` emit the full superset (settings filters removed);
+  `nodeVisible()` masks at render for both paths.
+- Deleted the dead unreachable hand-rolled SVG renderer block in `renderGraph`.
+- Documented above `renderGraph` why the BFS stays hand-rolled (so TinyBase isn't re-proposed).
+- Verified live on :3011: graph renders from server projection (1345 nodes), toggle no longer mutates
+  `window.nodes` (race gone), masking works (projects 1→0), fallback derives 509/501, zero console errors.
+
+**Known follow-up (deferred, not blocking):** the `.graph-node*` CSS (index.html ~441-451, 571-586,
+959-960) is now provably dead (its only ref was inside the deleted SVG block) but scattered/interleaved
+with live rules — left for a focused cleanup pass rather than rushed. Tracked as a spawned task.
 
 ### install
 ```bash

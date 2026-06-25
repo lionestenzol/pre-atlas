@@ -82,15 +82,21 @@ def _run_once() -> dict:
     run-memory summary so no tick evaporates (storage.py:35 / storage.py:96).
     """
     tick = watcher.tick()
-    advanced = _advance_stored_dags()
     # Brick 4: run every due daisy-chain this pass (trigger -> steps -> report ->
-    # action). Fail-soft so a chain fault never sinks the whole tick
+    # action) BEFORE advancing. Order matters: _advance_stored_dags consumes
+    # `ready` nodes (runs them to done), so a check-in/nudge chain that targets
+    # has_ready_node could never fire via the daemon if it ran AFTER advance —
+    # the shipped daily_ready_nudge chain would be wired-but-inert. Running
+    # chains first lets a nudge see stale ready work before this pass clears it.
+    # Fail-soft so a chain fault never sinks the whole tick
     # (~/.claude/rules/common/code-as-furniture.md). chain_runner.tick reads the
     # clock once and reconstructs per-chain last_run from chain_reports.jsonl.
+    # Fix from the SMOKE_AND_DOD.md §C break run, 2026-06-25.
     try:
         chains = chain_runner.tick()
     except Exception:  # noqa: BLE001 — a chain fault must not break the DAG tick
         chains = {"at": clock.now_iso(), "fired": []}
+    advanced = _advance_stored_dags()
 
     report: dict = {
         "at": clock.now_iso(),

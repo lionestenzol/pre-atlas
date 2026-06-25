@@ -404,3 +404,43 @@ def test_daemon_tick_runs_chain_and_creates_drop(data_dir, monkeypatch):
     assert after > before, f"daemon tick did not create the follow-up drop: {before}->{after}"
 
     shutil.rmtree(cdir, ignore_errors=True)
+
+
+def test_cron_chain_with_no_targets_takes_no_action(data_dir, monkeypatch):
+    """A cron window firing with ZERO matching targets must take NO action.
+
+    Regression for the bug the SMOKE_AND_DOD.md §C break-run found: run_chain
+    computed a per-step `ok` gate and `all_target_ids` but never consulted them,
+    so the on_report action fired unconditionally once the trigger was due —
+    dropping a generic 'clarify intent' packet even when no work matched (noise,
+    against DropList's one-fact-per-row posture). Fixed by gating the action on
+    real targets + passed expectations; the cron window stays UNCONSUMED so the
+    chain fires the instant real work appears.
+    """
+    from droplist import chain_runner, dropstore
+
+    _set_now(monkeypatch, FIRE_AT)
+    # A DAG that exists but does NOT match: created 'today', so older_than_days=2 fails.
+    _seed_dag("DAG-FRESH", FIRE_AT.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    chain = {
+        "id": "nudge_no_targets",
+        "trigger": {"on": "cron", "expr": "0 8 * * *"},
+        "steps": [{
+            "prompt": "Draft a nudge for stale ready work.",
+            "target_query": {"status": "running", "older_than_days": 2,
+                             "has_ready_node": True},
+            "expect": "non_empty",
+        }],
+        "on_report": {"action": "drop", "params": {"title_prefix": "Nudge"}},
+    }
+    store = dropstore.get_store()
+    before = len(store.read_all())
+
+    res = chain_runner.run_chain(chain, FIRE_AT, last_run=None)
+
+    assert res["fired"] is False, res
+    assert res.get("reason") == "no_targets", res
+    assert len(store.read_all()) == before, "spurious drop created on empty targets"
+    reports = os.path.join(data_dir, "chain_reports.jsonl")
+    assert not os.path.exists(reports) or sum(1 for _ in open(reports)) == 0, \
+        "no report should be written when nothing matched (window unconsumed)"

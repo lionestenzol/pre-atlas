@@ -459,6 +459,25 @@ def run_chain(
             "ok": ok,
         })
 
+    # 1b. A chain only ACTS when its steps actually found work AND met their
+    # expectations. A cron window firing with zero matching targets must NOT
+    # emit a spurious action (e.g. a generic "clarify intent" drop) — that is
+    # noise, and DropList's whole posture is one-fact-per-row, no noise. The
+    # per-step `ok` gate and `all_target_ids` were computed but never consulted,
+    # so the action fired unconditionally once the trigger was due. We leave the
+    # cron window UNCONSUMED (write nothing) so the chain re-checks on the next
+    # tick and fires the instant real work appears in the window.
+    # Bug found by the SMOKE_AND_DOD.md §C break run; fixed inline 2026-06-25.
+    # See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
+    gates_passed = all(r["ok"] for r in step_records)
+    if not all_target_ids or not gates_passed:
+        return {
+            "chain_id": chain["id"],
+            "fired": False,
+            "reason": "no_targets" if not all_target_ids else "step_expectation_unmet",
+            "actions_taken": [],
+        }
+
     # 2. assemble + persist the report (storage.py:35 append-only audit).
     report_id = "chrep_" + uuid.uuid4().hex[:12]
     report = {

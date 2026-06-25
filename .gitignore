@@ -267,3 +267,9 @@ services/cognitive-sensor/cycleboard/brain/strategic_priorities.json
 forensic-map.md
 .delta-scp/
 .weapon/
+
+# --- convergence pass 2026-06-25: junk & runtime state ---
+.tags-services
+*.tsbuildinfo
+.claire/
+festivals/.festival/.state/

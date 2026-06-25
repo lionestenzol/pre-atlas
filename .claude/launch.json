@@ -428,6 +428,62 @@
       },
       "port": 3074,
       "cwd": "services/triangulation"
+    },
+    {
+      "name": "hydra",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "apps/hydra",
+        "-p",
+        "8898",
+        "-c-1",
+        "--cors"
+      ],
+      "port": 8898
+    },
+    {
+      "name": "hydra-engine",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "apps/hydra/engine.py"
+      ],
+      "port": 8899
+    },
+    {
+      "name": "delta-scp-demo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "tsx",
+        "src/demo-server.ts"
+      ],
+      "port": 3012,
+      "cwd": "C:/Users/bruke/pre-atlas/services/delta-scp"
+    },
+    {
+      "name": "delta-scp-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "--port",
+        "5174",
+        "--strictPort"
+      ],
+      "port": 5174,
+      "cwd": "apps/delta-scp-web"
+    },
+    {
+      "name": "anatomy-saas-example",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "C:/Users/bruke/anatomy-saas/packages/compiler/examples",
+        "-p",
+        "8911",
+        "-c-1",
+        "--cors"
+      ],
+      "port": 8911
     }
   ]
 }

@@ -19,6 +19,13 @@ SCHEMAS_DIR = CONTRACTS_DIR / "schemas"
 HOST = os.environ.get("OPTOGON_HOST", "0.0.0.0")
 PORT = int(os.environ.get("OPTOGON_PORT", "3010"))
 
+# Signal transport · Ship Target #1
+# OPTOGON_SIGNAL_EMIT three-switch ladder (matches cortex_bridge.py convention):
+#   unset / "0" / "off" -> log only (no POST)
+#   "1" / "on"          -> POST to delta-kernel /api/signals
+DELTA_KERNEL_URL = os.environ.get("DELTA_KERNEL_URL", "http://localhost:3001")
+SIGNAL_EMIT_ENABLED = os.environ.get("OPTOGON_SIGNAL_EMIT", "").strip().lower() in {"1", "on", "true"}
+
 # Pacing
 DEFAULT_TOKEN_BUDGET_PER_NODE = 200
 MAX_QUESTIONS_PER_TURN = 1

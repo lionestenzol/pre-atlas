@@ -1,0 +1,80 @@
+{
+  "version": "anatomy-v1",
+  "metadata": {
+    "target": "https://shop.example.com/products",
+    "mode": "spa",
+    "source": "index.html",
+    "timestamp": "2026-04-26T14:30:00Z",
+    "tools": ["anatomy-extension@0.3.15", "web-audit@0.4.0"]
+  },
+  "regions": [
+    {
+      "id": "header-nav",
+      "n": 1,
+      "name": "Header",
+      "layer": "ui",
+      "selector": "header.site-header",
+      "desc": "Primary site header with logo and nav",
+      "kind": "sem",
+      "fetches": [
+        { "method": "GET", "url": "/api/me", "status": 200, "contentType": "application/json", "ts": 1761166212345 }
+      ]
+    },
+    {
+      "id": "search-bar",
+      "n": 2,
+      "name": "Search bar",
+      "layer": "ui",
+      "selector": "form.search",
+      "desc": "Product search form",
+      "fetches": [
+        { "method": "GET", "url": "/api/search?q=", "status": 200, "contentType": "application/json", "ts": 1761166212450 }
+      ]
+    },
+    {
+      "id": "product-grid",
+      "n": 3,
+      "name": "Product grid",
+      "layer": "ui",
+      "desc": "Paginated product grid",
+      "fetches": [
+        { "method": "GET", "url": "/api/products?page=1", "status": 200, "contentType": "application/json", "ts": 1761166212600 },
+        { "method": "POST", "url": "/api/cart", "status": 201, "contentType": "application/json", "ts": 1761166212700 },
+        { "method": "DELETE", "url": "/api/cart/item/1", "status": 204, "ts": 1761166212800 }
+      ]
+    },
+    {
+      "id": "cart-state",
+      "n": 4,
+      "name": "Cart store",
+      "layer": "state",
+      "desc": "Client-side cart state"
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain-search",
+      "nodes": [
+        { "n": 5, "layer": "ui", "label": "SearchBar.onSubmit" },
+        { "n": 6, "layer": "api", "label": "GET /api/search" },
+        { "n": 7, "layer": "lib", "label": "elasticClient.search()" },
+        { "n": 8, "layer": "ext", "label": "elasticsearch.example.com" }
+      ]
+    },
+    {
+      "id": "chain-add-to-cart",
+      "nodes": [
+        { "n": 9, "layer": "ui", "label": "ProductGrid.addToCart" },
+        { "n": 10, "layer": "api", "label": "POST /api/cart" },
+        { "n": 11, "layer": "state", "label": "cart table" }
+      ]
+    }
+  ],
+  "layers": {
+    "ui":    { "color": "#c084fc" },
+    "api":   { "color": "#f59e0b" },
+    "ext":   { "color": "#818cf8" },
+    "lib":   { "color": "#22c55e" },
+    "state": { "color": "#a855f7" }
+  }
+}

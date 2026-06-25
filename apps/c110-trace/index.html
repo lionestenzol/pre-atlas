@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C110-trace · PNG-as-Telemetry (Pattern 3)</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --bg:#f9fafb; --card:#fff; --ok:#059669; --bad:#dc2626; --hl:#fbbf24; --hot:#dc2626; --warm:#fb923c; --cool:#3b82f6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif; color: var(--fg); background: var(--bg); padding: 24px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 12px; margin-bottom: 20px; }
+  .card { background: var(--card); border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .controls { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  button, select { padding: 6px 14px; background: var(--accent); color: white; border: 0; border-radius: 6px; font: inherit; cursor: pointer; font-size: 13px; }
+  button:hover, select:hover { background: #1d4ed8; }
+  button:disabled { background: #9ca3af; cursor: not-allowed; }
+  button.secondary, select.secondary { background: #6b7280; }
+  button.secondary:hover, select.secondary:hover { background: #4b5563; }
+  select { padding-right: 24px; }
+  input[type="number"] { padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; font-size: 13px; width: 70px; }
+  .pixel-grid { display: inline-grid; gap: 2px; background: #d1d5db; padding: 2px; border-radius: 4px; }
+  .pix { width: 56px; height: 56px; position: relative; transition: outline 0.1s, background 0.05s; }
+  .pix.active { outline: 3px solid var(--hl); outline-offset: -3px; z-index: 1; }
+  .pix .label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; color: white; text-shadow: 0 0 2px rgba(0,0,0,0.8); font-family: ui-monospace, monospace; pointer-events: none; }
+  .pix .hits { position: absolute; bottom: 2px; right: 3px; font-size: 9px; color: white; text-shadow: 0 0 2px rgba(0,0,0,0.9); font-family: ui-monospace, monospace; pointer-events: none; }
+  .legend { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .badge.run { background: #d1fae5; color: var(--ok); }
+  .badge.halt { background: #fee2e2; color: var(--bad); }
+  .badge.idle { background: #e5e7eb; color: var(--muted); }
+  details { margin-top: 12px; }
+  details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+  pre { background: #f3f4f6; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0 0 8px; }
+  .stats { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .heat-scale { display: flex; gap: 0; height: 12px; border-radius: 2px; overflow: hidden; margin-top: 6px; }
+  .heat-scale > div { flex: 1; }
+  .scale-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; font-family: ui-monospace, monospace; }
+  .output { font-family: ui-monospace, monospace; font-size: 13px; background: var(--bg); border-radius: 6px; padding: 10px; min-height: 32px; word-break: break-all; line-height: 1.6; }
+  .runinfo { display: flex; gap: 16px; font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .runinfo b { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>C110-trace · PNG-as-Telemetry</h1>
+  <div class="sub">
+    Pattern 3 of the PNG-substrate seed. Same VM as <code>c110-png-vm</code>; per-instruction hit counter, dumped as a heatmap PNG.
+    Hot loops light up. The PNG is the trace.
+  </div>
+
+  <div class="card">
+    <div class="controls">
+      <label style="font-size:12px;color:var(--muted);">Program</label>
+      <select id="program" class="secondary">
+        <option value="fib">Fibonacci · 4×4</option>
+        <option value="collatz">Collatz from 7 · 5×4</option>
+      </select>
+      <label style="font-size:12px;color:var(--muted);margin-left:8px;">Repeat ×</label>
+      <input type="number" id="repeat" min="1" max="500" value="100">
+      <button id="run">Run + trace</button>
+      <button id="reset" class="secondary">Reset</button>
+      <button id="download" class="secondary" disabled>Download trace.png</button>
+      <span id="status" class="badge idle" style="margin-left: auto;">idle</span>
+    </div>
+
+    <div class="grid">
+      <div>
+        <h2>Program PNG (input)</h2>
+        <div class="pixel-grid" id="progGrid"></div>
+        <div class="stats" id="progStats"></div>
+        <div class="legend">R=opcode, G=arg1, B=arg2, A=valid. The yellow outline is the program counter.</div>
+      </div>
+      <div>
+        <h2>Trace PNG (output) <span style="color:var(--accent);font-weight:normal;text-transform:none;letter-spacing:0;font-size:11px;">— red = hot</span></h2>
+        <div class="pixel-grid" id="traceGrid"></div>
+        <div class="stats" id="traceStats"></div>
+        <div class="heat-scale" id="heatScale"></div>
+        <div class="scale-labels"><span>0 hits</span><span id="maxHitLabel">— max</span></div>
+        <div class="legend">
+          Each cell shows the number of times that instruction executed.
+          The heatmap is encoded into the trace PNG: R = hits&amp;0xFF, G = (hits&gt;&gt;8)&amp;0xFF, B = (hits&gt;&gt;16)&amp;0xFF, A = 255 if executed.
+        </div>
+      </div>
+    </div>
+    <div class="runinfo">
+      <span>Steps: <b id="stepCount">0</b></span>
+      <span>Runs: <b id="runCount">0</b></span>
+      <span>Total instructions executed: <b id="totalExec">0</b></span>
+      <span>Hottest pixel: <b id="hottest">—</b></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Output (last run)</h2>
+    <div class="output" id="output">·</div>
+    <div class="legend" id="expected"></div>
+  </div>
+
+  <details open>
+    <summary>What this proves</summary>
+<pre>PROVES
+  PNG works as a *third* substrate channel: telemetry / profiler output.
+  Same shape as the program PNG (1 pixel = 1 instruction).
+  Hit counts encode losslessly into RGBA (24 bits = 16M hits per cell).
+  Hot loops are visually obvious — the body of a fib loop will be ~5× the
+  hit count of the setup ops, and that pops as red against the cool tail.
+
+DOES NOT PROVE
+  - Anything about "AI verifying execution" (that's pattern 4 territory)
+  - Anything about programs running themselves from telemetry
+  - Anything about scaling: this is small-program tooling
+
+REAL VALUE
+  - Profiler output as PNG → ships through any image-friendly channel
+  - Diff two runs by subtracting the trace pixels (visual diff)
+  - Stack 100 runs into one PNG for aggregate hot-spot detection
+  - Educational visualization: students can SEE the loop body
+
+REAL COST
+  - One pass = same overhead as a counter array
+  - Encoding to PNG only at HALT, so runtime cost is one image-write</pre>
+  </details>
+
+  <details>
+    <summary>How this fits PNG-Substrate Seed</summary>
+<pre>Pattern 1 — Lookup table         (c121-png-calc, shipped)
+Pattern 2 — Bytecode VM           (c110-png-vm, shipped)
+Pattern 3 — Telemetry heatmap     (THIS, c110-trace, shipped)  ← you are here
+Pattern 4 — Content-addressed integrity (deferred)
+Pattern 5 — FSM transition tables (candidate, needs demo to promote)
+
+Each pattern reuses the same substrate (a PNG) for a different role.
+None of them require the others. None require AI-Symbolic Execution.
+The seed lives at PNG_SUBSTRATE_SEED.md in the trusting-germain-a57cb0 worktree.</pre>
+  </details>
+</div>
+
+<script>
+const PROGRAMS = {
+  fib: {
+    label: "Fibonacci",
+    expected: [0, 1, 1, 2, 3, 5, 8, 13],
+    b64: "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAK0lEQVR4nG3DwQmAQBAEsMyqeD1busiIfwMRmqSZ1YPu2fAQtwzOuYrvvxeJogiX0mcQAQAAAABJRU5ErkJggg=="
+  },
+  collatz: {
+    label: "Collatz from 7",
+    expected: [7, 22, 11, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1],
+    b64: "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAECAYAAABGM/VAAAAAQUlEQVR4nB3D0QmAMBBEwbd3iWnYEgS79V9ibkUHRmIYTZBARVsm1G4yxYgThWldRNfB9hT2RU2IKUjSI3cD398LLI8Tmb/+Gs4AAAAASUVORK5CYII="
+  }
+};
+
+const OP_NAMES = ["HALT","SETI","MOV","ADD","SUB","PRINT","DEC","JNZ","JZ","MOD","DIV","MUL"];
+const N_REGS = 6;
+const MAX_STEPS_PER_RUN = 5000;
+const $ = id => document.getElementById(id);
+
+// VM state (per-run)
+let cells = [], gridW = 0, gridH = 0, code = [];
+let pc = 0, R = new Array(N_REGS).fill(0), out = [], halted = false;
+let stepCount = 0;
+
+// Trace state (persists across runs until reset)
+let hits = [];          // length gridW * gridH, hit count per PIXEL (not per code-index)
+let runsCompleted = 0;
+let totalExecuted = 0;
+let currentProg = "fib";
+
+function loadProgram(b64) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, img.width, img.height).data;
+      const W = img.width, H = img.height;
+      const cellList = [];
+      for (let r = 0; r < H; r++) {
+        for (let col = 0; col < W; col++) {
+          const i = (r * W + col) * 4;
+          cellList.push({ op: data[i], a: data[i+1], b: data[i+2], alpha: data[i+3], row: r, col });
+        }
+      }
+      resolve({ cells: cellList, W, H });
+    };
+    img.onerror = () => reject(new Error("PNG decode failed"));
+    img.src = "data:image/png;base64," + b64;
+  });
+}
+
+function renderProgGrid() {
+  const g = $("progGrid");
+  g.style.gridTemplateColumns = `repeat(${gridW}, 56px)`;
+  g.innerHTML = "";
+  cells.forEach((cell, i) => {
+    const d = document.createElement("div");
+    d.className = "pix";
+    d.id = "pix" + i;
+    d.style.background = `rgba(${cell.op}, ${cell.a}, ${cell.b}, ${cell.alpha === 0 ? 0.1 : 1})`;
+    if (cell.alpha === 255) {
+      const lab = document.createElement("div");
+      lab.className = "label";
+      lab.textContent = OP_NAMES[cell.op] || "?";
+      d.appendChild(lab);
+    }
+    g.appendChild(d);
+  });
+  $("progStats").textContent = `${gridW}×${gridH} · ${code.length} valid instructions`;
+}
+
+// Map a hit count to a heat color (linear-in-log scale for visibility)
+function heatColor(hits, maxHits) {
+  if (hits === 0 || maxHits === 0) return [240, 240, 245, 32];
+  // log-scale so the loop body shows clearly even at 1 vs 100
+  const t = Math.log(hits + 1) / Math.log(maxHits + 1);
+  // gradient: cool blue → orange → hot red
+  if (t < 0.5) {
+    // blue → orange
+    const u = t * 2;
+    return [
+      Math.round(59  + (251 - 59)  * u),  // 59  → 251
+      Math.round(130 + (146 - 130) * u),  // 130 → 146
+      Math.round(246 + (60  - 246) * u),  // 246 → 60
+      255
+    ];
+  } else {
+    // orange → red
+    const u = (t - 0.5) * 2;
+    return [
+      Math.round(251 + (220 - 251) * u),  // 251 → 220
+      Math.round(146 + (38  - 146) * u),  // 146 → 38
+      Math.round(60  + (38  - 60)  * u),  // 60  → 38
+      255
+    ];
+  }
+}
+
+function maxHits() {
+  let m = 0;
+  for (let i = 0; i < hits.length; i++) if (hits[i] > m) m = hits[i];
+  return m;
+}
+
+function renderTraceGrid() {
+  const g = $("traceGrid");
+  g.style.gridTemplateColumns = `repeat(${gridW}, 56px)`;
+  g.innerHTML = "";
+  const mx = maxHits();
+  let hottestIdx = -1, hottestHits = 0;
+  for (let i = 0; i < hits.length; i++) {
+    if (hits[i] > hottestHits) { hottestHits = hits[i]; hottestIdx = i; }
+    const d = document.createElement("div");
+    d.className = "pix";
+    d.id = "trace" + i;
+    const [r, gc, b, alpha] = heatColor(hits[i], mx);
+    d.style.background = `rgba(${r}, ${gc}, ${b}, ${alpha / 255})`;
+    if (hits[i] > 0) {
+      const lab = document.createElement("div");
+      lab.className = "hits";
+      lab.textContent = hits[i];
+      d.appendChild(lab);
+    }
+    g.appendChild(d);
+  }
+  $("traceStats").textContent = `${gridW}×${gridH} · max ${mx} hits/cell · sum ${hits.reduce((s, h) => s + h, 0)}`;
+  $("maxHitLabel").textContent = mx + " hits";
+  // heat-scale gradient
+  const hs = $("heatScale");
+  hs.innerHTML = "";
+  for (let i = 0; i < 32; i++) {
+    const [r, gc, b] = heatColor(Math.exp(i / 31 * Math.log(mx + 1)) - 1, mx);
+    const sw = document.createElement("div");
+    sw.style.background = `rgb(${r}, ${gc}, ${b})`;
+    hs.appendChild(sw);
+  }
+  if (hottestIdx >= 0) {
+    const r = Math.floor(hottestIdx / gridW), c = hottestIdx % gridW;
+    const codeRow = code.find(cd => cd.row === r && cd.col === c);
+    const opName = codeRow ? OP_NAMES[codeRow.op] : "?";
+    $("hottest").textContent = `(${r},${c}) ${opName} · ${hottestHits} hits`;
+  } else {
+    $("hottest").textContent = "—";
+  }
+}
+
+function highlightPC(idx) {
+  document.querySelectorAll(".pix.active").forEach(el => el.classList.remove("active"));
+  if (idx < 0 || idx >= code.length) return;
+  const cell = code[idx];
+  const gi = cell.row * gridW + cell.col;
+  $("pix" + gi)?.classList.add("active");
+}
+
+function setStatus(s) {
+  const el = $("status");
+  el.textContent = s;
+  el.className = "badge " + (s === "running" ? "run" : s === "halted" ? "halt" : "idle");
+}
+
+function step() {
+  if (halted) return false;
+  if (pc < 0 || pc >= code.length) { halted = true; return false; }
+  const codeIdx = pc;
+  const { op, a, b, row, col } = code[codeIdx];
+  // increment hit counter for the PIXEL (not just the code index)
+  hits[row * gridW + col]++;
+  totalExecuted++;
+  let nextPc = pc + 1;
+  switch (op) {
+    case 0:  halted = true; return false;
+    case 1:  R[a] = b; break;
+    case 2:  R[a] = R[b]; break;
+    case 3:  R[a] = (R[a] + R[b]) & 0xFF; break;
+    case 4:  R[a] = (R[a] - R[b]) & 0xFF; break;
+    case 5:  out.push(R[a]); break;
+    case 6:  R[a] = (R[a] - 1) & 0xFF; break;
+    case 7:  if (R[a] !== 0) nextPc = pc + (b - 128); break;
+    case 8:  if (R[a] === 0) nextPc = pc + (b - 128); break;
+    case 9:  R[a] = R[b] !== 0 ? R[a] % R[b] : 0; break;
+    case 10: R[a] = R[b] !== 0 ? Math.floor(R[a] / R[b]) : 0; break;
+    case 11: R[a] = (R[a] * R[b]) & 0xFF; break;
+  }
+  pc = nextPc;
+  stepCount++;
+  return true;
+}
+
+function resetVMOnly() {
+  pc = 0; R = new Array(N_REGS).fill(0); out = []; halted = false;
+}
+
+function reset() {
+  resetVMOnly();
+  hits = new Array(gridW * gridH).fill(0);
+  runsCompleted = 0;
+  totalExecuted = 0;
+  stepCount = 0;
+  $("stepCount").textContent = "0";
+  $("runCount").textContent = "0";
+  $("totalExec").textContent = "0";
+  $("output").textContent = "·";
+  setStatus("idle");
+  $("download").disabled = true;
+  highlightPC(-1);
+  renderTraceGrid();
+}
+
+function runOnce() {
+  resetVMOnly();
+  let safety = 0;
+  while (!halted && safety++ < MAX_STEPS_PER_RUN) {
+    if (!step()) break;
+  }
+}
+
+function runMany() {
+  setStatus("running");
+  $("run").disabled = true;
+  $("reset").disabled = true;
+  $("download").disabled = true;
+  const N = Math.max(1, Math.min(500, parseInt($("repeat").value || "1", 10)));
+  // run synchronously; small programs finish in <50ms even for 500 repeats
+  const t0 = performance.now();
+  let lastOut = [];
+  for (let i = 0; i < N; i++) {
+    runOnce();
+    lastOut = out.slice();
+    runsCompleted++;
+  }
+  const dt = (performance.now() - t0).toFixed(1);
+  $("output").textContent = lastOut.join(", ") || "·";
+  $("stepCount").textContent = stepCount;
+  $("runCount").textContent = runsCompleted;
+  $("totalExec").textContent = totalExecuted;
+  renderTraceGrid();
+  setStatus("halted");
+  $("run").disabled = false;
+  $("reset").disabled = false;
+  $("download").disabled = false;
+  console.log(`[c110-trace] ${N} runs in ${dt}ms · ${totalExecuted} instructions executed`);
+}
+
+// Encode the trace as a PNG — same dims as the program. The encoding lets us
+// later reload it and reconstruct the full hit count, not just the heat color.
+//   R = hits & 0xFF
+//   G = (hits >> 8) & 0xFF
+//   B = (hits >> 16) & 0xFF
+//   A = 255 if hits > 0 else 0
+function buildTracePng() {
+  const c = document.createElement("canvas");
+  c.width = gridW; c.height = gridH;
+  const ctx = c.getContext("2d");
+  const img = ctx.createImageData(gridW, gridH);
+  for (let i = 0; i < hits.length; i++) {
+    const h = hits[i] | 0;
+    img.data[i * 4 + 0] = h & 0xFF;
+    img.data[i * 4 + 1] = (h >> 8) & 0xFF;
+    img.data[i * 4 + 2] = (h >> 16) & 0xFF;
+    img.data[i * 4 + 3] = h > 0 ? 255 : 0;
+  }
+  ctx.putImageData(img, 0, 0);
+  return c.toDataURL("image/png");
+}
+
+function downloadTrace() {
+  const url = buildTracePng();
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `c110-trace-${currentProg}-${runsCompleted}runs.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+async function loadAndRender(progKey) {
+  currentProg = progKey;
+  const prog = PROGRAMS[progKey];
+  const { cells: cellList, W, H } = await loadProgram(prog.b64);
+  cells = cellList;
+  gridW = W; gridH = H;
+  code = cellList.filter(c => c.alpha === 255).map(c => ({ op: c.op, a: c.a, b: c.b, row: c.row, col: c.col }));
+  renderProgGrid();
+  hits = new Array(gridW * gridH).fill(0);
+  renderTraceGrid();
+  $("expected").textContent = `Expected output (per run): ${prog.expected.join(", ")}`;
+  reset();
+}
+
+(async () => {
+  try {
+    await loadAndRender("fib");
+    $("run").addEventListener("click", runMany);
+    $("reset").addEventListener("click", reset);
+    $("download").addEventListener("click", downloadTrace);
+    $("program").addEventListener("change", e => loadAndRender(e.target.value));
+  } catch (e) {
+    document.body.innerHTML = `<pre style="color:red;padding:24px">${e.message}\n${e.stack || ""}</pre>`;
+  }
+})();
+</script>
+</body>
+</html>

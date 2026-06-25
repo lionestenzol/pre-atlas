@@ -1,0 +1,77 @@
+// Delta SCP · API gateway
+//
+//   POST /jobs        { "repo_url": "..." }  -> enqueue, returns the job row
+//   GET  /jobs/:id                            -> job status + compressed_state
+//   GET  /healthz                             -> liveness (open)
+//
+// /jobs routes require an API key (Authorization: Bearer <key> or x-api-key).
+
+import express from 'express';
+import { loadConfig, type ScpConfig } from './config.js';
+import { getSupabase } from './supabase.js';
+import { enqueueJob, getJob } from './queue.js';
+import { requireApiKey } from './auth.js';
+import { validateRepoUrl } from './validate.js';
+
+export function createServer(config: ScpConfig = loadConfig()) {
+  const app = express();
+  app.use(express.json({ limit: '256kb' }));
+  const db = getSupabase(config);
+
+  app.get('/healthz', (_req, res) => {
+    res.json({ ok: true, service: 'delta-scp' });
+  });
+
+  const auth = requireApiKey(config);
+
+  app.post('/jobs', auth, async (req, res) => {
+    const repoUrl = (req.body?.repo_url ?? '').toString().trim();
+    if (!repoUrl) {
+      res.status(400).json({ ok: false, error: 'repo_url is required' });
+      return;
+    }
+    const verdict = validateRepoUrl(repoUrl, config);
+    if (!verdict.ok) {
+      res.status(400).json({ ok: false, error: `rejected repo_url: ${verdict.reason}` });
+      return;
+    }
+    try {
+      const job = await enqueueJob(db, repoUrl);
+      res.status(201).json({ ok: true, job });
+    } catch (err) {
+      console.error('[delta-scp] POST /jobs failed:', err);
+      res.status(500).json({ ok: false, error: 'internal server error' });
+    }
+  });
+
+  app.get('/jobs/:id', auth, async (req, res) => {
+    try {
+      const job = await getJob(db, String(req.params.id));
+      if (!job) {
+        res.status(404).json({ ok: false, error: 'job not found' });
+        return;
+      }
+      res.json({ ok: true, job });
+    } catch (err) {
+      console.error('[delta-scp] GET /jobs/:id failed:', err);
+      res.status(500).json({ ok: false, error: 'internal server error' });
+    }
+  });
+
+  return app;
+}
+
+export function startServer(config: ScpConfig = loadConfig()) {
+  const app = createServer(config);
+  return app.listen(config.port, () => {
+    console.log(`[delta-scp] API gateway listening on :${config.port}`);
+    if (!config.apiKey) {
+      console.warn('[delta-scp] WARNING: SCP_API_KEY unset — /jobs routes return 503');
+    }
+  });
+}
+
+// Direct entry: `npm run api`
+if (import.meta.url === `file://${process.argv[1]}`) {
+  startServer();
+}

@@ -3,5 +3,5 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY . .
-EXPOSE 3006
+EXPOSE 3011
 CMD ["npx", "tsx", "index.ts"]

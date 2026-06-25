@@ -97,10 +97,10 @@ services:
       dockerfile: Dockerfile
     container_name: mosaic-ws-gateway
     ports:
-      - "${WS_GATEWAY_PORT:-3006}:3006"
+      - "${WS_GATEWAY_PORT:-3011}:3011"
     environment:
       NATS_URL: nats://nats:4222
-      WS_PORT: "3006"
+      WS_PORT: "3011"
     depends_on:
       nats:
         condition: service_healthy

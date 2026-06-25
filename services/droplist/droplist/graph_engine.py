@@ -156,6 +156,81 @@ def _enrich(dag: dict, packet) -> dict:
     return dag
 
 
+def advance_dag(dag: dict) -> dict:
+    """Run the ready -> execute -> review -> update -> save loop on an
+    ALREADY-BUILT, in-memory dag (mutated in place, persisted each cycle).
+
+    This is the engine's inner advance step, extracted verbatim from
+    run_graph_from_packet so the daemon (daemon.py) can advance a stored DAG
+    through the EXACT same dispatch/review/update path — no second engine to
+    drift. See ~/.claude/rules/common/code-as-furniture.md.
+
+    Returns a delta describing what moved:
+      - advanced: node ids whose status changed this run (off 'ready')
+      - settled:  True if no runnable node remains (loop reached a fixed point)
+      - cycles / tool_runs / recursive_updates: the per-cycle trace fragments
+        run_graph_from_packet folds into its full trace.
+    """
+    cycles: list[dict] = []
+    tool_runs: list[dict] = []
+    advanced: list[str] = []
+    recursive_updates = 0
+
+    cycle = 0
+    while cycle < _MAX_CYCLES:
+        ready = dispatcher.get_ready_nodes(dag)
+        if not ready:
+            break
+        cycle += 1
+        rec: dict = {"cycle": cycle, "dispatched": [], "reviews": [], "updates": []}
+        progressed = False
+        for node in ready:
+            kind, result, receipt = node_router.execute(node, dag)
+            review = node_reviewer.review(node, result, dag)
+
+            if receipt is not None:
+                tool_runs.append(receipt)
+                node["evidence"].append(receipt["tool_run_id"])
+
+            if review["review_status"] == "retry":
+                node["retry_count"] = node.get("retry_count", 0) + 1
+                rec["updates"].append(
+                    f"{node['id']}: retry {node['retry_count']}/{node['max_retries']} "
+                    f"(done_condition not met)")
+                progressed = True  # state changed (retry_count); avoid stall break
+            else:
+                updates = dag_update.apply_review(dag, node, result, review)
+                rec["updates"].extend(updates)
+                recursive_updates += sum(1 for u in updates if "-> ready" in u)
+                advanced.append(node["id"])
+                progressed = True
+
+            rec["dispatched"].append({
+                "node": node["id"], "kind": kind, "agent": node["agent"],
+                "tool": node["tool_type"] or "-",
+                "result": result.get("result", ""),
+            })
+            rec["reviews"].append({
+                "node": node["id"], "status": review["review_status"],
+                "mark": review["mark_node_as"], "reason": review["reason"],
+            })
+            storage.append(storage.REVIEWS, {"dag_id": dag["dag_id"], **review})
+
+        cycles.append(rec)
+        storage.save_dag(dag)
+        if not progressed:
+            break
+
+    settled = not dispatcher.get_ready_nodes(dag)
+    return {
+        "advanced": advanced,
+        "settled": settled,
+        "cycles": cycles,
+        "tool_runs": tool_runs,
+        "recursive_updates": recursive_updates,
+    }
+
+
 def run_graph(raw_input: str) -> dict:
     packet, _ = engine.process_drop(raw_input)
     return run_graph_from_packet(packet)
@@ -191,50 +266,10 @@ def run_graph_from_packet(packet) -> dict:
         "tool_runs": [],
     }
 
-    cycle = 0
-    recursive_updates = 0
-    while cycle < _MAX_CYCLES:
-        ready = dispatcher.get_ready_nodes(dag)
-        if not ready:
-            break
-        cycle += 1
-        rec = {"cycle": cycle, "dispatched": [], "reviews": [], "updates": []}
-        progressed = False
-        for node in ready:
-            kind, result, receipt = node_router.execute(node, dag)
-            review = node_reviewer.review(node, result, dag)
-
-            if receipt is not None:
-                trace["tool_runs"].append(receipt)
-                node["evidence"].append(receipt["tool_run_id"])
-
-            if review["review_status"] == "retry":
-                node["retry_count"] = node.get("retry_count", 0) + 1
-                rec["updates"].append(
-                    f"{node['id']}: retry {node['retry_count']}/{node['max_retries']} "
-                    f"(done_condition not met)")
-                progressed = True  # state changed (retry_count); avoid stall break
-            else:
-                updates = dag_update.apply_review(dag, node, result, review)
-                rec["updates"].extend(updates)
-                recursive_updates += sum(1 for u in updates if "-> ready" in u)
-                progressed = True
-
-            rec["dispatched"].append({
-                "node": node["id"], "kind": kind, "agent": node["agent"],
-                "tool": node["tool_type"] or "-",
-                "result": result.get("result", ""),
-            })
-            rec["reviews"].append({
-                "node": node["id"], "status": review["review_status"],
-                "mark": review["mark_node_as"], "reason": review["reason"],
-            })
-            storage.append(storage.REVIEWS, {"dag_id": dag["dag_id"], **review})
-
-        trace["cycles"].append(rec)
-        storage.save_dag(dag)
-        if not progressed:
-            break
+    delta = advance_dag(dag)
+    trace["cycles"] = delta["cycles"]
+    trace["tool_runs"] = delta["tool_runs"]
+    recursive_updates = delta["recursive_updates"]
 
     _finalize(dag)
     summary = state_summary(dag)

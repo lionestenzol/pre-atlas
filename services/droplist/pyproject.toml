@@ -19,6 +19,7 @@ graph = "droplist.cli:graph_main"
 brief = "droplist.cli:brief_main"
 watch = "droplist.cli:watch_main"
 droplist-ui = "droplist.server:run"
+droplist-daemon = "droplist.daemon:main"
 
 [build-system]
 requires = ["setuptools>=68"]

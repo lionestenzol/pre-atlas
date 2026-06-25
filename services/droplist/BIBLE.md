@@ -212,8 +212,22 @@ At least 4 of 5 must produce usable state without manual rescue.
 | PKT-005 Atlas seam mapping | `test_atlas_signal.py` | 4 fixture DAGs -> Signal.v1, structural + strict jsonschema | 4/4 |
 | PKT-006 live Atlas emission | `test_atlas_emit.py` | stdlib HTTP fixture, positive + negative case | 2/2 |
 | PKT-006 retry buffer (Stop 4) | `test_atlas_retry.py` | enqueue / drain / dedup / TTL / max-attempts / 4xx-vs-5xx split / strict-mode preservation / settle-pump integration | 10/10 |
+| PKT-011 mark-off + checklist | `test_markoff.py` | checklist shape / 404+409 guards / in-order advance wakes deps / dag→complete / idempotency / brief reflects done / reopen | 11/11 |
 
 Before any Execution Packet is closed, *all four* gates must still pass.
+
+### HTTP write surface (PKT-011 — mark-off + checklist)
+
+The read-only API (`server.py`) gained the write side of the project lifecycle:
+a human can view a plan as a checklist and advance it by hand. Auth mirrors
+`POST /api/drop` (open, no token). The graph logic is **not** reimplemented —
+completion delegates to `dag_update.apply_review` (`dag_update.py:20`).
+
+```
+GET   /api/dag/{dag_id}/checklist                  -> flat ordered tasks (id, title, status, done_condition, depends_on, blocked_by)
+POST  /api/dag/{dag_id}/node/{node_id}/complete    -> mark done + wake dependents + flip dag to complete; 404 / 409 / idempotent
+POST  /api/dag/{dag_id}/node/{node_id}/reopen      -> (stretch) done -> ready, re-wait dependents; 409 under do-not-reopen lock
+```
 
 ---
 

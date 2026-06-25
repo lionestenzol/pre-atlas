@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+import os
+import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
+from typing import Any, AsyncIterator, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import (  # noqa: F401 — atlas_signal/dag_builder kept for v2 mutation surface
     atlas_signal,
+    clock,
     command_brief,
     dag_builder,
+    dag_update,
+    dispatcher,
     entities,
     intake,
     state,
@@ -25,7 +31,51 @@ from . import (  # noqa: F401 — atlas_signal/dag_builder kept for v2 mutation 
 # delta-kernel — not by exposing a parallel /api/lattice/* surface.
 # See BIBLE.md §13 OQ-18 and PACKETS/007.
 
-app = FastAPI(title="DropList API", version="0.1.0")
+# ---------------------------------------------------------------------------
+# Brick 2: optional self-advancing daemon thread, gated by DROPLIST_DAEMON=1.
+#
+# This adds NO endpoint and NO mutation route — the read-only HTTP surface
+# stays read-only. It only runs the SAME daemon._run_once() loop the standalone
+# `python -m droplist.daemon` runs, on a background daemon thread, so an
+# always-on `droplist-ui` process is self-advancing without a separate cron
+# entry. With DROPLIST_DAEMON unset the server is byte-identical to before.
+# Uses the modern FastAPI lifespan (not the deprecated @app.on_event) so no
+# deprecated path is left to rot — see ~/.claude/rules/common/code-as-furniture.md.
+# ---------------------------------------------------------------------------
+
+#: Module-level sentinel: None until the gated startup hook spawns the loop.
+#: The gating test asserts this stays None when DROPLIST_DAEMON is unset.
+_daemon_thread: Optional[threading.Thread] = None
+
+
+def _maybe_start_daemon() -> None:
+    """Spawn the daemon loop on a background thread iff DROPLIST_DAEMON=1.
+
+    Called from the lifespan startup phase, and directly by the gating test.
+    Idempotent: never spawns a second loop while one is alive.
+    """
+    global _daemon_thread
+    if os.environ.get("DROPLIST_DAEMON") != "1":
+        return
+    if _daemon_thread is not None and _daemon_thread.is_alive():
+        return  # already running; never spawn a second loop
+    from . import daemon  # local import keeps daemon out of the read path by default
+    interval = float(os.environ.get("DROPLIST_DAEMON_INTERVAL", daemon._DEFAULT_INTERVAL))
+    _daemon_thread = threading.Thread(
+        target=daemon.run_loop, kwargs={"interval": interval},
+        name="droplist-daemon", daemon=True)
+    _daemon_thread.start()
+
+
+@asynccontextmanager
+async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    _maybe_start_daemon()
+    yield
+    # The daemon thread is a daemon=True thread; it dies with the interpreter.
+    # No explicit join — run_loop is KeyboardInterrupt-clean and stateless.
+
+
+app = FastAPI(title="DropList API", version="0.1.0", lifespan=_lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -169,6 +219,171 @@ async def post_drop(request: Request) -> dict:
         raise HTTPException(status_code=400, detail="'raw' must be a string")
 
     return intake.chain_intake(raw, make_ship=bool(body.get("ship", False)))
+
+
+# ---------------------------------------------------------------------------
+# Mark-off + Checklist (PKT-011 / Brick 1 of the project-lifecycle spine).
+#
+# The write side of "plan -> advance by hand": a human can check a task off and
+# the graph wakes its dependents. The graph logic is NOT reimplemented here —
+# completion reuses dag_update.apply_review (dag_update.py:20), which already
+# sets status->done, attaches the result, wakes waiting nodes whose deps are
+# satisfied, and flips dag.status to complete when nothing runnable remains.
+#
+# Auth mirrors POST /api/drop (server.py:148): that endpoint is open (no token
+# check), so these writes are open too. See PACKETS/011_markoff_and_checklist.md.
+# ---------------------------------------------------------------------------
+
+
+def _find_node(dag: dict, node_id: str) -> Optional[dict]:
+    return next((n for n in dag["nodes"] if n["id"] == node_id), None)
+
+
+@app.post("/api/dag/{dag_id}/node/{node_id}/complete")
+async def complete_node(dag_id: str, node_id: str, request: Request) -> dict:
+    """Mark a node done, unblock its dependents, and flip the DAG to complete
+    when the last node lands. Idempotent on an already-done node; 409 if the
+    node's dependencies are not all done yet."""
+    # load the dag the same way GET /api/dag/{dag_id} does (server.py:75-80)
+    dag = storage.load_dag(dag_id)
+    if dag is None:
+        raise HTTPException(status_code=404, detail=f"dag {dag_id} not found")
+    node = _find_node(dag, node_id)
+    if node is None:
+        raise HTTPException(
+            status_code=404, detail=f"node {node_id} not found in dag {dag_id}"
+        )
+
+    # optional body: {"result": <any>, "evidence": [<str>...], "note": <str>}
+    try:
+        body = await request.json()
+    except Exception:  # noqa: BLE001 — empty/no body is fine for a bare check-off
+        body = {}
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="request body must be a JSON object")
+
+    # idempotent: a done node is a no-op, no double-mutation
+    if node["status"] == "done":
+        return {
+            "dag_id": dag_id,
+            "node": node_id,
+            "already_done": True,
+            "dag_status": dag["status"],
+            "updates": [],
+            "ready_now": [n["id"] for n in dispatcher.get_ready_nodes(dag)],
+        }
+
+    # you can't check off step 3 while step 1 is still open
+    done = {n["id"] for n in dag["nodes"] if n["status"] == "done"}
+    unmet = [d for d in node.get("depends_on", []) if d not in done]
+    if unmet:
+        raise HTTPException(
+            status_code=409, detail=f"{node_id} blocked by {unmet}"
+        )
+
+    note = body.get("note")
+    evidence = body.get("evidence") or []
+    if not isinstance(evidence, list):
+        raise HTTPException(status_code=400, detail="'evidence' must be a list")
+    result: dict[str, Any] = {
+        "by": "human",
+        "note": note,
+        "evidence": evidence,
+        "result": body.get("result"),
+        "at": clock.now_iso(),
+    }
+    review = {"mark_node_as": "done", "approved_new_nodes": []}
+    # apply_review does the whole advance step: done + wake deps + flip dag.status
+    updates = dag_update.apply_review(dag, node, result, review)
+
+    storage.save_dag(dag)  # same persistence graph_engine.py uses (graph_engine.py:235)
+    storage.append(storage.DAG_EVENTS, {
+        "event": "node_completed", "dag_id": dag_id, "node_id": node_id,
+        "by": "human", "at": clock.now_iso(), "updates": updates,
+    })
+    return {
+        "dag_id": dag_id,
+        "node": node_id,
+        "dag_status": dag["status"],
+        "updates": updates,
+        "ready_now": [n["id"] for n in dispatcher.get_ready_nodes(dag)],
+    }
+
+
+@app.get("/api/dag/{dag_id}/checklist")
+def get_checklist(dag_id: str) -> dict:
+    """Return the DAG as a flat, ordered checklist."""
+    dag = storage.load_dag(dag_id)
+    if dag is None:
+        raise HTTPException(status_code=404, detail=f"dag {dag_id} not found")
+    done = {n["id"] for n in dag["nodes"] if n["status"] == "done"}
+    return {
+        "dag_id": dag_id,
+        "goal": dag.get("goal"),
+        "status": dag["status"],
+        "tasks": [
+            {
+                "id": n["id"],
+                "title": n.get("title", ""),
+                "status": n["status"],
+                "done_condition": n.get("done_condition", ""),
+                "depends_on": n.get("depends_on", []),
+                "blocked_by": [d for d in n.get("depends_on", []) if d not in done],
+            }
+            for n in dag["nodes"]
+        ],
+    }
+
+
+@app.post("/api/dag/{dag_id}/node/{node_id}/reopen")
+async def reopen_node(dag_id: str, node_id: str) -> dict:
+    """Set a done node back to ready, then re-derive the waiting/ready state of
+    every node and the DAG status from scratch. Refused (409) if the node is
+    under a do-not-reopen lock (node['do_not_reopen_refs'] intersecting the
+    state lock), honoring the same guard graph_engine._enrich respects."""
+    dag = storage.load_dag(dag_id)
+    if dag is None:
+        raise HTTPException(status_code=404, detail=f"dag {dag_id} not found")
+    node = _find_node(dag, node_id)
+    if node is None:
+        raise HTTPException(
+            status_code=404, detail=f"node {node_id} not found in dag {dag_id}"
+        )
+    if node["status"] != "done":
+        return {"dag_id": dag_id, "node": node_id, "reopened": False,
+                "reason": f"node is {node['status']}, not done", "dag_status": dag["status"]}
+
+    locked = set(state.locked_refs().keys())
+    blocked_by_lock = [r for r in node.get("do_not_reopen_refs", []) if r in locked]
+    if blocked_by_lock:
+        raise HTTPException(
+            status_code=409,
+            detail=f"{node_id} under do-not-reopen lock {blocked_by_lock}",
+        )
+
+    node["status"] = "ready"
+    node["result"] = None
+    # re-derive: a node is ready iff every dep is done, else waiting; done stays done
+    done = {n["id"] for n in dag["nodes"] if n["status"] == "done"}
+    for n in dag["nodes"]:
+        if n["status"] in ("ready", "waiting"):
+            n["status"] = "ready" if all(d in done for d in n.get("depends_on", [])) else "waiting"
+    pending = [n for n in dag["nodes"] if n["status"] in ("ready", "waiting")]
+    blocked = [n for n in dag["nodes"] if n["status"] in ("blocked", "failed")]
+    dag["status"] = ("blocked" if blocked else "complete") if not pending else "running"
+
+    storage.save_dag(dag)
+    storage.append(storage.DAG_EVENTS, {
+        "event": "node_reopened", "dag_id": dag_id, "node_id": node_id,
+        "by": "human", "at": clock.now_iso(),
+    })
+    return {
+        "dag_id": dag_id,
+        "node": node_id,
+        "reopened": True,
+        "dag_status": dag["status"],
+        "ready_now": [n["id"] for n in dispatcher.get_ready_nodes(dag)],
+    }
 
 
 def run() -> None:

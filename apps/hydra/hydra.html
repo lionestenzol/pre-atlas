@@ -425,10 +425,12 @@
   async function hop(target) {
     if (busy || !target) return;
     busy = true;
-    // eat the stone
+    // eat the stone — but never drop a duplicate capability into the tail.
+    // Manual hops can re-surface an already-eaten repo (bloodline parent,
+    // wander/tour overlaps); auto-explore can't (pickAuto filters visited).
+    // Dedupe by id; the head still hops either way. (web review 2026-06-25)
     const stone = makeStone(target.repo);
-    stones.push(stone);
-    renderStones();
+    if (!stones.some(s => s.id === stone.id)) { stones.push(stone); renderStones(); }
     // animate head slithering to the dot (time-based, not rAF-gated)
     hopAnim = { from: { x: current.x, y: current.y }, to: { x: target.x, y: target.y }, start: performance.now(), dur: 520 };
     await waitAnim();
@@ -482,8 +484,9 @@
 
     drawGrid();
     if (current) {
-      drawEdges(hx, hy);
-      drawNeighbors();
+      const aimed = aimedNeighbor();   // compute once per frame; both passes share it (web review 2026-06-25)
+      drawEdges(hx, hy, aimed);
+      drawNeighbors(aimed);
       drawSnake(hx, hy);
     }
     requestAnimationFrame(loop);
@@ -497,9 +500,8 @@
     for (let y = sy; y < camera.y + H/2 + g; y += g){ ctx.beginPath(); ctx.moveTo(0,y-camera.y+H/2); ctx.lineTo(W,y-camera.y+H/2); ctx.stroke(); }
   }
 
-  function drawEdges(hx, hy) {
+  function drawEdges(hx, hy, aimed) {
     const headSX = hx - camera.x + W/2, headSY = hy - camera.y + H/2;
-    const aimed = aimedNeighbor();
     for (const n of neighbors) {
       const sx = n.x - camera.x + W/2, sy = n.y - camera.y + H/2;
       const on = n === aimed;
@@ -509,8 +511,7 @@
     }
   }
 
-  function drawNeighbors() {
-    const aimed = aimedNeighbor();
+  function drawNeighbors(aimed) {
     for (const n of neighbors) {
       const sx = n.x - camera.x + W/2, sy = n.y - camera.y + H/2;
       if (sx < -160 || sx > W+160 || sy < -120 || sy > H+120) continue;
@@ -519,9 +520,10 @@
       const col = TYPE_COLOR[guessType(n.repo)];
       const on = n === aimed;
       const pop = Math.min(1, Math.max(0, (performance.now() - n.born) / 260));
+      const eaten = visited.has(n.repo.full_name);   // already in the tail — dim it (web review 2026-06-25)
 
       ctx.save();
-      ctx.globalAlpha = pop;
+      ctx.globalAlpha = pop * (eaten && !on ? 0.32 : 1);
       ctx.beginPath(); ctx.arc(sx, sy, r * (on ? 1.18 : 1), 0, Math.PI*2);
       ctx.fillStyle = col; ctx.shadowBlur = on ? 26 : 12; ctx.shadowColor = col; ctx.fill();
       ctx.shadowBlur = 0;
@@ -529,7 +531,7 @@
       ctx.restore();
 
       // label
-      ctx.globalAlpha = pop;
+      ctx.globalAlpha = pop * (eaten && !on ? 0.4 : 1);
       ctx.fillStyle = on ? "#fff" : "rgba(232,238,245,0.82)";
       ctx.font = (on ? "700 " : "600 ") + "13px Segoe UI, sans-serif";
       ctx.textAlign = "center";
@@ -548,7 +550,12 @@
   function drawSnake(hx, hy) {
     // spine = trail node positions + the live (possibly animating) head
     const pts = trail.map(n => ({ x: n.x, y: n.y }));
-    if (hopAnim) pts[pts.length-1] = { x: hx, y: hy }; // head is mid-hop beyond last trail node
+    // During a hop the head slithers BEYOND the last trail node, so keep every
+    // trail point (incl. the node we're leaving) and append the moving head once.
+    // When settled, the head simply IS the last trail node.
+    // Bug fix (web review 2026-06-25): the old code overwrote the last trail node
+    // AND pushed the head, dropping the leaving-node→head segment and duplicating
+    // the head point — the body visibly popped loose mid-slither.
     if (hopAnim) pts.push({ x: hx, y: hy });
     else pts[pts.length-1] = { x: hx, y: hy };
 

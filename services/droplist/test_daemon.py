@@ -165,6 +165,40 @@ def test_once_cli_returns_zero(data_dir, monkeypatch):
     assert rc == 0
 
 
+def test_daemon_fires_due_schedule_drop_and_dedups(data_dir, monkeypatch):
+    """Brick 3 wiring (§D gap #1): a due schedules.json 'drop' entry fires via
+    _run_once — creating a packet — and does NOT re-fire within the same cron
+    window. Proves scheduler.load_schedules/due_jobs/mark_run now have a live
+    consumer (were tested-but-inert)."""
+    from droplist import daemon, storage
+
+    schedules = [{
+        "id": "weekly_review",
+        "cron": "0 8 * * *",
+        "action": {"kind": "drop",
+                   "raw": "Scheduled reminder: review the backlog and prune stale work"},
+    }]
+    with open(os.path.join(data_dir, "schedules.json"), "w", encoding="utf-8") as f:
+        json.dump(schedules, f)
+    _set_day(monkeypatch, dt.date(2026, 6, 25), hour=8)
+
+    before = len(storage.read_all(storage.PACKETS))
+    rep1 = daemon._run_once()
+    after = len(storage.read_all(storage.PACKETS))
+
+    assert after > before, f"scheduled drop created no packet: {before}->{after}"
+    assert any(s["id"] == "weekly_review" for s in rep1["scheduled_fired"]), \
+        rep1["scheduled_fired"]
+    runs = storage.read_all(storage.SCHEDULE_RUNS)
+    assert any(r["schedule_id"] == "weekly_review" for r in runs)
+
+    # same cron window -> no re-fire (dedup via mark_run / schedule_runs.jsonl)
+    rep2 = daemon._run_once()
+    assert rep2["scheduled_fired"] == [], rep2["scheduled_fired"]
+    assert len(storage.read_all(storage.PACKETS)) == after, \
+        "schedule re-fired within the same cron window"
+
+
 def test_daemon_gating_unset(data_dir, monkeypatch):
     """With DROPLIST_DAEMON unset, the startup hook does NOT spawn a thread."""
     monkeypatch.delenv("DROPLIST_DAEMON", raising=False)

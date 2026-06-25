@@ -228,5 +228,27 @@ def test_reopen_non_done_is_noop():
     assert r.json()["reopened"] is False
 
 
+def test_reopen_under_do_not_reopen_lock_is_409():
+    """B6 (was untested per SMOKE_AND_DOD.md §D): a done node whose
+    do_not_reopen_refs intersect the state lock cannot be reopened — 409, and
+    the node stays done. Locks shipped/closed work against accidental reopen."""
+    from droplist import state
+
+    node = _node("N1", "done", title="shipped step")
+    node["do_not_reopen_refs"] = ["ship-2026-lock"]
+    dag = {
+        "dag_id": "DAG-LOCK", "source_drop": "drop_lock", "domain": "build_product",
+        "type": "task", "goal": "locked plan", "status": "complete",
+        "nodes": [node], "entity_refs": [], "links": [],
+    }
+    storage.save_dag(dag)
+    state.lock_ref("ship-2026-lock", reason="shipped — do not reopen")
+
+    r = client.post("/api/dag/DAG-LOCK/node/N1/reopen")
+    assert r.status_code == 409, r.text
+    assert "ship-2026-lock" in r.text
+    assert storage.load_dag("DAG-LOCK")["nodes"][0]["status"] == "done"
+
+
 def teardown_module(module):  # noqa: ARG001
     shutil.rmtree(_TMP, ignore_errors=True)

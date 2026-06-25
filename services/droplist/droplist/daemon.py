@@ -34,9 +34,11 @@ croniter (on PyPI, not yet installed) is the named candidate when it lands.
 from __future__ import annotations
 
 import argparse
+import os
 import time
 
-from . import chain_runner, clock, dispatcher, graph_engine, storage, watcher
+from . import (chain_runner, clock, dispatcher, graph_engine, intake,
+               scheduler, storage, watcher)
 
 #: DAG statuses worth re-driving on a tick. A 'complete'/'failed'/'needs_human'
 #: DAG has nothing runnable; 'running' (fresh) and 'stalled' (settled with a
@@ -45,6 +47,79 @@ from . import chain_runner, clock, dispatcher, graph_engine, storage, watcher
 _ADVANCEABLE_STATUSES = frozenset({"running", "stalled"})
 
 _DEFAULT_INTERVAL = 300.0
+
+
+def _schedule_last_run_map() -> dict:
+    """Most-recent fire instant per schedule id, from schedule_runs.jsonl.
+
+    Same append-only-log-as-bookkeeping pattern as chain_runner._last_run_map:
+    the log IS the last_run store, so the cron window closes across separate
+    `--once` invocations without a second state file to drift.
+    """
+    out: dict = {}
+    for rec in storage.read_all(storage.SCHEDULE_RUNS):
+        sid = rec.get("schedule_id")
+        ts = clock.parse(rec.get("at", ""))
+        if sid is None or ts is None:
+            continue
+        if sid not in out or ts > out[sid]:
+            out[sid] = ts
+    return out
+
+
+def _dispatch_schedule(job: dict, now) -> dict:
+    """Execute one due schedule entry by its closed action kind.
+
+    - drop:      create a templated reminder via intake (the non-redundant case:
+                 e.g. "every Mon 09:00 drop 'review the backlog'").
+    - run_chain: force the named chain via chain_runner (delegates to the chain's
+                 own target gate, so no spurious action on empty work).
+    - tick:      this daemon pass already performs a full tick, so the entry only
+                 documents the OS cadence — recorded as served, not recursed.
+    """
+    action = job.get("action") or {}
+    kind = action.get("kind")
+    if kind == "drop":
+        raw = action.get("raw") or action.get("text") or action.get("title") or job["id"]
+        return {"kind": "drop", **intake.chain_intake(str(raw))}
+    if kind == "run_chain":
+        cid = action.get("chain_id")
+        chains = {c["id"]: c for c in chain_runner.load_chains()}
+        if cid not in chains:
+            return {"kind": "run_chain", "chain": cid, "fired": False,
+                    "reason": "chain_not_found"}
+        return {"kind": "run_chain", "chain": cid,
+                **chain_runner.run_chain(chains[cid], now, last_run=None)}
+    return {"kind": "tick", "served_by": "daemon._run_once"}
+
+
+def _run_due_schedules(now) -> list[dict]:
+    """Fire every due schedule from schedules.json this pass (Brick 3 wiring).
+
+    Closes the inert-API gap: scheduler.load_schedules/due_jobs/mark_run had no
+    runtime consumer. Resolves the registry against the LIVE data dir (not the
+    import-time default) so a repointed DROPLIST_DATA is honored. Each fire is
+    appended to schedule_runs.jsonl with its prev_fire instant (via mark_run) so
+    the cron window cannot re-fire within itself.
+    """
+    path = os.path.join(storage.DATA_DIR, "schedules.json")
+    schedules = scheduler.load_schedules(path)
+    if not schedules:
+        return []
+    last_run = _schedule_last_run_map()
+    fired: list[dict] = []
+    for jid in scheduler.due_jobs(schedules, now, last_run):
+        job = next(j for j in schedules if j["id"] == jid)
+        result = _dispatch_schedule(job, now)
+        last_run = scheduler.mark_run(last_run, jid, job["cron"], now)
+        storage.append(storage.SCHEDULE_RUNS, {
+            "schedule_id": jid,
+            "kind": (job.get("action") or {}).get("kind"),
+            "at": last_run[jid].strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "result": result.get("status") or result.get("fired"),
+        })
+        fired.append({"id": jid, **result})
+    return fired
 
 
 def _advance_stored_dags() -> list[dict]:
@@ -96,6 +171,13 @@ def _run_once() -> dict:
         chains = chain_runner.tick()
     except Exception:  # noqa: BLE001 — a chain fault must not break the DAG tick
         chains = {"at": clock.now_iso(), "fired": []}
+    # Brick 3 wiring: fire any due schedules.json entries (drop/run_chain/tick)
+    # this pass. Fail-soft like chains so a malformed registry logs but never
+    # sinks the tick (validate_schedules still fail-louds for a direct/CLI load).
+    try:
+        scheduled = _run_due_schedules(clock.now())
+    except Exception:  # noqa: BLE001 — a bad schedule must not break the DAG tick
+        scheduled = []
     advanced = _advance_stored_dags()
 
     report: dict = {
@@ -103,6 +185,7 @@ def _run_once() -> dict:
         "recurring_materialized": tick["recurring_materialized"],
         "advanced": advanced,
         "chains_fired": chains["fired"],
+        "scheduled_fired": scheduled,
         "stale": tick["stale"],
         "blocked_resurfaced": tick["blocked_resurfaced"],
         "escalations": tick["escalations"],

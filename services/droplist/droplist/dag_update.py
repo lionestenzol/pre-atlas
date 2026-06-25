@@ -48,17 +48,37 @@ def apply_review(dag: dict, node: dict, result: dict, review: dict) -> list[str]
         })
         updates.append(f"+{nid}: new node '{spec.get('title','follow-up')}' (ready)")
 
-    # 3. wake up waiting nodes whose deps are satisfied
-    done = _done_ids(dag)
-    for n in dag["nodes"]:
-        if n["status"] == "waiting" and all(d in done for d in n["depends_on"]):
-            n["status"] = "ready"
-            updates.append(f"{n['id']}: waiting -> ready (deps satisfied)")
+    # 3+4. re-derive ready/waiting + DAG status. Shared with the reopen endpoint
+    # (server.py) via recompute_states so the graph-state rules live in ONE place
+    # and cannot drift. ~/.claude/rules/common/code-as-furniture.md.
+    updates += recompute_states(dag)
+    return updates
 
-    # mark dag complete if nothing remains runnable or pending
+
+def recompute_states(dag: dict) -> list[str]:
+    """Re-derive every non-terminal node's ready/waiting status from the done
+    set, then set the DAG status. The single source of truth for graph-state
+    derivation — apply_review (forward flow: deps only become MORE done) and the
+    reopen endpoint (which pushes a node and its dependents BACKWARD) both call
+    it, so the rules can't drift between the two paths.
+
+    Rules:
+      - done / blocked / failed nodes are terminal here — left untouched.
+      - a ready/waiting node is ``ready`` iff all deps are done, else ``waiting``.
+      - DAG: ``complete`` if nothing pending and nothing blocked/failed;
+        ``blocked`` if something is blocked/failed and nothing pending;
+        else ``running``.
+    Returns human-readable change strings for the trace.
+    """
+    done = _done_ids(dag)
+    updates: list[str] = []
+    for n in dag["nodes"]:
+        if n["status"] in ("ready", "waiting"):
+            new = "ready" if all(d in done for d in n["depends_on"]) else "waiting"
+            if new != n["status"]:
+                updates.append(f"{n['id']}: {n['status']} -> {new}")
+                n["status"] = new
     pending = [n for n in dag["nodes"] if n["status"] in ("ready", "waiting")]
     blocked = [n for n in dag["nodes"] if n["status"] in ("blocked", "failed")]
-    if not pending:
-        dag["status"] = "blocked" if blocked else "complete"
-
+    dag["status"] = ("blocked" if blocked else "complete") if not pending else "running"
     return updates

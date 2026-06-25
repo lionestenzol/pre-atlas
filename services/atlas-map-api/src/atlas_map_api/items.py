@@ -6,6 +6,7 @@ keeps its own items in its own shape:
     droplist   -> services/droplist/data/dags/*.json + entities/*.json
     cycleboard -> services/cognitive-sensor/thread_cards.json
     inpact     -> apps/inpact/projects.json
+    festival   -> ~/festival-project/festivals/**/fest.yaml (ATLAS_FESTIVAL_DIR)
 
 This normalizes all of them to ONE item shape so a single feed can show
 everything at once:
@@ -27,6 +28,8 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
+
+import yaml
 
 # Write-through (brick 3) is deliberately tiny: only these sources accept writes,
 # and only the `status` field. Everything else is read-only.
@@ -137,10 +140,69 @@ def inpact_items(repo_root: Path) -> list[dict[str, Any]]:
     return out
 
 
+def _read_yaml(path: Path) -> Any:
+    try:
+        if path.stat().st_size > _MAX_STORE_FILE_BYTES:
+            return None
+        return yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (yaml.YAMLError, OSError):
+        return None
+
+
+def _festival_workspace() -> Path:
+    """Festivals live OUTSIDE repo_root, unlike every other source. Resolve the
+    fest workspace via ATLAS_FESTIVAL_DIR (mirrors loader.py's ATLAS_REPO_ROOT
+    pattern), defaulting to ~/festival-project."""
+    env = os.environ.get("ATLAS_FESTIVAL_DIR")
+    return Path(env) if env else Path.home() / "festival-project"
+
+
+def festival_items(repo_root: Path) -> list[dict[str, Any]]:
+    """fest festivals as backbone items. `repo_root` is unused on purpose —
+    festivals live in their own workspace (ATLAS_FESTIVAL_DIR), not under the
+    repo. Read-only and fail-soft: a missing/malformed workspace yields []."""
+    fests = _festival_workspace() / "festivals"
+    if not fests.is_dir():
+        return []
+    out: list[dict[str, Any]] = []
+    for f in sorted(fests.rglob("fest.yaml"))[:500]:
+        d = _read_yaml(f)
+        if not isinstance(d, dict):
+            continue
+        md = d.get("metadata") if isinstance(d.get("metadata"), dict) else {}
+        history = md.get("status_history")
+        last = history[-1] if isinstance(history, list) and history and isinstance(history[-1], dict) else {}
+        # state dir = first path segment under festivals/ (active|planning|ready|dungeon|…)
+        try:
+            state_dir = f.relative_to(fests).parts[0]
+        except (ValueError, IndexError):
+            state_dir = ""
+        try:
+            ref = str(f.relative_to(_festival_workspace())).replace("\\", "/")
+        except ValueError:
+            ref = str(f).replace("\\", "/")
+        # PyYAML auto-parses ISO timestamps to datetime; coerce to the string
+        # contract every other source emits.
+        updated = last.get("timestamp") or md.get("created_at") or ""
+        if not isinstance(updated, str):
+            updated = updated.isoformat() if hasattr(updated, "isoformat") else str(updated)
+        out.append({
+            "id": str(md.get("id") or f.parent.name),
+            "source": "festival",
+            "kind": "festival",
+            "title": str(md.get("goal") or md.get("name") or f.parent.name),
+            "status": _as_status(last.get("status")) or state_dir,
+            "updated": updated,
+            "ref": ref,
+        })
+    return out
+
+
 _SOURCES: dict[str, Callable[[Path], list[dict[str, Any]]]] = {
     "droplist": droplist_items,
     "cycleboard": cycleboard_items,
     "inpact": inpact_items,
+    "festival": festival_items,
 }
 
 

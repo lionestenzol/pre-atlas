@@ -234,13 +234,88 @@ def test_items_backbone_aggregates_sources():
     # every item carries the one unified shape
     for it in body["items"][:50]:
         assert set(it.keys()) >= {"id", "source", "kind", "title", "status", "updated"}
-        assert it["source"] in ("droplist", "cycleboard", "inpact")
+        assert it["source"] in ("droplist", "cycleboard", "inpact", "festival")
 
 
 def test_items_source_filter():
     r = client.get("/items?source=inpact")
     body = r.json()
     assert all(it["source"] == "inpact" for it in body["items"])
+
+
+def _write_festival(ws, state, slug, *, goal="g", status="active"):
+    """Build a minimal fest workspace entry: ws/festivals/<state>/<slug>/fest.yaml."""
+    d = ws / "festivals" / state / slug
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "fest.yaml").write_text(
+        "version: '1.0'\n"
+        "metadata:\n"
+        f"  id: {slug.split('-')[-1]}\n"
+        f"  name: {slug}\n"
+        f"  goal: {goal}\n"
+        "  created_at: 2026-03-25T18:58:52.601511085Z\n"
+        "  status_history:\n"
+        f"    - status: {status}\n"
+        "      timestamp: 2026-03-25T18:58:52.601511085Z\n",
+        encoding="utf-8",
+    )
+
+
+def test_festival_items_shape(tmp_path, monkeypatch):
+    from atlas_map_api import items as ib
+    _write_festival(tmp_path, "active", "cycleboard-wiring-CW0001", goal="Wire CycleBoard")
+    monkeypatch.setenv("ATLAS_FESTIVAL_DIR", str(tmp_path))
+    got = ib.festival_items(tmp_path)
+    assert got, "expected at least one festival item"
+    need = {"id", "source", "kind", "title", "status", "updated", "ref"}
+    for it in got:
+        assert need <= set(it.keys())
+        assert it["source"] == "festival" and it["kind"] == "festival"
+        # contract: every field is a string (PyYAML datetime coerced)
+        assert all(isinstance(it[k], str) for k in need)
+    one = got[0]
+    assert one["id"] == "CW0001" and one["title"] == "Wire CycleBoard"
+    assert one["status"] == "active"
+
+
+def test_festival_items_failsoft_missing_workspace(tmp_path, monkeypatch):
+    from atlas_map_api import items as ib
+    monkeypatch.setenv("ATLAS_FESTIVAL_DIR", str(tmp_path / "does-not-exist"))
+    assert ib.festival_items(tmp_path) == []  # [] not an exception
+
+
+def test_festival_items_malformed_is_failsoft(tmp_path, monkeypatch):
+    """Hostile/garbage fest.yaml must yield [] or sane string-typed items,
+    never an exception (matches the per-source fail-soft contract)."""
+    from atlas_map_api import items as ib
+    fests = tmp_path / "festivals"
+    cases = {
+        "active/garbage-G1/fest.yaml": "{[}:::\n\t- ::",          # invalid yaml
+        "active/list-L1/fest.yaml": "- a\n- b\n",                 # non-dict
+        "active/empty-E1/fest.yaml": "",                          # empty
+        "active/nometa-N1/fest.yaml": "version: '1.0'\n",         # no metadata
+        "active/badmeta-B1/fest.yaml": "metadata: 42\n",          # metadata not a dict
+        "active/intid-I1/fest.yaml": "metadata:\n  id: 999\n  goal:\n    a: b\n",  # int id, dict goal
+    }
+    for rel, content in cases.items():
+        p = fests / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content, encoding="utf-8")
+    monkeypatch.setenv("ATLAS_FESTIVAL_DIR", str(tmp_path))
+    got = ib.festival_items(tmp_path)  # must not raise
+    need = {"id", "source", "kind", "title", "status", "updated", "ref"}
+    for it in got:
+        assert need <= set(it.keys())
+        assert all(isinstance(it[k], str) for k in need)  # string contract holds even on junk
+
+
+def test_items_source_filter_festival(monkeypatch, tmp_path):
+    _write_festival(tmp_path, "active", "demo-DM0001")
+    monkeypatch.setenv("ATLAS_FESTIVAL_DIR", str(tmp_path))
+    r = client.get("/items?source=festival")
+    assert r.status_code == 200
+    body = r.json()
+    assert all(it["source"] == "festival" for it in body["items"])
 
 
 def test_parse_backbone_id():

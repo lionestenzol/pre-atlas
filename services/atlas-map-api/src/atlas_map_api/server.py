@@ -390,12 +390,13 @@ async def map_surfaces() -> dict[str, Any]:
 
 
 @app.get("/items")
-async def items(source: str | None = Query(None, description="Filter to one source: droplist|cycleboard|inpact")) -> dict[str, Any]:
+async def items(source: str | None = Query(None, description="Filter to one source: droplist|cycleboard|inpact|festival")) -> dict[str, Any]:
     """The item backbone (brick 1): one unified feed of every surface's items.
 
-    Aggregates droplist packets/entities, cycleboard cards, and inpact projects
-    into a single {id, source, kind, title, status, updated} shape — so all your
-    stuff is visible in one place for the first time. Read-only, fail-soft.
+    Aggregates droplist packets/entities, cycleboard cards, inpact projects, and
+    fest festivals into a single {id, source, kind, title, status, updated} shape
+    — so all your stuff is visible in one place for the first time. Read-only,
+    fail-soft.
     """
     snap, _ = _ensure_loaded()
     return items_backbone.all_items(snap.repo_root, source)

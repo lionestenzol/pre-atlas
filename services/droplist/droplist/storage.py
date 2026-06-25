@@ -21,6 +21,7 @@ AGENT_RUNS = "agent_runs.jsonl"
 REVIEWS = "reviews.jsonl"
 DAG_EVENTS = "dag_events.jsonl"
 TOOL_RUNS = "tool_runs.jsonl"
+SCHEDULE_RUNS = "schedule_runs.jsonl"
 
 
 def _path(filename: str) -> str:

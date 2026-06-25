@@ -363,14 +363,9 @@ async def reopen_node(dag_id: str, node_id: str) -> dict:
 
     node["status"] = "ready"
     node["result"] = None
-    # re-derive: a node is ready iff every dep is done, else waiting; done stays done
-    done = {n["id"] for n in dag["nodes"] if n["status"] == "done"}
-    for n in dag["nodes"]:
-        if n["status"] in ("ready", "waiting"):
-            n["status"] = "ready" if all(d in done for d in n.get("depends_on", [])) else "waiting"
-    pending = [n for n in dag["nodes"] if n["status"] in ("ready", "waiting")]
-    blocked = [n for n in dag["nodes"] if n["status"] in ("blocked", "failed")]
-    dag["status"] = ("blocked" if blocked else "complete") if not pending else "running"
+    # re-derive ready/waiting + dag status via the shared updater — one source of
+    # truth with apply_review. Was hand-rolled here (drift risk); §D fix 2026-06-25.
+    dag_update.recompute_states(dag)
 
     storage.save_dag(dag)
     storage.append(storage.DAG_EVENTS, {

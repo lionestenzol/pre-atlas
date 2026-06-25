@@ -1,0 +1,12 @@
+{
+  "name": "lattice-smoke",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Hermetic browser smoke for apps/lattice/index.html — graph data-flow regression guard (single source of truth, no re-derive race, ghost-stub dedupe, derive fallback).",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  }
+}

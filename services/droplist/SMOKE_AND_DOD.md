@@ -144,15 +144,16 @@ to fix before "done."
 
 ---
 
-## §D — Known gaps (explicitly OUT of "done" — this is the backlog)
+## §D — Known gaps
 
-1. **Scheduler half-wired** — `cron_due` drives chain triggers, but registry-level
-   `due_jobs`/`mark_run` (scheduled *non-chain* tick/drop actions) are tested but
-   **not yet called by the daemon loop**. B-tests don't cover scheduled bare actions.
-2. **Reopen lock untested** — B6's `do_not_reopen` 409 branch exists in code
-   (server.py:357) but has no test; smoke it manually.
-3. **Reopen reimplements** complete-derivation instead of reusing `apply_review`
-   (drift risk if graph rules change).
+**CLOSED 2026-06-25 (commit `8e702e8`, suite 65):**
+1. ~~Scheduler half-wired~~ → **wired** into `daemon._run_once`; due `schedules.json`
+   entries fire + dedup via `schedule_runs.jsonl` (test_daemon).
+2. ~~Reopen lock untested~~ → **tested** (`do_not_reopen` 409 branch).
+3. ~~Reopen reimplements derivation~~ → **shared** `dag_update.recompute_states` is now the
+   single source of truth for both `apply_review` and reopen.
+
+**Still open (hardening/posture — deliberate backlog, not inert-code bugs):**
 4. **Naive-UTC scheduler** — no DST/timezone handling or test.
 5. **Open writes** — no auth on the write endpoints (per-spec, local single-user).
 

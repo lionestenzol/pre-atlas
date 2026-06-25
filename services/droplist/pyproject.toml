@@ -3,7 +3,10 @@ name = "droplist-packet-engine"
 version = "0.1.0"
 description = "Mini Ship #1: CLI-first RAG-DAG intake / Packet Engine for DropList / Atlas"
 requires-python = ">=3.10"
-dependencies = []  # zero-dependency core; anthropic is an optional extra
+# croniter: cron-expression math for the scheduler core (droplist/scheduler.py).
+# Assemble-first — cron parsing is a solved category; hand-rolling would be
+# strictly worse, not just later. See ~/.claude/rules/common/assemble-first.md.
+dependencies = ["croniter>=2.0"]
 
 [project.optional-dependencies]
 llm = ["anthropic>=0.39"]

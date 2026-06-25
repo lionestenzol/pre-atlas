@@ -36,7 +36,7 @@ from __future__ import annotations
 import argparse
 import time
 
-from . import clock, dispatcher, graph_engine, storage, watcher
+from . import chain_runner, clock, dispatcher, graph_engine, storage, watcher
 
 #: DAG statuses worth re-driving on a tick. A 'complete'/'failed'/'needs_human'
 #: DAG has nothing runnable; 'running' (fresh) and 'stalled' (settled with a
@@ -83,11 +83,20 @@ def _run_once() -> dict:
     """
     tick = watcher.tick()
     advanced = _advance_stored_dags()
+    # Brick 4: run every due daisy-chain this pass (trigger -> steps -> report ->
+    # action). Fail-soft so a chain fault never sinks the whole tick
+    # (~/.claude/rules/common/code-as-furniture.md). chain_runner.tick reads the
+    # clock once and reconstructs per-chain last_run from chain_reports.jsonl.
+    try:
+        chains = chain_runner.tick()
+    except Exception:  # noqa: BLE001 — a chain fault must not break the DAG tick
+        chains = {"at": clock.now_iso(), "fired": []}
 
     report: dict = {
         "at": clock.now_iso(),
         "recurring_materialized": tick["recurring_materialized"],
         "advanced": advanced,
+        "chains_fired": chains["fired"],
         "stale": tick["stale"],
         "blocked_resurfaced": tick["blocked_resurfaced"],
         "escalations": tick["escalations"],
@@ -98,6 +107,7 @@ def _run_once() -> dict:
         "at": report["at"],
         "materialized": len(report["recurring_materialized"]),
         "advanced": len(advanced),
+        "chains_fired": len(report["chains_fired"]),
         "stale": len(report["stale"]),
         "escalations": len(report["escalations"]),
     })
@@ -105,7 +115,8 @@ def _run_once() -> dict:
         tool="daemon", command="daemon._run_once", goal="self-advance tick",
         result_summary=(
             f"materialized={len(report['recurring_materialized'])} "
-            f"advanced={len(advanced)} stale={len(report['stale'])} "
+            f"advanced={len(advanced)} chains={len(report['chains_fired'])} "
+            f"stale={len(report['stale'])} "
             f"escalations={len(report['escalations'])}"),
     )
     return report
@@ -132,6 +143,7 @@ def _summary_line(report: dict) -> str:
         f"daemon tick {report['at']}  "
         f"materialized={len(report['recurring_materialized'])} "
         f"advanced={len(report['advanced'])} "
+        f"chains={len(report['chains_fired'])} "
         f"stale={len(report['stale'])} "
         f"escalations={len(report['escalations'])}")
 

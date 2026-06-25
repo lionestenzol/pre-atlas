@@ -15,6 +15,11 @@ interface TestResult {
 
 const results: TestResult[] = [];
 
+// Bearer token for /api/* — fetched once from the exempt /api/auth/token endpoint.
+// Stays null in dev mode (no .aegis-tenant-key); the server's auth middleware also
+// bypasses auth in that case, so unauthenticated requests still pass.
+let AUTH_TOKEN: string | null = null;
+
 async function test(name: string, fn: () => Promise<void>): Promise<void> {
   try {
     await fn();
@@ -31,9 +36,16 @@ function assert(condition: boolean, message: string): void {
 }
 
 async function fetchJSON(path: string, options?: RequestInit): Promise<{ status: number; body: any }> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string> | undefined),
+  };
+  if (AUTH_TOKEN) {
+    headers['Authorization'] = `Bearer ${AUTH_TOKEN}`;
+  }
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers,
   });
   const body = await res.json();
   return { status: res.status, body };
@@ -46,11 +58,15 @@ async function fetchJSON(path: string, options?: RequestInit): Promise<{ status:
 async function runTests(): Promise<void> {
   console.log('=== Delta-Kernel API Tests ===\n');
 
-  // Wait for server to be available
+  // Wait for server to be available, and fetch the auth token in the same probe.
+  // /api/auth/token is exempt from the Bearer gate (see auth middleware in
+  // src/api/server.ts) and returns the API key, or null in dev mode.
   let serverReady = false;
   for (let i = 0; i < 10; i++) {
     try {
-      await fetch(`${BASE}/api/state`);
+      const res = await fetch(`${BASE}/api/auth/token`);
+      const body = await res.json();
+      AUTH_TOKEN = body?.token ?? null;
       serverReady = true;
       break;
     } catch {
@@ -98,6 +114,8 @@ async function runTests(): Promise<void> {
   });
 
   // --- POST /api/tasks ---
+  // Contract: handler responds res.json({ id, title, status, priority, createdAt })
+  // — status 200, field `id` (matches GET /api/tasks and the rest of the surface).
   await test('POST /api/tasks creates a task', async () => {
     const { status, body } = await fetchJSON('/api/tasks', {
       method: 'POST',
@@ -106,8 +124,8 @@ async function runTests(): Promise<void> {
         priority: 'medium',
       }),
     });
-    assert(status === 201, `Expected 201, got ${status}`);
-    assert(body.entity_id !== undefined, 'Missing entity_id in response');
+    assert(status === 200, `Expected 200, got ${status}`);
+    assert(body.id !== undefined, 'Missing id in response');
   });
 
   // --- POST /api/law/refresh ---

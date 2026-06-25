@@ -1,0 +1,413 @@
+{
+  "src/search_stack/__init__.py": [],
+  "src/search_stack/audit.py": [
+    ".settings.DATA_DIR",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "typing.Any"
+  ],
+  "src/search_stack/budget.py": [
+    ".providers.base.BudgetSnapshot",
+    ".settings.DATA_DIR",
+    ".settings.settings",
+    "__future__.annotations",
+    "contextlib.contextmanager",
+    "datetime.datetime",
+    "datetime.timezone",
+    "pathlib.Path",
+    "sqlite3",
+    "time"
+  ],
+  "src/search_stack/cache.py": [
+    ".settings.DATA_DIR",
+    ".settings.settings",
+    "__future__.annotations",
+    "contextlib.contextmanager",
+    "hashlib",
+    "json",
+    "sqlite3",
+    "time"
+  ],
+  "src/search_stack/mcp_server.py": [
+    "..budget",
+    "..registry",
+    "..router",
+    "__future__.annotations",
+    "fastmcp.FastMCP",
+    "typing.Optional"
+  ],
+  "src/search_stack/providers/__init__.py": [],
+  "src/search_stack/providers/apify.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "os",
+    "typing.Any",
+    "typing.Callable"
+  ],
+  "src/search_stack/providers/arxiv.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "urllib.parse.urlencode",
+    "xml.etree.ElementTree"
+  ],
+  "src/search_stack/providers/base.py": [
+    "__future__.annotations",
+    "abc.ABC",
+    "abc.abstractmethod",
+    "datetime.datetime",
+    "datetime.timezone",
+    "pydantic.BaseModel",
+    "pydantic.Field",
+    "pydantic.HttpUrl",
+    "typing.Any",
+    "typing.Literal"
+  ],
+  "src/search_stack/providers/brave.py": [
+    "...budget",
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/court_listener.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/data_gov.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/exa.py": [
+    "...budget",
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/federal_register.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/firecrawl.py": [
+    "...budget",
+    "..settings.settings",
+    ".base.ExtractProvider",
+    ".base.ExtractResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/fred.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "os"
+  ],
+  "src/search_stack/providers/gdelt.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/github.py": [
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "asyncio",
+    "json",
+    "shutil"
+  ],
+  "src/search_stack/providers/google_maps.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "os"
+  ],
+  "src/search_stack/providers/govinfo.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "os"
+  ],
+  "src/search_stack/providers/hackernews.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/keepa.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "os"
+  ],
+  "src/search_stack/providers/local_file.py": [
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "asyncio",
+    "shutil"
+  ],
+  "src/search_stack/providers/memory.py": [
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "json",
+    "os",
+    "pathlib.Path",
+    "re",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "src/search_stack/providers/newsapi.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "os"
+  ],
+  "src/search_stack/providers/openalex.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/openstreetmap.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/perplexity.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "os"
+  ],
+  "src/search_stack/providers/pubmed.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/reddit.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/repo_search.py": [
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "asyncio",
+    "json",
+    "shutil"
+  ],
+  "src/search_stack/providers/sec_edgar.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/semantic_scholar.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/tavily.py": [
+    "...budget",
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/world_bank.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx"
+  ],
+  "src/search_stack/providers/yelp.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "os"
+  ],
+  "src/search_stack/providers/youtube.py": [
+    "..settings.settings",
+    ".base.SearchProvider",
+    ".base.SearchResult",
+    "__future__.annotations",
+    "httpx",
+    "os"
+  ],
+  "src/search_stack/registry.py": [
+    ".providers.apify.ApifyProvider",
+    ".providers.arxiv.ArxivProvider",
+    ".providers.base.ExtractProvider",
+    ".providers.base.SearchProvider",
+    ".providers.brave.BraveProvider",
+    ".providers.court_listener.CourtListenerProvider",
+    ".providers.data_gov.DataGovProvider",
+    ".providers.exa.ExaProvider",
+    ".providers.federal_register.FederalRegisterProvider",
+    ".providers.firecrawl.FirecrawlProvider",
+    ".providers.fred.FredProvider",
+    ".providers.gdelt.GdeltProvider",
+    ".providers.github.GitHubProvider",
+    ".providers.google_maps.GoogleMapsProvider",
+    ".providers.govinfo.GovInfoProvider",
+    ".providers.hackernews.HackerNewsProvider",
+    ".providers.keepa.KeepaProvider",
+    ".providers.local_file.LocalFileProvider",
+    ".providers.memory.MemoryProvider",
+    ".providers.newsapi.NewsApiProvider",
+    ".providers.openalex.OpenAlexProvider",
+    ".providers.openstreetmap.OpenStreetMapProvider",
+    ".providers.perplexity.PerplexityProvider",
+    ".providers.pubmed.PubMedProvider",
+    ".providers.reddit.RedditProvider",
+    ".providers.repo_search.RepoSearchProvider",
+    ".providers.sec_edgar.SecEdgarProvider",
+    ".providers.semantic_scholar.SemanticScholarProvider",
+    ".providers.tavily.TavilyProvider",
+    ".providers.world_bank.WorldBankProvider",
+    ".providers.yelp.YelpProvider",
+    ".providers.youtube.YouTubeProvider",
+    ".settings.settings",
+    "__future__.annotations"
+  ],
+  "src/search_stack/router.py": [
+    "..audit",
+    "..cache",
+    "..registry",
+    ".providers.base.ExtractResult",
+    ".providers.base.SearchResult",
+    ".settings.settings",
+    "__future__.annotations",
+    "re",
+    "typing.Iterable"
+  ],
+  "src/search_stack/server.py": [
+    "..budget",
+    "..registry",
+    "..router",
+    ".providers.base.BudgetSnapshot",
+    ".providers.base.ExtractResult",
+    ".settings.settings",
+    "__future__.annotations",
+    "fastapi.FastAPI",
+    "fastapi.HTTPException",
+    "httpx",
+    "pydantic.BaseModel",
+    "pydantic.Field",
+    "typing.Optional",
+    "uvicorn"
+  ],
+  "src/search_stack/settings.py": [
+    "__future__.annotations",
+    "dotenv.load_dotenv",
+    "pathlib.Path",
+    "pydantic_settings.BaseSettings",
+    "pydantic_settings.SettingsConfigDict"
+  ],
+  "tests/__init__.py": [],
+  "tests/test_budget.py": [
+    "search_stack.budget"
+  ],
+  "tests/test_cache.py": [
+    "search_stack.cache",
+    "time"
+  ],
+  "tests/test_providers_free_smoke.py": [
+    "__future__.annotations",
+    "pytest",
+    "search_stack.providers.arxiv.ArxivProvider",
+    "search_stack.providers.court_listener.CourtListenerProvider",
+    "search_stack.providers.data_gov.DataGovProvider",
+    "search_stack.providers.federal_register.FederalRegisterProvider",
+    "search_stack.providers.gdelt.GdeltProvider",
+    "search_stack.providers.hackernews.HackerNewsProvider",
+    "search_stack.providers.openalex.OpenAlexProvider",
+    "search_stack.providers.openstreetmap.OpenStreetMapProvider",
+    "search_stack.providers.pubmed.PubMedProvider",
+    "search_stack.providers.reddit.RedditProvider",
+    "search_stack.providers.sec_edgar.SecEdgarProvider",
+    "search_stack.providers.semantic_scholar.SemanticScholarProvider",
+    "search_stack.providers.world_bank.WorldBankProvider"
+  ],
+  "tests/test_providers_paid_disabled.py": [
+    "__future__.annotations",
+    "pytest",
+    "search_stack.providers.apify.ACTOR_ADAPTERS",
+    "search_stack.providers.apify.ApifyProvider",
+    "search_stack.providers.fred.FredProvider",
+    "search_stack.providers.google_maps.GoogleMapsProvider",
+    "search_stack.providers.govinfo.GovInfoProvider",
+    "search_stack.providers.keepa.KeepaProvider",
+    "search_stack.providers.newsapi.NewsApiProvider",
+    "search_stack.providers.perplexity.PerplexityProvider",
+    "search_stack.providers.yelp.YelpProvider",
+    "search_stack.providers.youtube.YouTubeProvider"
+  ],
+  "tests/test_providers_smoke.py": [
+    "os",
+    "pytest",
+    "search_stack.providers.brave.BraveProvider",
+    "search_stack.providers.exa.ExaProvider",
+    "search_stack.providers.firecrawl.FirecrawlProvider",
+    "search_stack.providers.tavily.TavilyProvider",
+    "search_stack.settings.Settings"
+  ],
+  "tests/test_router.py": [
+    "search_stack.router.KIND_CODE",
+    "search_stack.router.KIND_EXTRACT",
+    "search_stack.router.KIND_FILE",
+    "search_stack.router.KIND_GITHUB",
+    "search_stack.router.KIND_WEB",
+    "search_stack.router.classify"
+  ]
+}

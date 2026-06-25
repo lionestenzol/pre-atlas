@@ -188,16 +188,22 @@ def extract_symbols(text, ext):
     return syms[:40]
 
 
-def build_previews(services, file_graphs, root, preview_lines=80, preview_char_cap=5500):
+def build_previews(services, file_graphs, root, preview_lines=80, preview_char_cap=5500, preview_file_cap=150):
     """Per-service per-file inline previews + symbols. Truncated to preview_lines."""
     previews = {}
     for svc, g in file_graphs.items():
         svc_obj = next((s for s in services if s["name"] == svc), None)
         if not svc_obj:
             continue
-        svc_dir = root / svc_obj["group"] / svc
+        svc_dir = root / svc_obj.get("path", f"{svc_obj['group']}/{svc}")
         previews[svc] = {}
-        for node in g["nodes"]:
+        nodes = g["nodes"]
+        if preview_file_cap and len(nodes) > preview_file_cap:
+            # Prioritise code files for previews when a subsystem has many files;
+            # nodes still all exist in the graph, only the preview text is capped.
+            code_exts = {".py", ".ts", ".tsx", ".js", ".jsx", ".go", ".rs"}
+            nodes = sorted(nodes, key=lambda n: 0 if ("." + n["id"].rsplit(".", 1)[-1].lower()) in code_exts else 1)[:preview_file_cap]
+        for node in nodes:
             full = svc_dir / node["id"]
             if not full.is_file():
                 continue
@@ -245,7 +251,7 @@ def compute_insights(services, file_graphs, churn, root, retired_set, service_ed
     for s in services:
         if s["files"] < 5 or s["name"] in retired_set:
             continue
-        svc_dir = root / s["group"] / s["name"]
+        svc_dir = root / s.get("path", f"{s['group']}/{s['name']}")
         if not svc_dir.is_dir():
             continue
         has_tests = any((svc_dir / d).is_dir() for d in ("tests", "test", "__tests__"))
@@ -263,7 +269,7 @@ def compute_insights(services, file_graphs, churn, root, retired_set, service_ed
 
     svc_churn = {s["name"]: 0 for s in services}
     for s in services:
-        prefix = f"{s['group']}/{s['name']}/"
+        prefix = s.get("path", f"{s['group']}/{s['name']}") + "/"
         svc_churn[s["name"]] = sum(c for p, c in churn.items() if p.startswith(prefix))
 
     stale = sorted([
@@ -276,7 +282,7 @@ def compute_insights(services, file_graphs, churn, root, retired_set, service_ed
     flat = []
     for path, count in churn.items():
         for s in services:
-            prefix = f"{s['group']}/{s['name']}/"
+            prefix = s.get("path", f"{s['group']}/{s['name']}") + "/"
             if path.startswith(prefix):
                 flat.append({"path": path, "count": count, "svc": s["name"]})
                 break
@@ -305,6 +311,7 @@ def build(root: Path, config: dict[str, Any]) -> dict[str, Any]:
     substrate_nav_script = config.get("substrate_nav_script") or "/pages/nav.js"
     preview_lines = int(config.get("preview_lines") or 80)
     preview_char_cap = int(config.get("preview_char_cap") or 5500)
+    preview_file_cap = int(config.get("preview_file_cap") or 150)
     churn_days = int(config.get("churn_days") or 30)
 
     sys_index_path = root / output_dir / "system-index.json"
@@ -330,11 +337,12 @@ def build(root: Path, config: dict[str, Any]) -> dict[str, Any]:
         name = e["name"]
         if name.startswith("."):
             continue
-        group = e["path"].split("/")[0]
+        group = e.get("group") or e["path"].split("/")[0]
         state = "retired" if name in retired_set else ("new" if name in new_set else None)
         services.append({
             "name": name,
             "group": group,
+            "path": e["path"],
             "port": e.get("port"),
             "running": port_alive(e.get("port")),
             "state": state,
@@ -388,7 +396,7 @@ def build(root: Path, config: dict[str, Any]) -> dict[str, Any]:
         svc_obj = next((s for s in services if s["name"] == svc), None)
         if not svc_obj:
             continue
-        prefix = f"{svc_obj['group']}/{svc}/"
+        prefix = svc_obj.get("path", f"{svc_obj['group']}/{svc}") + "/"
         file_churn[svc] = {}
         for node in g["nodes"]:
             full = prefix + node["id"]
@@ -398,7 +406,8 @@ def build(root: Path, config: dict[str, Any]) -> dict[str, Any]:
     insights = compute_insights(services, file_graphs, churn, root, retired_set, service_edges)
     previews = build_previews(services, file_graphs, root,
                               preview_lines=preview_lines,
-                              preview_char_cap=preview_char_cap)
+                              preview_char_cap=preview_char_cap,
+                              preview_file_cap=preview_file_cap)
 
     data_js = (
         f"window.SERVICES = {json.dumps(services, separators=(',', ':'))};\n"
@@ -847,8 +856,8 @@ def build(root: Path, config: dict[str, Any]) -> dict[str, Any]:
         <div id="cy"></div>
         <div class="gtoolbar">
           <div class="tctl-group" role="tablist" aria-label="graph view">
-            <button class="tctl tctl-seg active" data-graph-view="full" title="Show parent groups + edges">full</button>
-            <button class="tctl tctl-seg" data-graph-view="flat" title="Hide parent groups">flat</button>
+            <button class="tctl tctl-seg" data-graph-view="full" title="Show parent groups + edges">full</button>
+            <button class="tctl tctl-seg active" data-graph-view="flat" title="Hide parent groups">flat</button>
             <button class="tctl tctl-seg" data-graph-view="nodes" title="Hide edges + groups">nodes</button>
           </div>
           <span class="label">layout</span>
@@ -1365,10 +1374,36 @@ function renderInsights() {
 let currentLayout = 'cose';
 let currentFocus = 'all';
 
+// Auto-scale node SIZE to the panel: the span of a packed graph is dominated by
+// node size, not gaps (35 services sized by LOC are 95-195px wide — too big to
+// pack into a small panel without fit() zooming out until labels vanish). Shrink
+// or grow every node by one factor so N of them tile into the panel at a readable
+// zoom (~1.0). Relative sizes (LOC encoding) are preserved; only the scale moves.
+// Idempotent: the original size is captured once in wBase/hBase.
+function autoScaleNodes() {
+  if (!cy) return;
+  const el = cy.container();
+  const W = el.clientWidth || 900, H = el.clientHeight || 600;
+  const leaves = cy.nodes('[w]');
+  const n = Math.max(leaves.length, 1);
+  leaves.forEach(nd => {
+    if (nd.data('wBase') == null) { nd.data('wBase', nd.data('w')); nd.data('hBase', nd.data('h')); }
+  });
+  const bases = leaves.map(nd => nd.data('wBase')).sort((a, b) => a - b);
+  const med = bases[Math.floor(bases.length / 2)] || 100;
+  const target = Math.sqrt((W * H * 0.5) / n);   // node footprint that fills ~half the panel
+  const scale = Math.max(0.3, Math.min(1.15, target / med));
+  leaves.forEach(nd => {
+    nd.data('w', Math.max(28, Math.round(nd.data('wBase') * scale)));
+    nd.data('h', Math.max(20, Math.round(nd.data('hBase') * scale)));
+  });
+}
+
 function applyLayout(name) {
   if (!cy) return;
   currentLayout = name;
   const hasBilkent = (typeof cytoscapeCoseBilkent !== 'undefined');
+  autoScaleNodes();
 
   // Per-parent layout: layouts that don't know about compound parents
   // (breadthfirst, circle, grid, concentric) spread children across the whole
@@ -1427,16 +1462,19 @@ function applyLayout(name) {
     }));
   } else if (hasBilkent) {
     cy.layout({
-      name: 'cose-bilkent', animate: true, animationDuration: 400, padding: 20,
-      nodeRepulsion: 4500, idealEdgeLength: 80, nestingFactor: 0.1,
-      gravity: 0.25, gravityRangeCompound: 1.5, gravityCompound: 1.0,
-      tile: true, tilingPaddingVertical: 12, tilingPaddingHorizontal: 12, randomize: false,
+      // Strong gravity balls up the many disconnected services (only 19 edges
+      // for 35 nodes) so the graph fills the panel at a readable zoom instead of
+      // sprawling. Node size is already panel-relative via autoScaleNodes().
+      name: 'cose-bilkent', animate: true, animationDuration: 400, padding: 12,
+      nodeRepulsion: 500, idealEdgeLength: 32, nestingFactor: 0.1,
+      gravity: 220, gravityRange: 1.0, gravityCompound: 28, gravityRangeCompound: 1.0,
+      tile: true, tilingPaddingVertical: 2, tilingPaddingHorizontal: 2, randomize: false,
     }).run();
   } else {
     cy.layout({
-      name: 'cose', animate: true, animationDuration: 400, padding: 30,
-      nodeRepulsion: 3500, idealEdgeLength: 85, nestingFactor: 5,
-      gravity: 1.5, componentSpacing: 60, nodeOverlap: 22,
+      name: 'cose', animate: true, animationDuration: 400, padding: 20,
+      nodeRepulsion: 700, idealEdgeLength: 38, nestingFactor: 5,
+      gravity: 8, componentSpacing: 12, nodeOverlap: 8,
     }).run();
   }
 }
@@ -1801,11 +1839,12 @@ function wireKeyboardNav() {
   });
 }
 
-let graphView = 'full';
+let graphView = 'flat';
 let graphColor = 'status';
 
 const LANG_COLORS = { py: '#534AB7', ts: '#185FA5', js: '#BA7517', tsx: '#0F6E56', html: '#993556', mixed: '#5F5E5A', unknown: '#888780' };
-const GROUP_COLORS = { services: '#534AB7', apps: '#0F6E56', tools: '#BA7517' };
+const GROUP_COLORS = { services: '#534AB7', apps: '#0F6E56', tools: '#BA7517',
+                       spec: '#1F6FB2', research: '#9C5BB8', ops: '#7A7468', root: '#5F5E5A' };
 
 function heatColor(val, min, max) {
   if (max <= min) return '#888780';
@@ -2670,7 +2709,7 @@ function renderServiceGraph() {
       { selector: 'node[w]', style: {
         'background-color': 'data(color)', 'label': 'data(label)',
         'text-wrap': 'wrap', 'text-valign': 'center', 'color': '#fff',
-        'font-size': 14, 'min-zoomed-font-size': 8, 'width': 'data(w)', 'height': 'data(h)', 'shape': 'data(shape)',
+        'font-size': 20, 'min-zoomed-font-size': 11, 'width': 'data(w)', 'height': 'data(h)', 'shape': 'data(shape)',
         'border-width': 0, 'font-weight': 500,
         'text-outline-width': 0,
         'line-height': 1.2,
@@ -2687,7 +2726,7 @@ function renderServiceGraph() {
         'text-halign': 'left',
         'text-margin-x': 8,
         'text-margin-y': 6,
-        'font-size': 12,
+        'font-size': 17,
         'color': '#888780',
         'font-weight': 500,
         'padding': 18,
@@ -2707,15 +2746,20 @@ function renderServiceGraph() {
       { selector: 'node.dimmed', style: { 'opacity': 0.18 }},
       { selector: 'edge.dimmed', style: { 'opacity': 0.05 }},
     ],
-    layout: (typeof cytoscapeCoseBilkent !== 'undefined')
-      ? { name: 'cose-bilkent', animate: false, nodeRepulsion: 4500, idealEdgeLength: 80, nestingFactor: 0.1, gravity: 0.25, gravityRangeCompound: 1.5, gravityCompound: 1.0, padding: 20, fit: true, randomize: false, tile: true, tilingPaddingVertical: 12, tilingPaddingHorizontal: 12 }
-      : { name: 'cose', animate: false, nodeRepulsion: 3500, idealEdgeLength: 85, nestingFactor: 5, gravity: 1.5, componentSpacing: 60, padding: 30, fit: true, nodeOverlap: 22 },
+    // Cheap initial placement only — the real layout (node auto-scale + strong
+    // gravity, panel-relative) runs via applyLayout(currentLayout) right after init.
+    layout: { name: 'grid', fit: false },
     minZoom: 0.2, maxZoom: 4,
     wheelSensitivity: 0.2,        // tame the zoom scale (default 1 is jumpy)
     userZoomingEnabled: false,    // wheel handled by wireGraphGestures: vertical=zoom, horizontal=pan
     userPanningEnabled: false,    // background drag handled in wireGraphGestures (scaled pan)
   });
   wireGraphGestures();
+  // Render in FLAT view on first paint: the 3 compound group-boxes (services/
+  // apps/tools) repel each other to the corners (sprawl), so default to flat —
+  // all nodes siblings, gravity balls them into one tight panel-filling cluster.
+  // applyGraphView re-runs applyLayout (autoScaleNodes + gravity) after unparenting.
+  applyGraphView('flat');
   cy.on('tap', 'node[kind = "service"]', evt => {
     const id = evt.target.data('id');
     const s = SERVICES.find(x => x.name === id);
@@ -2759,14 +2803,26 @@ function renderServiceGraph() {
   cy.on('pan zoom', () => { hideHoverTip(); drawMiniMap(); });
   cy.on('layoutstop', drawMiniMap);
 
-  // Refit when the cy container resizes (grid columns settle, drag-resize,
-  // window resize, maximize toggle). Debounced so we don't refit on every pixel.
+  // React when the cy container resizes (grid columns settle, drag-resize,
+  // window resize, maximize toggle). A SIGNIFICANT size change re-runs the
+  // layout so node size re-derives from the new panel (autoScaleNodes);
+  // a small change just refits. Debounced so we don't thrash on every pixel.
   if (window.__cyResizeObs) window.__cyResizeObs.disconnect();
   if (typeof ResizeObserver !== 'undefined') {
-    let t = null;
+    let t = null, lastW = 0, lastH = 0;
     window.__cyResizeObs = new ResizeObserver(() => {
       if (t) clearTimeout(t);
-      t = setTimeout(() => { if (cy) { cy.resize(); cy.fit(undefined, 30); } }, 120);
+      t = setTimeout(() => {
+        if (!cy) return;
+        cy.resize();
+        const el = cy.container();
+        const W = el.clientWidth, H = el.clientHeight;
+        const bigChange = !lastW || Math.abs(W - lastW) / lastW > 0.12
+                                 || Math.abs(H - lastH) / Math.max(lastH, 1) > 0.12;
+        lastW = W; lastH = H;
+        if (bigChange) applyLayout(currentLayout);  // re-derive spacing for new size
+        else cy.fit(undefined, 30);
+      }, 160);
     });
     window.__cyResizeObs.observe(document.getElementById('cy'));
   }
@@ -2868,7 +2924,7 @@ async function drillInto(svcName) {
       'background-color': 'data(color)', 'label': 'data(label)',
       'text-valign': 'bottom', 'text-margin-y': 6,
       'color': getComputedStyle(document.body).getPropertyValue('--text-2'),
-      'font-size': 11, 'width': 20, 'height': 20, 'border-width': 0,
+      'font-size': 15, 'min-zoomed-font-size': 9, 'width': 20, 'height': 20, 'border-width': 0,
       'font-weight': 500,
     })
     .selector('edge').style({

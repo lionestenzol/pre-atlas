@@ -1,0 +1,99 @@
+{
+  "src/triangulation/__init__.py": [
+    ".config.VERSION",
+    ".schema.ElementInput",
+    ".schema.SpatialSignal",
+    ".schema.Verdict",
+    ".schema.VerifyResult",
+    ".schema.VisualSignal",
+    ".verify.verify",
+    ".visual.Embedder",
+    ".visual.ReferenceLibrary"
+  ],
+  "src/triangulation/api.py": [
+    "__future__.annotations"
+  ],
+  "src/triangulation/config.py": [
+    "__future__.annotations",
+    "pathlib.Path"
+  ],
+  "src/triangulation/consensus.py": [
+    ".config.SIGNAL_WEIGHTS",
+    ".config.SPATIAL_OUTLIER_THRESHOLD",
+    ".schema.SpatialSignal",
+    ".schema.Verdict",
+    ".schema.VerifyResult",
+    ".schema.VisualSignal",
+    "__future__.annotations",
+    "typing.Any"
+  ],
+  "src/triangulation/schema.py": [
+    "__future__.annotations",
+    "dataclasses.dataclass",
+    "dataclasses.field",
+    "typing.Any",
+    "typing.Literal",
+    "typing.Optional"
+  ],
+  "src/triangulation/spatial.py": [
+    ".config.ALIGNMENT_TOLERANCE_PX",
+    ".config.LABEL_CONSISTENCY_THRESHOLD",
+    "__future__.annotations",
+    "collections.Counter",
+    "numpy",
+    "typing.Any",
+    "typing.Literal"
+  ],
+  "src/triangulation/verify.py": [
+    "..consensus",
+    "..spatial",
+    "..visual",
+    ".schema.VerifyResult",
+    "__future__.annotations",
+    "typing.Optional"
+  ],
+  "src/triangulation/visual.py": [
+    ".config.SIGLIP_MODEL_NAME",
+    "__future__.annotations",
+    "numpy",
+    "pathlib.Path",
+    "pickle",
+    "typing.Any",
+    "typing.Optional"
+  ],
+  "tests/__init__.py": [],
+  "tests/conftest.py": [
+    "__future__.annotations",
+    "pathlib.Path",
+    "pytest",
+    "sys",
+    "typing.Callable"
+  ],
+  "tests/test_consensus.py": [
+    "__future__.annotations",
+    "pytest",
+    "triangulation.SpatialSignal",
+    "triangulation.VisualSignal",
+    "triangulation.config.SIGNAL_WEIGHTS",
+    "triangulation.consensus.aggregate",
+    "typing.Callable"
+  ],
+  "tests/test_schema.py": [
+    "__future__.annotations",
+    "dataclasses.FrozenInstanceError",
+    "pytest",
+    "triangulation.ElementInput",
+    "triangulation.SpatialSignal",
+    "triangulation.Verdict",
+    "triangulation.VerifyResult",
+    "triangulation.VisualSignal",
+    "typing.get_args"
+  ],
+  "tests/test_spatial.py": [
+    "__future__.annotations",
+    "pytest",
+    "time",
+    "triangulation.spatial",
+    "typing.Callable"
+  ]
+}

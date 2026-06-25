@@ -3,7 +3,11 @@
   "groups": [
     "services",
     "apps",
-    "tools"
+    "tools",
+    "spec",
+    "research",
+    "ops",
+    "root"
   ],
   "lattice_mirror_dir": "apps/lattice",
   "substrate_pages_dir": "C:/Users/bruke/atlas/pages",
@@ -14,6 +18,20 @@
   "preview_char_cap": 5500,
   "churn_days": 30,
   "purposes": {
+    "contracts": "JSON Schema data contracts (draft-07)",
+    "doctrine": "governance docs · system specs · doctrine",
+    "research": "research notes & experiments",
+    "_research": "research scratch & captures",
+    "experiments": "experiment artifacts & trials",
+    "audit": "system index + map builder tooling",
+    "scripts": "repo automation scripts (start_atlas, etc.)",
+    "data": "datasets & state fixtures",
+    "public": "static/public assets",
+    "anatomy": "anatomy R&D notes & captures",
+    "workflows": "n8n / automation workflow defs",
+    "scorecards": "scorecard artifacts",
+    "docs": "top-level documentation",
+    "_root": "loose files at the repo root (handoffs, audits, READMEs)",
     "aegis-fabric": "admin gateway · API middleware",
     "canvas-engine": "URL→React clone via in-process Vite pool",
     "cognitive-sensor": "conversation analysis pipeline · idea registry",

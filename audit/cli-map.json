@@ -1,0 +1,1539 @@
+{
+  "generated_at": "2026-06-20",
+  "repo_root": "C:\\Users\\bruke\\Pre Atlas",
+  "note": "For agents. Static-extracted CLI surfaces; 'curated' entries enriched from cli_manifest.json.",
+  "cli_count": 45,
+  "by_category": {
+    "command-cli": 13,
+    "infra-tool": 4,
+    "one-shot-script": 28
+  },
+  "clis": [
+    {
+      "name": "atl",
+      "path": "services/cognitive-sensor/atlas_triage_cli.py",
+      "runtime": "python",
+      "category": "command-cli",
+      "curated": true,
+      "description": "Primary thread triage CLI. Walks a thread through the lifecycle (HARVESTED -> PLANNED -> BUILDING -> REVIEWING -> DONE/RESOLVED/DROPPED).",
+      "invoke": "atl --help",
+      "command_count": 23,
+      "commands": [
+        {
+          "name": "help",
+          "help": "Extended command guide."
+        },
+        {
+          "name": "scan",
+          "help": "Score open loops by abandonment."
+        },
+        {
+          "name": "rank",
+          "help": "Rank threads by value signal."
+        },
+        {
+          "name": "themes",
+          "help": "Cluster themes across threads."
+        },
+        {
+          "name": "winners",
+          "help": "Show top-ranked threads."
+        },
+        {
+          "name": "ideas",
+          "help": "Ideas extracted from conversations."
+        },
+        {
+          "name": "harvest",
+          "help": "Write harvest/<id>_*/manifest.json with summary, code, quotes, concepts. Sets status=HARVESTED."
+        },
+        {
+          "name": "show",
+          "help": "Show harvest dir contents."
+        },
+        {
+          "name": "decide",
+          "help": "Record verdict (MINE|CLOSE|ARCHIVE|KEEP|REVIEW|DROP). Appends thread_decisions.json."
+        },
+        {
+          "name": "undo",
+          "help": "Reverse the most recent decision."
+        },
+        {
+          "name": "apply",
+          "help": "Flush pending decisions to results.db loop_decisions and run auto_actor."
+        },
+        {
+          "name": "rollback",
+          "help": "Rollback the last apply."
+        },
+        {
+          "name": "log",
+          "help": "Tail decisions.log."
+        },
+        {
+          "name": "status",
+          "help": "Show lifecycle status for a thread or the whole triage queue."
+        },
+        {
+          "name": "serve",
+          "help": "Local HTTP server for the triage UI."
+        },
+        {
+          "name": "plan",
+          "help": "Interactive MUST/NICE/SKIP classification of concepts. Writes build_plan.json. Sets status=PLANNED."
+        },
+        {
+          "name": "start",
+          "help": "Declare the artifact being built. Sets status=BUILDING + artifact_path + building_started_at."
+        },
+        {
+          "name": "review",
+          "help": "Run verify_coverage against build_plan.json. Sets status=REVIEWING + coverage_score + reviewed_at."
+        },
+        {
+          "name": "done",
+          "help": "Terminal DONE for MINE verdict. Gates on coverage >= 0.8 and zero missing MUST items. POSTs full-shape close_loop payload."
+        },
+        {
+          "name": "resolve",
+          "help": "Terminal RESOLVED for CLOSE verdict (no artifact needed)."
+        },
+        {
+          "name": "drop",
+          "help": "Terminal DROPPED for ARCHIVE verdict (no artifact needed)."
+        },
+        {
+          "name": "lifecycle",
+          "help": "Show full state-machine trace for one thread."
+        },
+        {
+          "name": "in-progress",
+          "help": "List threads in PLANNED|BUILDING|REVIEWING."
+        }
+      ]
+    },
+    {
+      "name": "atlas",
+      "path": "services/cognitive-sensor/atlas.py",
+      "runtime": "python",
+      "category": "command-cli",
+      "curated": true,
+      "description": "Daily routing engine. Energy -> mode -> next-action. NOT related to thread triage.",
+      "invoke": "python atlas.py --help",
+      "command_count": 6,
+      "commands": [
+        {
+          "name": "boot",
+          "help": "Start the day. Derive mode from energy + open loops."
+        },
+        {
+          "name": "status",
+          "help": "Current mode / energy / closures."
+        },
+        {
+          "name": "next",
+          "help": "Print the single next action."
+        },
+        {
+          "name": "loop",
+          "help": "Top open loops for today."
+        },
+        {
+          "name": "plan",
+          "help": "Midday recalculation."
+        },
+        {
+          "name": "close",
+          "help": "End-of-day closeout. Flips state.closed=true."
+        }
+      ]
+    },
+    {
+      "name": "atlas-ai.ts",
+      "path": "services/delta-kernel/src/cli/atlas-ai.ts",
+      "runtime": "tsx",
+      "category": "command-cli",
+      "curated": true,
+      "description": "AI-native JSON-in/JSON-out CLI. Primitives + compound commands. All output is {ok, data|error}. Guarded: autonomous closers check midLifecycleIds().",
+      "invoke": "npx tsx services/delta-kernel/src/cli/atlas-ai.ts help",
+      "command_count": 10,
+      "commands": [
+        {
+          "name": "state",
+          "help": "Full system snapshot."
+        },
+        {
+          "name": "next",
+          "help": "Recommended action based on mode/energy."
+        },
+        {
+          "name": "do",
+          "help": "Decide + execute with work admission. Autonomous guard applies."
+        },
+        {
+          "name": "morning",
+          "help": "Start-of-day compound: plan + blocks + baseline goal."
+        },
+        {
+          "name": "close-stale",
+          "help": "Batch archive stale low-value loops. Guarded by midLifecycleIds(). Returns skipped_mid_lifecycle count."
+        },
+        {
+          "name": "close",
+          "help": "Close one loop. Sends status=RESOLVED."
+        },
+        {
+          "name": "archive",
+          "help": "Archive one loop. Sends status=DROPPED."
+        },
+        {
+          "name": "done",
+          "help": "Mark a time block complete + log win."
+        },
+        {
+          "name": "wrap",
+          "help": "End-of-day wrap. Rating + journal."
+        },
+        {
+          "name": "weekly-reflect",
+          "help": "Weekly reflection aggregate."
+        }
+      ]
+    },
+    {
+      "name": "atlas.ts",
+      "path": "services/delta-kernel/src/cli/atlas.ts",
+      "runtime": "tsx",
+      "category": "command-cli",
+      "curated": true,
+      "description": "Unified human TypeScript CLI. 21 screens. All go through delta-kernel /api/state/unified.",
+      "invoke": "npx tsx services/delta-kernel/src/cli/atlas.ts help",
+      "command_count": 27,
+      "commands": [
+        {
+          "name": "home",
+          "help": "Full dashboard (mode, plan, signals, ideas, pulse)."
+        },
+        {
+          "name": "status",
+          "help": "System status."
+        },
+        {
+          "name": "mode",
+          "help": "Current routing mode."
+        },
+        {
+          "name": "loops",
+          "help": "Open loops with status badges + artifact links."
+        },
+        {
+          "name": "lifecycle",
+          "help": "In-progress + finished-today board (reads brain/lifecycle_board.json)."
+        },
+        {
+          "name": "close",
+          "help": "Close a loop. Sends status=RESOLVED."
+        },
+        {
+          "name": "archive",
+          "help": "Archive a loop. Sends status=DROPPED."
+        },
+        {
+          "name": "brief",
+          "help": "Today's daily brief."
+        },
+        {
+          "name": "weekly",
+          "help": "Weekly governor packet."
+        },
+        {
+          "name": "cognitive",
+          "help": "Cognitive drift radar."
+        },
+        {
+          "name": "refresh",
+          "help": "Run refresh pipeline."
+        },
+        {
+          "name": "dashboard",
+          "help": "Rebuild dashboard.html."
+        },
+        {
+          "name": "day",
+          "help": "Today's plan and blocks."
+        },
+        {
+          "name": "journal",
+          "help": "Journal entries."
+        },
+        {
+          "name": "wins",
+          "help": "Recent wins."
+        },
+        {
+          "name": "timeline",
+          "help": "Recent system events."
+        },
+        {
+          "name": "stats",
+          "help": "Statistics."
+        },
+        {
+          "name": "settings",
+          "help": "System settings."
+        },
+        {
+          "name": "energy",
+          "help": "Energy signals."
+        },
+        {
+          "name": "finance",
+          "help": "Finance signals."
+        },
+        {
+          "name": "skills",
+          "help": "Skills signals."
+        },
+        {
+          "name": "network",
+          "help": "Network signals."
+        },
+        {
+          "name": "tasks",
+          "help": "Task list."
+        },
+        {
+          "name": "ideas",
+          "help": "Idea registry."
+        },
+        {
+          "name": "osint",
+          "help": "OSINT feed."
+        },
+        {
+          "name": "control",
+          "help": "Control panel."
+        },
+        {
+          "name": "daemon",
+          "help": "Daemon status / control."
+        }
+      ]
+    },
+    {
+      "name": "atlas_approve",
+      "path": "services/cognitive-sensor/atlas_approve.py",
+      "runtime": "python",
+      "category": "command-cli",
+      "curated": false,
+      "description": "CLI to approve/deny auto_actor proposals and fire the runner.",
+      "invoke": "python services/cognitive-sensor/atlas_approve.py --help",
+      "command_count": 3,
+      "commands": [
+        {
+          "name": "list",
+          "help": "show pending proposals"
+        },
+        {
+          "name": "approve",
+          "help": "approve + fire runner"
+        },
+        {
+          "name": "deny",
+          "help": "mark as denied"
+        }
+      ]
+    },
+    {
+      "name": "atlas_cli",
+      "path": "tools/atlas-cli/src/atlas_cli/main.py",
+      "runtime": "python",
+      "category": "command-cli",
+      "curated": false,
+      "description": "atlas \u2014 CLI front-end over atlas-map-api (:3072).",
+      "invoke": "python tools/atlas-cli/src/atlas_cli/main.py --help",
+      "command_count": 10,
+      "commands": [
+        {
+          "name": "where",
+          "help": "Which subsystem owns the current working directory?"
+        },
+        {
+          "name": "locate",
+          "help": "Which subsystem owns the given file?"
+        },
+        {
+          "name": "neighbors",
+          "help": "List N-hop dependency neighbors."
+        },
+        {
+          "name": "path",
+          "help": "Shortest directed dependency path between two subsystems (both ways)."
+        },
+        {
+          "name": "search",
+          "help": "Fuzzy match across name + purpose + language + framework."
+        },
+        {
+          "name": "status",
+          "help": "Live signals: autostart + ported + retired."
+        },
+        {
+          "name": "list-systems",
+          "help": "List subsystems (filter by group or autostart membership)."
+        },
+        {
+          "name": "show",
+          "help": "Detail for one subsystem (+ depends_on / depended_on_by)."
+        },
+        {
+          "name": "reload",
+          "help": "Re-read system-index.json + atlas-map.json from disk."
+        },
+        {
+          "name": "open",
+          "help": "Open system-map.html in your default browser (optionally focused on a node)."
+        }
+      ]
+    },
+    {
+      "name": "atlas_cli",
+      "path": "services/cognitive-sensor/atlas_cli.py",
+      "runtime": "python",
+      "category": "command-cli",
+      "curated": true,
+      "description": "Single entry point that runs the full daily/weekly pipelines via AtlasAgent.",
+      "invoke": "python atlas_cli.py --help",
+      "command_count": 5,
+      "commands": [
+        {
+          "name": "daily",
+          "help": "Run daily loop: refresh + governor brief."
+        },
+        {
+          "name": "weekly",
+          "help": "Run weekly loop: daily + audit + packet."
+        },
+        {
+          "name": "backlog",
+          "help": "Idea pipeline + backlog maintenance."
+        },
+        {
+          "name": "briefs",
+          "help": "Regenerate briefs only (no data refresh)."
+        },
+        {
+          "name": "status",
+          "help": "File freshness + system status."
+        }
+      ]
+    },
+    {
+      "name": "atlas_query",
+      "path": "services/cognitive-sensor/atlas_query.py",
+      "runtime": "python",
+      "category": "command-cli",
+      "curated": false,
+      "description": "atlas_query.py \u2014 Headless CLI access to the Cognitive Atlas.",
+      "invoke": "python services/cognitive-sensor/atlas_query.py --help",
+      "command_count": 21,
+      "commands": [
+        {
+          "name": "stats",
+          "help": "Top-bar stats (messages, clusters, noise, etc.)"
+        },
+        {
+          "name": "layers",
+          "help": "List available layer toggles"
+        },
+        {
+          "name": "vectors",
+          "help": "Group clusters by asset_vector"
+        },
+        {
+          "name": "clusters",
+          "help": "List all clusters"
+        },
+        {
+          "name": "cluster",
+          "help": "Full cluster record (Inspector view)"
+        },
+        {
+          "name": "inspect",
+          "help": "Alias for `cluster`"
+        },
+        {
+          "name": "leverage",
+          "help": "Leverage Ranking table"
+        },
+        {
+          "name": "search",
+          "help": "Find clusters whose titles/ngrams mention QUERY"
+        },
+        {
+          "name": "near",
+          "help": "Cosine-nearest clusters to CLUSTER_ID"
+        },
+        {
+          "name": "convo",
+          "help": "Find what cluster a conversation belongs to"
+        },
+        {
+          "name": "messages",
+          "help": "All conversations in a cluster with titles, dates, topic words (joins results.db)"
+        },
+        {
+          "name": "themes",
+          "help": "Cross-cluster topic threads (themes that span multiple clusters)"
+        },
+        {
+          "name": "region",
+          "help": "Spatial neighborhood around a cluster (within cosine radius)"
+        },
+        {
+          "name": "graph",
+          "help": "Full sigma graph (nodes + edges) or --summary for shape"
+        },
+        {
+          "name": "graph-node",
+          "help": "One cluster's graph node + all incident edges"
+        },
+        {
+          "name": "bridges",
+          "help": "Most-connected clusters (high graph degree)"
+        },
+        {
+          "name": "path",
+          "help": "Shortest path in cluster graph from A to B"
+        },
+        {
+          "name": "evolution",
+          "help": "Time histogram of a cluster (oldest..newest in 10 bins)"
+        },
+        {
+          "name": "role-breakdown",
+          "help": "User/assistant/tool split inside a cluster"
+        },
+        {
+          "name": "density",
+          "help": "Spatial density per cluster (UMAP 2D space)"
+        },
+        {
+          "name": "text",
+          "help": "Pull actual message text of a conversation from the ChatGPT export bundle"
+        }
+      ]
+    },
+    {
+      "name": "auto_actor",
+      "path": "services/cognitive-sensor/auto_actor.py",
+      "runtime": "python",
+      "category": "command-cli",
+      "curated": true,
+      "description": "Autonomous closer + directive executor. Guarded: skips any thread with manifest.status in mid-lifecycle or terminal.",
+      "invoke": "python auto_actor.py --help",
+      "command_count": 1,
+      "commands": [
+        {
+          "name": "(no args)",
+          "help": "Run one full cycle."
+        }
+      ]
+    },
+    {
+      "name": "close_loop",
+      "path": "services/cognitive-sensor/close_loop.py",
+      "runtime": "python",
+      "category": "command-cli",
+      "curated": true,
+      "description": "Manual close/archive of a single loop + pipeline refresh.",
+      "invoke": "python close_loop.py --help",
+      "command_count": 5,
+      "commands": [
+        {
+          "name": "(no args)",
+          "help": "Interactive triage of all open loops."
+        },
+        {
+          "name": "--list",
+          "help": "Print open loops, no action."
+        },
+        {
+          "name": "<id>",
+          "help": "Analyze one loop and recommend."
+        },
+        {
+          "name": "<id> CLOSE",
+          "help": "Close now. Sends status=RESOLVED."
+        },
+        {
+          "name": "<id> ARCHIVE",
+          "help": "Archive now. Sends status=DROPPED."
+        }
+      ]
+    },
+    {
+      "name": "cycleboard",
+      "path": "services/cognitive-sensor/cycleboard/cli.ts",
+      "runtime": "tsx",
+      "category": "command-cli",
+      "curated": true,
+      "description": "CycleBoard terminal CLI. Day plans, concept dumps, coverage audits, lifecycle board.",
+      "invoke": "npx tsx services/cognitive-sensor/cycleboard/cli.ts help",
+      "command_count": 11,
+      "commands": [
+        {
+          "name": "today",
+          "help": "Show today's plan."
+        },
+        {
+          "name": "calendar",
+          "help": "Month grid."
+        },
+        {
+          "name": "week",
+          "help": "Week overview."
+        },
+        {
+          "name": "plan",
+          "help": "Create a day plan."
+        },
+        {
+          "name": "complete",
+          "help": "Toggle time block N."
+        },
+        {
+          "name": "add",
+          "help": "Add custom event."
+        },
+        {
+          "name": "status",
+          "help": "System overview."
+        },
+        {
+          "name": "lifecycle",
+          "help": "In-progress + finished-today (from brain/lifecycle_board.json)."
+        },
+        {
+          "name": "dump",
+          "help": "Dump full ChatGPT transcript."
+        },
+        {
+          "name": "parse",
+          "help": "Extract concept checklist."
+        },
+        {
+          "name": "verify",
+          "help": "Coverage audit: does an artifact cover a thread's concepts?"
+        }
+      ]
+    },
+    {
+      "name": "delta",
+      "path": "services/delta-kernel/src/cli/index.ts",
+      "runtime": "tsx",
+      "category": "command-cli",
+      "curated": false,
+      "description": "Delta-State Fabric \u2014 CLI Entry Point  Run with: npx tsx src/cli/index.ts",
+      "invoke": "npx tsx services/delta-kernel/src/cli/index.ts help",
+      "command_count": 0,
+      "commands": []
+    },
+    {
+      "name": "droplist",
+      "path": "services/droplist/droplist/cli.py",
+      "runtime": "python",
+      "category": "command-cli",
+      "curated": false,
+      "description": "drop CLI.",
+      "invoke": "python services/droplist/droplist/cli.py --help",
+      "command_count": 32,
+      "commands": [
+        {
+          "name": "input",
+          "help": ""
+        },
+        {
+          "name": "--ship",
+          "help": ""
+        },
+        {
+          "name": "--recent",
+          "help": ""
+        },
+        {
+          "name": "--show",
+          "help": ""
+        },
+        {
+          "name": "--memory-search",
+          "help": ""
+        },
+        {
+          "name": "--external",
+          "help": ""
+        },
+        {
+          "name": "--morning",
+          "help": ""
+        },
+        {
+          "name": "--review",
+          "help": ""
+        },
+        {
+          "name": "--domain",
+          "help": ""
+        },
+        {
+          "name": "--status",
+          "help": ""
+        },
+        {
+          "name": "--needs-decision",
+          "help": ""
+        },
+        {
+          "name": "--inventory",
+          "help": ""
+        },
+        {
+          "name": "--hash",
+          "help": ""
+        },
+        {
+          "name": "--ship-from",
+          "help": ""
+        },
+        {
+          "name": "--graph",
+          "help": ""
+        },
+        {
+          "name": "--brief",
+          "help": ""
+        },
+        {
+          "name": "--watch",
+          "help": ""
+        },
+        {
+          "name": "--entities",
+          "help": ""
+        },
+        {
+          "name": "--recurring-add",
+          "help": ""
+        },
+        {
+          "name": "--json",
+          "help": ""
+        },
+        {
+          "name": "--no-color",
+          "help": ""
+        },
+        {
+          "name": "input",
+          "help": ""
+        },
+        {
+          "name": "--json",
+          "help": ""
+        },
+        {
+          "name": "--no-color",
+          "help": ""
+        },
+        {
+          "name": "--recent",
+          "help": ""
+        },
+        {
+          "name": "--domain",
+          "help": ""
+        },
+        {
+          "name": "--status",
+          "help": ""
+        },
+        {
+          "name": "--needs-decision",
+          "help": ""
+        },
+        {
+          "name": "--no-color",
+          "help": ""
+        },
+        {
+          "name": "folder",
+          "help": ""
+        },
+        {
+          "name": "--hash",
+          "help": ""
+        },
+        {
+          "name": "drop_id",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "_build_cli_map",
+      "path": "audit/imports/_build_cli_map.py",
+      "runtime": "python",
+      "category": "infra-tool",
+      "curated": false,
+      "description": "Build a complete CLI map for the repo \u2014 for agents, not humans.",
+      "invoke": "python audit/imports/_build_cli_map.py --help",
+      "command_count": 0,
+      "commands": []
+    },
+    {
+      "name": "_build_map",
+      "path": "audit/imports/_build_map.py",
+      "runtime": "python",
+      "category": "infra-tool",
+      "curated": false,
+      "description": "Build a system map for any repo.",
+      "invoke": "python audit/imports/_build_map.py --help",
+      "command_count": 3,
+      "commands": [
+        {
+          "name": "--root",
+          "help": ""
+        },
+        {
+          "name": "--init",
+          "help": ""
+        },
+        {
+          "name": "--overwrite-config",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "path": "contracts/validate.py",
+      "runtime": "python",
+      "category": "infra-tool",
+      "curated": false,
+      "description": "validate.py \u2014 Optogon stack contracts validator.",
+      "invoke": "python contracts/validate.py --help",
+      "command_count": 1,
+      "commands": [
+        {
+          "name": "--verbose",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "write_fest_tasks",
+      "path": "doctrine/scripts/write_fest_tasks.py",
+      "runtime": "python",
+      "category": "infra-tool",
+      "curated": false,
+      "description": "write_fest_tasks.py Materializes the optogon-stack festival task body markdown files.",
+      "invoke": "python doctrine/scripts/write_fest_tasks.py --help",
+      "command_count": 3,
+      "commands": [
+        {
+          "name": "--target",
+          "help": ""
+        },
+        {
+          "name": "--lifecycle",
+          "help": ""
+        },
+        {
+          "name": "--dry-run",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "build_atlas_explorer",
+      "path": "services/cognitive-sensor/build_atlas_explorer.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "build_atlas_explorer.py - interactive single-file dashboard.",
+      "invoke": "python services/cognitive-sensor/build_atlas_explorer.py --help",
+      "command_count": 4,
+      "commands": [
+        {
+          "name": "--classifications",
+          "help": ""
+        },
+        {
+          "name": "--registry",
+          "help": ""
+        },
+        {
+          "name": "--clusters",
+          "help": ""
+        },
+        {
+          "name": "--out",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "build_atlas_galaxy",
+      "path": "services/cognitive-sensor/build_atlas_galaxy.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "build_atlas_galaxy.py - render atlas_points.json as a WebGL galaxy.",
+      "invoke": "python services/cognitive-sensor/build_atlas_galaxy.py --help",
+      "command_count": 2,
+      "commands": [
+        {
+          "name": "--points",
+          "help": ""
+        },
+        {
+          "name": "--out",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "build_era_matrix",
+      "path": "tools/fest-reconcile/build_era_matrix.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "Phase 3 sequences 01-03: build (cluster x channel) matrix for one era.",
+      "invoke": "python tools/fest-reconcile/build_era_matrix.py --help",
+      "command_count": 5,
+      "commands": [
+        {
+          "name": "--era-label",
+          "help": ""
+        },
+        {
+          "name": "--start",
+          "help": ""
+        },
+        {
+          "name": "--end",
+          "help": ""
+        },
+        {
+          "name": "--out",
+          "help": ""
+        },
+        {
+          "name": "--clusters",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "build_memory_db",
+      "path": "services/cognitive-sensor/build_memory_db.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "build_memory_db.py \u2014 rebuild memory_db.json from one or more ChatGPT export bundles.",
+      "invoke": "python services/cognitive-sensor/build_memory_db.py --help",
+      "command_count": 4,
+      "commands": [
+        {
+          "name": "--sources",
+          "help": ""
+        },
+        {
+          "name": "--out-memory",
+          "help": ""
+        },
+        {
+          "name": "--out-raw",
+          "help": ""
+        },
+        {
+          "name": "--no-backup",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "code_themes",
+      "path": "services/cognitive-sensor/code_themes.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "code_themes \u2014 group all code blocks across all conversations by what they DO.",
+      "invoke": "python services/cognitive-sensor/code_themes.py --help",
+      "command_count": 3,
+      "commands": [
+        {
+          "name": "--json",
+          "help": ""
+        },
+        {
+          "name": "--theme",
+          "help": ""
+        },
+        {
+          "name": "--limit",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "cycleboard_push",
+      "path": "services/cognitive-sensor/cycleboard_push.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "CycleBoard push bridge for auto_actor.",
+      "invoke": "python services/cognitive-sensor/cycleboard_push.py --help",
+      "command_count": 2,
+      "commands": [
+        {
+          "name": "--dry-run",
+          "help": ""
+        },
+        {
+          "name": "--verbose",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "delegate",
+      "path": "tools/codex-partner/delegate.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "Codex-delegate wrapper. ZERO manual steps for the user.",
+      "invoke": "python tools/codex-partner/delegate.py --help",
+      "command_count": 5,
+      "commands": [
+        {
+          "name": "intent",
+          "help": ""
+        },
+        {
+          "name": "--cwd",
+          "help": ""
+        },
+        {
+          "name": "--schema",
+          "help": ""
+        },
+        {
+          "name": "--quiet",
+          "help": ""
+        },
+        {
+          "name": "--no-autostart",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "dump_conversation",
+      "path": "services/cognitive-sensor/dump_conversation.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "Dump a full ChatGPT conversation from memory_db.json to markdown.",
+      "invoke": "python services/cognitive-sensor/dump_conversation.py --help",
+      "command_count": 2,
+      "commands": [
+        {
+          "name": "convo_id",
+          "help": ""
+        },
+        {
+          "name": "--out",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "export_markdown",
+      "path": "services/cognitive-sensor/export_markdown.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "export_markdown \u2014 per-convo round-trippable Markdown files.",
+      "invoke": "python services/cognitive-sensor/export_markdown.py --help",
+      "command_count": 5,
+      "commands": [
+        {
+          "name": "--convo",
+          "help": ""
+        },
+        {
+          "name": "--convos",
+          "help": ""
+        },
+        {
+          "name": "--cluster",
+          "help": ""
+        },
+        {
+          "name": "--all",
+          "help": ""
+        },
+        {
+          "name": "--verify-roundtrip",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "extract_atlas_data",
+      "path": "services/cognitive-sensor/extract_atlas_data.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "extract_atlas_data.py \u2014 pull the 6.1 MB embedded JSON out of cognitive_atlas.html into discrete files so atlas_query.py can serve every screen-visible data point.",
+      "invoke": "python services/cognitive-sensor/extract_atlas_data.py --help",
+      "command_count": 3,
+      "commands": [
+        {
+          "name": "--html",
+          "help": ""
+        },
+        {
+          "name": "--out-dir",
+          "help": ""
+        },
+        {
+          "name": "--full",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "fs_overlay",
+      "path": "tools/fest-reconcile/fs_overlay.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "Phase 3 \u00b7 Sequence 04 \u00b7 fs_overlay",
+      "invoke": "python tools/fest-reconcile/fs_overlay.py --help",
+      "command_count": 2,
+      "commands": [
+        {
+          "name": "--clusters",
+          "help": ""
+        },
+        {
+          "name": "--out",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "genesis_tree",
+      "path": "services/cognitive-sensor/genesis_tree.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "GENESIS TREE -- Self-Organizing Knowledge Graph Builder ====================================================== Reads HDBSCAN cluster assignments from atlas_clusters.json (produced by build_cognitive_atlas.py) and builds a hierarchical knowledge tree on top.",
+      "invoke": "python services/cognitive-sensor/genesis_tree.py --help",
+      "command_count": 3,
+      "commands": [
+        {
+          "name": "--db",
+          "help": ""
+        },
+        {
+          "name": "--atlas-clusters",
+          "help": ""
+        },
+        {
+          "name": "--output",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "ghost_executor",
+      "path": "services/cognitive-sensor/ghost_executor.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "GHOST EXECUTOR -- Autonomous First-Move Agent ============================================= Reads Genesis tree outputs and produces actionable directives. Designed to run on a cron cycle and integrate with Atlas governance.",
+      "invoke": "python services/cognitive-sensor/ghost_executor.py --help",
+      "command_count": 3,
+      "commands": [
+        {
+          "name": "--genesis-dir",
+          "help": ""
+        },
+        {
+          "name": "--atlas-state",
+          "help": ""
+        },
+        {
+          "name": "--output",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "harvester",
+      "path": "services/cognitive-sensor/harvester.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "harvester \u2014 extract value from a conversation before any verdict is applied.",
+      "invoke": "python services/cognitive-sensor/harvester.py --help",
+      "command_count": 3,
+      "commands": [
+        {
+          "name": "--convo",
+          "help": ""
+        },
+        {
+          "name": "--verdict",
+          "help": ""
+        },
+        {
+          "name": "--from-decisions",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "idea_code_join",
+      "path": "services/cognitive-sensor/idea_code_join.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "idea_code_join \u2014 attach code signals + repo-presence to every idea in the registry.",
+      "invoke": "python services/cognitive-sensor/idea_code_join.py --help",
+      "command_count": 4,
+      "commands": [
+        {
+          "name": "--top",
+          "help": ""
+        },
+        {
+          "name": "--with-code-only",
+          "help": ""
+        },
+        {
+          "name": "--id",
+          "help": ""
+        },
+        {
+          "name": "--json",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "index_chatgpt_exports",
+      "path": "services/cognitive-sensor/index_chatgpt_exports.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "index_chatgpt_exports.py \u2014 one-shot scanner over the ChatGPT JSON export bundle.",
+      "invoke": "python services/cognitive-sensor/index_chatgpt_exports.py --help",
+      "command_count": 2,
+      "commands": [
+        {
+          "name": "--export-dir",
+          "help": ""
+        },
+        {
+          "name": "--out",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "ingest",
+      "path": "services/cognitive-sensor/ingest.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "ingest.py \u2014 full corpus refresh: ChatGPT exports -> fully-baked triage cards.",
+      "invoke": "python services/cognitive-sensor/ingest.py --help",
+      "command_count": 7,
+      "commands": [
+        {
+          "name": "--fast",
+          "help": ""
+        },
+        {
+          "name": "--from",
+          "help": ""
+        },
+        {
+          "name": "--only",
+          "help": ""
+        },
+        {
+          "name": "--list",
+          "help": ""
+        },
+        {
+          "name": "--dry-run",
+          "help": ""
+        },
+        {
+          "name": "--no-backup",
+          "help": ""
+        },
+        {
+          "name": "--continue-on-fail",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "migrate_manifest_status",
+      "path": "services/cognitive-sensor/migrate_manifest_status.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "migrate_manifest_status \u2014 backfill `status` on every existing harvest/<id>_<slug>/manifest.json.",
+      "invoke": "python services/cognitive-sensor/migrate_manifest_status.py --help",
+      "command_count": 1,
+      "commands": [
+        {
+          "name": "--apply",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "parse_conversation",
+      "path": "services/cognitive-sensor/parse_conversation.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "parse_conversation \u2014 extract a concept checklist from a ChatGPT thread.",
+      "invoke": "python services/cognitive-sensor/parse_conversation.py --help",
+      "command_count": 2,
+      "commands": [
+        {
+          "name": "convo_id",
+          "help": ""
+        },
+        {
+          "name": "--out",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "phase1_temporal_index",
+      "path": "tools/fest-reconcile/phase1_temporal_index.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "Phase 1 - Temporal index per channel.",
+      "invoke": "python tools/fest-reconcile/phase1_temporal_index.py --help",
+      "command_count": 1,
+      "commands": [
+        {
+          "name": "seq",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "ship_flow",
+      "path": "tools/fest-reconcile/ship_flow.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "Phase 4 / Seq 01: ship_flow_per_item",
+      "invoke": "python tools/fest-reconcile/ship_flow.py --help",
+      "command_count": 2,
+      "commands": [
+        {
+          "name": "--clusters",
+          "help": ""
+        },
+        {
+          "name": "--out",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "sync_bridge",
+      "path": "sync_bridge.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "sync_bridge.py \u2014 Sync the current repo to a local Google Drive folder for cross-surface AI coordination (Gemini Spark, etc.).",
+      "invoke": "python sync_bridge.py --help",
+      "command_count": 3,
+      "commands": [
+        {
+          "name": "--path",
+          "help": ""
+        },
+        {
+          "name": "--yes",
+          "help": ""
+        },
+        {
+          "name": "--dry-run",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "theme_winners",
+      "path": "services/cognitive-sensor/theme_winners.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "theme_winners \u2014 for each code theme, find the single best thread to stand up as a repo.",
+      "invoke": "python services/cognitive-sensor/theme_winners.py --help",
+      "command_count": 2,
+      "commands": [
+        {
+          "name": "--json",
+          "help": ""
+        },
+        {
+          "name": "--cards",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "thread_ranker",
+      "path": "services/cognitive-sensor/thread_ranker.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "thread_ranker \u2014 rank all 1397 conversations by mining potential.",
+      "invoke": "python services/cognitive-sensor/thread_ranker.py --help",
+      "command_count": 4,
+      "commands": [
+        {
+          "name": "--top",
+          "help": ""
+        },
+        {
+          "name": "--min-blocks",
+          "help": ""
+        },
+        {
+          "name": "--json",
+          "help": ""
+        },
+        {
+          "name": "--score-cards",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "thread_scorer",
+      "path": "services/cognitive-sensor/thread_scorer.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "thread_scorer \u2014 emit per-thread signal cards without reading full conversations.",
+      "invoke": "python services/cognitive-sensor/thread_scorer.py --help",
+      "command_count": 5,
+      "commands": [
+        {
+          "name": "--convo",
+          "help": ""
+        },
+        {
+          "name": "--convos",
+          "help": ""
+        },
+        {
+          "name": "--cluster",
+          "help": ""
+        },
+        {
+          "name": "--json",
+          "help": ""
+        },
+        {
+          "name": "--quiet",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "triage_server",
+      "path": "services/cognitive-sensor/triage_server.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "HTTP server for the thread cards triage UI.",
+      "invoke": "python services/cognitive-sensor/triage_server.py --help",
+      "command_count": 1,
+      "commands": [
+        {
+          "name": "--port",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "uasc-executor",
+      "path": "services/uasc-executor/server.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "UASC Executor Service \u2014 Port 3008",
+      "invoke": "python services/uasc-executor/server.py --help",
+      "command_count": 2,
+      "commands": [
+        {
+          "name": "--port",
+          "help": ""
+        },
+        {
+          "name": "--host",
+          "help": ""
+        }
+      ]
+    },
+    {
+      "name": "verify_coverage",
+      "path": "services/cognitive-sensor/verify_coverage.py",
+      "runtime": "python",
+      "category": "one-shot-script",
+      "curated": false,
+      "description": "verify_coverage \u2014 check whether a built artifact covers the concepts extracted from a harvested thread.",
+      "invoke": "python services/cognitive-sensor/verify_coverage.py --help",
+      "command_count": 4,
+      "commands": [
+        {
+          "name": "convo_id",
+          "help": ""
+        },
+        {
+          "name": "artifact",
+          "help": ""
+        },
+        {
+          "name": "--auto",
+          "help": ""
+        },
+        {
+          "name": "--no-plan",
+          "help": ""
+        }
+      ]
+    }
+  ]
+}

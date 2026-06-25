@@ -48,7 +48,9 @@ def test_build_target_path_param_cannot_open_query():
 
 
 def test_resolve_base_url_prefers_launchjson_runtime_port():
-    assert gateway.resolve_base_url(load_snapshot(), "triangulation") == "http://127.0.0.1:3074"
+    # triangulation's launch.json runtime port (moved 3074->3075 to clear the
+    # droplist-ui collision) is preferred over the snapshot's stale 3010.
+    assert gateway.resolve_base_url(load_snapshot(), "triangulation") == "http://127.0.0.1:3075"
 
 
 # ---- argv building (cli hardening) --------------------------------------------

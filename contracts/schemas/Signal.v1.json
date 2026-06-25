@@ -20,7 +20,7 @@
     },
     "source_layer": {
       "type": "string",
-      "enum": ["site_pull", "optogon", "atlas", "ghost_executor", "claude_code"]
+      "enum": ["site_pull", "optogon", "atlas", "ghost_executor", "claude_code", "droplist"]
     },
     "signal_type": {
       "type": "string",

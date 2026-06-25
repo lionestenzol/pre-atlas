@@ -168,3 +168,18 @@ to fix before "done."
 
 When §E holds, the spine is smoke-solid and we move to: wiring gap #1, then the
 live walkthrough, then hardening (auth, timezone) as warranted.
+
+---
+
+## Run log
+
+**2026-06-25 — first full run.** In-process TestClient harness on a scratch data dir.
+- §B smoke S1–S4 + §C break B1–B12: **14/14** after fixes. (B6 do_not_reopen lock, B10
+  empty-dir, B13 emit-failsoft: not auto-exercised this run — B6 still untested per §D.)
+- **2 real bugs found by break-testing, fixed inline (commit `08b5719`), suite 63 passed:**
+  1. Chains fired their `on_report` action on ZERO matching targets (spurious noise drops) —
+     `run_chain` never consulted its own step-gate / target list. Gated + regression test.
+  2. `daily_ready_nudge` was wired-but-inert via the daemon — `_run_once` advanced ready nodes
+     to done before running chains. Reordered: chains before advance.
+- Still open from §D: scheduler `due_jobs`/`mark_run` not wired into the daemon; B6 reopen-lock
+  untested; reopen reimplements complete-derivation; naive-UTC scheduler; open writes.

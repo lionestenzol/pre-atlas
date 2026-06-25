@@ -236,7 +236,7 @@
     const override = (localStorage.getItem(LS.tokenOverride) || "").trim();
     if (override) { writeToken = override; setTok("up", "token: manual"); return; }
     try {
-      const { token } = await hubGet("/admin/write-token");
+      const { token } = await hubGet("/admin/write-token?scope=boot");
       if (!token || typeof token !== "string") {   // 200 with an unexpected body => not usable
         writeToken = null;
         setTok("down", "token: empty");

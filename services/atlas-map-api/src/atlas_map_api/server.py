@@ -25,7 +25,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
-from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from rapidfuzz import fuzz
@@ -54,14 +54,17 @@ app = FastAPI(title="atlas-map-api", version="0.1.0", lifespan=lifespan)
 # CORS — the viewer queries this API from a different origin. Now that the API
 # has process start/stop/restart endpoints, allow_origins is restricted to the
 # known local viewer origins (was "*") so a malicious page can't drive services.
+# The same list gates the token handout (origin defense-in-depth), so it's a
+# module constant both the middleware and /admin/write-token consult.
+ALLOWED_ORIGINS: list[str] = [
+    "http://localhost:3011", "http://127.0.0.1:3011",   # lattice
+    "http://localhost:8897", "http://127.0.0.1:8897",   # audit-map
+    "http://localhost:8888", "http://127.0.0.1:8888",   # atlas-shell
+    "http://localhost:3006", "http://127.0.0.1:3006",   # inpact
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3011", "http://127.0.0.1:3011",   # lattice
-        "http://localhost:8897", "http://127.0.0.1:8897",   # audit-map
-        "http://localhost:8888", "http://127.0.0.1:8888",   # atlas-shell
-        "http://localhost:3006", "http://127.0.0.1:3006",   # inpact
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
@@ -124,16 +127,37 @@ async def healthz() -> dict[str, str]:
 
 
 @app.get("/admin/write-token")
-async def write_token() -> dict[str, str]:
-    """Hand the write token to a CORS-trusted viewer origin.
+async def write_token(
+    request: Request,
+    scope: str | None = Query(None, description="Capability scope: boot | items"),
+) -> dict[str, str]:
+    """Hand a SCOPED, least-privilege write token to a CORS-trusted viewer origin.
 
-    The static lattice viewer can't read the gitignored .atlas-write-token off
-    disk, so it bootstraps the secret here. CORS (allow_origins) restricts which
-    browser origins can read this response — a DNS-rebind tab at a foreign origin
-    cannot. Local processes with filesystem access can read the file directly, so
-    this endpoint exposes nothing they couldn't already obtain.
+    A static viewer can't read the gitignored .atlas-write-token off disk, so it
+    bootstraps a secret here. Two guards, layered:
+
+    1. Scope (least privilege): this returns a per-capability token, NEVER the
+       root token. `scope=boot` => may POST /map/* only (start/stop/restart/
+       launch/halt); `scope=items` => may POST /items/* only. Neither can touch
+       /admin/*. So a leaked handout token can't do everything root can.
+    2. Origin (defense-in-depth, NOT authentication): the request's Origin header
+       must be a known viewer origin. This blocks the no-Origin `curl` that
+       previously walked off with the root token. It is SPOOFABLE by a determined
+       non-browser caller (Origin is a client-set header), so it is a hardening
+       layer on top of scope, not a real authenticator.
+
+    Unknown/missing scope => 400. Disallowed/absent Origin => 403. The root token
+    is never exposed here; processes with filesystem access still read the file
+    directly (unchanged), and the CLI uses that file, not this endpoint.
     """
-    return {"token": auth.current_token()}
+    origin = request.headers.get("origin")
+    if not origin or origin not in ALLOWED_ORIGINS:
+        raise HTTPException(403, "origin not allowed")
+    try:
+        token = auth.scoped_token(scope or "")
+    except KeyError:
+        raise HTTPException(400, "unknown or missing scope (expected: boot | items)")
+    return {"token": token, "scope": scope or ""}
 
 
 @app.post("/admin/reload", dependencies=[Depends(auth.require_write_token)])

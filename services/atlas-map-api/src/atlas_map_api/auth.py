@@ -29,10 +29,28 @@ import secrets
 from pathlib import Path
 from typing import Any
 
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Request
 
 TOKEN_ENV = "ATLAS_WRITE_TOKEN"
 TOKEN_FILENAME = ".atlas-write-token"
+
+# Scoped-token registry. The token-handout endpoint no longer hands out the ROOT
+# write token (which authorizes everything: process spawn/kill AND item writes AND
+# /admin/reload). Instead it mints per-capability least-privilege tokens so a leaked
+# handout token can only reach the path prefixes its scope allows. Root stays
+# unrestricted for CLI/admin (it's read directly off the gitignored file, never
+# handed out over HTTP). See ~/.claude/rules/common/code-as-furniture.md — the open
+# root-token handout (HIGH finding) is fixed inline here, not documented-and-left.
+SCOPE_PREFIXES: dict[str, tuple[str, ...]] = {
+    "boot": ("/map/",),     # atlas-setup.html: start/stop/restart/launch/halt
+    "items": ("/items/",),  # lattice index.html: write-through item status
+}
+
+# One stable token per scope per process — minted on first request for that scope
+# and reused across calls (do NOT mint a fresh token every request). Two-way maps:
+# scope -> token (for handout reuse) and token -> scope (for enforcement).
+_scoped_tokens: dict[str, str] = {}   # scope -> token
+_scope_by_token: dict[str, str] = {}  # token -> scope
 
 # Role-token registry (used by /describe enforcement). Maps additional tokens to a
 # role NAME so a caller's role is derived from the token they present, not from a
@@ -106,19 +124,58 @@ def _ensure_token() -> str:
 
 
 def current_token() -> str:
-    """Public accessor — used by the token-handout endpoint and tests."""
+    """Public accessor — the ROOT write token. Used by /describe (existence-proof
+    secret), the CLI, and tests. NO LONGER handed out over HTTP (see scoped_token)."""
     return _ensure_token()
 
 
-async def require_write_token(x_atlas_token: str | None = Header(default=None)) -> None:
-    """FastAPI dependency: 401 unless the request carries the valid X-Atlas-Token.
+def scoped_token(scope: str) -> str:
+    """Mint (once) and return the stable least-privilege token for a scope.
+
+    Idempotent per process: the first call for a scope generates a fresh
+    `secrets.token_urlsafe` token and caches it both ways; later calls reuse it.
+    Raises KeyError for an unknown scope (caller maps that to HTTP 400)."""
+    if scope not in SCOPE_PREFIXES:
+        raise KeyError(scope)
+    existing = _scoped_tokens.get(scope)
+    if existing is not None:
+        return existing
+    token = secrets.token_urlsafe(32)
+    _scoped_tokens[scope] = token
+    _scope_by_token[token] = scope
+    return token
+
+
+def _matches_scope(token: str, path: str) -> bool:
+    """True if `token` is a known scoped token whose scope permits `path`."""
+    scope = _scope_by_token.get(token)
+    if scope is None:
+        return False
+    return any(path.startswith(prefix) for prefix in SCOPE_PREFIXES[scope])
+
+
+async def require_write_token(
+    request: Request, x_atlas_token: str | None = Header(default=None)
+) -> None:
+    """FastAPI dependency: authorize a state-changing POST.
+
+    Authorization ladder (least-privilege):
+      1. ROOT token (constant-time match) => allow anything (CLI/admin).
+      2. A known SCOPED token whose scope's allowed path-prefixes cover this
+         request's path => allow (e.g. a `boot` token on /map/*, an `items`
+         token on /items/*).
+      3. Otherwise 401. A `boot` token on /items/* (or either scoped token on
+         /admin/*) falls through to here — scoped tokens never reach /admin.
 
     Wire it as `dependencies=[Depends(require_write_token)]` on each POST route —
     one line, no handler signature changes.
     """
-    expected = _ensure_token()
-    if not x_atlas_token or not secrets.compare_digest(x_atlas_token, expected):
-        raise HTTPException(401, "missing or invalid X-Atlas-Token")
+    if x_atlas_token:
+        if secrets.compare_digest(x_atlas_token, _ensure_token()):
+            return
+        if _matches_scope(x_atlas_token, request.url.path):
+            return
+    raise HTTPException(401, "missing or invalid X-Atlas-Token")
 
 
 # ---------------------------------------------------------------------------

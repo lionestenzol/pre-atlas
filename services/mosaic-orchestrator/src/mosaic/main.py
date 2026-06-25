@@ -22,7 +22,7 @@ def main():
     )
     uvicorn.run(
         "mosaic.api:app",
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=config.orchestrator_port,
         reload=False,
         log_level="info",

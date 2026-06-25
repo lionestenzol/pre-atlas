@@ -285,8 +285,8 @@ app.delete('/sessions/:sessionId', async (req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`[canvas-engine] listening on http://localhost:${PORT}`);
+const server = app.listen(PORT, '127.0.0.1', () => {
+  console.log(`[canvas-engine] listening on http://127.0.0.1:${PORT}`);
   console.log(`[canvas-engine] phase ${PHASE} · version ${VERSION}`);
   console.log(`[canvas-engine] vendor ${VENDOR_INFO.repo}@${VENDOR_INFO.sha.slice(0, 12)}`);
   console.log(`[canvas-engine] vite pool ports 3060-3069 · template ${TEMPLATE_DIR}`);

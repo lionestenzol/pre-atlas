@@ -528,7 +528,7 @@
       "name": "governance_daemon",
       "type": "cron",
       "file_paths": ["services/delta-kernel/src/governance/governance_daemon.ts"],
-      "purpose": "Autonomous node-cron scheduler running inside delta-kernel API server. Manages 6 scheduled jobs for continuous system operation.",
+      "purpose": "Autonomous node-cron scheduler running inside delta-kernel API server. Manages 9 scheduled jobs for continuous system operation.",
       "inputs": ["cognitive_state.json", "closures.json", "system_state entity"],
       "outputs": ["system_state entity (delta-fabric)", "timeline events"],
       "trigger": "auto-starts with delta-kernel API server (npm run api)",
@@ -540,7 +540,10 @@
         "day_start": "0 6 * * * (06:00 daily)",
         "day_end": "0 22 * * * (22:00 daily)",
         "mode_recalc": "*/15 * * * * (every 15 min)",
-        "work_queue": "*/1 * * * * (every minute)"
+        "work_queue": "*/1 * * * * (every minute)",
+        "agent_pipeline": "0 6 * * 0 (Sunday 06:00 — weekly idea pipeline)",
+        "preparation": "*/5 * * * * (every 5 min — preparation engine)",
+        "stall_check": "0 21 * * * (21:00 daily — stall detection)"
       }
     },
 

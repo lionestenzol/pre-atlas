@@ -72,11 +72,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Mirrors delta-kernel/src/api/server.ts; add new surfaces here instead of reverting to "*".
+_DEV_ORIGINS = [
+    "http://localhost:8889", "http://127.0.0.1:8889",  # CycleBoard
+    "http://localhost:3008", "http://127.0.0.1:3008",  # UASC Executor
+    "http://localhost:3006", "http://127.0.0.1:3006",  # inPACT
+    "http://localhost:3011", "http://127.0.0.1:3011",  # Lattice
+    "http://localhost:3000", "http://127.0.0.1:3000",  # Mosaic Dashboard
+    "http://localhost:3001", "http://127.0.0.1:3001",  # delta-kernel
+    "null",  # file:// protocol
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_DEV_ORIGINS,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
 

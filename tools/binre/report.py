@@ -18,11 +18,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
-BINRE_ROOT = Path("C:/Users/bruke/binre")  # binre is a separate repo; bridge by abs path
+# binre is a separate repo; bridge by absolute path. Overridable for CI / another machine.
+BINRE_ROOT = Path(os.environ.get("BINRE_ROOT", "C:/Users/bruke/binre"))
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -33,7 +35,11 @@ def resolve_sha256(target: str) -> str | None:
         return t.lower()
     p = Path(t)
     if p.is_file():
-        return hashlib.sha256(p.read_bytes()).hexdigest()
+        h = hashlib.sha256()
+        with p.open("rb") as fh:                       # stream: never load a big binary whole
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+        return h.hexdigest()
     return None
 
 
@@ -56,7 +62,13 @@ def main(argv: list[str] | None = None) -> int:
                           "found": False, "error": "no cached report -- run binre.scripts.orchestrate first"}))
         return 1
 
-    r = json.loads(report_path.read_text(encoding="utf-8"))
+    try:
+        r = json.loads(report_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:      # truncated/interrupted Ghidra run, TOCTOU
+        print(json.dumps({"tool": "binre", "op": "report", "sha256": sha,
+                          "report_path": str(report_path).replace("\\", "/"),
+                          "found": False, "error": f"report.json unreadable or invalid JSON: {exc}"}))
+        return 1
     print(json.dumps({
         "tool": "binre", "op": "report",
         "sha256": r.get("sha256", sha),                  # the join key (== out-dir name)

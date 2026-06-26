@@ -144,6 +144,11 @@ coverage/
 # *.png above silently dropped them (manifest.webmanifest 404'd its own icons).
 !services/droplist/ui/icons/*.png
 
+# === Coverage / pytest cache ===
+.coverage
+coverage.xml
+.pytest_cache/
+
 # === Archives at root ===
 /*.zip
 /*.docx

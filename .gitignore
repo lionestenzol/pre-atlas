@@ -140,6 +140,9 @@ coverage/
 
 # === Testing artifacts ===
 *.png
+# ...but PWA/app icons are real product assets, not test screenshots. The blanket
+# *.png above silently dropped them (manifest.webmanifest 404'd its own icons).
+!services/droplist/ui/icons/*.png
 
 # === Archives at root ===
 /*.zip

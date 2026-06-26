@@ -48,7 +48,13 @@ def _wait_for_server(port: int, timeout: float = 15.0) -> bool:
 def main() -> None:
     import webview  # imported here so CLI users without the [desktop] extra still import the module
 
-    from . import server
+    # Absolute, NOT `from . import server`: as a PyInstaller --onefile entry script
+    # this module runs as __main__ with no package parent, so a relative import
+    # raises "attempted relative import with no known parent package". Absolute
+    # resolves both as the bundled exe and as `python -m droplist.desktop`.
+    # See ~/.claude/rules/common/code-as-furniture.md — bug found in the first
+    # exe build, fixed inline rather than documented.
+    from droplist import server
 
     port = _free_port()
     t = threading.Thread(target=server.run, kwargs={"port": port}, daemon=True)

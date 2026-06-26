@@ -13,10 +13,71 @@ Drop → Normalize → Classify → Retrieve Context → Route Workflow
      → Complete Packet → (optional Mini Ship) → Log → (memory)
 ```
 
-## Run it (zero dependencies, zero API key)
+## Run it as an app
+
+DropList ships **four ways to run** — same engine and same data underneath.
+
+**1 · Desktop app (no Python needed).** Double-click `DropList.exe`. It opens a
+native window and serves itself on a free local port — a desktop app and a
+localhost web app in one 85 MB process. Build it with:
 
 ```bash
-cd mini-ship-1
+pip install -e ".[desktop]"
+pyinstaller DropList.spec        # -> dist/DropList.exe
+```
+
+**2 · Web UI + install as a PWA.**
+
+```bash
+pip install -e ".[ui]"
+droplist-ui                      # serves http://127.0.0.1:3073
+```
+
+Open `http://127.0.0.1:3073` — the NOW screen (`/`) and the DAG view (`/chain`).
+In Chrome, **Install DropList** pins it as a standalone app with an icon; the
+shell is service-worker cached so it launches offline.
+
+**3 · One-click launcher.** `scripts/start_droplist.ps1` starts the server if it's
+down and opens the browser — wire it to a desktop `.lnk` (recipe in the script
+header) for a zero-terminal launch.
+
+**4 · CLI.** See [Run it as a CLI](#run-it-as-a-cli) below.
+
+### Pick your AI model (swappable)
+
+The UI has a model picker (top-right) populated from `GET /api/ai/models` — it
+only offers providers whose key the server actually has, so there are no silent
+401s. Keys stay **server-side**; the browser never sees them. Routed through
+`litellm` behind `POST /api/ai/complete` (write-token guarded). Set any of:
+
+| Provider | Env var | Example model id |
+|---|---|---|
+| Anthropic | `ANTHROPIC_API_KEY` | `anthropic/claude-sonnet-4-20250514` |
+| OpenAI | `OPENAI_API_KEY` | `openai/gpt-4o` |
+| Gemini | `GEMINI_API_KEY` | `gemini/gemini-1.5-pro` |
+| OpenRouter | `OPENROUTER_API_KEY` | `openrouter/auto` |
+| Ollama (local) | `OLLAMA_BASE_URL` | `ollama/llama3` |
+
+### Configuration (env vars)
+
+| Var | Default | What |
+|---|---|---|
+| `DROPLIST_PORT` | `3073` | web server port |
+| `DROPLIST_DATA` | `./data` | JSONL data dir |
+| `DROPLIST_DAILY_AI_BUDGET` | `5.0` | daily AI $ ceiling (`0` = off); routes `429` once hit |
+| `DROPLIST_AI_RATE` | `30/minute` | per-IP rate limit on `/api/ai/*` (needs `slowapi`) |
+| `DROPLIST_ALLOWED_ORIGINS` | localhost | extra CORS origins (comma-separated) |
+| `DROPLIST_DAEMON` | off | `1` = run the DAG-advancing daemon in-process |
+
+> **Local-first by design.** All state is JSONL under `./data`; nothing leaves the
+> machine except the AI calls you opt into. The SaaS path (multi-tenant) is a later
+> swap of `storage.py` + `auth.py`, kept clean as a seam — not built yet.
+
+## Run it as a CLI
+
+Zero dependencies, zero API key:
+
+```bash
 python3 -m droplist "Spark burned tokens on 14k Drive files before metadata indexing."
 ```
 
@@ -190,17 +251,23 @@ Currently 7/7.
 ## Turning on a real model
 
 The default classifier and completer are deterministic heuristics — that's why it
-runs with no key and the acceptance test is reproducible. To route classification
-through Claude instead, set:
+runs with no key and the acceptance test is reproducible.
 
-```bash
-export DROPLIST_LLM=anthropic
-export ANTHROPIC_API_KEY=sk-...
-pip install -e ".[llm]"
-```
+- **In the UI** (the recommended path): just set a provider key and pick the model
+  from the dropdown — see [Pick your AI model](#pick-your-ai-model-swappable). Any
+  of Anthropic / OpenAI / Gemini / OpenRouter / local Ollama, swappable per request
+  via `litellm`, keys held server-side.
+- **For the CLI's engine triage** (the `classifier.py` path): set
+
+  ```bash
+  export DROPLIST_LLM=anthropic
+  export ANTHROPIC_API_KEY=sk-...
+  pip install -e ".[llm]"
+  ```
 
 The heuristic stays as the fallback on any API error, and every call (heuristic,
 cache hit, or real) is logged to `llm_calls.jsonl` with latency and estimated cost.
+Spend is capped daily by `DROPLIST_DAILY_AI_BUDGET`.
 
 ## What was deliberately left for later (per the build packet)
 

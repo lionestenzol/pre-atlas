@@ -1743,32 +1743,92 @@ function lineSeed(){
   // work as no-ops (they already try/catch to a manual fallback). ----
   var MODEL_KEY = 'droplist:model:v1';
   window.DL_MODEL = (function(){ try{ return localStorage.getItem(MODEL_KEY) || ''; }catch(e){ return ''; } })();
+  var KEY_PROVIDERS = ['anthropic','openai','gemini','openrouter','ollama'];
   async function bootModelPicker(){
-    var models = [], def = null;
+    var models = [], def = null, configured = {};
     try{
       var r = await fetch('/api/ai/models');
       if(r.ok){ var j = await r.json(); models = j.models||[]; def = j.default||null; }
     }catch(e){ /* offline / desktop pre-server — leave DL_MODEL as-is */ }
+    try{
+      var rk = await fetch('/api/ai/keys');
+      if(rk.ok){ configured = (await rk.json()).configured || {}; }
+    }catch(e){}
     if(!window.DL_MODEL && def) window.DL_MODEL = def;
-    // keep persisted choice only if still available; else fall back to default
     if(models.length && !models.some(function(m){return m.id===window.DL_MODEL;})) window.DL_MODEL = def || models[0].id;
     if(window.DL_MODEL){ try{ localStorage.setItem(MODEL_KEY, window.DL_MODEL); }catch(e){} }
-    if(!models.length) return; // nothing to pick between — hide the control entirely
+
+    var old = document.getElementById('dl-ai-ctrl'); if(old) old.remove();   // idempotent re-render
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'position:fixed;top:8px;right:10px;z-index:9999;font:12px/1.2 system-ui,sans-serif;';
-    var sel = document.createElement('select');
-    sel.setAttribute('aria-label','AI model');
-    sel.title = 'AI model — keys stay server-side';
-    sel.style.cssText = 'background:#12161400;color:#8b918c;border:1px solid #2a302c;border-radius:7px;padding:4px 8px;max-width:200px;';
-    models.forEach(function(m){
-      var o = document.createElement('option');
-      o.value = m.id; o.textContent = m.provider + ' · ' + m.model;
-      if(m.id===window.DL_MODEL) o.selected = true;
-      o.style.color = '#0c0e0d';
-      sel.appendChild(o);
+    wrap.id = 'dl-ai-ctrl';
+    wrap.style.cssText = 'position:fixed;top:8px;right:10px;z-index:9999;font:12px/1.2 system-ui,sans-serif;display:flex;gap:6px;align-items:center;';
+
+    if(models.length){
+      var sel = document.createElement('select');
+      sel.setAttribute('aria-label','AI model');
+      sel.title = 'AI model — keys stay server-side';
+      sel.style.cssText = 'background:#121614;color:#8b918c;border:1px solid #2a302c;border-radius:7px;padding:4px 8px;max-width:200px;';
+      models.forEach(function(m){
+        var o = document.createElement('option');
+        o.value = m.id; o.textContent = m.provider + ' · ' + m.model;
+        if(m.id===window.DL_MODEL) o.selected = true;
+        o.style.color = '#0c0e0d';
+        sel.appendChild(o);
+      });
+      sel.onchange = function(){ window.DL_MODEL = sel.value; try{ localStorage.setItem(MODEL_KEY, sel.value); }catch(e){} };
+      wrap.appendChild(sel);
+    }
+
+    // 🔑 key affordance — ALWAYS shown (even with zero models) so you can add your
+    // first key. Optional, like HYDRA's token field; key is stored server-side.
+    var keyBtn = document.createElement('button');
+    keyBtn.type = 'button';
+    keyBtn.textContent = models.length ? '🔑' : '🔑 Add API key';
+    keyBtn.setAttribute('aria-label','Set an AI provider API key');
+    keyBtn.setAttribute('aria-expanded','false');
+    keyBtn.style.cssText = 'background:#121614;color:#8b918c;border:1px solid #2a302c;border-radius:7px;padding:4px 9px;cursor:pointer;';
+    wrap.appendChild(keyBtn);
+
+    var panel = document.createElement('div');
+    panel.style.cssText = 'display:none;position:absolute;top:34px;right:0;background:#101413;border:1px solid #2a302c;border-radius:9px;padding:10px;width:244px;box-shadow:0 6px 24px #0008;';
+    var psel = document.createElement('select');
+    psel.setAttribute('aria-label','Provider');
+    psel.style.cssText = 'width:100%;box-sizing:border-box;background:#0c0e0d;color:#cdd3cf;border:1px solid #2a302c;border-radius:6px;padding:5px;margin-bottom:6px;';
+    KEY_PROVIDERS.forEach(function(p){
+      var o=document.createElement('option'); o.value=p; o.textContent = p + (configured[p] ? '  ✓ set' : '');
+      psel.appendChild(o);
     });
-    sel.onchange = function(){ window.DL_MODEL = sel.value; try{ localStorage.setItem(MODEL_KEY, sel.value); }catch(e){} };
-    wrap.appendChild(sel);
+    var inp = document.createElement('input');
+    inp.type='password'; inp.placeholder='paste key (base URL for ollama)';
+    inp.setAttribute('aria-label','API key');
+    inp.style.cssText='width:100%;box-sizing:border-box;background:#0c0e0d;color:#cdd3cf;border:1px solid #2a302c;border-radius:6px;padding:6px;margin-bottom:6px;';
+    var save = document.createElement('button');
+    save.type='button'; save.textContent='Save key';
+    save.style.cssText='width:100%;background:#1c2a24;color:#7fe3b3;border:1px solid #2f5a47;border-radius:6px;padding:6px;cursor:pointer;';
+    var msg = document.createElement('div');
+    msg.setAttribute('aria-live','polite');
+    msg.style.cssText='color:#8b918c;margin-top:6px;min-height:14px;';
+    msg.textContent = 'Stored on the server, never in the browser.';
+    save.onclick = async function(){
+      save.disabled=true; msg.textContent='Saving…';
+      try{
+        var rr = await fetch('/api/ai/keys', {method:'POST',
+          headers:{'Content-Type':'application/json','X-Atlas-Token':(window.__DL_TOKEN__||'')},
+          body: JSON.stringify({provider:psel.value, key:inp.value})});
+        if(rr.ok){ inp.value=''; msg.textContent='Saved ✓'; bootModelPicker(); }
+        else { msg.textContent='Failed ('+rr.status+') — check the write token'; }
+      }catch(e){ msg.textContent='Error: '+(e&&e.message||e); }
+      save.disabled=false;
+    };
+    panel.appendChild(psel); panel.appendChild(inp); panel.appendChild(save); panel.appendChild(msg);
+    wrap.appendChild(panel);
+    keyBtn.onclick = function(){
+      var open = panel.style.display==='none';
+      panel.style.display = open ? 'block' : 'none';
+      keyBtn.setAttribute('aria-expanded', open ? 'true':'false');
+      if(open) inp.focus();
+    };
+
     document.body.appendChild(wrap);
   }
   bootModelPicker();

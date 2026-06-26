@@ -40,6 +40,7 @@ from . import (  # noqa: F401 — atlas_signal/dag_builder kept for v2 mutation 
     dispatcher,
     entities,
     intake,
+    keys,
     llm,
     state,
     storage,
@@ -91,6 +92,7 @@ def _maybe_start_daemon() -> None:
 @asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     auth.load_or_create_token()  # resolve/persist the shared write secret at startup
+    keys.load_into_env()  # apply any UI-saved provider keys (real env vars still win)
     _maybe_start_daemon()
     yield
     # The daemon thread is a daemon=True thread; it dies with the interpreter.
@@ -293,6 +295,28 @@ def ai_models() -> dict:
     picker can populate before the user authenticates a write."""
     models = llm.available_models()
     return {"models": models, "default": llm.default_model()}
+
+
+@app.get("/api/ai/keys")
+def ai_keys() -> dict:
+    """Which providers have a key configured. Booleans only — NEVER the key values."""
+    return {"configured": keys.configured()}
+
+
+@app.post("/api/ai/keys", dependencies=[Depends(auth.require_write_token)])
+async def ai_set_key(request: Request) -> Response:
+    """BYO-key from the UI. Body {provider, key} — empty key clears it. The key is
+    stored server-side (gitignored data dir) + applied to the process env so litellm
+    uses it; the response returns only the configured-booleans, never the value.
+    Write-token guarded: setting a key is a privileged, money-spending action."""
+    body = await request.json()
+    provider = (body.get("provider") or "").strip()
+    if not keys.set_key(provider, body.get("key") or ""):
+        return Response(
+            content=json.dumps({"error": f"unknown provider '{provider}'"}).encode(),
+            status_code=400, media_type="application/json",
+        )
+    return {"ok": True, "configured": keys.configured(), "models": llm.available_models()}
 
 
 def _ai_complete(model: str, system: str | None, messages: list, max_tokens: int) -> tuple[int, bytes]:

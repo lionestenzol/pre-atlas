@@ -1,5 +1,8 @@
 # Runtime data (regenerated per session by the CLI / tests).
 data/
+
+# Secrets: UI-saved provider API keys (also under data/, listed explicitly).
+provider_keys.json
 *.egg-info/
 __pycache__/
 *.pyc

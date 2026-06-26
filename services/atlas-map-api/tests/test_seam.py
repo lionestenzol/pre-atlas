@@ -136,6 +136,27 @@ def test_http_envelope_passes_data_through():
     assert r.status == "ok" and r.data == {"status": "ok"} and r.sha256 is None
 
 
+def test_lifecycle_receipts_chain_on_one_join_key():
+    """pack -> info -> unpack: three sigil capabilities, three stdout receipts, ONE
+    sha256. The seam lifts the same join key from each, so a chain keys on it in
+    either direction. Receipt shapes mirror sigil.py cmd_pack/cmd_info/cmd_unpack;
+    unpack now self-describes (container_bytes/ratio) symmetric with pack."""
+    def cli_env(cap: str, stdout: str) -> dict:
+        return {"ok": True, "surface": "sigil", "capability": cap, "kind": "cli",
+                "status": 0, "data": {"stdout": stdout, "stderr": ""}, "error": None, "meta": {}}
+
+    pack = f'{{"op": "pack", "carrier": "sgl", "sha256": "{SHA}", "ratio": 17.35, "dict_id": 0}}'
+    info = f'{{"op": "info", "magic": "SGL1", "sha256": "{SHA}", "container_len": 122}}'
+    unpack = f'{{"op": "unpack", "sha256": "{SHA}", "container_bytes": 122, "ratio": 17.35, "verified": true}}'
+
+    receipts = [Receipt.from_envelope(cli_env(c, s), produced_at=FIXED_TS)
+                for c, s in (("pack", pack), ("info", info), ("unpack", unpack))]
+    assert all(r.status == "ok" and r.tool == "sigil" for r in receipts)
+    assert {r.sha256 for r in receipts} == {SHA}          # one join key across the whole lifecycle
+    assert receipts[2].data["container_bytes"] == 122      # carry receipt self-describes like pack
+    assert receipts[2].data["ratio"] == 17.35
+
+
 # ---- hermetic end-to-end: call_capability -> envelope -> Receipt --------------
 def test_seam_end_to_end_through_gateway(monkeypatch):
     """The WHOLE chain without a real sigil install: enforce -> build_argv positional

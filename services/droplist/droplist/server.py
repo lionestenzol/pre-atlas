@@ -26,6 +26,7 @@ from . import (  # noqa: F401 — atlas_signal/dag_builder kept for v2 mutation 
     dispatcher,
     entities,
     intake,
+    llm,
     state,
     storage,
 )
@@ -153,48 +154,67 @@ def ui_chain() -> HTMLResponse:
 
 
 # ---------------------------------------------------------------------------
-# Server-side Anthropic proxy (Task B, 2026-06-25). The UIs used to POST straight
-# to api.anthropic.com from the browser — which both fails (CORS) and is a
-# client-side API-key path. This route holds the key server-side
-# (ANTHROPIC_API_KEY) and forwards the messages payload, so NO key ships to the
-# client (grep ui/ for sk-ant/api.anthropic.com comes back clean). Guarded by the
-# write token because it spends money. urllib in a threadpool = zero new deps and
-# never blocks the event loop. See ~/.claude/rules/common/code-as-furniture.md.
+# Swappable LLM proxy (Task B, litellm). The UIs used to POST straight to
+# api.anthropic.com from the browser — CORS-broken AND a client-side key path.
+# These routes hold every provider key server-side (litellm reads them from env)
+# and run one provider-agnostic `completion(model=...)`, so the user can pick
+# GPT-4o / Gemini / local Llama from a dropdown and NO key ships to the client.
+# The response is normalized to the Anthropic shape the UI already parses, so
+# nothing in line.html's data.content handling changes. Guarded by the write
+# token because it spends money; runs in a threadpool so the blocking SDK call
+# never stalls the event loop.
+# See assemble-first.md (litellm, not a 2nd HTTP path) + code-as-furniture.md.
 # ---------------------------------------------------------------------------
-_ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
-_ANTHROPIC_VERSION = "2023-06-01"
 
 
-def _forward_anthropic(payload: bytes) -> tuple[int, bytes]:
-    """Blocking POST to Anthropic with the server-side key. Runs in a threadpool."""
-    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if not key:
-        return 503, b'{"error":"ANTHROPIC_API_KEY is not set on the server"}'
-    req = urllib.request.Request(
-        _ANTHROPIC_URL, data=payload, method="POST",
-        headers={
-            "content-type": "application/json",
-            "x-api-key": key,
-            "anthropic-version": _ANTHROPIC_VERSION,
-        },
-    )
+@app.get("/api/ai/models")
+def ai_models() -> dict:
+    """Models the server can actually run right now (key present, or local Ollama).
+
+    Public read — it leaks no secret, only which providers are configured — so the
+    picker can populate before the user authenticates a write."""
+    models = llm.available_models()
+    return {"models": models, "default": llm.default_model()}
+
+
+def _ai_complete(model: str, system: str | None, messages: list, max_tokens: int) -> tuple[int, bytes]:
+    """Blocking litellm completion → (status, Anthropic-shaped JSON bytes). Threadpool."""
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            return resp.getcode(), resp.read()
-    except urllib.error.HTTPError as e:
-        return e.code, e.read()
-    except Exception as e:  # noqa: BLE001 — network/timeout surfaces as 502
-        return 502, json.dumps({"error": f"anthropic proxy failed: {e}"}).encode()
+        payload = llm.complete(model=model, messages=messages, system=system, max_tokens=max_tokens, purpose="ui")
+        return 200, json.dumps(payload).encode()
+    except Exception as e:  # noqa: BLE001 — provider/network error surfaces as 502
+        return 502, json.dumps({"error": f"completion failed: {e}"}).encode()
+
+
+@app.post("/api/ai/complete", dependencies=[Depends(auth.require_write_token)])
+async def proxy_complete(request: Request) -> Response:
+    """Provider-agnostic completion. Body: {model, max_tokens, system, messages}
+    where `model` is a litellm id (e.g. ``openai/gpt-4o``, ``ollama/llama3``).
+    Returns Anthropic-shaped ``{content:[{type,text}], model, estimated_cost}``."""
+    body = await request.json()
+    model = (body.get("model") or "").strip()
+    if not model:
+        return Response(
+            content=json.dumps({"error": "model is required"}).encode(),
+            status_code=400, media_type="application/json",
+        )
+    status, out = await run_in_threadpool(
+        _ai_complete, model, body.get("system"), body.get("messages") or [], int(body.get("max_tokens") or 1024),
+    )
+    return Response(content=out, status_code=status, media_type="application/json")
 
 
 @app.post("/api/ai/anthropic", dependencies=[Depends(auth.require_write_token)])
 async def proxy_anthropic(request: Request) -> Response:
-    """Forward an Anthropic /v1/messages request using the server-side key. The
-    body is the same {model, max_tokens, system, messages} the UI already builds;
-    the upstream response is passed straight back so the UI's data.content parse
-    is unchanged."""
-    body = await request.body()
-    status, out = await run_in_threadpool(_forward_anthropic, body)
+    """Back-compat alias for any caller still posting the old Anthropic shape —
+    routes through the same litellm path, forcing the anthropic/ provider."""
+    body = await request.json()
+    model = (body.get("model") or "claude-sonnet-4-20250514").strip()
+    if "/" not in model:
+        model = f"anthropic/{model}"
+    status, out = await run_in_threadpool(
+        _ai_complete, model, body.get("system"), body.get("messages") or [], int(body.get("max_tokens") or 1024),
+    )
     return Response(content=out, status_code=status, media_type="application/json")
 
 

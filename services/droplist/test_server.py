@@ -40,7 +40,7 @@ os.environ["DROPLIST_DATA"] = _TMP
 os.environ.pop("DROPLIST_ATLAS_SIGNALS_URL", None)
 
 import uvicorn  # noqa: E402
-from droplist import entities, graph_engine, state  # noqa: E402
+from droplist import auth, entities, graph_engine, state, storage  # noqa: E402
 from droplist.server import app  # noqa: E402
 
 
@@ -97,6 +97,33 @@ def _get_raw(base: str, path: str) -> tuple[int, str, str, str | None]:
         return e.code, "", "", f"http {e.code}"
     except Exception as e:  # noqa: BLE001
         return 0, "", "", f"{type(e).__name__}: {e}"
+
+
+def _post_json(
+    base: str, path: str, payload: object, token: str | None = None
+) -> tuple[int, object | None, str | None]:
+    """POST JSON to base+path with an optional X-Atlas-Token write header.
+    Returns (status, parsed_json_or_None, error_or_None)."""
+    try:
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(base + path, data=data, method="POST")
+        req.add_header("Content-Type", "application/json")
+        if token:
+            req.add_header("X-Atlas-Token", token)
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            status = resp.getcode()
+            raw = resp.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read().decode("utf-8")), None
+        except Exception:  # noqa: BLE001
+            return e.code, None, f"http {e.code}"
+    except Exception as e:  # noqa: BLE001
+        return 0, None, f"{type(e).__name__}: {e}"
+    try:
+        return status, json.loads(raw), None
+    except json.JSONDecodeError as e:
+        return status, None, f"json decode: {e}"
 
 
 # ---------------------------------------------------------------------------
@@ -201,6 +228,77 @@ def run() -> int:
         ok = st == 200 and isinstance(body, dict) and "nodes" in body
         rows.append(("GET /api/dag/sample", str(st),
                      err or (f"keys ok ({body.get('dag_id')})" if ok else "no dag"), ok))
+
+        # ---- Write round-trip (KEYSTONE wire, seq01 Task A) -----------------
+        # The exact calls the served UI (ui/line.html EngineClient) now issues as a
+        # real engine client. The engine separates capture (a secured PACKET) from
+        # planning (a DAG), so the two proofs are independent:
+        #   capture     -> POST /api/drop secures a packet (reflected in /api/packets)
+        #   completion  -> POST .../node/{id}/complete flips a real DAG node and
+        #                  writes a node_completed row to dag_events.
+        # Both die in a localStorage twin before this wire; both reach the engine now.
+        token = auth.current_token()
+
+        # capture: a drop secures a packet in the engine (the drop list grows by one)
+        st, body, _ = _get_json(base, "/api/packets")
+        pkts_before = body.get("total") if isinstance(body, dict) else None
+        w_raw = "Wire smoke: call the feed store about the 50lb rabbit pellet order."
+        st, body, err = _post_json(base, "/api/drop", {"raw": w_raw}, token)
+        secured = (st == 200 and isinstance(body, dict)
+                   and body.get("status") == "secured")
+        rows.append(("POST /api/drop (UI capture)", str(st),
+                     err or (f"status={body.get('status')!r}"
+                             if isinstance(body, dict) else "no body"), secured))
+
+        st, body, _ = _get_json(base, "/api/packets")
+        pkts_after = body.get("total") if isinstance(body, dict) else None
+        reflected = (isinstance(pkts_before, int)
+                     and pkts_after == pkts_before + 1)
+        rows.append(("GET /api/packets reflects drop", "200",
+                     f"total {pkts_before}->{pkts_after}", reflected))
+
+        # completion: the UI completes the first COMPLETABLE node (status != done,
+        # deps satisfied) of a DAG-backed job. Build a benign errand DAG for this --
+        # the seeded 'doe' emergency routes straight to needs_human with its first
+        # node already resolved, so it has nothing freshly completable.
+        comp_dag_id = graph_engine.run_graph(
+            "Refill the rabbit water bottles in the morning."
+        )["dag_id"]
+        node_id: str | None = None
+        st, body, _ = _get_json(base, f"/api/dag/{comp_dag_id}/checklist")
+        if st == 200 and isinstance(body, dict):
+            completable = [t for t in body.get("tasks", [])
+                           if t.get("status") != "done" and not t.get("blocked_by")]
+            node_id = completable[0]["id"] if completable else None
+
+        if node_id:
+            st, body, err = _post_json(
+                base, f"/api/dag/{comp_dag_id}/node/{node_id}/complete", {}, token)
+            comp_ok = (st == 200 and isinstance(body, dict)
+                       and body.get("dag_id") == comp_dag_id)
+            rows.append(("POST .../node/{id}/complete", str(st),
+                         err or (f"dag_status={body.get('dag_status')!r}"
+                                 if isinstance(body, dict) else "no body"),
+                         comp_ok))
+        else:
+            rows.append(("POST .../node/{id}/complete", "skip",
+                         "no completable node", False))
+
+        # the completion wrote a node_completed row to the dag_events log
+        events = storage.read_all(storage.DAG_EVENTS)
+        wrote_event = any(
+            e.get("event") == "node_completed"
+            and e.get("dag_id") == comp_dag_id
+            and e.get("node_id") == node_id
+            for e in events
+        )
+        rows.append(("dag_events node_completed", "ok" if wrote_event else "?",
+                     "row present" if wrote_event else "row missing", wrote_event))
+
+        # auth gate: the same write WITHOUT the token must be rejected (401)
+        st, _, _ = _post_json(base, "/api/drop", {"raw": "no token here"}, token=None)
+        rows.append(("POST /api/drop sans token", str(st), "401 expected",
+                     st == 401))
 
         # ---- table ----
         ep_w = max(len("endpoint"), max(len(r[0]) for r in rows))

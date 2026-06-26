@@ -401,6 +401,16 @@ function nextWaitingTitle(){
 }
 function completeActive(){
   const j = activeJob(); if(!j) return;
+  // Engine-backed: completing here is a real node-complete on the server, then a re-hydrate.
+  // See ~/.claude/rules/common/code-as-furniture.md -- the dead localStorage twin is gone.
+  if(window.EngineClient && EngineClient.wired && j.serverBacked && j.dagId){
+    const step = (j.steps||[]).find(s=>!s.done && s.ready) || (j.steps||[]).find(s=>!s.done);
+    if(step && step.nodeId){
+      step.done = true; save(); render();            // optimistic; hydrate reconciles to server truth
+      EngineClient.complete(j.dagId, step.nodeId);
+      return;
+    }
+  }
   const si = activeStepIndex(j);
   if(si>=0){ j.steps[si].done = true; if(activeStepIndex(j) === -1){ j.status='done'; advance(); } }
   else { j.status='done'; advance(); }
@@ -527,6 +537,7 @@ function minAdd(){
   S.jobs.push(newJob(tx)); ensureActive();
   if(typeof logEvent==='function') logEvent('add','Added "'+tx+'"');
   save(); render();
+  if(window.EngineClient && EngineClient.wired) EngineClient.drop(tx);  // real intake + re-hydrate
 }
 
 function scrNow(){
@@ -823,9 +834,9 @@ function openStuck(){
         try{
           const blk = j._block ? ('Block type: '+j._block+'. ') : '';
           const wh = (el.querySelector('#s_where')?.value || j._where || '');
-          const res = await fetch("/api/ai/anthropic",{
+          const res = await fetch("/api/ai/complete",{
             method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
-            body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:200,
+            body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:200,
               system:'A task is stuck. Given the task, where it stalled, and the block type, return ONLY the single smallest concrete next physical action that breaks the block. One imperative line. No preamble, no quotes, no explanation.',
               messages:[{role:"user", content:'TASK: '+j.title+'\n'+blk+(wh?('Stalled at: '+wh):'')}] })
           });
@@ -994,6 +1005,7 @@ function addDrops(){
   if(!lines.length){ view='today'; render(); return; }
   lines.forEach(l=>S.jobs.push(newJob(l)));
   ensureActive(); LINE.raw=''; save(); view='today'; render();
+  if(window.EngineClient && EngineClient.wired) EngineClient.dropMany(lines);  // real intake + re-hydrate
 }
 
 function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -1463,9 +1475,9 @@ async function lineCall(stage, raw, ctx){
   const userMsg = `RAW DROP FROM USER:\n"""\n${raw}\n"""\n\n` +
     (ctx ? `CONTEXT FROM EARLIER STATIONS:\n${ctx}\n\n` : '') +
     `Do your job as the ${stage.name} Agent now. Output only your station's result.`;
-  const res = await fetch("/api/ai/anthropic", {
+  const res = await fetch("/api/ai/complete", {
     method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
-    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000,
+    body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:1000,
       system: stage.sys, messages:[{role:"user", content:userMsg}] })
   });
   if(!res.ok) throw new Error("Station "+stage.name+" returned "+res.status);
@@ -1514,9 +1526,9 @@ async function dropReroute(){
   if(tgt){
     let move=null;
     try{
-      const res = await fetch("/api/ai/anthropic",{
+      const res = await fetch("/api/ai/complete",{
         method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
-        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:220,
+        body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:220,
           system:'A task is stalled. Given the task and what the user tried, return ONLY a JSON object, no markdown: {"nextMove": the single smallest concrete next physical action, "doneMeans": the observable done condition}. Keep both tight.',
           messages:[{role:"user", content:'TASK: '+tgt.title+(note?('\nTRIED / STALLED AT: '+note):'')}] })
       });
@@ -1537,9 +1549,9 @@ async function dropReroute(){
   LINE.raw = note;
   let job=null;
   try{
-    const res = await fetch("/api/ai/anthropic",{
+    const res = await fetch("/api/ai/complete",{
       method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
-      body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:300,
+      body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:300,
         system:'The user dropped ONE thing they are stuck on or unsure how to start. Return ONLY a JSON object, no markdown, no prose: {"title": short imperative task name, "nextMove": the single smallest concrete next physical action, "doneMeans": the observable done condition}. Keep every value tight.',
         messages:[{role:"user", content:LINE.raw}] })
     });
@@ -1564,9 +1576,9 @@ async function lineFire(){
   let job=null;
   try{
     const ctx = LINE_STAGES.map(s=>LINE.outputs[s.id]?('### '+s.name+'\n'+LINE.outputs[s.id]):'').filter(Boolean).join('\n\n');
-    const res = await fetch("/api/ai/anthropic", {
+    const res = await fetch("/api/ai/complete", {
       method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
-      body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:600,
+      body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:600,
         system:'You convert a finished triage into ONE actionable task for a do-one-thing app. Return ONLY a JSON object, no markdown fences, no prose: {"title": short imperative task name, "nextMove": the single concrete next physical action, "doneMeans": the observable done condition, "why": one tight line on why it matters}. Keep every value short.',
         messages:[{role:"user", content:'RAW DROP:\n'+LINE.raw+'\n\nTRIAGE OUTPUT:\n'+ctx+'\n\nEmit the job JSON only.'}] })
     });
@@ -1585,6 +1597,7 @@ async function lineFire(){
   save();
   LINE.fired=true; LINE.firing=false;
   view='now'; render();
+  if(window.EngineClient && EngineClient.wired) EngineClient.drop(nj.title);  // real intake + re-hydrate
 }
 
 function lineReset(){ LINE.raw=''; LINE.outputs={}; LINE.status={}; LINE.open=new Set(); LINE.verdict=''; LINE.closeText=''; LINE.err=''; LINE.fired=false; render(); }
@@ -1607,32 +1620,148 @@ function lineSeed(){
 })();
 </script>
 <script>
-/* Minimal-touch live wiring: GET /api/now, populate via tryWireLive(data) or
-   data-bind="<key>" elements. Silent fallback to demo state on any error.
+/* Engine client (KEYSTONE wire). Makes line.html a real client of the DropList engine instead
+   of a localStorage-only twin. READS hydrate S.jobs from the DAG store; WRITES (drop/complete)
+   go to the authenticated API and then re-hydrate from server truth. localStorage is demoted to
+   an optimistic first-paint cache, never the source of truth. Graceful: if the engine is
+   unreachable, wired stays false and the app behaves exactly as the offline demo (no regression).
+   The old bridge fetched /api/now and handed it to tryWireLive() -- a function that was never
+   defined -- so every server response was parsed and discarded.
    See ~/.claude/rules/common/code-as-furniture.md -- no broken code left in place. */
 (function(){
-  var url = window.location.origin + '/api/now';
-  fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
-    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-    .then(function(data){
-      if(typeof window.tryWireLive === 'function'){
-        window.tryWireLive(data);
-      } else {
-        document.querySelectorAll('[data-bind]').forEach(function(el){
-          var k = el.getAttribute('data-bind');
-          if(k && data && Object.prototype.hasOwnProperty.call(data, k)){
-            var v = data[k];
-            if(v == null) return;
-            if(typeof v === 'string' && /<[a-z][\s\S]*>/i.test(v)) el.innerHTML = v;
-            else el.textContent = String(v);
-          }
-        });
-      }
-      console.log('[droplist line] live wire OK from', url);
-    })
-    .catch(function(err){
-      console.log('[droplist line] live wire fallback to demo state:', err && err.message || err);
+  var TOKEN = (window.__DL_TOKEN__||'');
+  function hdrs(write){ var h={'Accept':'application/json'}; if(write){ h['Content-Type']='application/json'; h['X-Atlas-Token']=TOKEN; } return h; }
+  function mapStatus(s){ return s==='complete' ? 'done' : 'waiting'; }
+
+  // Map one engine DAG (via its checklist, which carries node ids + per-node status) into a UI job.
+  async function jobFromChecklist(dagId, fallbackGoal){
+    var cl = await fetch('/api/dag/'+encodeURIComponent(dagId)+'/checklist', {headers:hdrs(false), cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('checklist '+r.status); return r.json(); });
+    var tasks = cl.tasks || [];
+    var steps = tasks.map(function(t){
+      return { text:t.title||'', done:t.status==='done', ready:t.status==='ready', nodeId:t.id, doneCond:t.done_condition||'' };
     });
+    var nextTask = tasks.find(function(t){ return t.status!=='done'; });
+    return {
+      id: cl.dag_id, dagId: cl.dag_id, serverBacked:true,
+      title: cl.goal || fallbackGoal || '(untitled)',
+      why:'', doneMeans: steps.map(function(s){return s.doneCond;}).filter(Boolean).join('; '),
+      nextMove: nextTask ? nextTask.title : '',
+      steps: steps, status: mapStatus(cl.status)
+    };
+  }
+
+  var EngineClient = {
+    wired:false,
+    // READ: rebuild S.jobs from the engine and re-render -- the single source of truth.
+    // The engine separates capture (a secured PACKET) from planning (a DAG). DAG-backed
+    // jobs carry steps + node ids and are completable; a captured packet that has not yet
+    // been planned into a DAG shows as a pending job so a drop is never lost. A packet that
+    // already owns a DAG (matched by source_drop) is represented by that DAG, not duplicated.
+    async hydrate(){
+      try{
+        var pair = await Promise.all([
+          fetch('/api/dags', {headers:hdrs(false), cache:'no-store'}),
+          fetch('/api/packets', {headers:hdrs(false), cache:'no-store'})
+        ]);
+        if(!pair[0].ok) throw new Error('dags '+pair[0].status);
+        var dags = (await pair[0].json()).dags || [];
+        var packets = pair[1].ok ? ((await pair[1].json()).packets || []) : [];
+        var openDags = dags.filter(function(d){ return d.status!=='complete'; });
+        var dagJobs = await Promise.all(openDags.map(function(d){ return jobFromChecklist(d.dag_id, d.goal); }));
+        var planned = {};
+        dags.forEach(function(d){ if(d.source_drop) planned[d.source_drop]=true; });
+        var pktJobs = packets.filter(function(p){
+          var id = p.drop_id || p.id;
+          return id && !planned[id] && p.status!=='done' && p.status!=='dropped';
+        }).map(function(p){
+          return { id:'pkt:'+(p.drop_id||p.id), dropId:(p.drop_id||p.id), serverBacked:true, pending:true,
+                   title: p.next_action || p.normalized_input || p.title || '(captured)',
+                   why:'', doneMeans:'', nextMove:'', steps:[], status:'waiting' };
+        });
+        if(typeof S==='undefined' || !S) return false;
+        var jobs = dagJobs.concat(pktJobs);   // DAG-backed jobs first -> they win the active slot
+        var prevActive = S.activeId;
+        S.jobs = jobs;
+        var keep = prevActive && jobs.filter(function(j){ return j.id===prevActive && j.status!=='done'; })[0];
+        if(keep){ keep.status='active'; S.activeId=keep.id; }
+        else if(typeof ensureActive==='function'){ ensureActive(); }
+        this.wired = true;
+        if(typeof save==='function') save();
+        if(typeof render==='function') render();
+        console.log('[droplist line] hydrated '+dagJobs.length+' job(s) + '+pktJobs.length+' pending capture(s) from engine');
+        return true;
+      }catch(err){
+        console.log('[droplist line] engine unreachable, staying on local demo state:', err && err.message || err);
+        return false;
+      }
+    },
+    // WRITE: a captured thought goes through the intake valve (bouncer + chainer -> packet + DAG).
+    async dropRaw(raw){
+      var r = await fetch('/api/drop', {method:'POST', headers:hdrs(true), body:JSON.stringify({raw:raw})});
+      if(!r.ok) throw new Error('drop '+r.status);
+      return r.json();
+    },
+    async drop(raw){
+      try{ await this.dropRaw(raw); await this.hydrate(); }
+      catch(err){ console.log('[droplist line] drop failed, kept local optimistic copy:', err && err.message || err); }
+    },
+    async dropMany(list){
+      try{ for(var i=0;i<list.length;i++){ await this.dropRaw(list[i]); } await this.hydrate(); }
+      catch(err){ console.log('[droplist line] dropMany failed:', err && err.message || err); }
+    },
+    // WRITE: mark an engine node done (unblocks dependents, writes a dag_events row), then re-hydrate.
+    async complete(dagId, nodeId){
+      try{
+        var r = await fetch('/api/dag/'+encodeURIComponent(dagId)+'/node/'+encodeURIComponent(nodeId)+'/complete',
+          {method:'POST', headers:hdrs(true), body:'{}'});
+        if(!r.ok && r.status!==409) throw new Error('complete '+r.status);
+        await this.hydrate();
+      }catch(err){ console.log('[droplist line] complete failed:', err && err.message || err); }
+    }
+  };
+  window.EngineClient = EngineClient;
+  // Back-compat with the old bridge contract: tryWireLive now triggers a real hydrate.
+  window.tryWireLive = function(){ return EngineClient.hydrate(); };
+
+  // ---- Swappable LLM picker (Task B, litellm). Populates from /api/ai/models
+  // (only providers the server has keys for), persists choice, and sets the
+  // window.DL_MODEL that the 5 AI call sites read. No model = AI buttons still
+  // work as no-ops (they already try/catch to a manual fallback). ----
+  var MODEL_KEY = 'droplist:model:v1';
+  window.DL_MODEL = (function(){ try{ return localStorage.getItem(MODEL_KEY) || ''; }catch(e){ return ''; } })();
+  async function bootModelPicker(){
+    var models = [], def = null;
+    try{
+      var r = await fetch('/api/ai/models');
+      if(r.ok){ var j = await r.json(); models = j.models||[]; def = j.default||null; }
+    }catch(e){ /* offline / desktop pre-server — leave DL_MODEL as-is */ }
+    if(!window.DL_MODEL && def) window.DL_MODEL = def;
+    // keep persisted choice only if still available; else fall back to default
+    if(models.length && !models.some(function(m){return m.id===window.DL_MODEL;})) window.DL_MODEL = def || models[0].id;
+    if(window.DL_MODEL){ try{ localStorage.setItem(MODEL_KEY, window.DL_MODEL); }catch(e){} }
+    if(!models.length) return; // nothing to pick between — hide the control entirely
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;top:8px;right:10px;z-index:9999;font:12px/1.2 system-ui,sans-serif;';
+    var sel = document.createElement('select');
+    sel.setAttribute('aria-label','AI model');
+    sel.title = 'AI model — keys stay server-side';
+    sel.style.cssText = 'background:#12161400;color:#8b918c;border:1px solid #2a302c;border-radius:7px;padding:4px 8px;max-width:200px;';
+    models.forEach(function(m){
+      var o = document.createElement('option');
+      o.value = m.id; o.textContent = m.provider + ' · ' + m.model;
+      if(m.id===window.DL_MODEL) o.selected = true;
+      o.style.color = '#0c0e0d';
+      sel.appendChild(o);
+    });
+    sel.onchange = function(){ window.DL_MODEL = sel.value; try{ localStorage.setItem(MODEL_KEY, sel.value); }catch(e){} };
+    wrap.appendChild(sel);
+    document.body.appendChild(wrap);
+  }
+  bootModelPicker();
+
+  // Boot: overlay engine truth on top of the instant localStorage first-paint.
+  EngineClient.hydrate();
 })();
 </script>
 </body>

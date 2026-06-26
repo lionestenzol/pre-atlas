@@ -738,12 +738,33 @@ function scrDayDetail(){
 
 function mountSheet(){
   const old = document.querySelector('.sheet-bg'); if(old) old.remove();
+  const prevFocus = document.activeElement;
   const el = document.createElement('div');
   el.className='sheet-bg';
-  el.innerHTML = `<div class="sheet" onclick="event.stopPropagation()"><div class="grab"></div>${sheet.html()}</div>`;
-  el.addEventListener('click',()=>{ sheet=null; el.remove(); render(); });
+  // a11y: real modal dialog -- role + aria-modal, focus moved in, Escape closes, Tab is trapped.
+  // See ~/.claude/rules/common/code-as-furniture.md -- keyboard trap fixed, not documented-and-left.
+  el.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" tabindex="-1" onclick="event.stopPropagation()"><div class="grab"></div>${sheet.html()}</div>`;
+  const panel = el.querySelector('.sheet');
+  const focusables = ()=> Array.prototype.slice.call(panel.querySelectorAll(
+    'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'));
+  const closeSheet = ()=>{
+    sheet=null; el.remove(); render();
+    if(prevFocus && typeof prevFocus.focus==='function') prevFocus.focus();
+  };
+  // keydown bound to el so the listener auto-detaches when the sheet is removed (any close path).
+  el.addEventListener('keydown',(ev)=>{
+    if(ev.key==='Escape'){ ev.preventDefault(); closeSheet(); return; }
+    if(ev.key!=='Tab') return;
+    const f = focusables(); if(!f.length){ ev.preventDefault(); panel.focus(); return; }
+    const first=f[0], last=f[f.length-1];
+    if(ev.shiftKey && document.activeElement===first){ ev.preventDefault(); last.focus(); }
+    else if(!ev.shiftKey && document.activeElement===last){ ev.preventDefault(); first.focus(); }
+  });
+  el.addEventListener('click', closeSheet);
   document.body.appendChild(el);
   sheet.bind(el);
+  // Move focus into the dialog (first field, else the panel) for keyboard/screen-reader users.
+  const f = focusables(); (f[0] || panel).focus();
 }
 
 function openDetail(id){
@@ -1694,9 +1715,19 @@ function lineSeed(){
         });
         if(typeof S==='undefined' || !S) return false;
         var jobs = dagJobs.concat(pktJobs);   // DAG-backed jobs first -> they win the active slot
+        // Merge-not-replace: keep local-only jobs the engine has never seen (captured while
+        // offline / not yet synced) so a hydrate on reconnect can't destroy un-pushed work.
+        // Engine jobs carry serverBacked; anything else is local user content. Dedupe by id so
+        // a local job that has since become a DAG is not shown twice.
+        // See ~/.claude/rules/common/code-as-furniture.md -- data-loss fix, not documented-and-left.
+        var seen = {};
+        jobs.forEach(function(j){ if(j && j.id) seen[j.id]=true; });
+        var localOnly = (S.jobs||[]).filter(function(j){
+          return j && !j.serverBacked && j.id && !seen[j.id] && j.status!=='done';
+        });
         var prevActive = S.activeId;
-        S.jobs = jobs;
-        var keep = prevActive && jobs.filter(function(j){ return j.id===prevActive && j.status!=='done'; })[0];
+        S.jobs = jobs.concat(localOnly);
+        var keep = prevActive && S.jobs.filter(function(j){ return j.id===prevActive && j.status!=='done'; })[0];
         if(keep){ keep.status='active'; S.activeId=keep.id; }
         else if(typeof ensureActive==='function'){ ensureActive(); }
         this.wired = true;

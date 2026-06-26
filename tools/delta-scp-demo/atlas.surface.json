@@ -1,0 +1,26 @@
+{
+  "surface": "delta-scp-demo",
+  "headline": "delta-scp compression demo-server (127.0.0.1:3012). The carry stage: submit a compression job, read its result by id. Consumes a sigil sha256 as the carried artifact's identity (mints UUID job ids, not content-addresses).",
+  "kind": "http",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "healthz",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /healthz",
+      "evidence": "C:/Users/bruke/pre-atlas/services/delta-scp/src/demo-server.ts:125-127 (GET /healthz -> {ok:true, service, mode})",
+      "notes": "The always-available read with no precondition: the seam's liveness probe that the carry stage is reachable. Server is launched via npx tsx (launch.json name 'delta-scp-demo' port 3012); the gateway proxies live and does NOT auto-start it."
+    },
+    {
+      "id": "get-job",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /jobs/{id}",
+      "evidence": "C:/Users/bruke/pre-atlas/services/delta-scp/src/demo-server.ts:192-199 (GET /jobs/:id -> {ok:true, job} | 404 {ok:false, error})",
+      "notes": "Reads one compression job by UUID id minted by a prior POST /jobs (a write, gated off unless DESCRIBE_GATEWAY_WRITES=1). Jobs live in an in-memory Map (demo-server.ts:98), so an id does not survive a server restart."
+    }
+  ]
+}

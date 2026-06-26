@@ -181,3 +181,48 @@ def test_seam_end_to_end_through_gateway(monkeypatch):
     assert captured["argv"][1:] == ["info", "C:/x/sample.sgl"]
     r = Receipt.from_envelope(env, produced_at=FIXED_TS)
     assert r.status == "ok" and r.sha256 == SHA and r.tool == "sigil"
+
+
+# ---- the fan-out: binre / gw / st3gg / delta-scp-demo --------------------------
+def test_fanout_overlays_are_wellformed():
+    """The 4 fan-out surfaces load with the right kind and a resolvable invoke."""
+    snap = load_snapshot()
+
+    binre = d.load_overlay(snap.repo_root, "binre")
+    rep = next(c for c in binre.capabilities if c.id == "report")
+    assert binre.kind == "cli" and rep.direction == "read"
+    assert rep.invoke == "python tools/binre/report.py {target}"   # path relative to repo_root (gateway cwd)
+    assert gateway.declared_params(rep.invoke, rep.needs) == {"target"}
+
+    gw = d.load_overlay(snap.repo_root, "groundwork-cli")
+    idx = next(c for c in gw.capabilities if c.id == "index")
+    assert gw.kind == "cli" and idx.direction == "write"           # writes .groundwork/ -> double-gated
+    assert gateway.declared_params(idx.invoke, idx.needs) == {"root"}
+
+    st = d.load_overlay(snap.repo_root, "st3gg")
+    an = next(c for c in st.capabilities if c.id == "analyze")
+    assert st.kind == "cli" and an.direction == "read"             # analyze only; decode is NOT exposed
+    assert gateway.declared_params(an.invoke, an.needs) == {"input"}
+    assert "decode" not in {c.id for c in st.capabilities}         # injection channel stays off the seam
+
+    dscp = d.load_overlay(snap.repo_root, "delta-scp-demo")
+    assert dscp.kind == "http"                                     # name MUST match launch.json -> port 3012
+    assert {c.invoke for c in dscp.capabilities} == {"GET /healthz", "GET /jobs/{id}"}
+
+
+def test_fanout_receipts_lift_each_tools_join_key():
+    """binre/gw/st3gg each print a stdout JSON receipt carrying sha256; the seam
+    Receipt lifts it as the join key. Shapes mirror the live proofs."""
+    def cli_env(surface: str, stdout: str) -> dict:
+        return {"ok": True, "surface": surface, "kind": "cli", "status": 0,
+                "data": {"stdout": stdout, "stderr": ""}, "error": None, "meta": {}}
+
+    cases = {
+        "binre": f'{{"tool":"binre","op":"report","sha256":"{SHA}","found":true}}',
+        "groundwork-cli": f'{{"tool":"gw","op":"index","sha256":"{SHA}","subsystem_count":1}}',
+        "st3gg": f'{{"tool":"st3gg","op":"analyze","sha256":"{SHA}","analysis":{{}}}}',
+    }
+    for surface, stdout in cases.items():
+        r = Receipt.from_envelope(cli_env(surface, stdout), produced_at=FIXED_TS)
+        assert r.status == "ok" and r.sha256 == SHA, f"{surface} did not lift the join key"
+        assert r.tool == surface

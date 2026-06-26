@@ -1,0 +1,19 @@
+{
+  "surface": "groundwork-cli",
+  "headline": "Deterministic recon->map->plan CLI (gw). The compile stage's fast structural read: walks a repo into system-index.json. `index --json` emits a content-addressed receipt (sha256 of the canonical index, minus the wall-clock stamp) as the seam join key.",
+  "kind": "cli",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "index",
+      "label": "Index a repo into system-index.json and mint a content-addressed receipt",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "gw index {root} --json",
+      "needs": ["root"],
+      "evidence": "C:/Users/bruke/groundwork-cli/groundwork/cli.py:62 cmd_index (--json branch); pyproject.toml:15 console script gw=groundwork.cli:main",
+      "notes": "Writes <root>/.groundwork/system-index.json (a write) then prints {tool,op,sha256,subsystem_count,artifacts}. sha256 is over the canonical index with generated_at stripped -> a STABLE join key for the same tree. {root} must be a forward-slash path. Large trees may approach the 20s gateway timeout (full os.walk + per-file LOC)."
+    }
+  ]
+}

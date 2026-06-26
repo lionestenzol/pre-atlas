@@ -475,7 +475,7 @@ function lineBodyHTML(){
     const open = LINE.open.has(s.id);
     const statTxt = stt==='idle' ? 'idle' : stt;
     return `<div class="ln-st ${stt}" id="ln-st-${s.id}">
-      <div class="ln-head" data-lntoggle="${s.id}">
+      <div class="ln-head" data-lntoggle="${s.id}" role="button" tabindex="0" aria-expanded="${open?'true':'false'}" aria-label="Toggle stage ${s.name}">
         <span class="ln-num">0${i+1}</span>
         <span class="ln-meta"><span class="ln-name display">${s.name}</span><span class="ln-tag">${s.tag}</span></span>
         <span class="ln-stat" id="ln-stat-${s.id}">${statTxt}</span>
@@ -650,7 +650,7 @@ function scrToday(){
   const sorted = [...jobs].sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
   const live = sorted.filter(j=>['active','waiting','stuck','carry'].includes(j.status));
   const closed = sorted.filter(j=>['done','skipped'].includes(j.status));
-  const rowHTML = j=>`<div class="row ${j.status} ${j.status==='active'?'active':''}" data-act="opendetail" data-id="${j.id}">
+  const rowHTML = j=>`<div class="row ${j.status} ${j.status==='active'?'active':''}" data-act="opendetail" data-id="${j.id}" role="button" tabindex="0" aria-label="Open job ${esc(j.title)} (${j.status})">
       <span class="ttl">${esc(j.title)}</span><span class="chip ${j.status}">${j.status}</span></div>`;
   return `<div class="scr">
     <div class="kicker">Today's Queue</div>
@@ -1080,6 +1080,15 @@ document.addEventListener('click', e=>{
   setTimeout(()=>{ diffAndLog(snap); reconcileTask(); saveMetrics(); renderPanel(); if(xray) annotate(); }, 0);
 }, true);
 
+// A11y: Enter/Space on our role="button" rows/heads fires the same onclick handler
+// (job rows :653, station heads :478 are focusable divs, not native buttons).
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Enter' && e.key!==' ') return;
+  const el=e.target;
+  if(!el || ['BUTTON','INPUT','TEXTAREA','A','SELECT'].includes(el.tagName)) return;
+  if(el.getAttribute('role')==='button' && el.hasAttribute('tabindex')){ e.preventDefault(); el.click(); }
+});
+
 function openLoops(){ return S.jobs.filter(j=>['waiting','active','stuck','carry'].includes(j.status)).length; }
 const WEIGHTS={waiting:1, active:1, stuck:2, carry:1.5};
 function weightedLoad(){ return +S.jobs.reduce((s,j)=>s+(WEIGHTS[j.status]||0),0).toFixed(2); }
@@ -1398,14 +1407,18 @@ function apStop(reason){
 }
 
 
-document.getElementById('tgMin').onclick=function(){ MODE='min'; saveMode(); render(); };
+document.getElementById('tgMin').onclick=function(){ MODE='min'; saveMode(); this.setAttribute('aria-pressed','true'); render(); };
 document.getElementById('tgXray').onclick=function(){
   xray=!xray;
   this.classList.toggle('on',xray);
+  this.setAttribute('aria-pressed', xray?'true':'false');
   this.querySelector('span').textContent = xray?'\u25CF':'\u25CB';
   document.body.classList.toggle('xray',xray);
   render();
 };
+// initial pressed-state for assistive tech
+document.getElementById('tgMin').setAttribute('aria-pressed', MODE==='min'?'true':'false');
+document.getElementById('tgXray').setAttribute('aria-pressed','false');
 document.getElementById('tgPanel').onclick=function(){
   panelOpen=!panelOpen;
   this.classList.toggle('on',panelOpen);

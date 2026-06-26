@@ -67,7 +67,9 @@ def main(argv: list[str] | None = None) -> int:
         "tokens": orient.get("tokens"),
         "found": sha is not None,
     }))
-    return 0 if sha is not None else 1
+    # orient ran successfully; reporting MISSING (no cached map) is a valid verdict, not a
+    # failure. found:false + sha256:null communicate absence -- the call itself succeeded.
+    return 0
 
 
 if __name__ == "__main__":

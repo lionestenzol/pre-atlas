@@ -239,3 +239,25 @@ def test_fanout_receipts_lift_each_tools_join_key():
         r = Receipt.from_envelope(cli_env(surface, stdout), produced_at=FIXED_TS)
         assert r.status == "ok" and r.sha256 == SHA, f"{surface} did not lift the join key"
         assert r.tool == surface
+
+
+# ---- the standalone `seam` runner ---------------------------------------------
+def _load_seam_runner(snap):
+    import importlib.util
+    runpy = snap.repo_root / "tools" / "seam" / "run.py"
+    spec = importlib.util.spec_from_file_location("seam_run", runpy)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)                 # main() is __main__-gated -> not executed on import
+    return mod
+
+
+def test_seam_runner_helpers_and_pipeline():
+    """The model-agnostic runner's pure helpers behave, and its perceive pipeline only
+    references surfaces/capabilities that are actually registered."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    assert seam._summary([{"status": "ok"}, {"status": "error"}]) == {"ok": 1, "error": 1, "total": 2}
+    assert seam._parse_kv(["root=C:/x", "target=abc"]) == {"root": "C:/x", "target": "abc"}
+    for surface, cap, _arg in seam.PERCEIVE:
+        ov = d.load_overlay(snap.repo_root, surface)
+        assert ov is not None and cap in {c.id for c in ov.capabilities}, f"{surface}.{cap} not registered"

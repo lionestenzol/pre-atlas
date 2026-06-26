@@ -125,7 +125,24 @@ app.add_middleware(
 #   2. Per-IP rate limit (slowapi, when installed): blunts bursts/abuse.
 # Without these a leaked token = unbounded provider spend. See security.md.
 # ---------------------------------------------------------------------------
-DAILY_AI_BUDGET = float(os.environ.get("DROPLIST_DAILY_AI_BUDGET", "5.0"))
+def _env_float(name: str, default: float) -> float:
+    try:
+        return float(os.environ.get(name, str(default)))
+    except (TypeError, ValueError):
+        return default
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.environ.get(name, str(default)))
+    except (TypeError, ValueError):
+        return default
+
+
+# Guarded parse: a malformed env value must not crash the server at import.
+DAILY_AI_BUDGET = _env_float("DROPLIST_DAILY_AI_BUDGET", 5.0)
+# Hard per-request ceiling so one oversized call can't outrun the daily budget.
+MAX_AI_TOKENS = _env_int("DROPLIST_MAX_AI_TOKENS", 4096)
 _AI_RATE = os.environ.get("DROPLIST_AI_RATE", "30/minute")
 
 if _limiter is not None:
@@ -158,6 +175,16 @@ def require_ai_budget() -> None:
 def ai_rate_limit(func):
     """Apply the slowapi per-IP limit when available; a no-op passthrough otherwise."""
     return _limiter.limit(_AI_RATE)(func) if _limiter is not None else func
+
+
+def _clamp_tokens(v) -> int:
+    """Bound user-supplied max_tokens to [1, MAX_AI_TOKENS] so a single oversized
+    (or negative) request can't outrun the daily budget guard."""
+    try:
+        n = int(v)
+    except (TypeError, ValueError):
+        n = 1024
+    return max(1, min(n, MAX_AI_TOKENS))
 
 
 def _packets_by_drop() -> dict:
@@ -294,7 +321,7 @@ async def proxy_complete(request: Request) -> Response:
             status_code=400, media_type="application/json",
         )
     status, out = await run_in_threadpool(
-        _ai_complete, model, body.get("system"), body.get("messages") or [], int(body.get("max_tokens") or 1024),
+        _ai_complete, model, body.get("system"), body.get("messages") or [], _clamp_tokens(body.get("max_tokens")),
     )
     return Response(content=out, status_code=status, media_type="application/json")
 
@@ -312,7 +339,7 @@ async def proxy_anthropic(request: Request) -> Response:
     if "/" not in model:
         model = f"anthropic/{model}"
     status, out = await run_in_threadpool(
-        _ai_complete, model, body.get("system"), body.get("messages") or [], int(body.get("max_tokens") or 1024),
+        _ai_complete, model, body.get("system"), body.get("messages") or [], _clamp_tokens(body.get("max_tokens")),
     )
     return Response(content=out, status_code=status, media_type="application/json")
 

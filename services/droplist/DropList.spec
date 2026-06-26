@@ -4,8 +4,13 @@ from PyInstaller.utils.hooks import collect_all
 datas = [('ui', 'ui')]
 binaries = []
 hiddenimports = []
-tmp_ret = collect_all('webview')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+# Bundle the runtime packages whose data files / lazily-imported submodules
+# PyInstaller's static analysis misses. litellm ships model-pricing JSON + provider
+# modules loaded by string; without collect_all, /api/ai/* crashes in the frozen
+# exe even though the window opens. See ~/.claude/rules/common/code-as-furniture.md.
+for _pkg in ('webview', 'litellm', 'fastapi', 'uvicorn'):
+    _d, _b, _h = collect_all(_pkg)
+    datas += _d; binaries += _b; hiddenimports += _h
 
 
 a = Analysis(

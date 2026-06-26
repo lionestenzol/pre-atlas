@@ -94,6 +94,41 @@ def default_model() -> str | None:
     return avail[0]["id"]
 
 
+# Cost estimation fallback ----------------------------------------------------
+# litellm.completion_cost is the primary source, but it returns 0 for models it
+# has no price map for (e.g. openrouter/auto) and the direct-anthropic call_json
+# path has no litellm response at all. A spend CEILING must never under-count, so
+# unmapped *paid* models fall back to this table (over-counting is the safe
+# direction); local ollama/* is genuinely free.
+# See ~/.claude/rules/common/code-as-furniture.md — budget bypass fixed inline.
+_RATES = {  # $/Mtok (input, output); ordered so longer keys match before prefixes
+    "claude-opus": (15.0, 75.0),
+    "claude-sonnet": (3.0, 15.0),
+    "claude-3-5-haiku": (0.80, 4.0),
+    "claude-haiku": (0.80, 4.0),
+    "gpt-4o-mini": (0.15, 0.60),
+    "gpt-4o": (2.50, 10.0),
+    "gpt-4": (5.0, 15.0),
+    "gemini-1.5-pro": (1.25, 5.0),
+    "gemini": (0.50, 1.50),
+}
+_FALLBACK_RATE = (5.0, 15.0)  # conservative default for any unmapped paid model
+
+
+def _rate_for(model: str) -> tuple[float, float]:
+    m = (model or "").lower()
+    for key, rate in _RATES.items():
+        if key in m:
+            return rate
+    return _FALLBACK_RATE
+
+
+def _usage_cost(model: str, in_tok: int, out_tok: int) -> float:
+    """Token-usage * per-model rate, in dollars. Used when litellm can't price."""
+    rin, rout = _rate_for(model)
+    return (in_tok or 0) / 1e6 * rin + (out_tok or 0) / 1e6 * rout
+
+
 def complete(
     model: str,
     messages: list[dict[str, Any]],
@@ -130,6 +165,13 @@ def complete(
             cost = float(litellm.completion_cost(completion_response=resp) or 0.0)
         except Exception:  # noqa: BLE001 — cost is best-effort, never fatal
             cost = 0.0
+        if cost <= 0.0 and not model.startswith("ollama/"):
+            # litellm has no price map for this paid model (e.g. openrouter/auto).
+            # Logging 0 would let it slip past the daily budget ceiling forever, so
+            # estimate from token usage. Over-counting is the safe direction.
+            u = getattr(resp, "usage", None)
+            if u is not None:
+                cost = _usage_cost(model, getattr(u, "prompt_tokens", 0), getattr(u, "completion_tokens", 0))
         log_call(purpose, model, input_hash, user_preview, text, int((time.time() - t0) * 1000), "success", cost)
         return {"content": [{"type": "text", "text": text}], "model": model, "estimated_cost": round(cost, 6)}
     except Exception as e:  # noqa: BLE001 — surfaced to the route as a 502
@@ -206,8 +248,8 @@ def call_json(purpose: str, system: str, user: str, input_hash: str) -> dict[str
         usage = getattr(resp, "usage", None)
         cost = 0.0
         if usage:
-            # rough Sonnet pricing: $3/Mtok in, $15/Mtok out
-            cost = usage.input_tokens / 1e6 * 3 + usage.output_tokens / 1e6 * 15
+            # per-MODEL pricing — NOT a hardcoded Sonnet rate (Opus output is 5x).
+            cost = _usage_cost(MODEL, usage.input_tokens, usage.output_tokens)
         log_call(purpose, MODEL, input_hash, user, text, int((time.time() - t0) * 1000), "success", cost)
         return data
     except Exception as e:  # noqa: BLE001 - any failure -> heuristic fallback

@@ -209,6 +209,17 @@ def test_fanout_overlays_are_wellformed():
     assert dscp.kind == "http"                                     # name MUST match launch.json -> port 3012
     assert {c.invoke for c in dscp.capabilities} == {"GET /healthz", "GET /jobs/{id}"}
 
+    # perceive-stage wrappers (binre-style thin adapters over ~/.claude skill engines)
+    cr = d.load_overlay(snap.repo_root, "code-recon")
+    orient = next(c for c in cr.capabilities if c.id == "orient")
+    assert cr.kind == "cli" and orient.direction == "read"        # runs orient WITHOUT --regen
+    assert gateway.declared_params(orient.invoke, orient.needs) == {"root"}
+
+    ri = d.load_overlay(snap.repo_root, "repo-inventory")
+    inv = next(c for c in ri.capabilities if c.id == "inventory")
+    assert ri.kind == "cli" and inv.direction == "read"
+    assert gateway.declared_params(inv.invoke, inv.needs) == {"root"}
+
 
 def test_fanout_receipts_lift_each_tools_join_key():
     """binre/gw/st3gg each print a stdout JSON receipt carrying sha256; the seam
@@ -221,6 +232,8 @@ def test_fanout_receipts_lift_each_tools_join_key():
         "binre": f'{{"tool":"binre","op":"report","sha256":"{SHA}","found":true}}',
         "groundwork-cli": f'{{"tool":"gw","op":"index","sha256":"{SHA}","subsystem_count":1}}',
         "st3gg": f'{{"tool":"st3gg","op":"analyze","sha256":"{SHA}","analysis":{{}}}}',
+        "code-recon": f'{{"tool":"code-recon","op":"orient","sha256":"{SHA}","verdict":"FRESH","found":true}}',
+        "repo-inventory": f'{{"tool":"repo-inventory","op":"inventory","sha256":"{SHA}","system_count":3,"found":true}}',
     }
     for surface, stdout in cases.items():
         r = Receipt.from_envelope(cli_env(surface, stdout), produced_at=FIXED_TS)

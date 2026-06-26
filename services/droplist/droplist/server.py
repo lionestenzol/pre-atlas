@@ -14,7 +14,8 @@ from typing import Any, AsyncIterator, Optional
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from . import (  # noqa: F401 — atlas_signal/dag_builder kept for v2 mutation surface
     atlas_signal,
@@ -133,12 +134,47 @@ def _serve_ui(filename: str) -> HTMLResponse:
     gitignored token file, so the bar is unchanged. See auth.py and
     ~/.claude/rules/common/code-as-furniture.md."""
     html = (_UI_DIR / filename).read_text(encoding="utf-8")
-    inject = f"<script>window.__DL_TOKEN__={json.dumps(auth.current_token())};</script>"
+    # Task B: inject the write token. Task C: inject PWA head tags + SW registration
+    # here (same mechanism) so both line.html and chain.html become installable with
+    # zero edits to the static files.
+    inject = (
+        f"<script>window.__DL_TOKEN__={json.dumps(auth.current_token())};</script>"
+        '<link rel="manifest" href="/manifest.webmanifest">'
+        '<meta name="theme-color" content="#0c0e0d">'
+        '<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">'
+        '<link rel="icon" type="image/png" href="/icons/icon-192.png">'
+        "<script>if('serviceWorker' in navigator){window.addEventListener('load',"
+        "function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>"
+    )
     if "</head>" in html:
         html = html.replace("</head>", inject + "</head>", 1)
     else:
         html = inject + html
     return HTMLResponse(html)
+
+
+# Task C — PWA install assets. Manifest + service worker are served from the app
+# root (SW scope must cover "/"); icons are a static mount. MIME types matter:
+# browsers reject a manifest/SW served as text/plain.
+@app.get("/manifest.webmanifest", include_in_schema=False)
+def pwa_manifest() -> FileResponse:
+    return FileResponse(_UI_DIR / "manifest.webmanifest", media_type="application/manifest+json")
+
+
+@app.get("/sw.js", include_in_schema=False)
+def pwa_service_worker() -> FileResponse:
+    # Service-Worker-Allowed lets a root-scope SW be served from anywhere; here it's
+    # already at root, but the header is harmless and future-proofs a /static move.
+    return FileResponse(
+        _UI_DIR / "sw.js",
+        media_type="text/javascript",
+        headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"},
+    )
+
+
+_ICONS_DIR = _UI_DIR / "icons"
+if _ICONS_DIR.is_dir():
+    app.mount("/icons", StaticFiles(directory=str(_ICONS_DIR)), name="icons")
 
 
 @app.get("/", response_class=HTMLResponse)

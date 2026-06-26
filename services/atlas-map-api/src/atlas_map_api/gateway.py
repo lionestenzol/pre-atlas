@@ -98,9 +98,15 @@ def parse_invoke(invoke: str) -> tuple[str, str]:
 
 
 def declared_params(cap_invoke: str, needs: tuple[str, ...]) -> set[str]:
-    """The only arg keys a caller may pass: path placeholders + declared `needs`."""
-    _, path = parse_invoke(cap_invoke)
-    return set(_PATH_PARAM.findall(path)) | set(needs or ())
+    """The only arg keys a caller may pass: {placeholders} declared anywhere in the
+    invoke (http path params OR cli positionals) + declared `needs`.
+
+    Scanning the WHOLE invoke (not just the parsed path) is what lets a cli
+    capability like "sigil info {input}" declare its positional arg. http invokes
+    only ever carry `{...}` inside the path, so this stays byte-identical for them.
+    See ~/.claude/rules/common/code-as-furniture.md — the cli arg path was declared
+    but unreachable for positional tools; fixed inline, not documented-and-left."""
+    return set(_PATH_PARAM.findall(cap_invoke)) | set(needs or ())
 
 
 def is_write(kind: str, cap) -> bool:
@@ -138,25 +144,56 @@ def build_target(base_url: str, invoke: str, args: dict[str, Any]) -> tuple[str,
 def build_argv(invoke: str, args: dict[str, Any]) -> tuple[list[str], str | None]:
     """Safe argv from a cli capability's trusted command + caller args.
 
-    Command comes from the overlay (argv-split). Caller args become `--key value`,
-    each validated: safe charset, no leading dash (no flag injection), bounded
-    length/count. A `--` end-of-options sentinel separates the command from caller
-    args so the target treats them as values, not options. Nothing runs via a shell."""
+    Command comes from the overlay (argv-split, trusted). Caller args bind two ways,
+    both validated identically (safe charset, no leading dash = no flag injection,
+    bounded length/count):
+      - POSITIONAL: a `{key}` token in the command is replaced IN PLACE by the
+        value — mirrors the http path-param convention — so positional-arg tools
+        like `sigil info {input}` are reachable. An unsupplied placeholder fails
+        loud rather than shelling out a literal `{key}`.
+      - FLAG: any leftover key becomes `--key value`, placed AFTER a `--`
+        end-of-options sentinel so the target reads it as a value, not an option.
+    Literal command tokens (incl. trusted flags like `--out`, and human doc hints
+    like `<file>`) pass through untouched; only caller-supplied values are charset-
+    restricted. Nothing runs via a shell."""
     base = shlex.split(invoke, posix=True)
     if not base:
         return [], "empty command"
+    # Defense-in-depth: the executable (argv[0]) must be a literal from the trusted
+    # overlay — never a caller-substituted `{placeholder}`. Overlays are repo-authored
+    # (so this is a malformed-overlay guard, not a caller exploit), but it removes any
+    # path by which caller args could choose which binary shutil.which resolves.
+    if _PATH_PARAM.fullmatch(base[0]):
+        return [], "command name must be a literal, not a placeholder"
     items = list((args or {}).items())
     if len(items) > _MAX_ARG_COUNT:
         return [], f"too many args (max {_MAX_ARG_COUNT})"
-    tail: list[str] = []
+    clean: dict[str, str] = {}
     for k, v in items:
         ks, vs = str(k), str(v)
         if len(ks) > _MAX_ARG_LEN or len(vs) > _MAX_ARG_LEN:
             return [], "arg too long"
         if not _SAFE_ARG.match(ks) or not _SAFE_ARG.match(vs):
             return [], f"unsafe cli argument rejected: {k!r}"
+        clean[ks] = vs
+    used: set[str] = set()
+    cmd: list[str] = []
+    for tok in base:
+        m = _PATH_PARAM.fullmatch(tok)
+        if m is None:
+            cmd.append(tok)
+            continue
+        key = m.group(1)
+        if key not in clean:
+            return [], f"unbound placeholder {tok!r} (no {key!r} arg supplied)"
+        cmd.append(clean[key])
+        used.add(key)
+    tail: list[str] = []
+    for ks, vs in clean.items():
+        if ks in used:
+            continue
         tail += [f"--{ks}", vs]
-    argv = base + (["--"] + tail if tail else [])
+    argv = cmd + (["--"] + tail if tail else [])
     return argv, None
 
 

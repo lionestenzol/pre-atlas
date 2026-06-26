@@ -35,6 +35,7 @@ from . import describe as describe_mod
 from . import gateway as gateway_mod
 from . import items as items_backbone
 from . import launcher
+from . import seam as seam_mod
 from . import surfaces as surfaces_mod
 from .graph import ServiceGraph
 from .loader import MapSnapshot, load_snapshot
@@ -620,6 +621,31 @@ async def call_endpoint(
     if result.get("refusal"):
         raise HTTPException(result.get("code", 400), result["error"])
     return result
+
+
+@app.post("/seam/call")
+async def seam_call_endpoint(
+    surface: str = Body(...),
+    capability: str = Body(...),
+    args: dict[str, Any] | None = Body(default=None),
+    sha256: str | None = Body(default=None),
+    x_atlas_token: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """The perceive -> compile -> carry seam's front door: invoke any tool capability
+    and ALWAYS get back ONE normalized Receipt (seam.v1), keyed on a content-address.
+
+    Unlike /call (which raises an HTTP error on a gateway refusal), this folds
+    refusal, reached-but-failed, and success into a single Receipt shape — so a
+    downstream stage reads `status` only: 'error' carries the reason in `error`,
+    'ok' carries the tool's parsed payload in `data` plus the `sha256` join key. A
+    caller-supplied `sha256` (the known join key for this artifact) is authoritative;
+    otherwise it is lifted from the tool's own receipt when present.
+    """
+    snap, _ = _ensure_loaded()
+    env = await gateway_mod.call_capability(snap, surface, capability, args, x_atlas_token)
+    if "surface" not in env:  # gateway refusals carry no surface — stamp the requested one
+        env = {**env, "surface": surface}
+    return seam_mod.Receipt.from_envelope(env, sha256=sha256).model_dump()
 
 
 @app.get("/map/signals")

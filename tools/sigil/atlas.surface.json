@@ -1,0 +1,38 @@
+{
+  "surface": "sigil",
+  "kind": "cli",
+  "lifecycle": "live",
+  "headline": "Content-addressable symbolic substrate codec — the stack's join-key minter. `info` reads a container's SGL1 sha256, the one content-address every other seam tool keys on.",
+  "capabilities": [
+    {
+      "id": "info",
+      "label": "Read a sigil container header (mint the sha256 join key)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "sigil info {input}",
+      "needs": ["input"],
+      "evidence": "C:/Users/bruke/sigil/sigil.py:183 cmd_info -> container_info"
+    },
+    {
+      "id": "pack",
+      "label": "Pack a file into a sigil container (.sgl) — writes an output file",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "sigil pack {input}",
+      "needs": ["input"],
+      "evidence": "C:/Users/bruke/sigil/sigil.py:117 cmd_pack"
+    },
+    {
+      "id": "unpack",
+      "label": "Expand a sigil container back to the original — writes an output file",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "sigil unpack {input}",
+      "needs": ["input"],
+      "evidence": "C:/Users/bruke/sigil/sigil.py:139 cmd_unpack"
+    }
+  ]
+}

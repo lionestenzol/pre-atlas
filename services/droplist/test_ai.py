@@ -93,6 +93,21 @@ def test_complete_normalizes_to_anthropic_shape(monkeypatch):
     assert body["estimated_cost"] == pytest.approx(0.00042, rel=1e-3)
 
 
+def test_daily_budget_ceiling_returns_429(monkeypatch):
+    # Task F: once today's spend crosses the ceiling, the route is refused BEFORE
+    # it can spend more — the SaaS runaway-cost guard.
+    monkeypatch.setattr(S, "DAILY_AI_BUDGET", 1.0)
+    monkeypatch.setattr(S, "_today_ai_cost", lambda: 5.0)
+    tok = auth.current_token()
+    r = client.post(
+        "/api/ai/complete",
+        json={"model": "openai/gpt-4o", "messages": [{"role": "user", "content": "x"}]},
+        headers={"X-Atlas-Token": tok},
+    )
+    assert r.status_code == 429, r.text
+    assert "budget" in r.text.lower()
+
+
 def test_anthropic_alias_forces_provider_prefix(monkeypatch):
     captured = {}
 

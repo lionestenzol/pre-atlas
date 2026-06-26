@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import threading
+import time
 import urllib.error
 import urllib.request
 from contextlib import asynccontextmanager
@@ -13,6 +14,18 @@ from typing import Any, AsyncIterator, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
+
+# slowapi is optional (Task F): the daily AI cost-ceiling below is pure-stdlib and
+# always on; per-IP rate limiting layers on only when slowapi is installed, so the
+# zero-extra-deps `[ui]` install still runs. See assemble-first.md.
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
+    from slowapi.util import get_remote_address
+
+    _limiter: "Limiter | None" = Limiter(key_func=get_remote_address)
+except ImportError:  # pragma: no cover - exercised only without the extra
+    _limiter = None
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -103,6 +116,48 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "X-Atlas-Token"],
 )
+
+# ---------------------------------------------------------------------------
+# AI spend guards (Task F). Two layers on /api/ai/*:
+#   1. Daily cost ceiling (pure stdlib, always on): sum today's estimated_cost
+#      from llm_calls.jsonl; reject once it crosses DROPLIST_DAILY_AI_BUDGET. The
+#      real SaaS guard — caps dollars, not just request rate. 0 disables.
+#   2. Per-IP rate limit (slowapi, when installed): blunts bursts/abuse.
+# Without these a leaked token = unbounded provider spend. See security.md.
+# ---------------------------------------------------------------------------
+DAILY_AI_BUDGET = float(os.environ.get("DROPLIST_DAILY_AI_BUDGET", "5.0"))
+_AI_RATE = os.environ.get("DROPLIST_AI_RATE", "30/minute")
+
+if _limiter is not None:
+    app.state.limiter = _limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+def _today_ai_cost() -> float:
+    """Sum of today's (UTC) logged AI cost. Matches llm.log_call's timestamp format."""
+    today = time.strftime("%Y-%m-%d", time.gmtime())
+    total = 0.0
+    for rec in storage.iter_records(storage.LLM_CALLS):
+        if str(rec.get("timestamp", "")).startswith(today):
+            try:
+                total += float(rec.get("estimated_cost") or 0.0)
+            except (TypeError, ValueError):
+                continue
+    return total
+
+
+def require_ai_budget() -> None:
+    """FastAPI dependency: 429 once today's AI spend hits the ceiling."""
+    if DAILY_AI_BUDGET > 0 and _today_ai_cost() >= DAILY_AI_BUDGET:
+        raise HTTPException(
+            status_code=429,
+            detail=f"daily AI budget ${DAILY_AI_BUDGET:.2f} reached; raise DROPLIST_DAILY_AI_BUDGET to continue",
+        )
+
+
+def ai_rate_limit(func):
+    """Apply the slowapi per-IP limit when available; a no-op passthrough otherwise."""
+    return _limiter.limit(_AI_RATE)(func) if _limiter is not None else func
 
 
 def _packets_by_drop() -> dict:
@@ -222,7 +277,11 @@ def _ai_complete(model: str, system: str | None, messages: list, max_tokens: int
         return 502, json.dumps({"error": f"completion failed: {e}"}).encode()
 
 
-@app.post("/api/ai/complete", dependencies=[Depends(auth.require_write_token)])
+@app.post(
+    "/api/ai/complete",
+    dependencies=[Depends(auth.require_write_token), Depends(require_ai_budget)],
+)
+@ai_rate_limit
 async def proxy_complete(request: Request) -> Response:
     """Provider-agnostic completion. Body: {model, max_tokens, system, messages}
     where `model` is a litellm id (e.g. ``openai/gpt-4o``, ``ollama/llama3``).
@@ -240,7 +299,11 @@ async def proxy_complete(request: Request) -> Response:
     return Response(content=out, status_code=status, media_type="application/json")
 
 
-@app.post("/api/ai/anthropic", dependencies=[Depends(auth.require_write_token)])
+@app.post(
+    "/api/ai/anthropic",
+    dependencies=[Depends(auth.require_write_token), Depends(require_ai_budget)],
+)
+@ai_rate_limit
 async def proxy_anthropic(request: Request) -> Response:
     """Back-compat alias for any caller still posting the old Anthropic shape —
     routes through the same litellm path, forcing the anthropic/ provider."""

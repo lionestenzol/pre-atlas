@@ -12,7 +12,7 @@ dependencies = ["croniter>=2.0"]
 # llm: swappable providers via litellm (Task B). anthropic kept for the legacy
 # call_json path; litellm covers OpenAI/Gemini/OpenRouter/Ollama too.
 llm = ["anthropic>=0.39", "litellm>=1.40"]
-ui = ["fastapi>=0.110", "uvicorn[standard]>=0.27"]
+ui = ["fastapi>=0.110", "uvicorn[standard]>=0.27", "slowapi>=0.1.9"]
 # desktop: native-window app + single-file binary (Task E). pywebview uses the
 # OS webview (EdgeWebView2 on Windows) — no bundled Chromium.
 desktop = ["pywebview>=5.0", "pyinstaller>=6.0"]

@@ -618,13 +618,17 @@ async def reopen_node(dag_id: str, node_id: str) -> dict:
     }
 
 
-def run() -> None:
+def run(port: int | None = None, host: str = "127.0.0.1") -> None:
     import uvicorn
     # Port 3073: 3071 is owned by memory-hub (.claude/launch.json). Two FastAPI
     # services cannot bind the same port; droplist moved off the collision so the
     # atlas-map action layer resolves droplist→3073 (not memory-hub's 3071).
+    # The desktop wrapper (desktop.py) passes a dynamic free port so two instances
+    # don't collide — hence the param + DROPLIST_PORT override, default 3073.
     # See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
-    uvicorn.run(app, host="127.0.0.1", port=3073)
+    if port is None:
+        port = int(os.environ.get("DROPLIST_PORT", "3073"))
+    uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":

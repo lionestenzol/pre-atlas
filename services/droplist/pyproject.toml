@@ -9,8 +9,13 @@ requires-python = ">=3.10"
 dependencies = ["croniter>=2.0"]
 
 [project.optional-dependencies]
-llm = ["anthropic>=0.39"]
+# llm: swappable providers via litellm (Task B). anthropic kept for the legacy
+# call_json path; litellm covers OpenAI/Gemini/OpenRouter/Ollama too.
+llm = ["anthropic>=0.39", "litellm>=1.40"]
 ui = ["fastapi>=0.110", "uvicorn[standard]>=0.27"]
+# desktop: native-window app + single-file binary (Task E). pywebview uses the
+# OS webview (EdgeWebView2 on Windows) — no bundled Chromium.
+desktop = ["pywebview>=5.0", "pyinstaller>=6.0"]
 
 [project.scripts]
 drop = "droplist.cli:main"
@@ -22,6 +27,7 @@ graph = "droplist.cli:graph_main"
 brief = "droplist.cli:brief_main"
 watch = "droplist.cli:watch_main"
 droplist-ui = "droplist.server:run"
+droplist-desktop = "droplist.desktop:main"
 droplist-daemon = "droplist.daemon:main"
 
 [build-system]

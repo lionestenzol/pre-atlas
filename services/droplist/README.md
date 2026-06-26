@@ -4,7 +4,9 @@ Drop messy human input. Get back exactly one Work Packet that says what this is,
 where it routes, who handles the next step, the one next action, when it stops,
 and what Atlas should remember. Everything appends to JSONL.
 
-**Answers like an operator, not a chatbot.** No UI. No dispatch. No automation.
+**Answers like an operator, not a chatbot.** Now with a web UI (installable PWA +
+native desktop app) and an always-on daemon that plans DAGs and marks work done.
+The zero-dependency CLI is still the core.
 
 ```
 Drop → Normalize → Classify → Retrieve Context → Route Workflow

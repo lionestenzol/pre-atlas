@@ -79,6 +79,104 @@ def _summary(receipts: list[dict]) -> dict:
     return {"ok": ok, "error": len(receipts) - ok, "total": len(receipts)}
 
 
+# ── objective combo feed → tool-outcome ledger ────────────────────────────────
+# A seam pipeline run IS an objective tool-combination observation: N tools fired
+# together, with a hard ok/error manifest. That is a NON-proxy reward signal the
+# combo scorer (~/.claude/scripts/ledger/combo.py) can learn from, replacing the
+# sentiment proxy for combos that actually ran. We append ONE ledger row per tool,
+# all sharing a synthetic turn key (request=seam:<pipeline>:<target>) under a
+# per-run synthetic session, so combo.py's EXISTING cofire grouping picks the
+# combination up unchanged -- zero combo.py change (option a).
+#
+# Per-run session (not one global session) so the holdout split in combo.evaluate
+# (hash(session)%10) can actually spread recurring cofire pairs across train/holdout;
+# one constant session would dump every objective row into a single bucket.
+#
+# Reward is OBJECTIVE: the COMBINATION succeeded (+1) iff every receipt is ok, else
+# -1. Opt-in via SEAM_LEDGER=1 so unit-test / exploratory seam runs never pollute the
+# real ledger (gate per the lattice NEXT). SEAM_LEDGER_PATH overrides the target file
+# (hermetic tests point it at a temp ledger).
+def _ledger_path() -> Path:
+    return Path(os.environ.get(
+        "SEAM_LEDGER_PATH", str(Path.home() / ".claude" / "logs" / "tool-outcomes.jsonl")))
+
+
+def _next_invocation_index(path: Path, session: str) -> int:
+    """Max existing invocation_index for `session`, +1 (monotonic per session, like backfill)."""
+    hi = -1
+    if path.exists():
+        try:
+            with path.open(encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        r = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if r.get("session") == session:
+                        idx = r.get("invocation_index")
+                        if isinstance(idx, int) and idx > hi:
+                            hi = idx
+        except OSError:
+            pass
+    return hi + 1
+
+
+def _ledger_rows(manifest: dict, session: str, base_index: int) -> list[dict]:
+    """One objective row per receipt, matching backfill.py's row schema exactly."""
+    receipts = manifest.get("receipts") or []
+    all_ok = (manifest.get("summary") or {}).get("error", 1) == 0
+    reward = 1.0 if all_ok else -1.0
+    request = f"seam:{manifest.get('pipeline')}:{manifest.get('target')}"[:160].replace("\n", " ")
+    rows = []
+    for off, r in enumerate(receipts):
+        rows.append({
+            "session": session,
+            "cwd": str(manifest.get("target")),
+            "skill": r.get("tool"),                # surface name = the combo member
+            "source": "seam",                      # objective row; distinguishes from transcript-mined
+            "invocation_index": base_index + off,
+            "request": request,                    # shared turn key -> combo.py groups these as one cofire
+            "n_tools_in_turn": len(receipts),
+            "reward": "objective_ok" if all_ok else "objective_error",
+            "score": reward,
+            "shipped": False,
+            "retried": False,
+            "reward_score": reward,                # router/_row_reward reads this first
+            "next_user": None,
+            "has_feedback": True,                  # objective evidence present (not sentiment, but real)
+        })
+    return rows
+
+
+def _append_ledger(manifest: dict) -> int:
+    """Append objective combo rows for a pipeline manifest. No-op unless SEAM_LEDGER=1.
+
+    Best-effort telemetry: the whole body is fail-safe so a ledger write error can
+    never crash the seam run or change its exit code (scripts gate on receipt-ok, not
+    on this side-channel). Same posture as append_outcome.py's Stop-hook failsafe.
+    Returns the number of rows written (0 when gated off, no receipts, or on error).
+    """
+    if os.environ.get("SEAM_LEDGER") != "1":
+        return 0
+    try:
+        if not manifest.get("receipts"):
+            return 0
+        path = _ledger_path()
+        session = f"seam:{manifest.get('pipeline')}:{manifest.get('target')}"
+        rows = _ledger_rows(manifest, session, _next_invocation_index(path, session))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            for row in rows:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        return len(rows)
+    except Exception as e:  # noqa: BLE001 — telemetry must never break the seam run
+        print(f"seam: ledger feed skipped (non-fatal): {e!r}", file=sys.stderr)
+        return 0
+
+
 def _parse_kv(pairs: list[str]) -> dict:
     args: dict[str, str] = {}
     for p in pairs:
@@ -174,6 +272,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest = {"pipeline": a.cmd, "target": a.target,
                 "produced_at": _now(), "receipts": receipts, "summary": _summary(receipts)}
     _emit(manifest, a.json)
+    _append_ledger(manifest)   # objective combo feed (no-op unless SEAM_LEDGER=1)
     return 0 if manifest["summary"]["error"] == 0 else 1
 
 

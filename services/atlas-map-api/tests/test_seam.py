@@ -346,3 +346,71 @@ def test_deepwiki_wrapper_content_addresses_a_cached_wiki(monkeypatch):
     monkeypatch.setattr(ask.urllib.request, "urlopen", fake_urlopen2)
     r2 = ask.read_wiki("https://github.com/o/r")
     assert r2["sha256"] == r1["sha256"], "content-address must ignore volatile timestamps"
+
+
+# ---- objective combo feed: seam manifest -> tool-outcome ledger ----------------
+def _perceive_manifest(all_ok: bool) -> dict:
+    """A synthetic perceive manifest (3 tools) mirroring run.py's manifest shape."""
+    recs = [
+        {"tool": "repo-inventory", "status": "ok", "sha256": SHA, "error": None},
+        {"tool": "code-recon", "status": "ok", "sha256": SHA, "error": None},
+        {"tool": "groundwork-cli",
+         "status": "ok" if all_ok else "error",
+         "sha256": SHA if all_ok else None,
+         "error": None if all_ok else "writes gated"},
+    ]
+    err = sum(1 for r in recs if r["status"] != "ok")
+    return {"pipeline": "perceive", "target": "C:/x/repo", "produced_at": FIXED_TS,
+            "receipts": recs, "summary": {"ok": len(recs) - err, "error": err, "total": len(recs)}}
+
+
+def test_seam_ledger_feed_is_gated_off_by_default(tmp_path, monkeypatch):
+    """No SEAM_LEDGER -> the appender is a no-op and never touches the ledger file."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    ledger = tmp_path / "tool-outcomes.jsonl"
+    monkeypatch.setenv("SEAM_LEDGER_PATH", str(ledger))
+    monkeypatch.delenv("SEAM_LEDGER", raising=False)
+    assert seam._append_ledger(_perceive_manifest(all_ok=True)) == 0
+    assert not ledger.exists()                       # unit/exploratory runs never pollute the ledger
+
+
+def test_seam_ledger_feed_writes_objective_cofire_rows(tmp_path, monkeypatch):
+    """SEAM_LEDGER=1 -> one row per tool, shared session+turn key, OBJECTIVE reward,
+    in exactly the shape combo.py's cofire grouping consumes (session+request -> turn,
+    distinct skills -> a co-fire, reward_score = all-receipts-ok)."""
+    import json as _json
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    ledger = tmp_path / "tool-outcomes.jsonl"
+    monkeypatch.setenv("SEAM_LEDGER_PATH", str(ledger))
+    monkeypatch.setenv("SEAM_LEDGER", "1")
+
+    n = seam._append_ledger(_perceive_manifest(all_ok=True))
+    assert n == 3                                    # one row per receipt
+    rows = [_json.loads(ln) for ln in ledger.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    assert len(rows) == 3
+    # the cofire contract combo.py relies on:
+    assert {r["session"] for r in rows} == {"seam:perceive:C:/x/repo"}          # one session
+    assert {r["request"] for r in rows} == {"seam:perceive:C:/x/repo"}          # one turn key
+    assert {r["skill"] for r in rows} == {"repo-inventory", "code-recon", "groundwork-cli"}
+    assert [r["invocation_index"] for r in rows] == [0, 1, 2]                   # monotonic block
+    assert all(r["reward_score"] == 1.0 and r["source"] == "seam" for r in rows)  # objective +1
+
+    # a re-run of the SAME pipeline+target continues the invocation_index block (monotonic)
+    seam._append_ledger(_perceive_manifest(all_ok=True))
+    rows2 = [_json.loads(ln) for ln in ledger.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    assert [r["invocation_index"] for r in rows2[-3:]] == [3, 4, 5]
+
+
+def test_seam_ledger_feed_penalizes_a_failed_combination(tmp_path, monkeypatch):
+    """Any receipt in error -> the whole combination scores -1 (objective, not sentiment)."""
+    import json as _json
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    ledger = tmp_path / "tool-outcomes.jsonl"
+    monkeypatch.setenv("SEAM_LEDGER_PATH", str(ledger))
+    monkeypatch.setenv("SEAM_LEDGER", "1")
+    seam._append_ledger(_perceive_manifest(all_ok=False))
+    rows = [_json.loads(ln) for ln in ledger.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    assert all(r["reward_score"] == -1.0 and r["reward"] == "objective_error" for r in rows)

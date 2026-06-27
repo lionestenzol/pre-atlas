@@ -59,7 +59,22 @@ CARRY = [
 NARRATE = [
     ("deepwiki",       "narrate",   "repo"),   # read  -- cached wiki, content-addressed
 ]
-PIPELINES = {"perceive": PERCEIVE, "carry": CARRY, "narrate": NARRATE}
+# FULL  one combined pass that CO-FIRES structural + carry + narrate over a single target,
+# so the objective feed actually emits multi-tool combos that INCLUDE the narrator -- the
+# only way a deepwiki cofire ever forms (perceive/carry/narrate alone never co-fire it with
+# the structural tools). Every stage binds to the same local path: the structural + carry
+# tools read it as `root`, deepwiki derives the repo identity from it as `repo`. The
+# writes-gated gw index is excluded so the reward is driven by real content delivery, not
+# the writes gate; a NARRATE miss (no cached wiki -> ok-but-no-sha) is exactly the
+# heterogeneous outcome the per-receipt reward needs to separate one combination from
+# another. See ~/.claude/rules/common/code-as-furniture.md.
+FULL = [
+    ("repo-inventory", "inventory", "root"),
+    ("code-recon",     "orient",    "root"),
+    ("repomix",        "pack",      "root"),
+    ("deepwiki",       "narrate",   "repo"),
+]
+PIPELINES = {"perceive": PERCEIVE, "carry": CARRY, "narrate": NARRATE, "full": FULL}
 
 # zoom's whole-repo READ skeleton: the cheap, lossy, EVERYWHERE pass. Read tools ONLY
 # (no groundwork-cli index -- that is a WRITE, gated off, which would make zoom error by
@@ -410,6 +425,9 @@ def main(argv: list[str] | None = None) -> int:
                         help="heterogeneous fidelity: read skeleton over the whole repo + repomix CARRY on the hot subdirs")
     zm.add_argument("target", help="a repo / directory path (forward slashes)")
     zm.add_argument("--top", type=int, default=3, help="number of hot subdirs to carry at full fidelity (default 3)")
+    fu = sub.add_parser("full", parents=[common],
+                        help="FULL combined pass (inventory + orient + carry + narrate) -- co-fires tools so combos including the narrator form")
+    fu.add_argument("target", help="a local repo / directory path (forward slashes)")
 
     a = ap.parse_args(argv)
     gateway.CLI_ENABLED = True
@@ -455,7 +473,7 @@ def main(argv: list[str] | None = None) -> int:
         _append_ledger(manifest)   # objective combo feed (no-op unless SEAM_LEDGER=1)
         return 0 if manifest["summary"]["error"] == 0 else 1
 
-    # perceive / carry / narrate -- a named fan-out pipeline over one target
+    # perceive / carry / narrate / full -- a named fan-out pipeline over one target
     stages = PIPELINES[a.cmd]
     receipts = [_call(snap, surface, cap, {arg: a.target}, a.role) for surface, cap, arg in stages]
     manifest = {"pipeline": a.cmd, "target": a.target,

@@ -286,11 +286,25 @@ def test_carry_narrate_pipelines_only_reference_registered_surfaces():
     """seam CARRY/NARRATE stages point only at surfaces+caps that are actually registered."""
     snap = load_snapshot()
     seam = _load_seam_runner(snap)
-    assert set(seam.PIPELINES) == {"perceive", "carry", "narrate"}
-    for stage in (seam.CARRY, seam.NARRATE):
+    assert set(seam.PIPELINES) == {"perceive", "carry", "narrate", "full"}
+    for stage in (seam.CARRY, seam.NARRATE, seam.FULL):
         for surface, cap, _arg in stage:
             ov = d.load_overlay(snap.repo_root, surface)
             assert ov is not None and cap in {c.id for c in ov.capabilities}, f"{surface}.{cap} not registered"
+
+
+def test_full_pipeline_cofires_structural_carry_and_narrator():
+    """FULL is the combined pass whose whole point is to CO-FIRE the narrator (deepwiki)
+    with the structural + carry tools in ONE manifest -- the only run shape that ever forms
+    a deepwiki cofire combo. It must include all four and exclude the writes-gated gw index
+    (so reward is driven by content delivery, not the writes gate)."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    tools = [surface for surface, _cap, _arg in seam.FULL]
+    assert tools == ["repo-inventory", "code-recon", "repomix", "deepwiki"]
+    assert "groundwork-cli" not in tools                       # writes-gated index excluded
+    # deepwiki binds the target as `repo` (derives identity); the rest read it as `root`
+    assert dict((s, arg) for s, _c, arg in seam.FULL)["deepwiki"] == "repo"
 
 
 def test_carry_receipt_lifts_repomix_join_key():

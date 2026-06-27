@@ -1,0 +1,19 @@
+{
+  "surface": "repomix",
+  "kind": "cli",
+  "lifecycle": "live",
+  "headline": "The CARRY stage: a scoped, lossless full-content bundle of a repo region (repomix), parked in a content-addressed cache. Where perceive is lossy skeletons, carry is the actual file contents an LLM reads whole -- the receipt's sha256 (over the deterministic bundle bytes) is the seam join key; the heavy bytes stay in the cache file, not the Receipt.",
+  "capabilities": [
+    {
+      "id": "pack",
+      "label": "Pack a scope into a content-addressed full-content bundle (read-only)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python tools/repomix/pack.py {root}",
+      "needs": ["root"],
+      "evidence": "C:/Users/bruke/Pre Atlas/tools/repomix/pack.py wraps the repomix CLI (npm 1.15.x); content-address = sha256 of the deterministic bundle bytes (verified: two runs -> identical sha, no wall-clock header, relative paths only)",
+      "notes": "Read-only over the FS (writes only its own .seam/carry/<sha> cache). {root} is a forward-slash directory scope relative to repo_root (the gateway cwd) or absolute. SCOPE IT: repomix has ~5s node startup even for a tiny dir, so a large root can hit the 20s gateway timeout (the wrapper self-caps repomix at 19s and returns found:false on timeout). Glob --include is a STANDALONE-only flag -- the gateway arg charset rejects '*', so through the gateway scope by directory path. found:false (exit 0) when the scope is empty/repomix finds nothing; nonzero exit only on a real failure (repomix missing, crash, timeout)."
+    }
+  ]
+}

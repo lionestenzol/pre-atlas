@@ -261,3 +261,88 @@ def test_seam_runner_helpers_and_pipeline():
     for surface, cap, _arg in seam.PERCEIVE:
         ov = d.load_overlay(snap.repo_root, surface)
         assert ov is not None and cap in {c.id for c in ov.capabilities}, f"{surface}.{cap} not registered"
+
+
+# ---- the lattice stages: CARRY (repomix) + NARRATE (deepwiki) ------------------
+def test_carry_narrate_overlays_are_wellformed():
+    """The two new lattice surfaces load as read-only cli with a resolvable invoke."""
+    snap = load_snapshot()
+
+    rmx = d.load_overlay(snap.repo_root, "repomix")
+    pack = next(c for c in rmx.capabilities if c.id == "pack")
+    assert rmx.kind == "cli" and pack.direction == "read"          # writes only its own .seam/ cache
+    assert pack.invoke == "python tools/repomix/pack.py {root}"    # repo-root-relative, forward slashes
+    assert gateway.declared_params(pack.invoke, pack.needs) == {"root"}
+
+    dw = d.load_overlay(snap.repo_root, "deepwiki")
+    nar = next(c for c in dw.capabilities if c.id == "narrate")
+    assert dw.kind == "cli" and nar.direction == "read"            # cached-wiki read only; live RAG not exposed
+    assert nar.invoke == "python tools/deepwiki/ask.py {repo}"
+    assert gateway.declared_params(nar.invoke, nar.needs) == {"repo"}
+    assert "ask" not in {c.id for c in dw.capabilities}            # the slow live lane stays off the seam
+
+
+def test_carry_narrate_pipelines_only_reference_registered_surfaces():
+    """seam CARRY/NARRATE stages point only at surfaces+caps that are actually registered."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    assert set(seam.PIPELINES) == {"perceive", "carry", "narrate"}
+    for stage in (seam.CARRY, seam.NARRATE):
+        for surface, cap, _arg in stage:
+            ov = d.load_overlay(snap.repo_root, surface)
+            assert ov is not None and cap in {c.id for c in ov.capabilities}, f"{surface}.{cap} not registered"
+
+
+def test_carry_receipt_lifts_repomix_join_key():
+    """repomix pack prints a stdout JSON receipt with sha256; the seam Receipt lifts it."""
+    env = {"ok": True, "surface": "repomix", "kind": "cli", "status": 0,
+           "data": {"stdout": f'{{"tool":"repomix","op":"pack","sha256":"{SHA}","found":true,'
+                              f'"file_count":2,"char_count":5777}}', "stderr": ""},
+           "error": None, "meta": {}}
+    r = Receipt.from_envelope(env, produced_at=FIXED_TS)
+    assert r.status == "ok" and r.sha256 == SHA and r.tool == "repomix"
+
+
+def test_narrate_absence_is_ok_receipt_without_join_key():
+    """A repo with no cached wiki -> found:false, exit 0: an ok Receipt with NO join key
+    (the legitimate-absence case, like code-recon orient MISSING)."""
+    env = {"ok": True, "surface": "deepwiki", "kind": "cli", "status": 0,
+           "data": {"stdout": '{"tool":"deepwiki","op":"wiki","found":false,'
+                              '"reason":"no cached wiki for this repo"}', "stderr": ""},
+           "error": None, "meta": {}}
+    r = Receipt.from_envelope(env, produced_at=FIXED_TS)
+    assert r.status == "ok" and r.sha256 is None and r.tool == "deepwiki"
+
+
+def test_deepwiki_wrapper_content_addresses_a_cached_wiki(monkeypatch):
+    """Hermetic proof of the found:true NARRATE path: a cached wiki is read and
+    content-addressed, the sha is STABLE across volatile-field changes (no live backend)."""
+    import importlib.util
+    import io
+    import json as _json
+    snap = load_snapshot()
+    askpy = snap.repo_root / "tools" / "deepwiki" / "ask.py"
+    spec = importlib.util.spec_from_file_location("deepwiki_ask", askpy)
+    ask = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ask)
+
+    wiki = {"wiki_structure": {"title": "demo", "pages": [{"id": "p1", "content": "x"}]},
+            "generated_pages": {"p1": "x"}}
+
+    def fake_urlopen(url, timeout=0):
+        body = dict(wiki)
+        body["generated_at"] = "2026-06-27T10:00:00Z"  # volatile -> must NOT affect the sha
+        return io.BytesIO(_json.dumps(body).encode())
+
+    monkeypatch.setattr(ask.urllib.request, "urlopen", fake_urlopen)
+    r1 = ask.read_wiki("https://github.com/o/r")
+    assert r1["found"] is True and isinstance(r1["sha256"], str) and r1["page_count"] == 1
+
+    # a different volatile timestamp yields the SAME content-address (scrubbed before hashing)
+    def fake_urlopen2(url, timeout=0):
+        body = dict(wiki)
+        body["generated_at"] = "2099-01-01T00:00:00Z"
+        return io.BytesIO(_json.dumps(body).encode())
+    monkeypatch.setattr(ask.urllib.request, "urlopen", fake_urlopen2)
+    r2 = ask.read_wiki("https://github.com/o/r")
+    assert r2["sha256"] == r1["sha256"], "content-address must ignore volatile timestamps"

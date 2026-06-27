@@ -286,3 +286,6 @@ forensic-map.md
 *.tsbuildinfo
 .claire/
 festivals/.festival/.state/
+
+# === seam CARRY stage content-addressed bundle cache (tools/repomix/pack.py) ===
+.seam/

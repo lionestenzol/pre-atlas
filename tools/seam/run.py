@@ -8,7 +8,9 @@ cron job, any LLM/agent -- can use it.
 
   seam list                                  every surface + capability
   seam call <surface> <capability> k=v ...   call one tool, print its Receipt
-  seam perceive <repo> [--writes]            fan out the repo-perceive tools -> manifest
+  seam perceive <repo> [--writes]            lossy structure: inventory + orient + index
+  seam carry <repo>                          lossless content: content-addressed bundle (repomix)
+  seam narrate <repo>                        prose: read the cached wiki (deepwiki-open)
 
 Flags:
   --json     machine-readable JSON manifest (default is a human table)
@@ -38,12 +40,24 @@ from atlas_map_api import gateway              # noqa: E402
 from atlas_map_api.loader import load_snapshot  # noqa: E402
 from atlas_map_api.seam import Receipt         # noqa: E402
 
-# The repo-perceive pipeline: (surface, capability, the-arg-name-the-target-binds-to).
+# The seam stages: each is a fan-out pipeline of (surface, capability, the-arg-name-
+# the-target-binds-to). Lists, not single tools, so more tools can join a stage later
+# (a 2nd carrier, a 2nd narrator) without touching the dispatch.
+#   PERCEIVE  lossy structure  (skeleton / census / freshness)   -- cheap, default
+#   CARRY     lossless content (the actual files, scoped)         -- the zoom lane
+#   NARRATE   prose            (the generated wiki, read cached)  -- the narrator lane
 PERCEIVE = [
     ("repo-inventory", "inventory", "root"),   # read  -- file/LOC census
     ("code-recon",     "orient",    "root"),   # read  -- recon map freshness + content-address
     ("groundwork-cli", "index",     "root"),   # write -- subsystem index (needs --writes)
 ]
+CARRY = [
+    ("repomix",        "pack",      "root"),   # read  -- content-addressed full-content bundle
+]
+NARRATE = [
+    ("deepwiki",       "narrate",   "repo"),   # read  -- cached wiki, content-addressed
+]
+PIPELINES = {"perceive": PERCEIVE, "carry": CARRY, "narrate": NARRATE}
 
 
 def _now() -> str:
@@ -125,6 +139,10 @@ def main(argv: list[str] | None = None) -> int:
     pc.add_argument("kv", nargs="*", help="key=value args, e.g. root=C:/path or target=<sha256>")
     pp = sub.add_parser("perceive", parents=[common], help="repo structural perceive pass (inventory + orient + index)")
     pp.add_argument("target", help="a repo / directory path (forward slashes)")
+    cy = sub.add_parser("carry", parents=[common], help="CARRY stage: content-addressed full-content bundle (repomix)")
+    cy.add_argument("target", help="a repo / directory scope (forward slashes)")
+    nr = sub.add_parser("narrate", parents=[common], help="NARRATE stage: read the cached wiki (deepwiki-open)")
+    nr.add_argument("target", help="a repo URL (github/gitlab) or local path (forward slashes)")
 
     a = ap.parse_args(argv)
     gateway.CLI_ENABLED = True
@@ -150,9 +168,10 @@ def main(argv: list[str] | None = None) -> int:
         _emit(manifest, a.json)
         return 0 if r["status"] == "ok" else 1
 
-    # perceive
-    receipts = [_call(snap, surface, cap, {arg: a.target}, a.role) for surface, cap, arg in PERCEIVE]
-    manifest = {"pipeline": "perceive", "target": a.target,
+    # perceive / carry / narrate -- a named fan-out pipeline over one target
+    stages = PIPELINES[a.cmd]
+    receipts = [_call(snap, surface, cap, {arg: a.target}, a.role) for surface, cap, arg in stages]
+    manifest = {"pipeline": a.cmd, "target": a.target,
                 "produced_at": _now(), "receipts": receipts, "summary": _summary(receipts)}
     _emit(manifest, a.json)
     return 0 if manifest["summary"]["error"] == 0 else 1

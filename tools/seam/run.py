@@ -11,6 +11,8 @@ cron job, any LLM/agent -- can use it.
   seam perceive <repo> [--writes]            lossy structure: inventory + orient + index
   seam carry <repo>                          lossless content: content-addressed bundle (repomix)
   seam narrate <repo>                        prose: read the cached wiki (deepwiki-open)
+  seam zoom <repo> [--top K]                 heterogeneous fidelity: read skeleton over the
+                                             whole repo + repomix CARRY on the top-K hot subdirs
 
 Flags:
   --json     machine-readable JSON manifest (default is a human table)
@@ -59,6 +61,14 @@ NARRATE = [
 ]
 PIPELINES = {"perceive": PERCEIVE, "carry": CARRY, "narrate": NARRATE}
 
+# zoom's whole-repo READ skeleton: the cheap, lossy, EVERYWHERE pass. Read tools ONLY
+# (no groundwork-cli index -- that is a WRITE, gated off, which would make zoom error by
+# default). Keeping it the read pair keeps zoom read-only + all-ok without --writes.
+ZOOM_SKELETON = [
+    ("repo-inventory", "inventory", "root"),   # read -- file/LOC census + per-subdir regions
+    ("code-recon",     "orient",    "root"),   # read -- recon map freshness + content-address
+]
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -77,6 +87,142 @@ def _call(snap, surface: str, capability: str, args: dict, role: str) -> dict:
 def _summary(receipts: list[dict]) -> dict:
     ok = sum(1 for r in receipts if r["status"] == "ok")
     return {"ok": ok, "error": len(receipts) - ok, "total": len(receipts)}
+
+
+# ── zoom: heterogeneous-fidelity region selection ─────────────────────────────
+# A 'zoom' manifest carries skeleton-everywhere (the cheap read skeleton over the
+# whole repo) PLUS lossless content on the HOT regions only. Choosing the hot regions
+# is a PURE, deterministic, unit-testable function so the dynamic dispatch branch stays
+# thin and the ranking can be tested without a gateway. Two signal sources, in order:
+#   1. PRIMARY -- a FRESH repo-inventory receipt already exposes per-immediate-subdir
+#      regions (receipt.data.systems[<dir>] = {files, code_lines, primary_language});
+#      rank by code_lines desc (truer 'carry weight' than raw file count), then files
+#      desc, then directory-name asc (total order -> deterministic). Free when present.
+#   2. FALLBACK -- no fresh inventory receipt: walk the tree with stdlib only, ranking
+#      immediate subdirs by file count, name tie-break. Reuses the inventory engine's
+#      EXCLUDE_DIRS for parity so both paths skip the same noise.
+# Both paths are charset-safe: they operate on literal directory-name segments, never
+# globs, so the chosen scopes pass the gateway arg charset (which rejects '*').
+_SYNTHETIC_ROOT_KEY = "<root>"      # inv.py's loose-files bucket -- never a real subdir
+
+
+def _engine_exclude_dirs() -> set[str]:
+    """The inventory engine's EXCLUDE_DIRS, so the fallback walk skips the same noise.
+
+    Best-effort: if the engine can't be imported (path drift), fall back to a small
+    built-in set. Fail-soft -- a missing engine must not break region selection.
+    """
+    try:
+        import importlib.util
+        engine = Path(os.environ.get(
+            "REPO_INVENTORY_ENGINE",
+            "C:/Users/bruke/.claude/skills/repo-inventory/scripts/inventory.py"))
+        spec = importlib.util.spec_from_file_location("repo_inventory_engine_excl", engine)
+        if spec is not None and spec.loader is not None:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            excl = getattr(mod, "EXCLUDE_DIRS", None)
+            if isinstance(excl, set):
+                return set(excl)
+    except Exception:  # noqa: BLE001 -- engine drift must not break selection
+        pass
+    return {".git", "node_modules", "__pycache__", ".venv", "venv", "dist",
+            "build", "target", ".next", "out", "coverage", ".cache", ".claude"}
+
+
+def _regions_from_inventory(receipts: list[dict]) -> list[str]:
+    """Full hot-region ranking from a FRESH repo-inventory receipt, or [] if none.
+
+    Ranks systems by (code_lines desc, files desc, name asc) -- a total order, so the
+    result is deterministic. Drops inv.py's synthetic '<root>' loose-files bucket.
+    Returns the FULL ranked list; the caller filters carry-eligibility and slices top-K.
+    """
+    inv = next((r for r in receipts
+                if r.get("tool") == "repo-inventory" and r.get("status") == "ok"), None)
+    if inv is None:
+        return []
+    systems = ((inv.get("data") or {}).get("systems")) or {}
+    candidates = [(name, meta) for name, meta in systems.items()
+                  if name != _SYNTHETIC_ROOT_KEY and isinstance(meta, dict)]
+    if not candidates:
+        return []
+    ranked = sorted(
+        candidates,
+        key=lambda kv: (-(kv[1].get("code_lines") or 0), -(kv[1].get("files") or 0), kv[0]),
+    )
+    return [name for name, _meta in ranked]
+
+
+def _regions_from_walk(repo: str) -> list[str]:
+    """Fallback full ranking: immediate subdirs of `repo` by file count (name tie-break).
+
+    Stdlib only, globless. (-count, name) is a total order -> deterministic; no ties
+    left to OS iteration order. Returns the FULL ranked list ([] if no measurable
+    subdirs); the caller filters carry-eligibility and slices top-K.
+    """
+    excl = _engine_exclude_dirs()
+    counts: dict[str, int] = {}
+    try:
+        entries = sorted(os.listdir(repo))
+    except OSError:
+        return []
+    for entry in entries:
+        full = os.path.join(repo, entry)
+        if not os.path.isdir(full) or entry in excl:
+            continue
+        n = 0
+        for _dirpath, dirnames, filenames in os.walk(full):
+            dirnames[:] = [d for d in dirnames if d not in excl]
+            n += len(filenames)
+        counts[entry] = n
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    return [name for name, _n in ranked]
+
+
+def _carry_eligible(repo: str, regions: list[str]) -> list[str]:
+    """Drop regions whose directory is WHOLLY git-ignored.
+
+    repomix (the CARRY tool) honors .gitignore, so a fully-ignored region packs zero
+    files -> an EMPTY carry and a VACUOUS 'lossless' guarantee; the ranking signal
+    (on-disk LOC / file count) and the carry (git-tracked files) would disagree. This
+    aligns them: a region git cannot track is not carry-eligible, so it is not a hot
+    region. One `git check-ignore` call, repo-relative names. Fail-soft: if git is
+    unavailable or `repo` is not a work tree (returncode not in {0,1}), do NOT filter --
+    we cannot determine ignore status, so we must not silently drop real regions.
+    """
+    if not regions:
+        return regions
+    try:
+        import subprocess
+        # paths as args (not --stdin: that form returns no matches under subprocess on
+        # Windows git). check-ignore echoes each ignored pathspec verbatim.
+        proc = subprocess.run(
+            ["git", "-C", repo, "check-ignore", "--", *regions],
+            capture_output=True, text=True, timeout=10,
+        )
+    except Exception:  # noqa: BLE001 -- best-effort; selection must not break on git issues
+        return regions
+    if proc.returncode not in (0, 1):       # 0 = some ignored, 1 = none; else not a worktree/error
+        return regions
+    ignored = {line.strip() for line in proc.stdout.splitlines() if line.strip()}
+    return [r for r in regions if r not in ignored]
+
+
+def _hot_regions(repo: str, top: int, receipts: list[dict] | None = None) -> list[str]:
+    """The deterministic hot-region selector for `seam zoom`.
+
+    Returns up to `top` immediate-subdir names of `repo` (NOT full paths -- the caller
+    joins them repo-relative). Prefers a fresh repo-inventory receipt's per-subdir
+    code_lines signal; falls back to an os.walk file-count ranking. Then drops wholly
+    git-ignored regions (carry-ineligible -> would yield an empty repomix carry) and
+    slices the top-K. Deterministic and charset-safe (directory names only, never globs).
+    """
+    if top <= 0:
+        return []
+    ranked = _regions_from_inventory(receipts) if receipts else []
+    if not ranked:
+        ranked = _regions_from_walk(repo)
+    return _carry_eligible(repo, ranked)[:top]
 
 
 # ── objective combo feed → tool-outcome ledger ────────────────────────────────
@@ -241,6 +387,10 @@ def main(argv: list[str] | None = None) -> int:
     cy.add_argument("target", help="a repo / directory scope (forward slashes)")
     nr = sub.add_parser("narrate", parents=[common], help="NARRATE stage: read the cached wiki (deepwiki-open)")
     nr.add_argument("target", help="a repo URL (github/gitlab) or local path (forward slashes)")
+    zm = sub.add_parser("zoom", parents=[common],
+                        help="heterogeneous fidelity: read skeleton over the whole repo + repomix CARRY on the hot subdirs")
+    zm.add_argument("target", help="a repo / directory path (forward slashes)")
+    zm.add_argument("--top", type=int, default=3, help="number of hot subdirs to carry at full fidelity (default 3)")
 
     a = ap.parse_args(argv)
     gateway.CLI_ENABLED = True
@@ -265,6 +415,26 @@ def main(argv: list[str] | None = None) -> int:
                     "produced_at": _now(), "receipts": [r], "summary": _summary([r])}
         _emit(manifest, a.json)
         return 0 if r["status"] == "ok" else 1
+
+    if a.cmd == "zoom":
+        # heterogeneous fidelity in ONE manifest: skeleton EVERYWHERE (read pair over the
+        # whole repo) + lossless CARRY on only the HOT regions. zoom is region-dependent
+        # (dynamic), so it is its own branch, not a PIPELINES entry. Reuses _call / _emit
+        # / _append_ledger / _summary -- no fork.
+        if not Path(a.target).is_dir():
+            raise SystemExit(f"seam: zoom needs an existing repo directory, got {a.target!r}")
+        skeleton = [_call(snap, surface, cap, {arg: a.target}, a.role)
+                    for surface, cap, arg in ZOOM_SKELETON]
+        regions = _hot_regions(a.target, a.top, receipts=skeleton)
+        carry = [_call(snap, "repomix", "pack",
+                       {"root": f"{a.target.rstrip('/')}/{region}"}, a.role)
+                 for region in regions]
+        receipts = skeleton + carry
+        manifest = {"pipeline": "zoom", "target": a.target, "produced_at": _now(),
+                    "receipts": receipts, "summary": _summary(receipts), "regions": regions}
+        _emit(manifest, a.json)
+        _append_ledger(manifest)   # objective combo feed (no-op unless SEAM_LEDGER=1)
+        return 0 if manifest["summary"]["error"] == 0 else 1
 
     # perceive / carry / narrate -- a named fan-out pipeline over one target
     stages = PIPELINES[a.cmd]

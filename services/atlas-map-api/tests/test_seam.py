@@ -414,3 +414,154 @@ def test_seam_ledger_feed_penalizes_a_failed_combination(tmp_path, monkeypatch):
     seam._append_ledger(_perceive_manifest(all_ok=False))
     rows = [_json.loads(ln) for ln in ledger.read_text(encoding="utf-8").splitlines() if ln.strip()]
     assert all(r["reward_score"] == -1.0 and r["reward"] == "objective_error" for r in rows)
+
+
+# ---- zoom: heterogeneous-fidelity region selection + manifest ------------------
+def _make_tree(root, spec: dict) -> None:
+    """Create immediate subdirs under `root`, each with `n` empty files (per spec)."""
+    import os as _os
+    for sub, n in spec.items():
+        d = root / sub
+        d.mkdir(parents=True, exist_ok=True)
+        for i in range(n):
+            (d / f"f{i}.py").write_text("x", encoding="utf-8")
+    _ = _os  # keep import local + intentional
+
+
+def test_hot_regions_walk_fallback_is_deterministic_topk(tmp_path):
+    """No inventory receipt -> os.walk file-count ranking, (-count, name) tie-break.
+    'big' (5) > 'mid' (3) > 'a_small' (1) == 'z_small' (1) -> name tie-break picks a_small."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    _make_tree(tmp_path, {"big": 5, "mid": 3, "z_small": 1, "a_small": 1})
+    assert seam._hot_regions(str(tmp_path), 3) == ["big", "mid", "a_small"]
+    assert seam._hot_regions(str(tmp_path), 2) == ["big", "mid"]
+    assert seam._hot_regions(str(tmp_path), 0) == []                # K=0 -> nothing
+
+
+def test_hot_regions_walk_excludes_engine_noise_dirs(tmp_path):
+    """The fallback walk reuses the inventory engine's EXCLUDE_DIRS -> node_modules etc.
+    are never proposed as a hot region even when they hold the most files."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    _make_tree(tmp_path, {"node_modules": 99, "src": 2})
+    assert seam._hot_regions(str(tmp_path), 3) == ["src"]           # noise dir dropped
+
+
+def test_hot_regions_prefers_inventory_receipt_code_lines(tmp_path):
+    """A FRESH repo-inventory receipt drives selection by code_lines desc (then files,
+    then name). The synthetic '<root>' loose-files bucket is dropped. This is the PRIMARY
+    path: it must win over the filesystem walk (here the fs tree would rank differently)."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    # On disk 'noise' has the most files, but the receipt is authoritative when present.
+    _make_tree(tmp_path, {"noise": 50, "hot": 1, "warm": 1})
+    inv_receipt = {
+        "tool": "repo-inventory", "status": "ok", "sha256": SHA,
+        "data": {"systems": {
+            "<root>": {"files": 9, "code_lines": 9999, "primary_language": "Shell"},
+            "hot":    {"files": 4, "code_lines": 500, "primary_language": "Python"},
+            "warm":   {"files": 9, "code_lines": 500, "primary_language": "TypeScript"},
+            "cold":   {"files": 1, "code_lines": 10, "primary_language": "Markdown"},
+        }},
+    }
+    recon_receipt = {"tool": "code-recon", "status": "ok", "sha256": None, "data": {}}
+    picked = seam._hot_regions(str(tmp_path), 2, receipts=[inv_receipt, recon_receipt])
+    # code_lines tie (hot==warm==500) -> files desc -> warm(9) before hot(4); '<root>' dropped
+    assert picked == ["warm", "hot"]
+    assert "<root>" not in picked
+
+
+def test_hot_regions_falls_back_when_inventory_receipt_errored(tmp_path):
+    """An ERRORED inventory receipt is not a usable signal -> fall back to the walk."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    _make_tree(tmp_path, {"big": 4, "small": 1})
+    bad_inv = {"tool": "repo-inventory", "status": "error", "sha256": None, "data": None}
+    assert seam._hot_regions(str(tmp_path), 1, receipts=[bad_inv]) == ["big"]
+
+
+def test_hot_regions_drops_wholly_gitignored_region(tmp_path):
+    """A region whose directory is entirely git-ignored yields an EMPTY repomix carry
+    (repomix honors .gitignore), so it must NOT be selected even when it ranks first.
+    Real git repo so the check-ignore filter actually fires -- regression for the
+    anatomy-research empty-carry signal-mismatch bug."""
+    import subprocess
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    _make_tree(tmp_path, {"vendored": 50, "src": 3})        # vendored ranks first by file count
+    (tmp_path / ".gitignore").write_text("vendored/\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    picked = seam._hot_regions(str(tmp_path), 2)
+    assert "vendored" not in picked                          # git-ignored -> not carry-eligible
+    assert picked == ["src"]                                 # only the trackable region survives
+
+
+def test_zoom_manifest_is_heterogeneous_skeleton_plus_carry(tmp_path, monkeypatch):
+    """zoom main(): skeleton read pair over the WHOLE repo + a repomix CARRY per hot
+    region, in ONE manifest of the standard shape. Hermetic -- _call is faked so no
+    gateway/subprocess runs. Asserts: pipeline=zoom, BOTH skeleton tools present,
+    >=1 repomix carry, every receipt content-addressed, summary correct, regions echoed,
+    and the real ledger is never touched (SEAM_LEDGER unset)."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    _make_tree(tmp_path, {"big": 5, "mid": 2})       # walk fallback -> ["big", "mid"]
+    monkeypatch.delenv("SEAM_LEDGER", raising=False)  # ledger feed must stay a no-op
+
+    calls: list[tuple] = []
+
+    def fake_call(_snap, surface, capability, args, role):
+        calls.append((surface, capability, args.get("root")))
+        return {"tool": surface, "status": "ok",
+                "sha256": SHA, "data": {"scope": args.get("root")},
+                "error": None, "_capability": capability}
+
+    monkeypatch.setattr(seam, "_call", fake_call)
+
+    rc = seam.main(["zoom", str(tmp_path), "--top", "2", "--json"])
+    assert rc == 0
+
+    tools = [c[0] for c in calls]
+    assert "repo-inventory" in tools and "code-recon" in tools     # skeleton EVERYWHERE
+    carries = [c for c in calls if c[0] == "repomix" and c[1] == "pack"]
+    assert len(carries) >= 1                                       # lossless on hot regions
+    # carry scopes are repo-relative DIRECTORY paths (charset-safe, no globs)
+    scopes = [c[2] for c in carries]
+    assert all("*" not in s for s in scopes)
+    assert scopes == [f"{str(tmp_path).rstrip(chr(47))}/big", f"{str(tmp_path).rstrip(chr(47))}/mid"]
+
+
+def test_zoom_main_builds_correct_manifest_shape(tmp_path, monkeypatch, capsys):
+    """The emitted JSON manifest has the standard shape + a regions list, every receipt
+    has a sha256 join key, and summary counts match (2 skeleton + N carry, all ok)."""
+    import json as _json
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    _make_tree(tmp_path, {"alpha": 3, "beta": 1})    # walk fallback -> ["alpha", "beta"]
+    monkeypatch.delenv("SEAM_LEDGER", raising=False)
+
+    def fake_call(_snap, surface, capability, args, role):
+        return {"tool": surface, "status": "ok", "sha256": SHA,
+                "data": {"scope": args.get("root")}, "error": None, "_capability": capability}
+
+    monkeypatch.setattr(seam, "_call", fake_call)
+    seam.main(["zoom", str(tmp_path), "--top", "2", "--json"])
+    out = capsys.readouterr().out
+    manifest = _json.loads(out)
+
+    assert manifest["pipeline"] == "zoom" and manifest["target"] == str(tmp_path)
+    assert manifest["regions"] == ["alpha", "beta"]
+    assert manifest["summary"] == {"ok": 4, "error": 0, "total": 4}   # 2 skeleton + 2 carry
+    assert all(r["sha256"] == SHA for r in manifest["receipts"])      # every receipt addressed
+    tools = [r["tool"] for r in manifest["receipts"]]
+    assert tools[:2] == ["repo-inventory", "code-recon"]             # skeleton first, then carry
+    assert tools.count("repomix") == 2
+
+
+def test_zoom_fails_loud_on_missing_repo(tmp_path):
+    """code-as-furniture: a non-existent repo path raises, it does not silently no-op."""
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    missing = str(tmp_path / "does-not-exist")
+    with pytest.raises(SystemExit):
+        seam.main(["zoom", missing, "--json"])

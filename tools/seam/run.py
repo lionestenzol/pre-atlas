@@ -270,14 +270,33 @@ def _next_invocation_index(path: Path, session: str) -> int:
     return hi + 1
 
 
+def _receipt_ok(r: dict) -> bool:
+    """A receipt is a real success only if the tool RAN (status ok) AND produced a join
+    key (sha256). A tool that ran but content-addressed nothing -- e.g. NARRATE on a repo
+    with no cached wiki (found:false, exit 0) -- contributed nothing to the combination,
+    so it must NOT count as success for the objective reward. This is what lets the combo
+    feed distinguish a member that delivered content from one that merely didn't crash.
+    See ~/.claude/rules/common/code-as-furniture.md.
+    """
+    return r.get("status") == "ok" and bool(r.get("sha256"))
+
+
 def _ledger_rows(manifest: dict, session: str, base_index: int) -> list[dict]:
-    """One objective row per receipt, matching backfill.py's row schema exactly."""
+    """One objective row per receipt, matching backfill.py's row schema exactly.
+
+    Reward is PER-RECEIPT (was manifest-shared all-or-nothing): each tool is credited for
+    ITS OWN outcome, so in one mixed run a tool that delivered a join key scores +1 while
+    one that produced nothing scores -1. Combined with combo.py's per-pair (weakest-member)
+    cofire reward, this makes a combination's score reflect which members actually delivered
+    -- the prerequisite for combination-specific value to surface instead of every co-fired
+    tool sharing one verdict.
+    """
     receipts = manifest.get("receipts") or []
-    all_ok = (manifest.get("summary") or {}).get("error", 1) == 0
-    reward = 1.0 if all_ok else -1.0
     request = f"seam:{manifest.get('pipeline')}:{manifest.get('target')}"[:160].replace("\n", " ")
     rows = []
     for off, r in enumerate(receipts):
+        ok_r = _receipt_ok(r)
+        reward = 1.0 if ok_r else -1.0
         rows.append({
             "session": session,
             "cwd": str(manifest.get("target")),
@@ -286,7 +305,7 @@ def _ledger_rows(manifest: dict, session: str, base_index: int) -> list[dict]:
             "invocation_index": base_index + off,
             "request": request,                    # shared turn key -> combo.py groups these as one cofire
             "n_tools_in_turn": len(receipts),
-            "reward": "objective_ok" if all_ok else "objective_error",
+            "reward": "objective_ok" if ok_r else "objective_error",
             "score": reward,
             "shipped": False,
             "retried": False,

@@ -403,8 +403,12 @@ def test_seam_ledger_feed_writes_objective_cofire_rows(tmp_path, monkeypatch):
     assert [r["invocation_index"] for r in rows2[-3:]] == [3, 4, 5]
 
 
-def test_seam_ledger_feed_penalizes_a_failed_combination(tmp_path, monkeypatch):
-    """Any receipt in error -> the whole combination scores -1 (objective, not sentiment)."""
+def test_seam_ledger_feed_scores_each_receipt_for_its_own_outcome(tmp_path, monkeypatch):
+    """PER-RECEIPT reward: in a mixed run, a tool that delivered a join key (status ok +
+    sha256) keeps +1 while the one that produced nothing scores -1. The old all-or-nothing
+    rule (any error -> the WHOLE combo -1) blinded the feed to WHICH member failed; crediting
+    each receipt for its own outcome is what lets a combination's score reflect the members
+    that actually delivered. See run.py _receipt_ok."""
     import json as _json
     snap = load_snapshot()
     seam = _load_seam_runner(snap)
@@ -413,7 +417,42 @@ def test_seam_ledger_feed_penalizes_a_failed_combination(tmp_path, monkeypatch):
     monkeypatch.setenv("SEAM_LEDGER", "1")
     seam._append_ledger(_perceive_manifest(all_ok=False))
     rows = [_json.loads(ln) for ln in ledger.read_text(encoding="utf-8").splitlines() if ln.strip()]
-    assert all(r["reward_score"] == -1.0 and r["reward"] == "objective_error" for r in rows)
+    by_skill = {r["skill"]: r for r in rows}
+    # the two tools that delivered a join key keep full credit ...
+    assert by_skill["repo-inventory"]["reward_score"] == 1.0
+    assert by_skill["repo-inventory"]["reward"] == "objective_ok"
+    assert by_skill["code-recon"]["reward_score"] == 1.0
+    # ... only the writes-gated tool that produced nothing is penalized
+    assert by_skill["groundwork-cli"]["reward_score"] == -1.0
+    assert by_skill["groundwork-cli"]["reward"] == "objective_error"
+
+
+def test_seam_ledger_feed_penalizes_ok_receipt_with_no_join_key(tmp_path, monkeypatch):
+    """The NARRATE found:false case: a receipt can be status 'ok' (exit 0) yet produce NO
+    sha256 -- it ran but content-addressed nothing. That is NOT a success for the combo
+    reward (_receipt_ok requires a join key), so it scores -1 while a sibling that delivered
+    a key scores +1. This ok-but-empty outcome is the heterogeneous variance the combo feed
+    needs to ever rank one combination above another."""
+    import json as _json
+    snap = load_snapshot()
+    seam = _load_seam_runner(snap)
+    ledger = tmp_path / "tool-outcomes.jsonl"
+    monkeypatch.setenv("SEAM_LEDGER_PATH", str(ledger))
+    monkeypatch.setenv("SEAM_LEDGER", "1")
+    manifest = {
+        "pipeline": "full", "target": "C:/x/repo", "produced_at": FIXED_TS,
+        "receipts": [
+            {"tool": "repo-inventory", "status": "ok", "sha256": SHA, "error": None},
+            {"tool": "deepwiki", "status": "ok", "sha256": None, "error": None},  # found:false
+        ],
+        "summary": {"ok": 2, "error": 0, "total": 2},
+    }
+    seam._append_ledger(manifest)
+    rows = [_json.loads(ln) for ln in ledger.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    by_skill = {r["skill"]: r for r in rows}
+    assert by_skill["repo-inventory"]["reward_score"] == 1.0     # delivered a join key
+    assert by_skill["deepwiki"]["reward_score"] == -1.0          # ran but produced nothing
+    assert by_skill["deepwiki"]["reward"] == "objective_error"
 
 
 # ---- zoom: heterogeneous-fidelity region selection + manifest ------------------

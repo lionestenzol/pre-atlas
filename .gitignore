@@ -254,6 +254,11 @@ sync_bridge.py
 .sync_bridge_config
 .sync_bridge.log
 
+# === gw map auto-refresh (post-commit hook) artifacts ===
+.groundwork/
+.gw-map-refresh.log
+.gw-map.lock
+
 # === cognitive-sensor cycleboard/brain runtime state ===
 services/cognitive-sensor/cycleboard/brain/cognitive_state.json
 services/cognitive-sensor/cycleboard/brain/closures.json

@@ -218,3 +218,22 @@ def test_malformed_write_surfaces_fails_closed(monkeypatch):
     # absent key -> unrestricted (role-based)
     monkeypatch.setattr(auth, "_role_tokens", {"plain": auth._normalize_entry({"role": "agent"})})
     assert auth.caller_write_surfaces("plain", repo) is None
+
+
+# ---- env-configurable CLI timeout (DESCRIBE_GATEWAY_TIMEOUT_S) -----------------
+def test_cli_timeout_default_unset_is_20(monkeypatch):
+    monkeypatch.delenv("DESCRIBE_GATEWAY_TIMEOUT_S", raising=False)
+    assert gateway._cli_timeout_default() == 20.0
+
+
+def test_cli_timeout_override_raises_cap(monkeypatch):
+    # a genuinely-large repo (1.4G tree repo-inventory can't census in 20s) needs a raised cap.
+    monkeypatch.setenv("DESCRIBE_GATEWAY_TIMEOUT_S", "180")
+    assert gateway._cli_timeout_default() == 180.0
+
+
+def test_cli_timeout_malformed_or_nonpositive_falls_back(monkeypatch):
+    # a typo or non-positive value must never brick the gateway import -> default 20.0.
+    for bad in ("abc", "0", "-5", ""):
+        monkeypatch.setenv("DESCRIBE_GATEWAY_TIMEOUT_S", bad)
+        assert gateway._cli_timeout_default() == 20.0

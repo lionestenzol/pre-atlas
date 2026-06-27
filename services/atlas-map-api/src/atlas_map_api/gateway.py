@@ -55,7 +55,24 @@ _PATH_PARAM = re.compile(r"\{([^}]+)\}")
 # argv values: safe charset AND must not begin with '-' (no flag injection).
 _SAFE_ARG = re.compile(r"^[A-Za-z0-9_.,:/@=+][A-Za-z0-9_.,:/@=+-]*$|^$")
 _MUTATING_VERBS = {"POST", "PUT", "PATCH", "DELETE"}
-_CLI_TIMEOUT_S = 20.0
+
+
+def _cli_timeout_default() -> float:
+    """Per-call CLI timeout in seconds. Default 20.0 keeps the common fast path fail-closed;
+    an operator can raise it for a genuinely-large repo (e.g. a 1.4G tree repo-inventory cannot
+    census in 20s) via DESCRIBE_GATEWAY_TIMEOUT_S. Malformed / non-positive values fall back to
+    20.0 so a typo can never brick the gateway import.
+    Made env-configurable to match the WRITES/CLI gates above.
+    See ~/.claude/rules/common/code-as-furniture.md — fix the cap, don't just document the timeout.
+    """
+    try:
+        val = float(os.environ.get("DESCRIBE_GATEWAY_TIMEOUT_S", ""))
+    except (TypeError, ValueError):
+        return 20.0
+    return val if val > 0 else 20.0
+
+
+_CLI_TIMEOUT_S = _cli_timeout_default()
 _MAX_ARG_COUNT = 32
 _MAX_ARG_LEN = 512
 

@@ -22,6 +22,9 @@ import urllib.request
 from datetime import datetime
 from typing import Any, Optional
 
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 DELTA_URL = os.environ.get("ATLAS_DELTA_URL", "http://localhost:3001")
 UASC_URL = os.environ.get("ATLAS_UASC_URL", "http://localhost:3008")

@@ -9,6 +9,7 @@
         "src/api/server.ts"
       ],
       "port": 3001,
+      "autoPort": false,
       "cwd": "services/delta-kernel"
     },
     {
@@ -296,6 +297,15 @@
       "cwd": "services/uasc-executor"
     },
     {
+      "name": "atlas-execution-daemon",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "daemon.py"
+      ],
+      "port": 8900,
+      "cwd": "services/uasc-executor"
+    },
+    {
       "name": "cortex",
       "runtimeExecutable": "python",
       "runtimeArgs": [
@@ -485,6 +495,19 @@
       "runtimeArgs": ["tsx", "index.ts"],
       "port": 3011,
       "cwd": "services/ws-gateway"
+    },
+    {
+      "name": "strudel",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["astro", "dev", "--host", "0.0.0.0", "--port", "4321"],
+      "port": 4321,
+      "cwd": "C:/Users/bruke/STRUDEL/website"
+    },
+    {
+      "name": "chatpull",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-c", "import chatpull.web; chatpull.web.serve()"],
+      "port": 8877
     }
   ]
 }

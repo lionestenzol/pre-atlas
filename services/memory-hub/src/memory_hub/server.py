@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import os
+
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from . import stores
 from .schemas import (
@@ -15,6 +18,21 @@ from .schemas import (
 )
 
 app = FastAPI(title="memory-hub", version="0.1.0")
+
+# Same allowlist pattern as droplist/server.py -- no callers used this from a
+# browser before lattice's search box, so CORS was never configured.
+# See ~/.claude/rules/common/code-as-furniture.md -- open gap fixed inline.
+_DEFAULT_ORIGINS = ["http://localhost:3011", "http://127.0.0.1:3011"]
+_ENV_ORIGINS = [
+    o.strip() for o in os.environ.get("MEMORY_HUB_ALLOWED_ORIGINS", "").split(",") if o.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_DEFAULT_ORIGINS + _ENV_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
 
 # Map source-name → callable that returns list[MemoryHit].
 # Wrapped at request time so we can pass query + k.

@@ -437,6 +437,40 @@ svg { display: block; }
 }
 .settings-row input { cursor: pointer; }
 
+.search-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 0 16px 12px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.search-panel[hidden] { display: none; }
+.search-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-1);
+  font-size: 13px;
+}
+.search-results { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+.search-hit {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border);
+  cursor: default;
+}
+.search-hit.clickable { cursor: pointer; }
+.search-hit.clickable:hover { background: var(--bg); }
+.search-hit-top { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+.search-hit-snippet { color: var(--text-1); font-size: 12px; }
+.search-empty, .search-status { color: var(--text-3); font-size: 12px; }
+
 .ctx-divider {
   height: 1px;
   background: var(--border);
@@ -1011,6 +1045,13 @@ svg { display: block; }
           <span>timeline</span>
         </button>
       </div>
+      <button class="today-btn" id="memory-search-btn" aria-label="search memory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <span>search</span>
+      </button>
       <button class="today-btn" id="today-btn" aria-label="jump to today">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <rect x="4" y="5" width="16" height="16" rx="2"/>
@@ -1033,6 +1074,11 @@ svg { display: block; }
         <span>knobs</span>
       </button>
     </header>
+
+    <div class="search-panel" id="memory-search-panel" hidden>
+      <input type="text" id="memory-search-input" placeholder="search across droplist, ideas, cognitive-sensor..." autocomplete="off" />
+      <div class="search-results" id="memory-search-results"></div>
+    </div>
 
     <div class="settings-panel" id="settings-panel" hidden>
       <div class="settings-row">
@@ -2356,6 +2402,73 @@ function setupSettingsPanel() {
   });
 }
 
+/* ============================================================
+ * MEMORY SEARCH — wires the memory-hub aggregator (droplist +
+ * idea_registry + cognitive-sensor, port 3071) into a real search box.
+ * Graceful if memory-hub isn't running: shows a status line, not an error.
+ * ============================================================ */
+let memorySearchDebounce = null;
+
+function setupMemorySearchPanel() {
+  const btn = document.getElementById('memory-search-btn');
+  const panel = document.getElementById('memory-search-panel');
+  const input = document.getElementById('memory-search-input');
+  const results = document.getElementById('memory-search-results');
+  if (!btn || !panel || !input || !results) return;
+
+  btn.addEventListener('click', () => {
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) input.focus();
+  });
+
+  input.addEventListener('input', () => {
+    clearTimeout(memorySearchDebounce);
+    const q = input.value.trim();
+    if (!q) {
+      results.innerHTML = '';
+      return;
+    }
+    memorySearchDebounce = setTimeout(() => runMemorySearch(q), 300);
+  });
+}
+
+async function runMemorySearch(q) {
+  const results = document.getElementById('memory-search-results');
+  results.innerHTML = '<div class="search-status">searching memory-hub...</div>';
+  try {
+    const r = await fetch(MEMORY_HUB_URL + '/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q, k: 8 }),
+    });
+    if (!r.ok) throw new Error('memory-hub returned ' + r.status);
+    const data = await r.json();
+    renderMemorySearchResults(data);
+  } catch (err) {
+    results.innerHTML = '<div class="search-status">memory-hub not reachable at ' + MEMORY_HUB_URL + ' (' + escapeHtml(String(err.message || err)) + ')</div>';
+  }
+}
+
+function renderMemorySearchResults(data) {
+  const results = document.getElementById('memory-search-results');
+  const hits = (data && data.results) || [];
+  if (!hits.length) {
+    results.innerHTML = '<div class="search-empty">no matches across ' + ((data && data.sources_used) || []).join(', ') + '</div>';
+    return;
+  }
+  results.innerHTML = hits.map(h => {
+    const localItem = h.canonical_id ? itemById(h.canonical_id) : null;
+    const cls = localItem ? 'search-hit clickable' : 'search-hit';
+    return '<div class="' + cls + '" data-item-id="' + escapeHtml(h.canonical_id || '') + '">' +
+      '<div class="search-hit-top"><span>' + escapeHtml(h.source || '') + '</span><span>' + (h.relevance != null ? h.relevance.toFixed(2) : '') + '</span></div>' +
+      '<div class="search-hit-snippet">' + escapeHtml(h.snippet || '') + '</div>' +
+      '</div>';
+  }).join('');
+  Array.from(results.querySelectorAll('.search-hit.clickable')).forEach(el => {
+    el.addEventListener('click', () => focusItemAsGraph(el));
+  });
+}
+
 function jumpToToday() {
   if (currentView !== 'timeline') switchView('timeline');
   // Anchor selectors per sub-mode
@@ -2419,6 +2532,7 @@ function switchView(name) {
  * with the Replicache/delta-kernel viewmodel sync. Graceful if :3072 down.
  * ============================================================ */
 const ATLAS_MAP_API = 'http://127.0.0.1:3072';
+const MEMORY_HUB_URL = 'http://127.0.0.1:3071';
 var backboneItems = [];
 var backboneSources = [];
 function mapBackboneItem(it) {
@@ -2494,6 +2608,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('today-btn').addEventListener('click', jumpToToday);
   setupSettingsPanel();
+  setupMemorySearchPanel();
   Array.from(document.querySelectorAll('.zoom-btn')).forEach(b => {
     b.addEventListener('click', () => zoom(b.dataset.zoom));
   });

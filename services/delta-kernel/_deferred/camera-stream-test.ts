@@ -9,8 +9,8 @@
  * 4. Residual tile rate < 10% of tiles/sec under normal motion
  */
 
-import { UUID, Delta, SceneTileData, SceneLightData } from './types';
-import { CameraSceneStore } from './camera-surface';
+import { UUID, Delta, SceneTileData, SceneLightData } from '../src/core/types.js';
+import { CameraSceneStore } from './camera-surface.js';
 import {
   CameraExtractor,
   CameraMetricsTracker,
@@ -19,14 +19,14 @@ import {
   TilePixels,
   buildBaseline,
   createCompactCameraDelta,
-} from './camera-extractor';
+} from './camera-extractor.js';
 import {
   CameraStreamReceiver,
   composeScene,
   scenesMatch,
   computeSceneHash,
-} from './camera-renderer';
-import { generateUUID, now, computeHash } from './delta';
+} from './camera-renderer.js';
+import { generateUUID, now, computeHash } from '../src/core/delta.js';
 
 // === TEST CONFIGURATION ===
 

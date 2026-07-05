@@ -26,7 +26,7 @@ import {
   TokenData,
   EntityHead,
   InboxData,
-} from './types';
+} from '../src/core/types.js';
 import {
   createEntity,
   createDelta,
@@ -36,14 +36,14 @@ import {
   now,
   hashState,
   applyPatch,
-} from './delta';
-import { route, bucketSignals } from './routing';
+} from '../src/core/delta.js';
+import { route, bucketSignals } from '../src/core/routing.js';
 import {
   runPreparationEngine,
   PreparationContext,
   triageThreads,
   triageTasks,
-} from './preparation';
+} from '../src/core/preparation.js';
 import {
   computeHeadsDiff,
   generateWantEntries,
@@ -52,7 +52,7 @@ import {
   createWantPacket,
   validateDelta,
   prioritizeDeltas,
-} from './delta-sync';
+} from './delta-sync.js';
 import {
   createEmptyDictionary,
   getOrCreateToken,
@@ -61,9 +61,9 @@ import {
   DictionaryState,
   compressTokenSequence,
   tokenize,
-} from './dictionary';
-import { buildCockpit, CockpitBuildContext } from './cockpit';
-import { isTemplateLegalForMode, TEMPLATE_IDS } from './templates';
+} from '../src/core/dictionary.js';
+import { buildCockpit, CockpitBuildContext } from '../src/core/cockpit.js';
+import { isTemplateLegalForMode, TEMPLATE_IDS } from '../src/core/templates.js';
 
 // === TEST UTILITIES ===
 

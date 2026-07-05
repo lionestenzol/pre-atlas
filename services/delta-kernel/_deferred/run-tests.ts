@@ -5,7 +5,7 @@
  * Or: npx tsx src/core/run-tests.ts
  */
 
-import { runAllTests } from './fabric-tests';
+import { runAllTests } from './fabric-tests.js';
 
 async function main() {
   console.log('Starting Delta-State Fabric Proof Tests...\n');

@@ -11,14 +11,14 @@ import {
   SceneTileData,
   SceneObjectData,
   SceneLightData,
-} from './types';
+} from '../src/core/types.js';
 import {
   CameraSceneStore,
   validateTilePatch,
   validateObjectPatch,
   validateLightPatch,
-} from './camera-surface';
-import { computeHash, applyPatch } from './delta';
+} from './camera-surface.js';
+import { computeHash, applyPatch } from '../src/core/delta.js';
 
 // === RECEIVER ===
 

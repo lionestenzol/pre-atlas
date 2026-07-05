@@ -2,6 +2,10 @@
   "id": "DEPLOY",
   "version": 1,
   "description": "Deploy delta-scp-web — real build, verified artifact stamp",
+  "policy_gate": {
+    "action": "request_approval",
+    "params": { "reason": "DEPLOY builds and stamps a real artifact for {environment}" }
+  },
   "inputs": [
     {
       "name": "environment",

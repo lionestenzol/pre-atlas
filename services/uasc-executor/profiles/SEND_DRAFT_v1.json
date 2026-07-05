@@ -2,6 +2,10 @@
   "id": "SEND_DRAFT",
   "version": 1,
   "description": "Send a draft notification via ntfy.sh push",
+  "policy_gate": {
+    "action": "request_approval",
+    "params": { "reason": "SEND_DRAFT pushes a real notification to the phone" }
+  },
   "inputs": [
     {
       "name": "draft_id",

@@ -4,6 +4,7 @@ UASC Executor — Profile Execution Engine
 Executes steps defined in JSON profiles: shell, http, log.
 """
 
+import os
 import subprocess
 import json
 import time
@@ -13,6 +14,10 @@ import urllib.error
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from datetime import datetime
+
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 
 @dataclass
@@ -67,6 +72,17 @@ class ProfileExecutor:
             version=profile['version'],
             status='success',
         )
+
+        policy_gate = profile.get('policy_gate')
+        if policy_gate:
+            gate_result = self._check_policy_gate(profile['id'], policy_gate)
+            if gate_result is not None:
+                result.status = 'failed'
+                result.error = gate_result
+                handler = profile.get('on_failure')
+                if handler:
+                    self._execute_step(handler)
+                return result
 
         for step in profile.get('steps', []):
             step_result = self._execute_step(step)
@@ -238,6 +254,47 @@ class ProfileExecutor:
             name=step.get('name', 'log'), step_type='log',
             status='success', output=message,
         )
+
+    def _check_policy_gate(self, profile_id: str, gate: dict) -> Optional[str]:
+        """Ask aegis-fabric for a policy decision before running a profile.
+
+        Returns None if the run may proceed, or an error string (fail-closed)
+        if it must not.
+        """
+        base_url = os.environ.get('AEGIS_FABRIC_URL')
+        api_key = os.environ.get('AEGIS_API_KEY')
+        agent_id = os.environ.get('AEGIS_AGENT_ID')
+
+        if not (base_url and api_key and agent_id):
+            return 'Policy gate configured but AEGIS_FABRIC_URL/AEGIS_API_KEY/AEGIS_AGENT_ID not set (fail-closed)'
+
+        action = gate.get('action', 'request_approval')
+        params = self._interpolate_body({**gate.get('params', {}), 'profile_id': profile_id})
+        body = json.dumps({'agent_id': agent_id, 'action': action, 'params': params}).encode()
+
+        req = urllib.request.Request(
+            f'{base_url}/api/v1/agent/action', data=body, method='POST',
+            headers={'Content-Type': 'application/json', 'X-API-Key': api_key},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                decision = json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            # aegis-fabric returns 403 (denied) / 202 (pending_approval) with a
+            # real decision body, not a transport failure -- parse it.
+            try:
+                decision = json.loads(e.read().decode())
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return f'Policy gate returned HTTP {e.code} with unreadable body, refusing to run (fail-closed)'
+        except (urllib.error.URLError, TimeoutError) as e:
+            return f'Policy gate unreachable, refusing to run (fail-closed): {e}'
+
+        status = decision.get('status')
+        effect = decision.get('policy_decision', {}).get('effect')
+        if status == 'executed' and effect == 'ALLOW':
+            return None
+        reason = decision.get('policy_decision', {}).get('reason', 'no reason given')
+        return f'Policy gate blocked run: status={status} effect={effect} reason={reason}'
 
     def _interpolate(self, text: str) -> str:
         for key, value in self.variables.items():

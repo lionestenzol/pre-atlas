@@ -11,7 +11,7 @@ import platform
 import urllib.request
 import urllib.error
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 from datetime import datetime
 
 
@@ -180,13 +180,20 @@ class ProfileExecutor:
         expected_status = step.get('expected_status', 200)
         timeout = step.get('timeout_seconds', 30)
         retries = step.get('retries', 1)
+        headers = dict(step.get('headers', {}))
+        for k, v in headers.items():
+            headers[k] = self._interpolate(str(v))
+
+        if body is not None:
+            body = self._interpolate_body(body)
 
         for attempt in range(retries):
             try:
                 data = json.dumps(body).encode() if body else None
+                req_headers = {'Content-Type': 'application/json'} if body else {}
+                req_headers.update(headers)
                 req = urllib.request.Request(
-                    url, data=data, method=method,
-                    headers={'Content-Type': 'application/json'} if body else {},
+                    url, data=data, method=method, headers=req_headers,
                 )
 
                 with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -236,6 +243,15 @@ class ProfileExecutor:
         for key, value in self.variables.items():
             text = text.replace(f'{{{key}}}', str(value))
         return text
+
+    def _interpolate_body(self, body: Any) -> Any:
+        if isinstance(body, str):
+            return self._interpolate(body)
+        if isinstance(body, dict):
+            return {k: self._interpolate_body(v) for k, v in body.items()}
+        if isinstance(body, list):
+            return [self._interpolate_body(item) for item in body]
+        return body
 
     def _evaluate_condition(self, condition: str) -> bool:
         condition = condition.strip()

@@ -768,12 +768,35 @@ export class WorkController {
    * Atomically claim the next approved executable task for autonomous execution.
    * Active jobs are considered approved. Only tasks with metadata.cmd are executable.
    */
-  claimNextExecutable(executorId: string): ExecutableTaskClaim {
+  /**
+   * Re-applies the same mode/build_allowed admission rule used at request()
+   * time. A job can be approved under one mode and still be sitting active
+   * when mode later drops (e.g. BUILD -> RECOVER) — this re-check stops the
+   * daemon from claiming it anyway just because it already passed once.
+   */
+  private isJobAllowedInCurrentMode(
+    jobType: JobType,
+    systemState: { mode: string; build_allowed: boolean }
+  ): boolean {
+    if (systemState.mode === 'CLOSURE' && jobType === 'ai' && !this.ledger.config.allow_ai_in_closure_mode) {
+      return false;
+    }
+    if (!systemState.build_allowed && jobType !== 'system') {
+      return false;
+    }
+    return true;
+  }
+
+  claimNextExecutable(
+    executorId: string,
+    systemState: { mode: string; build_allowed: boolean }
+  ): ExecutableTaskClaim {
     const now = Date.now();
 
     for (const job of this.ledger.active) {
       if (!['ai', 'system'].includes(job.type)) continue;
       if (!this.hasExecutableCommand(job.metadata)) continue;
+      if (!this.isJobAllowedInCurrentMode(job.type, systemState)) continue;
 
       const claim = this.getExecutionClaim(job.metadata);
       const claimExpiresAt = typeof claim?.claim_expires_at === 'number'

@@ -9,7 +9,7 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '../cli/sqlite-storage';
 import { createEntity, createDelta, now } from '../core/delta';
-import { buildCockpit, CockpitBuildContext } from '../core/cockpit';
+import { buildCockpit, CockpitBuildContext, isActionAllowedInMode } from '../core/cockpit';
 import type { InboxData, ThreadData, DraftData, EntityType } from '../core/types-core';
 import { getDaemon, JobName } from '../governance/governance_daemon';
 import { WorkController } from '../core/work-controller';
@@ -1915,7 +1915,8 @@ app.post('/api/work/claim', (req, res) => {
     return;
   }
 
-  const claim = workController.claimNextExecutable(executor_id);
+  const systemState = getSystemStateForWork();
+  const claim = workController.claimNextExecutable(executor_id, systemState);
   res.json(claim);
 });
 
@@ -2820,6 +2821,21 @@ app.post('/api/actions/confirm/:id', async (req, res) => {
     state.status = 'EXPIRED' as PendingActionStatus;
     storage.saveEntity(found.entity, state);
     res.status(410).json({ error: 'Action expired' });
+    return;
+  }
+
+  // Mode gate: block execution if the current mode doesn't allow this action type.
+  // Presentation (buildCockpit) already filters candidates by mode, but a pending
+  // action can outlive a mode shift, and this endpoint can be called directly —
+  // so the check must be re-applied here, not just trusted from creation time.
+  const systemStateEntities = storage.loadEntitiesByType<SystemStateData>('system_state');
+  const currentMode = systemStateEntities[0]?.state.mode;
+  if (currentMode && !isActionAllowedInMode(state.action_type, currentMode)) {
+    res.status(403).json({
+      error: `Action type '${state.action_type}' is not allowed in mode ${currentMode}`,
+      action_type: state.action_type,
+      mode: currentMode,
+    });
     return;
   }
 

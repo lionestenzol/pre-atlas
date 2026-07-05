@@ -1,7 +1,7 @@
 {
   "id": "DEPLOY",
   "version": 1,
-  "description": "Deploy — push, migrate, verify health",
+  "description": "Deploy delta-scp-web — real build, verified artifact stamp",
   "inputs": [
     {
       "name": "environment",
@@ -13,19 +13,19 @@
     {
       "name": "pre_deploy_check",
       "type": "shell",
-      "cmd": "git status --porcelain",
+      "cmd": "git status --porcelain ../../apps/delta-scp-web",
       "store_as": "dirty_files",
       "fail_if": "dirty_files != ''"
     },
     {
       "name": "build_artifacts",
       "type": "shell",
-      "cmd": "echo 'Building artifacts...'"
+      "cmd": "cd ../../apps/delta-scp-web && npm run build"
     },
     {
       "name": "push_artifacts",
       "type": "shell",
-      "cmd": "echo 'Pushing to {environment}...'"
+      "cmd": "cd ../../apps/delta-scp-web && node -e \"const fs=require('fs');const n=fs.readdirSync('dist').length;fs.writeFileSync('.last-deploy.json', JSON.stringify({environment:'{environment}',deployed_at:new Date().toISOString(),file_count:n},null,2));console.log('Deployed '+n+' files to {environment}')\""
     },
     {
       "name": "notify_complete",

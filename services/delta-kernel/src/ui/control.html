@@ -45,8 +45,23 @@
 </section>
 
 <script>
+let API_TOKEN = null;
+
+async function getAuthHeaders() {
+  if (API_TOKEN === null) {
+    const res = await fetch('/api/auth/token');
+    const { token } = await res.json();
+    API_TOKEN = token || '';
+  }
+  return API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {};
+}
+
+async function authFetch(url) {
+  return fetch(url, { headers: await getAuthHeaders() });
+}
+
 async function refresh() {
-  const res = await fetch("/api/work/status");
+  const res = await authFetch("/api/work/status");
   const s = await res.json();
 
   document.getElementById("state").innerHTML = `
@@ -73,7 +88,7 @@ async function refresh() {
 
 async function loadCompletions() {
   try {
-    const res = await fetch("/api/work/history");
+    const res = await authFetch("/api/work/history");
     if (res.ok) {
       const h = await res.json();
       const closed = h.completed || [];

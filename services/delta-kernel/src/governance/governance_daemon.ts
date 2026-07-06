@@ -18,6 +18,8 @@ import { getTimelineLogger, TimelineLogger } from '../core/timeline-logger.js';
 import { getEffectiveRiskTier, buildCockpit, createPendingAction, CockpitBuildContext } from '../core/cockpit.js';
 import { emitEvent } from '../core/event-emitter.js';
 import { notifyPhone } from '../core/notify.js';
+import { processClosureEvent } from '../core/closure-engine.js';
+import { executeOnUASC } from '../core/executor-bridge.js';
 
 // === TYPES ===
 
@@ -712,6 +714,25 @@ export class GovernanceDaemon {
       if (taskCompleted) {
         executedThisCycle++;
         const title = triaged.task_title || triaged.label || 'Task';
+
+        // Drive the same closures registry / streak / closure-ratio / mode-transition
+        // pipeline that PUT /api/tasks/:id triggers on manual completion. Before this,
+        // auto-tier completions were invisible to the machinery mode governance reads.
+        try {
+          await processClosureEvent(
+            { storage: this.storage, timeline: this.timeline, cognitiveSensorDir: this.cognitiveSensorDir },
+            { title, outcome: 'closed' }
+          );
+        } catch (e) {
+          console.error(`[Daemon] Closure feedback failed for auto-executed task "${title}":`, e);
+        }
+
+        // Best-effort UASC audit trail entry. @CLOSE_LOOP's mark_task_done step is the
+        // identical PUT this loop already performed directly above — this call exists
+        // purely so auto-tier completions show up in UASC's run ledger. Fire-and-forget:
+        // 'auto' tier must stay reliable even if the UASC executor service is down.
+        executeOnUASC({ cmd: '@CLOSE_LOOP', inputs: { task_id: taskId, task_title: title } })
+          .catch(() => {});
 
         this.timeline.emit('AUTO_EXECUTED', 'governance_daemon', {
           action_type: 'complete_task',

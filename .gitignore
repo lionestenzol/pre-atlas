@@ -289,3 +289,8 @@ festivals/.festival/.state/
 
 # === seam CARRY stage content-addressed bundle cache (tools/repomix/pack.py) ===
 .seam/
+
+# --- closure pass 2026-07-06: runtime logs & vendored skill packs ---
+data/dag_events.jsonl
+data/run_log.jsonl
+.claude/skills/

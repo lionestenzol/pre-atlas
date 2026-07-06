@@ -53,3 +53,24 @@ async def confirm_pending_action(action_id: str) -> tuple[int, dict]:
         except ValueError:
             body = {}
         return resp.status_code, body
+
+
+async def fetch_pending_actions() -> list[dict]:
+    """Return the live list of PENDING actions from delta-kernel.
+
+    Shape per item (server.ts GET /api/actions/pending): id, action_type,
+    target_entity_id, label, status, created_at, expires_at, token. Raises on
+    transport/auth/HTTP failure so callers can surface the error, matching
+    fetch_delta_derived's contract.
+    """
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        tok_resp = await client.get(f"{config.delta_url}/api/auth/token")
+        tok_resp.raise_for_status()
+        token = tok_resp.json()["token"]
+
+        resp = await client.get(
+            f"{config.delta_url}/api/actions/pending",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        resp.raise_for_status()
+        return resp.json().get("pending_actions", [])

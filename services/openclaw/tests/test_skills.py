@@ -85,3 +85,56 @@ class TestApproveSkill:
             monkeypatch.setattr(approve_module, "confirm_pending_action", fake_confirm)
             result = await approve_module.handle_approve(Message(text="pa-1"))
             assert expected in result, f"status {status}: {result}"
+
+
+class TestPendingSkill:
+    @pytest.mark.asyncio
+    async def test_pending_fails_gracefully(self, monkeypatch):
+        # Unroutable port makes the transport failure deterministic — same
+        # rationale as TestStatusSkill/TestApproveSkill's isolation fix.
+        from openclaw import config as config_module
+        monkeypatch.setattr(config_module.config, "delta_url", "http://127.0.0.1:1")
+        from openclaw.skills.pending import handle_pending
+        result = await handle_pending(Message(text=""))
+        assert "Could not fetch pending actions" in result
+
+    @pytest.mark.asyncio
+    async def test_pending_empty(self, monkeypatch):
+        from openclaw.skills import pending as pending_module
+
+        async def fake_fetch():
+            return []
+        monkeypatch.setattr(pending_module, "fetch_pending_actions", fake_fetch)
+        result = await pending_module.handle_pending(Message(text=""))
+        assert result == "No pending actions."
+
+    @pytest.mark.asyncio
+    async def test_pending_lists_actions(self, monkeypatch):
+        from openclaw.skills import pending as pending_module
+
+        async def fake_fetch():
+            return [
+                {
+                    "id": "pa-1",
+                    "action_type": "reply_message",
+                    "target_entity_id": "draft-1",
+                    "label": "Reply to Jane",
+                    "status": "PENDING",
+                    "expires_at": 1720000000000,
+                },
+                {
+                    "id": "pa-2",
+                    "action_type": "rest_action",
+                    "target_entity_id": "t-2",
+                    "label": None,
+                    "status": "PENDING",
+                    "expires_at": 1720000100000,
+                },
+            ]
+        monkeypatch.setattr(pending_module, "fetch_pending_actions", fake_fetch)
+        result = await pending_module.handle_pending(Message(text=""))
+        assert "(2)" in result
+        assert "pa-1" in result and "Reply to Jane" in result
+        # Falls back to action_type when label is missing/None.
+        assert "pa-2" in result and "rest_action" in result
+        assert "/approve <id>" in result

@@ -120,58 +120,68 @@ export class GovernanceDaemon {
       timestamp: this.state.started_at,
     });
 
+    // noOverlap:true on every job below — verified 2026-07-06 (adversarial review of
+    // f6a0c61) that node-cron 4.2.1 defaults noOverlap to false, so a slow tick (e.g.
+    // work_queue's notifyPreparedActions looping over up to 7 prepared actions with
+    // an awaited hash per entity) could otherwise overlap the next tick and race the
+    // in-memory pending_action dedup check against not-yet-persisted writes, creating
+    // duplicate pending actions + duplicate phone notifications for the same target.
+    // Every job here re-derives its state from current data each run, so skipping an
+    // overlapped tick (node-cron's behavior with noOverlap:true) is always correct —
+    // nothing here needs to "catch up" a missed tick.
+
     // Schedule heartbeat (every 5 minutes)
     const heartbeatJob = cron.schedule(this.HEARTBEAT_CRON, () => {
       this.runJob('heartbeat');
-    });
+    }, { noOverlap: true, name: 'heartbeat' });
     this.cronJobs.push(heartbeatJob);
 
     // Schedule refresh (every hour)
     const refreshJob = cron.schedule(this.REFRESH_CRON, () => {
       this.runJob('refresh');
-    });
+    }, { noOverlap: true, name: 'refresh' });
     this.cronJobs.push(refreshJob);
 
     // Schedule day start (06:00)
     const dayStartJob = cron.schedule(this.DAY_START_CRON, () => {
       this.runJob('day_start');
-    });
+    }, { noOverlap: true, name: 'day_start' });
     this.cronJobs.push(dayStartJob);
 
     // Schedule day end (22:00)
     const dayEndJob = cron.schedule(this.DAY_END_CRON, () => {
       this.runJob('day_end');
-    });
+    }, { noOverlap: true, name: 'day_end' });
     this.cronJobs.push(dayEndJob);
 
     // Schedule autonomous mode recalculation (every 15 minutes)
     const modeRecalcJob = cron.schedule(this.MODE_RECALC_CRON, () => {
       this.runJob('mode_recalc');
-    });
+    }, { noOverlap: true, name: 'mode_recalc' });
     this.cronJobs.push(modeRecalcJob);
 
     // Schedule work queue management (every minute)
     const workQueueJob = cron.schedule(this.WORK_QUEUE_CRON, () => {
       this.runJob('work_queue');
-    });
+    }, { noOverlap: true, name: 'work_queue' });
     this.cronJobs.push(workQueueJob);
 
     // Schedule agent pipeline (weekly Sunday 06:00)
     const agentPipelineJob = cron.schedule(this.AGENT_PIPELINE_CRON, () => {
       this.runJob('agent_pipeline');
-    });
+    }, { noOverlap: true, name: 'agent_pipeline' });
     this.cronJobs.push(agentPipelineJob);
 
     // Schedule preparation engine (every 5 minutes)
     const preparationJob = cron.schedule(this.PREPARATION_CRON, () => {
       this.runJob('preparation');
-    });
+    }, { noOverlap: true, name: 'preparation' });
     this.cronJobs.push(preparationJob);
 
     // Schedule stall detection (21:00 daily)
     const stallCheckJob = cron.schedule(this.STALL_CHECK_CRON, () => {
       this.runJob('stall_check');
-    });
+    }, { noOverlap: true, name: 'stall_check' });
     this.cronJobs.push(stallCheckJob);
 
     // Schedule cognitive-sensor's daily pipeline (05:45, ahead of Day Start at
@@ -179,7 +189,7 @@ export class GovernanceDaemon {
     // completeness assessment: Optogon/cortex had nothing feeding them.
     const sensorDailyJob = cron.schedule(this.SENSOR_DAILY_CRON, () => {
       this.runJob('sensor_daily');
-    });
+    }, { noOverlap: true, name: 'sensor_daily' });
     this.cronJobs.push(sensorDailyJob);
 
     // Run initial heartbeat immediately
@@ -785,26 +795,36 @@ export class GovernanceDaemon {
       if (tier === 'auto') continue;
       if (targetsAwaitingConfirmation.has(action.entity_id)) continue;
 
-      const result = await createPendingAction(action, 'governance_daemon');
-      this.storage.saveEntity(result.entity, result.state);
-      this.storage.appendDelta(result.delta);
-      targetsAwaitingConfirmation.add(action.entity_id);
+      // Per-action isolation (added 2026-07-06 after adversarial review of f6a0c61):
+      // a thrown error here previously propagated out of the whole loop, silently
+      // dropping every remaining prepared action for this tick with no per-action
+      // visibility. Each action now fails independently — the tick's dedup Set
+      // already reflects everything that succeeded, so a skipped action is just
+      // retried on the next minute's tick.
+      try {
+        const result = await createPendingAction(action, 'governance_daemon');
+        this.storage.saveEntity(result.entity, result.state);
+        this.storage.appendDelta(result.delta);
+        targetsAwaitingConfirmation.add(action.entity_id);
 
-      this.timeline.emit('PENDING_ACTION_CREATED', 'governance_daemon', {
-        pending_id: result.entity.entity_id,
-        action_type: action.action_type,
-        entity_id: action.entity_id,
-        label: action.label,
-        risk_tier: tier,
-        mode,
-      });
+        this.timeline.emit('PENDING_ACTION_CREATED', 'governance_daemon', {
+          pending_id: result.entity.entity_id,
+          action_type: action.action_type,
+          entity_id: action.entity_id,
+          label: action.label,
+          risk_tier: tier,
+          mode,
+        });
 
-      notifyPhone(
-        tier === 'confirm' ? 'Action needs confirmation' : 'Action ready',
-        action.label
-      ).catch(() => {});
+        notifyPhone(
+          tier === 'confirm' ? 'Action needs confirmation' : 'Action ready',
+          action.label
+        ).catch(() => {});
 
-      console.log(`[Daemon] Pending action created (${tier}): "${action.label}"`);
+        console.log(`[Daemon] Pending action created (${tier}): "${action.label}"`);
+      } catch (error) {
+        console.error(`[Daemon] Failed to create pending action for "${action.label}":`, (error as Error).message);
+      }
     }
   }
 

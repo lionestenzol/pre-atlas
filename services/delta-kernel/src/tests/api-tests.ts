@@ -159,6 +159,91 @@ async function runTests(): Promise<void> {
     assert(body.error !== undefined, 'Expected error message');
   });
 
+  // --- Pending-action confirmation gate ---
+  // Governance daemon's Phase 3C wiring (governance_daemon.ts:826) is the real
+  // caller; these tests exercise the HTTP surface it and /approve (openclaw)
+  // both go through. action_type 'rest_action' is used deliberately — it has
+  // no ACTION_TOKEN_MAP entry (executor-bridge.ts), so bridgeAction resolves
+  // to { executed: false, status: 'skipped' } with no side effects on any
+  // live channel (no message sent, no draft touched) *when* the mode gate
+  // lets it through. ACTION_MODE_MAP restricts 'rest_action' to RECOVER mode
+  // (cockpit.ts:128) — the confirm route re-checks mode at confirm time, not
+  // just at creation, so this test branches on the live mode instead of
+  // assuming one. Confirmed empirically: this run was in CLOSURE and the gate
+  // correctly returned 403 rather than executing.
+  let pendingActionId: string | undefined;
+  let liveMode: string | undefined;
+
+  await test('POST /api/actions/pending creates a pending action', async () => {
+    const { status, body } = await fetchJSON('/api/actions/pending', {
+      method: 'POST',
+      body: JSON.stringify({
+        action_type: 'rest_action',
+        target_entity_id: '__test_target_' + Date.now(),
+        payload: { label: 'api-test pending action' },
+      }),
+    });
+    assert(status === 200, `Expected 200, got ${status}`);
+    assert(body.id !== undefined, 'Missing id in response');
+    assert(body.status === 'PENDING', `Expected status PENDING, got ${body.status}`);
+    assert(typeof body.expires_at === 'number', 'Missing expires_at');
+    pendingActionId = body.id;
+  });
+
+  await test('GET /api/actions/pending includes the created action', async () => {
+    assert(pendingActionId !== undefined, 'No pendingActionId from create step');
+    const { status, body } = await fetchJSON('/api/actions/pending');
+    assert(status === 200, `Expected 200, got ${status}`);
+    const found = (body.pending_actions as Array<{ id: string }>).find(a => a.id === pendingActionId);
+    assert(found !== undefined, `Created action ${pendingActionId} not in pending list`);
+  });
+
+  await test('POST /api/actions/confirm/:id respects the live mode gate', async () => {
+    assert(pendingActionId !== undefined, 'No pendingActionId from create step');
+    const { body: stateBody } = await fetchJSON('/api/state/unified');
+    liveMode = stateBody.derived.mode;
+
+    const { status, body } = await fetchJSON(`/api/actions/confirm/${pendingActionId}`, {
+      method: 'POST',
+    });
+
+    if (liveMode === 'RECOVER') {
+      assert(status === 200, `Expected 200 in RECOVER mode, got ${status}`);
+      assert(body.status === 'CONFIRMED', `Expected status CONFIRMED, got ${body.status}`);
+      assert(body.execution !== undefined, 'Missing execution block');
+      assert(body.execution.status === 'skipped', `Expected execution.status skipped (rest_action), got ${body.execution.status}`);
+    } else {
+      // rest_action is RECOVER-only (cockpit.ts ACTION_MODE_MAP) — outside
+      // RECOVER the mode gate must block execution, not silently allow it.
+      assert(status === 403, `Expected 403 outside RECOVER (mode: ${liveMode}), got ${status}`);
+      assert(body.error !== undefined, 'Expected error message');
+      assert(body.mode === liveMode, `Expected error body to echo mode ${liveMode}, got ${body.mode}`);
+    }
+  });
+
+  await test('POST /api/actions/confirm/:id second call matches first outcome', async () => {
+    assert(pendingActionId !== undefined, 'No pendingActionId from create step');
+    const { status, body } = await fetchJSON(`/api/actions/confirm/${pendingActionId}`, {
+      method: 'POST',
+    });
+    if (liveMode === 'RECOVER') {
+      // Already CONFIRMED by the prior test.
+      assert(status === 409, `Expected 409 (already confirmed), got ${status}`);
+    } else {
+      // Still PENDING — the mode gate blocks every retry the same way.
+      assert(status === 403, `Expected 403 (still gated), got ${status}`);
+    }
+    assert(body.error !== undefined, 'Expected error message');
+  });
+
+  await test('POST /api/actions/confirm/:id 404s for an unknown id', async () => {
+    const { status, body } = await fetchJSON('/api/actions/confirm/__does_not_exist__', {
+      method: 'POST',
+    });
+    assert(status === 404, `Expected 404, got ${status}`);
+    assert(body.error !== undefined, 'Expected error message');
+  });
+
   // Summary
   console.log('');
   const passed = results.filter(r => r.passed).length;

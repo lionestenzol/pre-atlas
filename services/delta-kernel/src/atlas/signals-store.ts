@@ -147,6 +147,17 @@ export class SignalsStore {
     return rows.map(rowToSignal);
   }
 
+  /** Fetch a single signal by id, resolved or not. Returns null if it doesn't exist. */
+  get(signalId: string): Signal | null {
+    const row = this.db
+      .prepare(
+        `SELECT id, emitted_at, source_layer, signal_type, priority, payload_json
+           FROM signals WHERE id = ?`
+      )
+      .get(signalId) as SignalRow | undefined;
+    return row ? rowToSignal(row) : null;
+  }
+
   /** Mark a signal resolved. Returns null if not found or already resolved. */
   resolve(signalId: string, actionId: string): SignalResolution | null {
     const row = this.db
@@ -234,6 +245,12 @@ export function listSignals(since?: string, repoRoot?: string): Signal[] {
     return [];
   }
   return getStore(_storeRepoRoot || repoRoot!).list(since);
+}
+
+/** Fetch a single signal by id. Returns null if the store isn't initialized or it doesn't exist. */
+export function getSignal(signalId: string): Signal | null {
+  if (!_store) return null;
+  return _store.get(signalId);
 }
 
 /** Record resolution of an approval_required signal. Returns null if not found. */

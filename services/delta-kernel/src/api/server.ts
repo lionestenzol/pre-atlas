@@ -26,6 +26,7 @@ import { DirectiveEmitter, DirectiveValidationError } from '../atlas/directive.j
 import {
   ingestSignal,
   listSignals,
+  getSignal,
   resolveSignal,
   SignalValidationError,
 } from '../atlas/signals-store.js';
@@ -1838,6 +1839,27 @@ app.get('/api/signals', (req, res) => {
   res.json({ ok: true, signals: listSignals(since, repoRoot) });
 });
 
+const OPTOGON_URL = process.env.OPTOGON_URL || 'http://localhost:3010';
+
+/**
+ * Forward a resolved approval_required signal into Optogon's own session so the
+ * chosen option actually resumes the blocked path, not just marks the signal
+ * resolved here. Optogon's _handle_approval already recognizes 'approve'/'deny'
+ * as turn text (action_options ids match exactly) — no Optogon-side change needed.
+ * Fully fail-soft: a confirm action must never fail because Optogon is down.
+ */
+async function forwardApprovalToOptogon(sessionId: string, actionId: string): Promise<void> {
+  try {
+    await fetch(`${OPTOGON_URL}/session/${encodeURIComponent(sessionId)}/turn`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: actionId }),
+    });
+  } catch {
+    // Optogon down or unreachable — the signal is still marked resolved here.
+  }
+}
+
 app.post('/api/signals/:id/resolve', (req, res) => {
   const signalId = req.params.id;
   const actionId = typeof req.body?.action_id === 'string' ? req.body.action_id : '';
@@ -1845,11 +1867,23 @@ app.post('/api/signals/:id/resolve', (req, res) => {
     res.status(400).json({ ok: false, error: 'action_id required in body' });
     return;
   }
+
+  const signal = getSignal(signalId);
   const resolution = resolveSignal(signalId, actionId);
   if (!resolution) {
     res.status(404).json({ ok: false, error: `Signal ${signalId} not found or already resolved` });
     return;
   }
+
+  // Scoped to approval_required only — error signals' retry/abandon options
+  // aren't honored by Optogon's _handle_execute yet (separately scoped, Phase 4b).
+  if (signal?.source_layer === 'optogon' && signal.signal_type === 'approval_required') {
+    const sessionId = signal.payload?.data?.session_id;
+    if (typeof sessionId === 'string' && sessionId) {
+      forwardApprovalToOptogon(sessionId, actionId);
+    }
+  }
+
   res.json({ ok: true, resolution });
 });
 

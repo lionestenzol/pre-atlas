@@ -13,6 +13,7 @@
 
 import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { homedir } from 'os';
 import Database from 'better-sqlite3';
 import Ajv, { type ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
@@ -215,7 +216,7 @@ function getStore(repoRoot: string): SignalsStore {
     _store.close();
     _store = null;
   }
-  const dataDir = process.env.DELTA_DATA_DIR || join(require('os').homedir(), '.delta-fabric');
+  const dataDir = process.env.DELTA_DATA_DIR || join(homedir(), '.delta-fabric');
   _store = new SignalsStore(dataDir, repoRoot);
   _storeRepoRoot = repoRoot;
   return _store;

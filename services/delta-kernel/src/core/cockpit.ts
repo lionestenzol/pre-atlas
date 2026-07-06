@@ -290,41 +290,50 @@ export interface CockpitBuildContext {
 export function buildCockpit(ctx: CockpitBuildContext): CockpitState {
   const currentTime = now();
   const mode = ctx.systemState.state.mode;
+  // bucketSignals() already defaults a missing signals object internally (routing.ts);
+  // this local mirrors the exact same default shape so the raw/label fields below don't
+  // crash on the same missing data bucketSignals already tolerated one line above.
+  // Found live: the production system_state entity has no `signals` key at all, which
+  // crashed every call site of buildCockpit (pre-existing bug, exposed by this session's
+  // new governance_daemon caller running every minute).
+  const rawSignals = ctx.systemState.state.signals || {
+    sleep_hours: 0, open_loops: 0, assets_shipped: 0, deep_work_blocks: 0, money_delta: 0,
+  };
   const buckets = bucketSignals(ctx.systemState.state.signals, ctx.config);
 
   // 1. Build signal displays
   const signals = {
     sleep_hours: {
-      raw: ctx.systemState.state.signals.sleep_hours,
+      raw: rawSignals.sleep_hours,
       bucket: buckets.sleep_hours,
-      label: `${ctx.systemState.state.signals.sleep_hours}h`,
+      label: `${rawSignals.sleep_hours}h`,
       is_critical: buckets.sleep_hours === 'LOW',
     },
     open_loops: {
-      raw: ctx.systemState.state.signals.open_loops,
+      raw: rawSignals.open_loops,
       bucket: buckets.open_loops,
-      label: `${ctx.systemState.state.signals.open_loops} open`,
+      label: `${rawSignals.open_loops} open`,
       is_critical: buckets.open_loops === 'LOW',
     },
     assets_shipped: {
-      raw: ctx.systemState.state.signals.assets_shipped,
+      raw: rawSignals.assets_shipped,
       bucket: buckets.assets_shipped,
-      label: `${ctx.systemState.state.signals.assets_shipped} shipped`,
+      label: `${rawSignals.assets_shipped} shipped`,
       is_critical: false,
     },
     deep_work_blocks: {
-      raw: ctx.systemState.state.signals.deep_work_blocks,
+      raw: rawSignals.deep_work_blocks,
       bucket: buckets.deep_work_blocks,
-      label: `${ctx.systemState.state.signals.deep_work_blocks} blocks`,
+      label: `${rawSignals.deep_work_blocks} blocks`,
       is_critical: false,
     },
     money_delta: {
-      raw: ctx.systemState.state.signals.money_delta,
+      raw: rawSignals.money_delta,
       bucket: buckets.money_delta,
       label:
-        ctx.systemState.state.signals.money_delta >= 0
-          ? `+$${ctx.systemState.state.signals.money_delta}`
-          : `-$${Math.abs(ctx.systemState.state.signals.money_delta)}`,
+        rawSignals.money_delta >= 0
+          ? `+$${rawSignals.money_delta}`
+          : `-$${Math.abs(rawSignals.money_delta)}`,
       is_critical: buckets.money_delta === 'LOW',
     },
   };

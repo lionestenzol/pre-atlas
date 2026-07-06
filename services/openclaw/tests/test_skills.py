@@ -5,7 +5,11 @@ from openclaw.channels.base import Message
 
 class TestStatusSkill:
     @pytest.mark.asyncio
-    async def test_status_fails_gracefully(self):
+    async def test_status_fails_gracefully(self, monkeypatch):
+        # Unroutable port: delta-kernel is often live on the dev machine, and a
+        # running service made this "fails gracefully" test fail with a success.
+        from openclaw import config as config_module
+        monkeypatch.setattr(config_module.config, "delta_url", "http://127.0.0.1:1")
         from openclaw.skills.status import handle_status
         result = await handle_status(Message(text=""))
         assert "Could not fetch status" in result
@@ -24,7 +28,9 @@ class TestFestSkill:
     async def test_fest_fails_gracefully(self):
         from openclaw.skills.fest import handle_fest
         result = await handle_fest(Message(text=""))
-        assert "Could not fetch festival" in result
+        # FA0001 retired the live festival API; the skill now degrades to a
+        # pointer at the terminal CLI instead of a fetch error.
+        assert "isn't available over chat" in result
 
 
 class TestSimulateSkill:
@@ -38,7 +44,9 @@ class TestSimulateSkill:
     async def test_simulate_fails_gracefully(self):
         from openclaw.skills.simulate import handle_simulate
         result = await handle_simulate(Message(text="AI impact on testing"))
-        assert "Could not start simulation" in result
+        # FA0001 retired mirofish with no successor endpoint; the skill now
+        # reports unavailability rather than a connection failure.
+        assert "aren't available right now" in result
 
 
 class TestApproveSkill:
@@ -47,3 +55,33 @@ class TestApproveSkill:
         from openclaw.skills.approve import handle_approve
         result = await handle_approve(Message(text=""))
         assert "Usage" in result
+
+    @pytest.mark.asyncio
+    async def test_approve_fails_gracefully(self, monkeypatch):
+        # Unroutable port makes the transport failure deterministic — the
+        # other "fails gracefully" tests rely on the service being down,
+        # but delta-kernel (:3001) is often running on the dev machine.
+        from openclaw import config as config_module
+        monkeypatch.setattr(config_module.config, "delta_url", "http://127.0.0.1:1")
+        from openclaw.skills.approve import handle_approve
+        result = await handle_approve(Message(text="pa-123"))
+        assert "Could not reach delta-kernel" in result
+
+    @pytest.mark.asyncio
+    async def test_approve_maps_gate_outcomes(self, monkeypatch):
+        from openclaw.skills import approve as approve_module
+
+        outcomes = [
+            (200, {"id": "pa-1", "status": "CONFIRMED",
+                   "execution": {"run_id": "r-9", "status": "ok"}}, "Approved"),
+            (404, {"error": "Pending action not found"}, "No pending action"),
+            (409, {"error": "Action already CONFIRMED"}, "already resolved"),
+            (410, {"error": "Action expired"}, "expired"),
+            (403, {"error": "not allowed in mode RECOVER"}, "mode gate"),
+        ]
+        for status, body, expected in outcomes:
+            async def fake_confirm(action_id, _s=status, _b=body):
+                return _s, _b
+            monkeypatch.setattr(approve_module, "confirm_pending_action", fake_confirm)
+            result = await approve_module.handle_approve(Message(text="pa-1"))
+            assert expected in result, f"status {status}: {result}"

@@ -41,9 +41,9 @@ Run from `services/delta-kernel/`: `npm run atlas-ai -- <command> [args]`. Self-
 
 `delta-kernel` (:3001) exposes `/api/work/{request,claim,complete,cancel,heartbeat,status,history,metrics}` as the machine job queue, and `/api/auth/token` to fetch the bearer key (open route; every other `/api/*` route requires `Authorization: Bearer <token>` once `.aegis-tenant-key` exists — dev mode with no key file skips auth entirely). Prefer options 1 or 2 above; drop to raw REST only for something neither the gateway nor the CLI covers yet.
 
-## Known gap (as of 2026-07-06) — don't assume this loop is live
+## Known gap (updated 2026-07-06) — the loop is partially live now
 
-Optogon (:3010) reasons over signals and cortex prepares work, but nothing currently turns that reasoning into a pending action: `createPendingAction` (`delta-kernel/src/core/cockpit.ts`) has no caller anywhere in the repo, and Optogon's signal emission is off by default (`OPTOGON_SIGNAL_EMIT`). If you're asked to "check what Atlas recommends," the CLI (`next`, `directive`, `cognitive`) and the describe/call gateway are the live signal — don't assume Optogon's proposal queue is populated until the wiring in the completeness assessment's plan (items 4-6) lands.
+`createPendingAction` (`delta-kernel/src/core/cockpit.ts:499`) now has its first caller: the governance daemon's Phase 3C wiring (`delta-kernel/src/governance/governance_daemon.ts:826`) turns prepared actions at `notify`/`confirm` risk tiers into pending actions each tick, with per-action isolation and dedup. Pending actions are served over `GET /api/actions/pending` and confirmed/cancelled via the routes around `delta-kernel/src/api/server.ts:2564-2719`. Still not live: Optogon's signal emission remains off by default (`OPTOGON_SIGNAL_EMIT`), so the Optogon→cortex front half of the loop carries no traffic until enabled. If you're asked to "check what Atlas recommends," the CLI (`next`, `directive`, `cognitive`) and the describe/call gateway remain the primary live signal; the pending-action queue is populated only for what the governance daemon prepares.
 
 ## Two audiences, one backend
 

@@ -27,3 +27,29 @@ async def fetch_delta_derived() -> dict:
         )
         resp.raise_for_status()
         return resp.json().get("derived", {})
+
+
+async def confirm_pending_action(action_id: str) -> tuple[int, dict]:
+    """Confirm a pending action via delta-kernel's confirmation gate.
+
+    POSTs `/api/actions/confirm/{id}` with a bearer token from the open
+    `/api/auth/token` route. Returns `(status_code, response_json)` rather than
+    raising on non-2xx, because the gate's outcomes are semantically distinct
+    and callers map them to user-facing messages: 404 not found, 409 already
+    resolved, 410 expired, 403 blocked by mode gate. Raises only on transport
+    or token-fetch failure.
+    """
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        tok_resp = await client.get(f"{config.delta_url}/api/auth/token")
+        tok_resp.raise_for_status()
+        token = tok_resp.json()["token"]
+
+        resp = await client.post(
+            f"{config.delta_url}/api/actions/confirm/{action_id}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        try:
+            body = resp.json()
+        except ValueError:
+            body = {}
+        return resp.status_code, body

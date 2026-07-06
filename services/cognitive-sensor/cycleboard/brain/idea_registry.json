@@ -1,22 +1,22 @@
 {
   "metadata": {
-    "generated_at": "2026-05-27T09:45:09.188230",
-    "total_ideas": 1339,
+    "generated_at": "2026-07-05T06:23:06.856823",
+    "total_ideas": 1335,
     "tier_breakdown": {
-      "execute_now": 12,
-      "next_up": 205,
-      "backlog": 819,
-      "archive": 303
+      "execute_now": 7,
+      "next_up": 116,
+      "backlog": 907,
+      "archive": 305
     }
   },
   "execute_now": [
     {
-      "canonical_id": "canon_0250",
+      "canonical_id": "canon_0247",
       "canonical_title": "Venture Portfolio Architecture",
-      "priority_score": 0.583,
+      "priority_score": 0.542,
       "priority_breakdown": {
         "frequency": 0.015,
-        "recency": 0.041,
+        "recency": 0.0,
         "alignment": 0.19,
         "feasibility": 0.136,
         "compounding": 0.2
@@ -28,40 +28,39 @@
       "alignment_score": 0.759,
       "dependencies": [],
       "child_ideas": [
-        "canon_0249",
+        "canon_0246",
+        "canon_0250",
+        "canon_0251",
         "canon_0252",
-        "canon_0253",
-        "canon_0254",
-        "canon_0890",
+        "canon_0886",
         "canon_0037",
         "canon_0047",
         "canon_0073",
-        "canon_0175",
+        "canon_0173",
+        "canon_0177",
         "canon_0179",
-        "canon_0181",
-        "canon_0268",
-        "canon_0492",
-        "canon_0571",
-        "canon_0892",
+        "canon_0491",
+        "canon_0570",
+        "canon_0888",
+        "canon_1202",
         "canon_1206",
-        "canon_1210",
-        "canon_1221",
-        "canon_1245",
-        "canon_1246",
-        "canon_1263",
-        "canon_1273",
-        "canon_1285"
+        "canon_1217",
+        "canon_1241",
+        "canon_1242",
+        "canon_1259",
+        "canon_1269",
+        "canon_1281"
       ]
     },
     {
       "canonical_id": "canon_0435",
       "canonical_title": "GPT-5 features overview",
-      "priority_score": 0.569,
+      "priority_score": 0.539,
       "priority_breakdown": {
         "frequency": 0.2,
         "recency": 0.0,
         "alignment": 0.082,
-        "feasibility": 0.128,
+        "feasibility": 0.098,
         "compounding": 0.16
       },
       "category": "ai_automation",
@@ -69,21 +68,25 @@
       "complexity": "massive",
       "mention_count": 65,
       "alignment_score": 0.326,
-      "dependencies": [],
+      "dependencies": [
+        "canon_0534",
+        "canon_0535",
+        "canon_0536"
+      ],
       "child_ideas": [
         "canon_0436",
-        "canon_0830",
-        "canon_0901",
-        "canon_1149"
+        "canon_0827",
+        "canon_0897",
+        "canon_1145"
       ]
     },
     {
       "canonical_id": "canon_0045",
       "canonical_title": "Etch A Sketch Constraints",
-      "priority_score": 0.535,
+      "priority_score": 0.492,
       "priority_breakdown": {
         "frequency": 0.006,
-        "recency": 0.172,
+        "recency": 0.129,
         "alignment": 0.079,
         "feasibility": 0.078,
         "compounding": 0.2
@@ -94,95 +97,73 @@
       "mention_count": 2,
       "alignment_score": 0.315,
       "dependencies": [
+        "canon_0534",
         "canon_0535",
-        "canon_0536",
-        "canon_0537"
+        "canon_0536"
       ],
       "child_ideas": [
         "canon_0057",
-        "canon_0182",
-        "canon_0226",
+        "canon_0180",
+        "canon_0224",
         "canon_0373",
-        "canon_0719",
-        "canon_0876"
+        "canon_0717",
+        "canon_0873"
       ]
     },
     {
-      "canonical_id": "canon_0188",
-      "canonical_title": "SOP Creation Process",
-      "priority_score": 0.527,
+      "canonical_id": "canon_0482",
+      "canonical_title": "Study Mode Launcher Analysis",
+      "priority_score": 0.483,
       "priority_breakdown": {
-        "frequency": 0.006,
-        "recency": 0.079,
-        "alignment": 0.124,
-        "feasibility": 0.117,
-        "compounding": 0.2
-      },
-      "category": "ai_automation",
-      "status": "idea",
-      "complexity": "massive",
-      "mention_count": 2,
-      "alignment_score": 0.498,
-      "dependencies": [],
-      "child_ideas": [
-        "canon_0185",
-        "canon_0186",
-        "canon_0567",
-        "canon_0708",
-        "canon_1015"
-      ]
-    },
-    {
-      "canonical_id": "canon_0094",
-      "canonical_title": "Custom GPT Feature Changes",
-      "priority_score": 0.478,
-      "priority_breakdown": {
-        "frequency": 0.003,
-        "recency": 0.113,
-        "alignment": 0.027,
-        "feasibility": 0.135,
-        "compounding": 0.2
-      },
-      "category": "ai_automation",
-      "status": "idea",
-      "complexity": "simple",
-      "mention_count": 1,
-      "alignment_score": 0.108,
-      "dependencies": [],
-      "child_ideas": []
-    },
-    {
-      "canonical_id": "canon_0095",
-      "canonical_title": "Claude Code System Audit",
-      "priority_score": 0.471,
-      "priority_breakdown": {
-        "frequency": 0.003,
-        "recency": 0.112,
-        "alignment": 0.043,
+        "frequency": 0.08,
+        "recency": 0.0,
+        "alignment": 0.09,
         "feasibility": 0.112,
         "compounding": 0.2
       },
-      "category": "technical_project",
-      "status": "idea",
-      "complexity": "complex",
-      "mention_count": 1,
-      "alignment_score": 0.171,
+      "category": "ai_automation",
+      "status": "stalled",
+      "complexity": "massive",
+      "mention_count": 26,
+      "alignment_score": 0.361,
       "dependencies": [],
       "child_ideas": [
-        "canon_0150",
-        "canon_0234"
+        "canon_0257",
+        "canon_0306",
+        "canon_0544",
+        "canon_0614",
+        "canon_1166",
+        "canon_0476",
+        "canon_0486",
+        "canon_0488",
+        "canon_0514",
+        "canon_0525",
+        "canon_0526",
+        "canon_0528",
+        "canon_0530",
+        "canon_0531",
+        "canon_0539",
+        "canon_0627",
+        "canon_0635",
+        "canon_0907",
+        "canon_1018",
+        "canon_1051",
+        "canon_1085",
+        "canon_1117",
+        "canon_1144",
+        "canon_1161"
       ]
     },
     {
       "canonical_id": "canon_0015",
       "canonical_title": "Website Design Process",
-      "priority_score": 0.464,
+      "priority_score": 0.461,
       "priority_breakdown": {
         "frequency": 0.009,
-        "recency": 0.18,
+        "recency": 0.137,
         "alignment": 0.031,
         "feasibility": 0.124,
-        "compounding": 0.12
+        "compounding": 0.16
       },
       "category": "ecommerce",
       "status": "idea",
@@ -193,48 +174,46 @@
       "child_ideas": [
         "canon_0017",
         "canon_0018",
-        "canon_0026"
+        "canon_0026",
+        "canon_0648"
       ]
     },
     {
-      "canonical_id": "canon_0141",
-      "canonical_title": "Sheet Music to Piano Tutorial",
-      "priority_score": 0.46,
+      "canonical_id": "canon_0614",
+      "canonical_title": "Model Introduction Summary",
+      "priority_score": 0.457,
       "priority_breakdown": {
-        "frequency": 0.006,
-        "recency": 0.094,
-        "alignment": 0.047,
-        "feasibility": 0.112,
+        "frequency": 0.009,
+        "recency": 0.0,
+        "alignment": 0.125,
+        "feasibility": 0.122,
         "compounding": 0.2
       },
-      "category": "technical_project",
+      "category": "ai_automation",
       "status": "idea",
       "complexity": "massive",
-      "mention_count": 2,
-      "alignment_score": 0.189,
+      "mention_count": 3,
+      "alignment_score": 0.501,
       "dependencies": [],
       "child_ideas": [
-        "canon_0022",
-        "canon_0359",
-        "canon_0384",
-        "canon_0518",
-        "canon_0803",
-        "canon_0821",
-        "canon_0990",
-        "canon_1070",
-        "canon_1090",
-        "canon_1299"
+        "canon_0690",
+        "canon_0051",
+        "canon_0124",
+        "canon_0556",
+        "canon_0959",
+        "canon_0978",
+        "canon_1153"
       ]
     },
     {
-      "canonical_id": "canon_1027",
+      "canonical_id": "canon_1024",
       "canonical_title": "SaaS Market Growth Trends",
-      "priority_score": 0.459,
+      "priority_score": 0.454,
       "priority_breakdown": {
         "frequency": 0.068,
         "recency": 0.0,
         "alignment": 0.082,
-        "feasibility": 0.109,
+        "feasibility": 0.105,
         "compounding": 0.2
       },
       "category": "saas_product",
@@ -244,69 +223,18 @@
       "alignment_score": 0.327,
       "dependencies": [],
       "child_ideas": [
-        "canon_0875",
+        "canon_0872",
+        "canon_1025",
         "canon_1028",
-        "canon_1031",
-        "canon_1032",
-        "canon_1036",
-        "canon_1048"
-      ]
-    },
-    {
-      "canonical_id": "canon_0021",
-      "canonical_title": "Website Design Process",
-      "priority_score": 0.453,
-      "priority_breakdown": {
-        "frequency": 0.006,
-        "recency": 0.18,
-        "alignment": 0.064,
-        "feasibility": 0.123,
-        "compounding": 0.08
-      },
-      "category": "technical_project",
-      "status": "started",
-      "complexity": "complex",
-      "mention_count": 2,
-      "alignment_score": 0.256,
-      "dependencies": [],
-      "child_ideas": [
-        "canon_0020",
-        "canon_0027"
+        "canon_1029",
+        "canon_1033",
+        "canon_1045"
       ]
     }
   ],
   "next_up": [
     {
-      "canonical_id": "canon_0173",
-      "canonical_title": "Your System and Infrastructure",
-      "priority_score": 0.447,
-      "priority_breakdown": {
-        "frequency": 0.006,
-        "recency": 0.081,
-        "alignment": 0.117,
-        "feasibility": 0.082,
-        "compounding": 0.16
-      },
-      "category": "ai_automation",
-      "status": "idea",
-      "complexity": "complex",
-      "mention_count": 2,
-      "alignment_score": 0.469,
-      "dependencies": [
-        "canon_0229",
-        "canon_0230",
-        "canon_0231",
-        "canon_0312",
-        "canon_0535",
-        "canon_0536",
-        "canon_0537"
-      ],
-      "child_ideas": [
-        "canon_0174"
-      ]
-    },
-    {
-      "canonical_id": "canon_1213",
+      "canonical_id": "canon_1209",
       "canonical_title": "Document Processing with AI",
       "priority_score": 0.441,
       "priority_breakdown": {
@@ -323,156 +251,69 @@
       "alignment_score": 0.458,
       "dependencies": [],
       "child_ideas": [
-        "canon_0260",
-        "canon_0191",
-        "canon_0195",
+        "canon_0258",
+        "canon_0189",
+        "canon_0193",
         "canon_0350",
-        "canon_0506",
-        "canon_1198"
+        "canon_0505",
+        "canon_1194"
       ]
     },
     {
-      "canonical_id": "canon_0251",
-      "canonical_title": "Code analysis process",
-      "priority_score": 0.439,
+      "canonical_id": "canon_0692",
+      "canonical_title": "Productivity Web App Template",
+      "priority_score": 0.427,
       "priority_breakdown": {
-        "frequency": 0.009,
-        "recency": 0.04,
-        "alignment": 0.128,
-        "feasibility": 0.102,
-        "compounding": 0.16
+        "frequency": 0.012,
+        "recency": 0.0,
+        "alignment": 0.087,
+        "feasibility": 0.128,
+        "compounding": 0.2
       },
       "category": "ai_automation",
-      "status": "started",
-      "complexity": "complex",
-      "mention_count": 3,
-      "alignment_score": 0.511,
-      "dependencies": [
-        "canon_1000",
-        "canon_0855",
-        "canon_1002",
-        "canon_1197",
-        "canon_0841",
-        "canon_0849",
+      "status": "idea",
+      "complexity": "massive",
+      "mention_count": 4,
+      "alignment_score": 0.348,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0370",
+        "canon_0893",
+        "canon_1106",
+        "canon_0176",
+        "canon_0237",
+        "canon_0783",
+        "canon_0802",
         "canon_0854",
-        "canon_0856",
-        "canon_0872",
-        "canon_0873",
-        "canon_0875",
-        "canon_0876",
-        "canon_0898",
-        "canon_0909",
-        "canon_0999",
-        "canon_1001",
-        "canon_1003",
+        "canon_0891",
+        "canon_0965",
+        "canon_0988",
+        "canon_1006",
+        "canon_1019",
+        "canon_1042",
+        "canon_1047",
+        "canon_1048",
+        "canon_1077",
+        "canon_1084",
+        "canon_1089",
+        "canon_1134",
+        "canon_1139",
         "canon_1143",
-        "canon_1144",
-        "canon_1181",
-        "canon_1218"
-      ],
-      "child_ideas": [
-        "canon_0132"
-      ]
-    },
-    {
-      "canonical_id": "canon_0232",
-      "canonical_title": "Application as Intent Template",
-      "priority_score": 0.437,
-      "priority_breakdown": {
-        "frequency": 0.006,
-        "recency": 0.046,
-        "alignment": 0.117,
-        "feasibility": 0.107,
-        "compounding": 0.16
-      },
-      "category": "technical_project",
-      "status": "stalled",
-      "complexity": "complex",
-      "mention_count": 2,
-      "alignment_score": 0.47,
-      "dependencies": [],
-      "child_ideas": [
-        "canon_0213",
-        "canon_0241",
-        "canon_0242"
-      ]
-    },
-    {
-      "canonical_id": "canon_0006",
-      "canonical_title": "Real Question Real Answer",
-      "priority_score": 0.437,
-      "priority_breakdown": {
-        "frequency": 0.003,
-        "recency": 0.187,
-        "alignment": 0.033,
-        "feasibility": 0.135,
-        "compounding": 0.08
-      },
-      "category": "ai_automation",
-      "status": "idea",
-      "complexity": "simple",
-      "mention_count": 1,
-      "alignment_score": 0.13,
-      "dependencies": [],
-      "child_ideas": []
-    },
-    {
-      "canonical_id": "canon_0158",
-      "canonical_title": "System Stress Test",
-      "priority_score": 0.437,
-      "priority_breakdown": {
-        "frequency": 0.003,
-        "recency": 0.089,
-        "alignment": 0.095,
-        "feasibility": 0.09,
-        "compounding": 0.16
-      },
-      "category": "ai_automation",
-      "status": "idea",
-      "complexity": "complex",
-      "mention_count": 1,
-      "alignment_score": 0.381,
-      "dependencies": [
-        "canon_1143",
-        "canon_1144"
-      ],
-      "child_ideas": [
-        "canon_0205",
-        "canon_0209",
-        "canon_0166"
-      ]
-    },
-    {
-      "canonical_id": "canon_0043",
-      "canonical_title": "Etch A Sketch Constraints",
-      "priority_score": 0.436,
-      "priority_breakdown": {
-        "frequency": 0.003,
-        "recency": 0.172,
-        "alignment": 0.06,
-        "feasibility": 0.12,
-        "compounding": 0.08
-      },
-      "category": "ai_automation",
-      "status": "idea",
-      "complexity": "complex",
-      "mention_count": 1,
-      "alignment_score": 0.241,
-      "dependencies": [],
-      "child_ideas": [
-        "canon_0046",
-        "canon_0165"
+        "canon_1148",
+        "canon_1191",
+        "canon_1211",
+        "canon_1214"
       ]
     },
     {
       "canonical_id": "canon_0037",
       "canonical_title": "Semantic Command Architecture",
-      "priority_score": 0.434,
+      "priority_score": 0.421,
       "priority_breakdown": {
         "frequency": 0.003,
-        "recency": 0.173,
+        "recency": 0.13,
         "alignment": 0.092,
-        "feasibility": 0.086,
+        "feasibility": 0.116,
         "compounding": 0.08
       },
       "category": "technical_project",
@@ -480,52 +321,179 @@
       "complexity": "complex",
       "mention_count": 1,
       "alignment_score": 0.368,
-      "dependencies": [
-        "canon_0239"
-      ],
+      "dependencies": [],
       "child_ideas": [
         "canon_0036",
-        "canon_0554"
+        "canon_0553"
       ]
     },
     {
-      "canonical_id": "canon_0259",
-      "canonical_title": "Branch · Branch · Branch · Screen visibility check",
-      "priority_score": 0.432,
+      "canonical_id": "canon_0139",
+      "canonical_title": "Sheet Music to Piano Tutorial",
+      "priority_score": 0.417,
+      "priority_breakdown": {
+        "frequency": 0.006,
+        "recency": 0.051,
+        "alignment": 0.047,
+        "feasibility": 0.112,
+        "compounding": 0.2
+      },
+      "category": "technical_project",
+      "status": "idea",
+      "complexity": "massive",
+      "mention_count": 2,
+      "alignment_score": 0.189,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0022",
+        "canon_0359",
+        "canon_0384",
+        "canon_0517",
+        "canon_0801",
+        "canon_0818",
+        "canon_0987",
+        "canon_1067",
+        "canon_1087",
+        "canon_1295"
+      ]
+    },
+    {
+      "canonical_id": "canon_0882",
+      "canonical_title": "AI Automation Consulting Blueprint",
+      "priority_score": 0.415,
+      "priority_breakdown": {
+        "frequency": 0.006,
+        "recency": 0.0,
+        "alignment": 0.089,
+        "feasibility": 0.12,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "idea",
+      "complexity": "massive",
+      "mention_count": 2,
+      "alignment_score": 0.356,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0247",
+        "canon_1209",
+        "canon_1244",
+        "canon_0810",
+        "canon_1250"
+      ]
+    },
+    {
+      "canonical_id": "canon_0690",
+      "canonical_title": "AI Bootstrap for App Dev",
+      "priority_score": 0.413,
+      "priority_breakdown": {
+        "frequency": 0.006,
+        "recency": 0.0,
+        "alignment": 0.072,
+        "feasibility": 0.135,
+        "compounding": 0.2
+      },
+      "category": "ai_automation",
+      "status": "started",
+      "complexity": "massive",
+      "mention_count": 2,
+      "alignment_score": 0.288,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0055",
+        "canon_0275",
+        "canon_0346",
+        "canon_0608",
+        "canon_0615",
+        "canon_0658",
+        "canon_0683",
+        "canon_0847",
+        "canon_0964",
+        "canon_0971",
+        "canon_1140"
+      ]
+    },
+    {
+      "canonical_id": "canon_0021",
+      "canonical_title": "Website Design Process",
+      "priority_score": 0.41,
+      "priority_breakdown": {
+        "frequency": 0.006,
+        "recency": 0.137,
+        "alignment": 0.064,
+        "feasibility": 0.123,
+        "compounding": 0.08
+      },
+      "category": "technical_project",
+      "status": "started",
+      "complexity": "complex",
+      "mention_count": 2,
+      "alignment_score": 0.256,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0020",
+        "canon_0027"
+      ]
+    },
+    {
+      "canonical_id": "canon_0637",
+      "canonical_title": "Peanut Butter Instructions Exercise",
+      "priority_score": 0.409,
       "priority_breakdown": {
         "frequency": 0.012,
-        "recency": 0.037,
-        "alignment": 0.081,
-        "feasibility": 0.102,
+        "recency": 0.0,
+        "alignment": 0.066,
+        "feasibility": 0.131,
         "compounding": 0.2
       },
       "category": "ai_automation",
       "status": "started",
       "complexity": "massive",
       "mention_count": 4,
-      "alignment_score": 0.325,
-      "dependencies": [
-        "canon_0265",
-        "canon_0980",
-        "canon_0981"
-      ],
+      "alignment_score": 0.265,
+      "dependencies": [],
       "child_ideas": [
-        "canon_1122",
-        "canon_0302",
-        "canon_0448",
-        "canon_0979",
-        "canon_1161",
-        "canon_1162",
-        "canon_1163"
+        "canon_0624",
+        "canon_0625",
+        "canon_0338",
+        "canon_0339",
+        "canon_0737",
+        "canon_0871",
+        "canon_1003",
+        "canon_1014",
+        "canon_1095",
+        "canon_1213"
       ]
     },
     {
-      "canonical_id": "canon_0265",
-      "canonical_title": "Tell me about yourself",
-      "priority_score": 0.43,
+      "canonical_id": "canon_0049",
+      "canonical_title": "Branch · Branch · Branch · Math and Geometry",
+      "priority_score": 0.409,
       "priority_breakdown": {
         "frequency": 0.003,
-        "recency": 0.022,
+        "recency": 0.128,
+        "alignment": 0.075,
+        "feasibility": 0.124,
+        "compounding": 0.08
+      },
+      "category": "ai_automation",
+      "status": "idea",
+      "complexity": "complex",
+      "mention_count": 1,
+      "alignment_score": 0.299,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0044",
+        "canon_0347"
+      ]
+    },
+    {
+      "canonical_id": "canon_0263",
+      "canonical_title": "Tell me about yourself",
+      "priority_score": 0.408,
+      "priority_breakdown": {
+        "frequency": 0.003,
+        "recency": 0.0,
         "alignment": 0.079,
         "feasibility": 0.126,
         "compounding": 0.2

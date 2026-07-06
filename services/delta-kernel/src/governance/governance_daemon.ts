@@ -21,7 +21,7 @@ import { notifyPhone } from '../core/notify.js';
 
 // === TYPES ===
 
-export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check';
+export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily';
 
 export interface JobRun {
   job: JobName;
@@ -44,6 +44,7 @@ export interface DaemonState {
   last_agent_pipeline: number | null;
   last_preparation: number | null;
   last_stall_check: number | null;
+  last_sensor_daily: number | null;
   job_history: JobRun[];
   current_job: JobRun | null;
 }
@@ -58,6 +59,7 @@ export class GovernanceDaemon {
   private cronJobs: cron.ScheduledTask[] = [];
   private refreshProcess: ChildProcess | null = null;
   private agentProcess: ChildProcess | null = null;
+  private sensorProcess: ChildProcess | null = null;
   private workController: WorkController;
   private timeline: TimelineLogger;
 
@@ -71,8 +73,10 @@ export class GovernanceDaemon {
   private readonly AGENT_PIPELINE_CRON = '0 6 * * 0'; // Sunday 06:00 — weekly idea pipeline
   private readonly PREPARATION_CRON = '*/5 * * * *';  // Every 5 minutes — preparation engine
   private readonly STALL_CHECK_CRON = '0 21 * * *';   // 21:00 daily — stall detection
+  private readonly SENSOR_DAILY_CRON = '45 5 * * *';  // 05:45 daily — cognitive-sensor pipeline, ahead of Day Start
   private readonly REFRESH_TIMEOUT_MS = 120000;       // 2 minutes
   private readonly AGENT_PIPELINE_TIMEOUT_MS = 600000; // 10 minutes
+  private readonly SENSOR_DAILY_TIMEOUT_MS = 900000;   // 15 minutes — multi-phase pipeline (ingest, es_scan, triage, backlog); measured >5min in practice
 
   constructor(storage: Storage, repoRoot: string) {
     this.storage = storage;
@@ -92,6 +96,7 @@ export class GovernanceDaemon {
       last_agent_pipeline: null,
       last_preparation: null,
       last_stall_check: null,
+      last_sensor_daily: null,
       job_history: [],
       current_job: null,
     };
@@ -169,6 +174,14 @@ export class GovernanceDaemon {
     });
     this.cronJobs.push(stallCheckJob);
 
+    // Schedule cognitive-sensor's daily pipeline (05:45, ahead of Day Start at
+    // 06:00) — this was the unscheduled front of the spine per the 2026-07-06
+    // completeness assessment: Optogon/cortex had nothing feeding them.
+    const sensorDailyJob = cron.schedule(this.SENSOR_DAILY_CRON, () => {
+      this.runJob('sensor_daily');
+    });
+    this.cronJobs.push(sensorDailyJob);
+
     // Run initial heartbeat immediately
     this.runJob('heartbeat');
 
@@ -182,6 +195,7 @@ export class GovernanceDaemon {
     console.log(`  - Agent Pipeline: ${this.AGENT_PIPELINE_CRON}`);
     console.log(`  - Preparation: ${this.PREPARATION_CRON}`);
     console.log(`  - Stall Check: ${this.STALL_CHECK_CRON}`);
+    console.log(`  - Sensor Daily: ${this.SENSOR_DAILY_CRON}`);
   }
 
   /**
@@ -209,6 +223,10 @@ export class GovernanceDaemon {
     if (this.agentProcess) {
       this.agentProcess.kill();
       this.agentProcess = null;
+    }
+    if (this.sensorProcess) {
+      this.sensorProcess.kill();
+      this.sensorProcess = null;
     }
 
     this.state.running = false;
@@ -266,6 +284,9 @@ export class GovernanceDaemon {
           break;
         case 'stall_check':
           await this.runStallCheck();
+          break;
+        case 'sensor_daily':
+          await this.runSensorDaily();
           break;
       }
 
@@ -977,6 +998,71 @@ export class GovernanceDaemon {
   }
 
   /**
+   * Sensor Daily: run cognitive-sensor's run_daily.py once a day, ahead of
+   * Day Start. This is the front of the spine that ATLAS_HEADLESS_MAP.md
+   * flagged as unscheduled — without it, Optogon/cortex reason over stale or
+   * empty input. Non-critical by design: a failure here logs and moves on,
+   * it never blocks Day Start or seeding.
+   */
+  private async runSensorDaily(): Promise<void> {
+    const scriptPath = path.join(this.cognitiveSensorDir, 'run_daily.py');
+
+    if (!fs.existsSync(scriptPath)) {
+      throw new Error(`run_daily.py not found at: ${scriptPath}`);
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        if (this.sensorProcess) {
+          this.sensorProcess.kill();
+          this.sensorProcess = null;
+        }
+        reject(new Error(`Sensor daily pipeline timed out after ${this.SENSOR_DAILY_TIMEOUT_MS}ms`));
+      }, this.SENSOR_DAILY_TIMEOUT_MS);
+
+      this.sensorProcess = spawn('python', [scriptPath], {
+        cwd: this.cognitiveSensorDir,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      this.sensorProcess.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      this.sensorProcess.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      this.sensorProcess.on('close', async (code) => {
+        clearTimeout(timeout);
+        this.sensorProcess = null;
+
+        if (code === 0) {
+          await this.updateSystemState({
+            'daemon.last_sensor_daily': now(),
+            'daemon.sensor_daily_output': stdout.slice(-500),
+          });
+          this.timeline.emit('SENSOR_DAILY_COMPLETE', 'governance_daemon', {
+            output_length: stdout.length,
+          });
+          resolve();
+        } else {
+          reject(new Error(`run_daily.py exited with code ${code}: ${stderr.slice(-500)}`));
+        }
+      });
+
+      this.sensorProcess.on('error', (err) => {
+        clearTimeout(timeout);
+        this.sensorProcess = null;
+        reject(err);
+      });
+    });
+  }
+
+  /**
    * AUTONOMOUS MODE ENGINE
    *
    * Reads cognitive state, computes closure ratio, applies mode rules.
@@ -1207,6 +1293,9 @@ export class GovernanceDaemon {
         break;
       case 'stall_check':
         this.state.last_stall_check = timestamp;
+        break;
+      case 'sensor_daily':
+        this.state.last_sensor_daily = timestamp;
         break;
     }
   }

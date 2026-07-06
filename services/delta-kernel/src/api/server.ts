@@ -2445,12 +2445,12 @@ app.get('/api/daemon/status', (req, res) => {
 /**
  * POST /api/daemon/run
  * Manually trigger a daemon job.
- * Body: { job: "heartbeat" | "refresh" | "day_start" | "day_end" }
+ * Body: { job: "heartbeat" | "refresh" | "day_start" | "day_end" | "sensor_daily" }
  */
 app.post('/api/daemon/run', async (req, res) => {
   const { job } = req.body;
 
-  const validJobs: JobName[] = ['heartbeat', 'refresh', 'day_start', 'day_end'];
+  const validJobs: JobName[] = ['heartbeat', 'refresh', 'day_start', 'day_end', 'sensor_daily'];
   if (!job || !validJobs.includes(job)) {
     res.status(400).json({
       ok: false,

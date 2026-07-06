@@ -15,7 +15,6 @@ PRE_ATLAS_ROOT = Path(__file__).resolve().parents[4]
 DROPLIST_PACKETS = PRE_ATLAS_ROOT / "services" / "droplist" / "data" / "packets.jsonl"
 ATLAS_QUERY = PRE_ATLAS_ROOT / "services" / "cognitive-sensor" / "atlas_query.py"
 IDEA_REGISTRY = PRE_ATLAS_ROOT / "services" / "cognitive-sensor" / "cycleboard" / "brain" / "idea_registry.json"
-MIROFISH_NEO4J_HEALTH = "http://127.0.0.1:7474"
 
 _TOKEN = re.compile(r"[a-z0-9]+")
 _STOP = {
@@ -187,29 +186,15 @@ async def search_atlas_query(query: str, k: int) -> list[MemoryHit]:
     return out
 
 
-# ----- mirofish (Neo4j graph, degrade silently) -----
-# Stays empty until Neo4j is reachable. Wire is here so 1 line flips it on.
-
-async def search_mirofish_graph(query: str, k: int) -> list[MemoryHit]:
-    """Placeholder: returns [] until mirofish exposes a text→neighbors endpoint
-    or we run the embedder in-process. Probing Neo4j health first; nothing else
-    if it's down (which it is by default)."""
-    try:
-        import urllib.request
-        urllib.request.urlopen(MIROFISH_NEO4J_HEALTH, timeout=1)
-    except OSError:
-        return []
-    # Future: import mirofish embedder, vector_search via Neo4jClient
-    return []
-
+# ----- graph neighbors (no backend) -----
+# The graph store (mirofish / Neo4j) was retired 2026-07-06 (festival FA0001);
+# its successor is cognitive-sensor, which is already a first-class source above.
+# The /entity route is kept as a stable surface and returns [] until a graph
+# backend is wired again.
 
 async def graph_neighbors(entity: str, k: int = 10) -> list[MemoryHit]:
-    """1-hop graph neighbors for a topic/entity name. Degrades silently."""
-    try:
-        import urllib.request
-        urllib.request.urlopen(MIROFISH_NEO4J_HEALTH, timeout=1)
-    except OSError:
-        return []
+    """1-hop graph neighbors for a topic/entity name. No graph backend since the
+    mirofish/Neo4j store was retired — returns [] until one is re-wired."""
     return []
 
 
@@ -233,17 +218,6 @@ def store_status() -> list[StoreStatus]:
             note=f"atlas_query.py at {ATLAS_QUERY}" if ATLAS_QUERY.exists() else "missing",
         ),
     ]
-    # Neo4j liveness probe
-    neo4j_up = False
-    note = "Neo4j not reachable on :7474 — graph queries stay empty"
-    try:
-        import urllib.request
-        urllib.request.urlopen(MIROFISH_NEO4J_HEALTH, timeout=1)
-        neo4j_up = True
-        note = "Neo4j reachable on :7474"
-    except OSError:
-        pass
-    statuses.append(StoreStatus(name="mirofish_neo4j", available=neo4j_up, note=note))
     return statuses
 
 

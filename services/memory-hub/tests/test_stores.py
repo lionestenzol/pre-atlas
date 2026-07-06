@@ -113,7 +113,8 @@ def test_append_to_droplist_writes_valid_packet(tmp_path, monkeypatch):
     assert parsed["drop_id"] == record["drop_id"]
 
 
-def test_store_status_returns_all_four():
+def test_store_status_returns_live_sources():
+    # mirofish_neo4j dropped when the graph store was retired (FA0001).
     statuses = stores.store_status()
     names = {s.name for s in statuses}
-    assert names == {"droplist", "idea_registry", "cognitive_sensor", "mirofish_neo4j"}
+    assert names == {"droplist", "idea_registry", "cognitive_sensor"}

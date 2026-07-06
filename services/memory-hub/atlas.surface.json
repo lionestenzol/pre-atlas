@@ -1,6 +1,6 @@
 {
   "surface": "memory-hub",
-  "headline": "Aggregates memory across droplist, idea-registry, cognitive-sensor, and mirofish into one search/save surface",
+  "headline": "Aggregates memory across droplist, idea-registry, and cognitive-sensor into one search/save surface",
   "capabilities": [
     {
       "id": "status",

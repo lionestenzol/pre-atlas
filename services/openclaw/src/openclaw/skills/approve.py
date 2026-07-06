@@ -1,28 +1,22 @@
-"""Skill: /approve — approve a pending governance decision."""
-import structlog
-import httpx
+"""Skill: /approve — approve a pending governance decision.
 
-from openclaw.config import config
+No live HTTP backend since mosaic-orchestrator (:3005) was retired (festival FA0001).
+delta-kernel's pending-action queue isn't wired yet — `createPendingAction` has no
+caller (see Pre Atlas/CLAUDE.md "Known gap"). Re-point when that queue is populated.
+"""
+import structlog
+
 from openclaw.channels.base import Message
 
 log = structlog.get_logger()
 
 
 async def handle_approve(message: Message) -> str:
-    """Approve a pending item by ID."""
+    """Governance approvals aren't wired to a live service yet."""
     item_id = message.text.strip()
     if not item_id:
         return "Usage: /approve <item_id>"
-
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(
-                f"{config.orchestrator_url}/api/v1/approve",
-                json={"item_id": item_id, "approved": True},
-            )
-            resp.raise_for_status()
-            data = resp.json()
-        return f"Approved: `{item_id}` — {data.get('message', 'OK')}"
-    except Exception as e:
-        log.warning("skill.approve_failed", error=str(e))
-        return f"Could not approve: {e}"
+    return (
+        f"Approvals aren't wired to a live service yet — `{item_id}` was not submitted "
+        "(orchestrator retired; delta-kernel pending-action queue not yet live)."
+    )

@@ -36,7 +36,7 @@ app.add_middleware(
 
 # Map source-name → callable that returns list[MemoryHit].
 # Wrapped at request time so we can pass query + k.
-ALL_SOURCES = {"droplist", "idea_registry", "cognitive_sensor", "mirofish"}
+ALL_SOURCES = {"droplist", "idea_registry", "cognitive_sensor"}
 
 
 @app.get("/healthz", response_model=list[StoreStatus])
@@ -74,14 +74,6 @@ async def search(req: MemorySearchRequest) -> MemorySearchResponse:
             used.append("cognitive_sensor")
         except Exception as exc:
             failed.append({"source": "cognitive_sensor", "error": str(exc)[:200]})
-
-    if "mirofish" in requested:
-        try:
-            hits = await stores.search_mirofish_graph(req.q, req.max_results)
-            all_hits.extend(hits)
-            used.append("mirofish")
-        except Exception as exc:
-            failed.append({"source": "mirofish", "error": str(exc)[:200]})
 
     # Dedup by canonical_id (favor higher relevance)
     seen: dict[str, MemoryHit] = {}

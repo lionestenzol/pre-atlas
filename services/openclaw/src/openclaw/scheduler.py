@@ -5,6 +5,7 @@ import httpx
 from datetime import datetime, timezone
 
 from openclaw.config import config
+from openclaw.delta import fetch_delta_derived
 
 log = structlog.get_logger()
 
@@ -49,15 +50,15 @@ class DailyScheduler:
     async def check_closure_stall(self) -> str | None:
         """Check if CLOSURE mode has stalled (no completions in threshold hours)."""
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.get(f"{config.orchestrator_url}/api/v1/status")
-                resp.raise_for_status()
-                data = resp.json()
+            # Governance state now comes from delta-kernel directly (mosaic-orchestrator
+            # retired, FA0001). See openclaw/delta.py.
+            data = await fetch_delta_derived()
 
             if data.get("mode") != "CLOSURE":
                 return None
 
-            # Check last completion time
+            # Last-completion timestamp isn't surfaced by delta's unified state yet, so
+            # timestamp-based stall detection stays dormant (returns None) until it is.
             last_completion = data.get("last_completion_at")
             if not last_completion:
                 return None

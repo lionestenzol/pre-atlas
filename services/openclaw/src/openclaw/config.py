@@ -21,9 +21,11 @@ class OpenClawConfig(BaseModel):
     discord_channel_id: str = os.getenv("DISCORD_CHANNEL_ID", "")
 
     # Internal service URLs
-    orchestrator_url: str = os.getenv("ORCHESTRATOR_URL", "http://localhost:3005")
+    # delta-kernel is the system-state authority (mode/risk/loops). mosaic-orchestrator
+    # (:3005) and mirofish (:3003) were retired 2026-07-06 (festival FA0001); status now
+    # reads delta-kernel directly. See services/openclaw/src/openclaw/delta.py.
+    delta_url: str = os.getenv("DELTA_URL", "http://localhost:3001")
     cognitive_url: str = os.getenv("COGNITIVE_URL", "http://localhost:8000")
-    mirofish_url: str = os.getenv("MIROFISH_URL", "http://localhost:3003")
 
     # Scheduler
     brief_cron_hour: int = int(os.getenv("BRIEF_CRON_HOUR", "9"))

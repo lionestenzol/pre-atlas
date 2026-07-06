@@ -7,7 +7,10 @@ Port **3071**. Sits in front of:
 - **DropList** (`services/droplist/data/packets.jsonl`) — every drop you've made
 - **Cognitive Sensor** (`services/cognitive-sensor/atlas_query.py`) — embedding cluster search over conversation history
 - **Idea Registry** (`services/cognitive-sensor/cycleboard/brain/idea_registry.json`) — 20 prioritized canonical ideas (execute_now + next_up)
-- **Mirofish** (`services/mirofish/.../neo4j_client.py`) — conversation/topic/idea graph (degrades silently if Neo4j isn't running)
+
+> The former graph store (mirofish / Neo4j) was retired 2026-07-06 (festival FA0001);
+> its role is now covered by cognitive-sensor. The `/entity` route remains but returns
+> `[]` until a graph backend is re-wired.
 
 Each store stays where it is. memory-hub doesn't own data — it routes queries to the right backend and merges results.
 
@@ -17,7 +20,7 @@ Each store stays where it is. memory-hub doesn't own data — it routes queries 
 GET  /healthz                          → store availability
 POST /search   {q, max_results, sources?}  → merged hits across all stores
 GET  /idea/{canonical_id}              → exact lookup in idea_registry
-GET  /entity/{name}                    → mirofish 1-hop neighbors (when Neo4j up)
+GET  /entity/{name}                    → graph 1-hop neighbors (empty; no graph backend since FA0001)
 POST /save     {type, content, source}     → persist as DropList packet
 ```
 

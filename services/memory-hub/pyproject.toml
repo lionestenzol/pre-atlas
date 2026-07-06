@@ -1,7 +1,7 @@
 [project]
 name = "memory-hub"
 version = "0.1.0"
-description = "REST surface over Pre Atlas memory stores: droplist packets + cognitive-sensor atlas_query + idea_registry + mirofish neo4j. Each store stays where it is; this just routes."
+description = "REST surface over Pre Atlas memory stores: droplist packets + cognitive-sensor atlas_query + idea_registry. Each store stays where it is; this just routes."
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",

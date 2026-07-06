@@ -14,6 +14,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getTimelineLogger, TimelineLogger } from './timeline-logger.js';
 import { emitEvent } from './event-emitter.js';
+import { notifyPhone } from './notify.js';
 
 // === TYPES ===
 
@@ -714,6 +715,9 @@ export class WorkController {
       queueAdvanced,
       nextJobStarted: nextJobStarted,
     }).catch(() => {}); // Best-effort
+
+    // Push to phone — best-effort, never block the work controller
+    notifyPhone('Task Completed', `${req.job_id} — ${req.outcome}`).catch(() => {});
 
     return {
       success: true,

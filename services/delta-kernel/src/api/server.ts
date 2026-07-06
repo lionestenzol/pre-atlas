@@ -2753,6 +2753,7 @@ app.get('/api/actions/pending', (req, res) => {
       id: e.entity.entity_id,
       action_type: (e.state as PendingActionData).action_type,
       target_entity_id: (e.state as PendingActionData).target_entity_id,
+      label: ((e.state as PendingActionData).payload?.label as string) || (e.state as PendingActionData).action_type,
       status: (e.state as PendingActionData).status,
       created_at: (e.state as PendingActionData).created_at,
       expires_at: (e.state as PendingActionData).expires_at,

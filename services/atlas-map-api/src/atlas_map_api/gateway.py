@@ -44,7 +44,7 @@ from urllib.parse import quote, urlencode
 
 import httpx
 
-from . import auth, launcher
+from . import auth, call_counter, launcher
 from . import describe as describe_mod
 from .loader import MapSnapshot
 
@@ -360,10 +360,16 @@ async def call_capability(
 ) -> dict[str, Any]:
     enforced = _enforce(snap, surface, capability_id, args, token, role_name)
     if isinstance(enforced, dict):
+        call_counter.record(snap.repo_root, surface, capability_id, "refused")
         return enforced
     overlay, cap, role = enforced
     if overlay.kind == "http":
-        return await _invoke_http(snap, surface, cap, role, args)
-    if overlay.kind == "cli":
-        return _invoke_cli(snap, surface, cap, role, args)
-    return _refusal(422, f"surface kind '{overlay.kind}' is not invocable yet (http, cli)")
+        result = await _invoke_http(snap, surface, cap, role, args)
+    elif overlay.kind == "cli":
+        result = _invoke_cli(snap, surface, cap, role, args)
+    else:
+        result = _refusal(422, f"surface kind '{overlay.kind}' is not invocable yet (http, cli)")
+        call_counter.record(snap.repo_root, surface, capability_id, "refused")
+        return result
+    call_counter.record(snap.repo_root, surface, capability_id, "ok" if result.get("ok") else "error")
+    return result

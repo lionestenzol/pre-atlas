@@ -31,6 +31,7 @@ from fastapi.responses import PlainTextResponse
 from rapidfuzz import fuzz
 
 from . import auth
+from . import call_counter
 from . import describe as describe_mod
 from . import gateway as gateway_mod
 from . import items as items_backbone
@@ -621,6 +622,35 @@ async def call_endpoint(
     if result.get("refusal"):
         raise HTTPException(result.get("code", 400), result["error"])
     return result
+
+
+@app.get("/map/calls")
+async def call_traffic(
+    dark: bool = Query(False, description="Only list DECLARED capabilities with zero recorded calls"),
+) -> dict[str, Any]:
+    """Live-traffic report over the capability registry: for every (surface,
+    capability), how many times has /call, /seam/call, or the MCP atlas_call
+    actually reached it. Answers "which capabilities are dark" — a static
+    /describe form can't tell you that, since declaring a capability says
+    nothing about whether anyone has ever invoked it.
+
+    dark=true flips this to a punch list: every capability declared in a
+    surface's overlay with NO recorded row at all (never even attempted).
+    """
+    snap, _ = _ensure_loaded()
+    called = call_counter.get_counts(snap.repo_root)
+    if not dark:
+        return {"calls": called}
+    called_keys = {(r["surface"], r["capability"]) for r in called}
+    dark_caps: list[dict[str, str]] = []
+    for surface in describe_mod.described_surfaces(snap.repo_root):
+        overlay = describe_mod.load_overlay(snap.repo_root, surface)
+        if overlay is None:
+            continue
+        for cap in overlay.capabilities:
+            if (surface, cap.id) not in called_keys:
+                dark_caps.append({"surface": surface, "capability": cap.id, "lifecycle": overlay.lifecycle})
+    return {"dark_count": len(dark_caps), "dark": dark_caps}
 
 
 @app.post("/seam/call")

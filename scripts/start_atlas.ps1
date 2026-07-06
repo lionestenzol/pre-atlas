@@ -10,8 +10,9 @@ $HttpServer = "C:\Users\bruke\AppData\Roaming\npm\node_modules\http-server\bin\h
 
 # Services. Order: low-deps first.
 # Skipped (need Docker): mirofish (Neo4j), ws-gateway (NATS).
-# Retired 2026-07-06 (FA0001 task 01): mosaic-orchestrator:3005 -> superseded by optogon + cortex.
-#   Archived to services/_retired/. See festival finish-atlas-fleet-FA0001.
+# Retired 2026-07-06 (FA0001): mosaic-orchestrator:3005 -> superseded by optogon + cortex (task 01);
+#   mosaic-dashboard:3000 -> retired with its backend (task 02). Archived to services/_retired/.
+#   See festival finish-atlas-fleet-FA0001.
 $services = @(
     @{ Name = "delta-kernel";     Port = 3001; Cwd = "$RepoRoot\services\delta-kernel";        Cmd = "`$env:DELTA_REPO_ROOT='$RepoRoot'; `$env:DELTA_DATA_DIR='$RepoRoot\.delta-fabric'; npx tsx src/api/server.ts" },
     @{ Name = "aegis-fabric";     Port = 3002; Cwd = "$RepoRoot\services\aegis-fabric";        Cmd = "node --env-file=.env --import tsx/esm src/api/server.ts" },
@@ -23,7 +24,6 @@ $services = @(
     @{ Name = "optogon";          Port = 3010; Cwd = "$RepoRoot\services\optogon";             Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn optogon.main:app --host 127.0.0.1 --port 3010" },
     @{ Name = "blueprint-gen";    Port = 3030; Cwd = "$RepoRoot\apps\blueprint-generator";     Cmd = "npx next dev -p 3030" },
     @{ Name = "canvas-engine";    Port = 3050; Cwd = "$RepoRoot\services\canvas-engine";       Cmd = "npm run dev" },
-    @{ Name = "mosaic-dashboard"; Port = 3000; Cwd = "$RepoRoot\services\mosaic-dashboard";    Cmd = "npm run dev" },
     # atlas substrate (sibling repo, absolute Cwd): frontend over data the others produce, starts last.
     @{ Name = "atlas-substrate";  Port = 8887; Cwd = "C:\Users\bruke\atlas";                   Cmd = "python serve.py" }
 )
@@ -90,7 +90,6 @@ Write-Host ""
 Write-Host "  $alive of $($services.Count) services up" -ForegroundColor $(if ($alive -eq $services.Count) {"Green"} else {"Yellow"})
 Write-Host ""
 Write-Host "  inPACT (your UI):  http://127.0.0.1:3006" -ForegroundColor White
-Write-Host "  Mosaic Dashboard:  http://127.0.0.1:3000" -ForegroundColor DarkGray
 Write-Host "  Cortex API:        http://127.0.0.1:3009/health" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "  Stop:    stop_atlas.bat" -ForegroundColor DarkGray

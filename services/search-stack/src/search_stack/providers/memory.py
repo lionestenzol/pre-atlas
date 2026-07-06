@@ -3,12 +3,12 @@ fallback when memory-hub isn't running.
 
 Wraps existing tools (no re-implementation):
   - memory-hub REST (preferred) — unified surface over droplist, atlas_query,
-    idea_registry, mirofish neo4j
+    idea_registry
   - droplist packets.jsonl direct (fallback) — token-overlap on normalized_input
 
 The HTTP path is the primary route — it gives Phase 3 a clean seam where
-adding new stores (mirofish graph queries, embedding-based retrieval) requires
-no change to search-stack. memory.py stays a 1-page wrapper.
+adding new stores (embedding-based retrieval, etc.) requires no change to
+search-stack. memory.py stays a 1-page wrapper.
 """
 
 from __future__ import annotations
@@ -108,8 +108,6 @@ class MemoryProvider(SearchProvider):
             return f"idea://{cid}"
         if source == "cognitive_sensor":
             return f"atlas://cluster/{cid}"
-        if source == "mirofish":
-            return f"mirofish://{cid}"
         return f"memory://{cid}"
 
     def _via_droplist_fallback(self, query: str, max_results: int) -> list[SearchResult]:

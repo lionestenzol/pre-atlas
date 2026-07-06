@@ -2,7 +2,7 @@
   "generated_at": "2026-06-24",
   "repo_root": "C:\\Users\\bruke\\Pre Atlas",
   "subsystem_count": 49,
-  "autostart_count": 11,
+  "autostart_count": 10,
   "entries": [
     {
       "path": "services/aegis-fabric",
@@ -199,7 +199,7 @@
       "in_autostart": false
     },
     {
-      "path": "services/mosaic-dashboard",
+      "path": "services/_retired/mosaic-dashboard",
       "name": "mosaic-dashboard",
       "group": "services",
       "language": "ts",
@@ -232,7 +232,7 @@
       "file_count": 38,
       "total_loc": 2137,
       "port": 3000,
-      "in_autostart": true
+      "in_autostart": false
     },
     {
       "path": "services/_retired/mosaic-orchestrator",

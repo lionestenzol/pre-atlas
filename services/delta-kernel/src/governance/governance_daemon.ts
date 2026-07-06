@@ -17,6 +17,7 @@ import { WorkController } from '../core/work-controller';
 import { getTimelineLogger, TimelineLogger } from '../core/timeline-logger.js';
 import { getEffectiveRiskTier } from '../core/cockpit.js';
 import { emitEvent } from '../core/event-emitter.js';
+import { notifyPhone } from '../core/notify.js';
 
 // === TYPES ===
 
@@ -412,7 +413,84 @@ export class GovernanceDaemon {
       'metrics.closures_today': 0,
     });
 
+    // Seed inPACT's Today screen from what Atlas already knows, instead of
+    // leaving Bruke to author a blank plan every morning (see TRUST_BOUNDARY.md-
+    // adjacent completeness assessment, 2026-07-06).
+    await this.seedTodayPlan(today);
+
     console.log(`[Daemon] Day start: ${today}, mode: ${modeResult.mode}`);
+  }
+
+  /**
+   * Pre-fill inPACT's Today.daily[date] with real open tasks (top 3 by priority)
+   * so the screen arrives with content instead of starting blank. Never invents
+   * winTarget/why/lever — those need Bruke's own judgment, not a guess. Skips
+   * entirely if a plan for `date` already exists (never clobbers in-progress work)
+   * or if there's no cycle_board entity yet, or no open tasks to seed with.
+   */
+  private async seedTodayPlan(date: string): Promise<void> {
+    const entities = this.storage.loadEntitiesByType<Record<string, unknown>>('cycle_board');
+    if (entities.length === 0) return;
+
+    const existing = entities[0];
+    const cbData = (existing.state as Record<string, unknown>).data as Record<string, unknown> | undefined;
+    if (!cbData) return;
+
+    const todayBlock = (cbData.Today as Record<string, unknown>) || { mission: '', motto: '', daily: {} };
+    const daily = (todayBlock.daily as Record<string, unknown>) || {};
+    if (daily[date]) return;
+
+    const priorityRank: Record<string, number> = { CRITICAL: 0, HIGH: 1, NORMAL: 2, LOW: 3 };
+    const tasks = this.storage.loadEntitiesByType<Record<string, unknown>>('task');
+    const openTasks = tasks
+      .filter((t) => {
+        const status = (t.state as Record<string, unknown>).status as string;
+        return status !== 'DONE' && status !== 'ARCHIVED';
+      })
+      .sort((a, b) => {
+        const pa = priorityRank[(a.state as Record<string, unknown>).priority as string] ?? 4;
+        const pb = priorityRank[(b.state as Record<string, unknown>).priority as string] ?? 4;
+        return pa - pb;
+      })
+      .slice(0, 3);
+
+    if (openTasks.length === 0) return;
+
+    const titleOf = (t: { state: Record<string, unknown> }): string =>
+      (t.state.title as string) || (t.state.title_template as string) || 'Untitled task';
+
+    const seededPlan = {
+      date,
+      winTarget: '',
+      p1: titleOf(openTasks[0]), p1why: '',
+      p2: openTasks[1] ? titleOf(openTasks[1]) : '', p2why: '',
+      p3: openTasks[2] ? titleOf(openTasks[2]) : '', p3why: '',
+      x1: '', y1: '', x2: '', y2: '', x3: '', y3: '',
+      lever: '', resetMove: '', reflection: '',
+      updated_at: null,
+      seeded_from_atlas: true,
+    };
+
+    const newCbData = {
+      ...cbData,
+      Today: {
+        ...todayBlock,
+        daily: { ...daily, [date]: seededPlan },
+      },
+      _localUpdatedAt: new Date().toISOString(),
+    };
+
+    const result = await createDelta(
+      existing.entity,
+      existing.state,
+      [{ op: 'replace' as const, path: '/data', value: newCbData }],
+      'governance_daemon'
+    );
+    this.storage.saveEntity(result.entity, result.state);
+    this.storage.appendDelta(result.delta);
+
+    const summary = openTasks.map(titleOf).join(' · ');
+    notifyPhone('Today seeded', summary).catch(() => {});
   }
 
   /**
@@ -993,6 +1071,9 @@ export class GovernanceDaemon {
         buildAllowed,
         reason: `Autonomous recalc: ratio=${closureRatio.toFixed(2)}`,
       }).catch(() => {}); // Best-effort — don't block on NATS
+
+      // Push to phone — best-effort, never block the daemon loop
+      notifyPhone('Mode Changed', `${previousMode} → ${newMode} (ratio=${closureRatio.toFixed(2)})`).catch(() => {});
 
       // Re-run preparation engine immediately on mode change
       // so Command screen shows actions relevant to the new mode

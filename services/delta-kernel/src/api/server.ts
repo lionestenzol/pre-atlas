@@ -2698,7 +2698,17 @@ app.get('/api/cycleboard', (req, res) => {
     res.json({ ok: true, data: null });
     return;
   }
-  res.json({ ok: true, data: entities[0].state });
+  // Path 2 hardened: entity.state stores the client blob wrapped as { data: blob }
+  // (see the PUT handler below, which patches path "/data"). Every consumer —
+  // apps/inpact/js/api.js's getCycleBoardState() and atlas-ai.ts's
+  // getCycleboardState() — expects this endpoint's "data" field to BE the raw
+  // blob (top-level Today/DayPlans/_localUpdatedAt), matching what PUT accepts.
+  // Returning the still-wrapped entity.state left "data" double-nested, so
+  // remote._localUpdatedAt was always undefined and syncFromApi() could never
+  // detect a newer remote — pull-down silently never fired, only push-up did.
+  // See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
+  const blob = (entities[0].state as Record<string, unknown>).data ?? null;
+  res.json({ ok: true, data: blob });
 });
 
 app.put('/api/cycleboard', async (req, res) => {

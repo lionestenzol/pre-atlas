@@ -10,11 +10,12 @@ $HttpServer = "C:\Users\bruke\AppData\Roaming\npm\node_modules\http-server\bin\h
 
 # Services. Order: low-deps first.
 # Skipped (need Docker): mirofish (Neo4j), ws-gateway (NATS).
+# Retired 2026-07-06 (FA0001 task 01): mosaic-orchestrator:3005 -> superseded by optogon + cortex.
+#   Archived to services/_retired/. See festival finish-atlas-fleet-FA0001.
 $services = @(
     @{ Name = "delta-kernel";     Port = 3001; Cwd = "$RepoRoot\services\delta-kernel";        Cmd = "`$env:DELTA_REPO_ROOT='$RepoRoot'; `$env:DELTA_DATA_DIR='$RepoRoot\.delta-fabric'; npx tsx src/api/server.ts" },
     @{ Name = "aegis-fabric";     Port = 3002; Cwd = "$RepoRoot\services\aegis-fabric";        Cmd = "node --env-file=.env --import tsx/esm src/api/server.ts" },
     @{ Name = "openclaw";         Port = 3004; Cwd = "$RepoRoot\services\openclaw";            Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn openclaw.api:app --host 127.0.0.1 --port 3004" },
-    @{ Name = "mosaic-orch";      Port = 3005; Cwd = "$RepoRoot\services\mosaic-orchestrator"; Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn mosaic.main:app --host 127.0.0.1 --port 3005" },
     @{ Name = "inpact";           Port = 3006; Cwd = "$RepoRoot\apps\inpact";                  Cmd = "node `"$HttpServer`" . -p 3006 -c-1 --cors" },
     @{ Name = "code-converter";   Port = 3007; Cwd = "$RepoRoot\apps\code-converter";          Cmd = "python server.py" },
     @{ Name = "uasc";             Port = 3008; Cwd = "$RepoRoot\services\uasc-executor";       Cmd = "python server.py --port 3008" },

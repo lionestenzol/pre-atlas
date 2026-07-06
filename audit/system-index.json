@@ -2,7 +2,7 @@
   "generated_at": "2026-06-24",
   "repo_root": "C:\\Users\\bruke\\Pre Atlas",
   "subsystem_count": 49,
-  "autostart_count": 12,
+  "autostart_count": 11,
   "entries": [
     {
       "path": "services/aegis-fabric",
@@ -186,7 +186,7 @@
       "in_autostart": false
     },
     {
-      "path": "services/mirofish",
+      "path": "services/_retired/mirofish",
       "name": "mirofish",
       "group": "services",
       "language": "py",
@@ -235,7 +235,7 @@
       "in_autostart": true
     },
     {
-      "path": "services/mosaic-orchestrator",
+      "path": "services/_retired/mosaic-orchestrator",
       "name": "mosaic-orchestrator",
       "group": "services",
       "language": "py",
@@ -245,7 +245,7 @@
       "file_count": 59,
       "total_loc": 7578,
       "port": null,
-      "in_autostart": true
+      "in_autostart": false
     },
     {
       "path": "services/openclaw",

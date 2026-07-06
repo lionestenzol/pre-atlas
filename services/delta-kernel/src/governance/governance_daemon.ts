@@ -12,10 +12,10 @@ import * as fs from 'fs';
 import { Storage } from '../cli/sqlite-storage';
 import { createDelta, createEntity, now } from '../core/delta';
 import { route } from '../core/routing';
-import { Mode, SystemStateData, ActionType } from '../core/types';
+import { Mode, SystemStateData, ActionType, InboxData, TaskData, ThreadData, DraftData, PendingActionData, EntityType } from '../core/types';
 import { WorkController } from '../core/work-controller';
 import { getTimelineLogger, TimelineLogger } from '../core/timeline-logger.js';
-import { getEffectiveRiskTier } from '../core/cockpit.js';
+import { getEffectiveRiskTier, buildCockpit, createPendingAction, CockpitBuildContext } from '../core/cockpit.js';
 import { emitEvent } from '../core/event-emitter.js';
 import { notifyPhone } from '../core/notify.js';
 
@@ -623,6 +623,9 @@ export class GovernanceDaemon {
 
     // Auto-execute prepared actions with 'auto' risk tier
     await this.autoExecutePreparedActions();
+
+    // Create pending_action + phone notify for notify/confirm-tier prepared actions
+    await this.notifyPreparedActions();
   }
 
   /**
@@ -717,6 +720,91 @@ export class GovernanceDaemon {
         'auto_executions_today': autoExecToday + executedThisCycle,
         'daemon.last_auto_execution': now(),
       });
+    }
+  }
+
+  /**
+   * Phase 3C: create pending_action entities (+ phone notify) for prepared
+   * actions whose effective risk tier is 'notify' or 'confirm' — this is the
+   * first caller createPendingAction has ever had in the repo. 'auto'-tier
+   * actions stay on autoExecutePreparedActions()'s existing path above.
+   * Dedup: skip any entity that already has a PENDING pending_action, so the
+   * same task doesn't spawn a fresh one on every minute's tick.
+   */
+  private async notifyPreparedActions(): Promise<void> {
+    const systemStateEntities = this.storage.loadEntitiesByType<SystemStateData>('system_state');
+    if (systemStateEntities.length === 0) return;
+    const systemState = systemStateEntities[0];
+    const mode = systemState.state.mode as Mode;
+
+    const inboxEntities = this.storage.loadEntitiesByType<InboxData>('inbox');
+    const inbox = inboxEntities.length > 0
+      ? inboxEntities[0]
+      : {
+          entity: {
+            entity_id: 'synthetic-inbox-governance',
+            entity_type: 'inbox' as EntityType,
+            created_at: now(),
+            current_version: 1,
+            current_hash: '',
+            is_archived: false,
+          },
+          state: {
+            unread_count: 0,
+            priority_queue: [],
+            task_queue: [],
+            idea_queue: [],
+            last_activity_at: now(),
+          } satisfies InboxData,
+        };
+
+    const tasks = this.storage.loadEntitiesByType<TaskData>('task');
+    const threads = this.storage.loadEntitiesByType<ThreadData>('thread');
+    const drafts = this.storage.loadEntitiesByType<DraftData>('draft');
+    const existingPending = this.storage.loadEntitiesByType<PendingActionData>('pending_action');
+
+    const ctx: CockpitBuildContext = {
+      systemState,
+      inbox,
+      tasks,
+      threads,
+      drafts,
+      pendingAction: existingPending.length > 0 ? existingPending[0] : null,
+    };
+
+    const cockpit = buildCockpit(ctx);
+
+    const targetsAwaitingConfirmation = new Set(
+      existingPending
+        .filter((e) => e.state.status === 'PENDING')
+        .map((e) => e.state.target_entity_id)
+    );
+
+    for (const action of cockpit.prepared_actions) {
+      const tier = getEffectiveRiskTier(action.action_type as ActionType, mode);
+      if (tier === 'auto') continue;
+      if (targetsAwaitingConfirmation.has(action.entity_id)) continue;
+
+      const result = await createPendingAction(action, 'governance_daemon');
+      this.storage.saveEntity(result.entity, result.state);
+      this.storage.appendDelta(result.delta);
+      targetsAwaitingConfirmation.add(action.entity_id);
+
+      this.timeline.emit('PENDING_ACTION_CREATED', 'governance_daemon', {
+        pending_id: result.entity.entity_id,
+        action_type: action.action_type,
+        entity_id: action.entity_id,
+        label: action.label,
+        risk_tier: tier,
+        mode,
+      });
+
+      notifyPhone(
+        tier === 'confirm' ? 'Action needs confirmation' : 'Action ready',
+        action.label
+      ).catch(() => {});
+
+      console.log(`[Daemon] Pending action created (${tier}): "${action.label}"`);
     }
   }
 

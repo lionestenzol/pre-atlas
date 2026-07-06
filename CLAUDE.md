@@ -48,3 +48,7 @@ Run from `services/delta-kernel/`: `npm run atlas-ai -- <command> [args]`. Self-
 ## Two audiences, one backend
 
 `apps/inpact/` (today.html, :3006) is the human worker-facing execution surface; Atlas/delta-kernel is the manager/operator view. They share the same backend state — don't build manager-only write paths for execution data, and don't restyle one to look like the other. (Claude's memory: `project_atlas_inpact_role_split`.)
+
+## Aside: `/prune` is not an Atlas surface
+
+`/prune` (`~/.claude/commands/prune.md`) is a global Claude Code housekeeping command, not part of this repo's front door. It deletes pending `continuous-learning-v2` "instincts" (auto-generated behavioral learnings) older than 30 days that were never reviewed or promoted, via `instinct-cli.py prune` (supports `--max-age` and `--dry-run`). It has nothing to do with delta-kernel, atlas-map, or any surface listed above — noted here only so it isn't mistaken for one.

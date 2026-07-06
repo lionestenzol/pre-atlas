@@ -41,7 +41,10 @@ import { createEntity, createDelta, now } from './delta';
 // === CONSTANTS ===
 
 const MAX_PREPARED_ACTIONS = 7;
-const PENDING_ACTION_TIMEOUT_MS = 30000; // 30 seconds
+// 30 minutes — a notify/confirm-tier pending action needs to survive long enough
+// for a phone push to be noticed and acted on; 30s (the prior value) expired
+// before a human could plausibly respond.
+export const PENDING_ACTION_TIMEOUT_MS = 30 * 60 * 1000;
 
 // === DISPLAY TYPES ===
 

@@ -9,7 +9,7 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '../cli/sqlite-storage';
 import { createEntity, createDelta, now } from '../core/delta';
-import { buildCockpit, CockpitBuildContext, isActionAllowedInMode } from '../core/cockpit';
+import { buildCockpit, CockpitBuildContext, isActionAllowedInMode, PENDING_ACTION_TIMEOUT_MS } from '../core/cockpit';
 import type { InboxData, ThreadData, DraftData, EntityType } from '../core/types-core';
 import { getDaemon, JobName } from '../governance/governance_daemon';
 import { WorkController } from '../core/work-controller';
@@ -2743,8 +2743,6 @@ app.put('/api/cycleboard', async (req, res) => {
 
 import { bridgeAction, checkExecutorHealth, getTokenForAction } from '../core/executor-bridge.js';
 import type { PendingActionData, ActionType, PendingActionStatus, SystemStateData, TaskData, Priority } from '../core/types-core';
-
-const PENDING_ACTION_TIMEOUT_MS = 30_000; // 30 seconds
 
 // List pending actions
 app.get('/api/actions/pending', (req, res) => {

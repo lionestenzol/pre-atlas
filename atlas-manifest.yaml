@@ -1,462 +1,451 @@
 # =============================================================================
 # atlas-manifest.yaml — Atlas system manifest (interface-first)
-# =============================================================================
-# PURPOSE
-#   One compact, complete, machine-ingestible map of the ENTIRE Atlas system,
-#   built so an LLM (or Atlas-as-agent) can reason about real structure without
-#   guessing or cherry-picking. It captures INTERFACE, not implementation:
-#   what each surface/UI asks each backend, what each API provides, what data
-#   each thing requires, and what contract governs each seam.
 #
-# WHY THIS EXISTS (and why git/prose fail)
-#   - A GitHub upload misses gitignored state (SQLite DBs, JSON dumps, .env).
-#     This manifest was built by reading the FILESYSTEM, not git — nothing hidden.
-#   - Prose describes implementation and is too big. This describes interfaces,
-#     collapsing ~302K owned LOC into a few thousand lines you can hold at once.
+#   GENERATED FILE — do not hand-edit. Regenerate with:
+#       python audit/build_atlas_manifest.py
+#   Curated knowledge (UI calls, store shapes, contract ownership, roles) lives
+#   in audit/manifest-overlay.yaml. Mechanical facts (ports, routes, loc, deps,
+#   seams, contracts) are re-derived from system-index.json + atlas-map.json +
+#   .claude/launch.json + a source route sweep every run.
 #
-# HOW TO READ
-#   - `provides`  = the API surface you can ASK a system (verified route list).
-#   - `consumes`  = which other systems this one calls (from service_edges + env).
-#   - `requires`  = auth / data a caller must supply.
-#   - `speaks`    = JSON-Schema contracts this system produces/consumes (see §contracts).
-#   - `port`      = RUNTIME port from .claude/launch.json (the boot truth), which
-#                   overrides code-default drift in audit/system-index.json.
-#   - `verified`  = how the node was grounded (see §verification for the legend).
-#
-# PROVENANCE (all first-hand, 2026-06-25)
-#   identity/loc/deps  ← audit/system-index.json (machine-generated)
-#   purposes/lifecycle ← atlas-map.json + REPO_RUNDOWN.md (reconciled)
-#   runtime ports      ← .claude/launch.json
-#   provides (routes)  ← rg sweep of route decorators/registrations (paths starting "/")
-#   seams              ← atlas-map.json service_edges + launch.json env vars
-#   contracts          ← contracts/schemas/*.v1.json (50 files)
+# PURPOSE: one compact, complete map of ALL of Atlas, sized to upload to an LLM
+#   so it reasons about real structure without cherry-picking. INTERFACE, not
+#   implementation. Reads the filesystem (not git) — gitignored stores included.
+# HOW TO READ: provides = API surface you can ASK · consumes = who it calls ·
+#   requires = auth needed · speaks = contracts · port = RUNTIME (launch.json).
 # =============================================================================
 
 meta:
   name: Atlas (Pre Atlas)
-  one_liner: "Personal behavioral-governance system — a federated monorepo."
-  architecture: "hub-and-spoke over SQLite + one-way HTTP seams; JSON-Schema contracts are the wire format. NOT an event bus."
+  one_liner: Personal behavioral-governance system — a federated monorepo.
+  architecture: hub-and-spoke over SQLite + one-way HTTP seams; JSON-Schema contracts are the wire format. NOT an event bus.
   hub: delta-kernel
-  fsm_modes: [RECOVER, CLOSURE, MAINTENANCE, BUILD, COMPOUND, SCALE]
-  repo_root: "C:/Users/bruke/Pre Atlas"
-  sibling_repo: "C:/Users/bruke/pre-atlas (hyphen) — hosts delta-scp; folded in as a node"
-  totals: { owned_systems: 35, owned_files: ~3400, owned_loc: ~302000, contracts: 50 }
-  generated_at: "2026-06-25"
-  generator: "groundwork pipeline (delta-scp orient + code-recon verify + manual assemble)"
-
-# -----------------------------------------------------------------------------
-# spine_loop — the capture→act→reflect cycle (most automation is gated OFF)
-# -----------------------------------------------------------------------------
+  fsm_modes:
+  - RECOVER
+  - CLOSURE
+  - MAINTENANCE
+  - BUILD
+  - COMPOUND
+  - SCALE
+  repo_root: C:/Users/bruke/Pre Atlas
+  sibling_repo: C:/Users/bruke/pre-atlas (hyphen) — hosts delta-scp; folded in as a node
+  totals: {systems_in_manifest: 22, services: 19, apps: 7, owned_loc_approx: 253295, contracts: 50}
+  generated_at: '2026-06-28'
+  generator: audit/build_atlas_manifest.py (deterministic; edit audit/manifest-overlay.yaml for curated bits)
 spine_loop:
-  flow: "cognitive-sensor (analyze) → optogon/cortex (propose/execute, GATED) → droplist (packetize) → delta-kernel (commit state) → lattice/inpact (project)"
-  note: "Seams are reads or signal-writes. cortex/optogon act only behind default-off env flags."
-
-# -----------------------------------------------------------------------------
-# runtime_ports — the boot truth (.claude/launch.json). Authoritative.
-# -----------------------------------------------------------------------------
+  flow: cognitive-sensor (analyze) → optogon/cortex (propose/execute, GATED) → droplist (packetize) → delta-kernel (commit state) → lattice/inpact (project)
+  note: Seams are reads or signal-writes. cortex/optogon act only behind default-off env flags.
 runtime_ports:
-  backends:
-    delta-kernel: 3001          # + delta-web (vite) 5173
-    aegis-fabric: 3002          # + aegis-landing (static) 8890
-    openclaw: 3004              # legacy
-    mosaic-orchestrator: 3005   # legacy
-    inpact: 3006                # static http-server of apps/inpact
-    code-converter: 3007
-    uasc-executor: 3008
-    cortex: 3009                # + cortex-dashboard (static) 8891
-    optogon: 3010
-    lattice: 3011               # static http-server of apps/lattice
-    delta-scp: 3012             # CROSS-REPO: C:/Users/bruke/pre-atlas/services/delta-scp
-    canvas-engine: 3050
-    search-stack: 3070
-    memory-hub: 3071
-    atlas-map-api: 3072
-    droplist: 3073
-    triangulation: 3075         # stub
-    mosaic-dashboard: 3000      # legacy
-    blueprint-generator: 3030   # legacy
-    ai-exec-pipeline: 5000      # legacy
-    cognitive-sensor-triage: 8765
-    hydra-engine: 8899
-  static_shell_servers:
-    atlas-shell: 8888           # serves repo root incl. atlas-setup.html
-    cognitive-sensor-threadcards: 8893
-    anatomy: 8894
-    audit-map: 8897
-    hydra: 8898
-    delta-scp-web: 5174
-  drift_notes:
-    - "system-index.json shows canvas-engine 3060, cortex/optogon null, aegis 3010, triangulation 3010 — all stale code-defaults. launch.json above is runtime truth."
-    - "Latent (not active): aegis gateway subpkg + triangulation both code-default to 3010 (optogon owns it at runtime). No live collision; harden the two stale defaults."
-    - "ws-gateway code-default 3006 == inpact runtime 3006, but ws-gateway is not autostarted → no live collision."
-
-# =============================================================================
-# systems
-# =============================================================================
+  backends: {mosaic-dashboard: 3000, delta-api: 3001, aegis-api: 3002, openclaw: 3004, mosaic-orch: 3005, code-converter: 3007, uasc: 3008, cortex: 3009, optogon: 3010, ws-gateway: 3011, delta-scp-demo: 3012,
+    blueprint-generator: 3030, canvas-engine: 3050, search-stack: 3070, memory-hub: 3071, atlas-map-api: 3072, droplist: 3073, triangulation: 3075, strudel: 4321, ai-exec-pipeline: 5000, delta-web: 5173,
+    delta-scp-web: 5174, triage-server: 8765, hydra-engine: 8899}
+  static_shell_servers: {inpact: 3006, lattice: 3011, atlas-shell: 8888, cycleboard: 8889, aegis-landing: 8890, cortex-dashboard: 8891, inpact-site-legacy: 8892, thread-cards: 8893, anatomy: 8894, tour-test: 8895,
+    anatomy-calibration: 8896, audit-map: 8897, c110-trace: 8897, hydra: 8898, anatomy-saas-example: 8911}
+  note: Runtime ports from .claude/launch.json (boot truth). Overrides code-default drift in audit/system-index.json — see verification.port_drift_resolved.
 systems:
-
-  # ----- services/ : the engine room (19) -----------------------------------
-
-  delta-kernel:
-    role: hub
-    lifecycle: active
-    automation: "active — governance daemon: 9 cron jobs; */5 heartbeat + preparation auto-completes auto-tier tasks"
-    props: { lang: 'ts', framework: 'express', port: '3001', loc: '35043', files: '111' }
-    purpose: "Deterministic 6-mode state engine — THE API hub. All durable state lives here."
-    entry_points: [services/delta-kernel/src/api/server.ts]
-    modules: [core (6-mode FSM + types), api (Express routes), cli (atlas.ts), governance (cron/daemon), web (delta-web React UI :5173)]
-    stores:
-      - { kind: sqlite, engine: better-sqlite3, holds: "state · cycleboard blob · dayplans · journal · history · tasks · signals · timeline · work-ledger" }
-    provides:                   # verified: services/delta-kernel/src/api/server.ts
-      state:      ["GET /api/state", "GET /api/state/unified", "GET /api/state/unified/stream (SSE)", "PUT /api/state"]
-      cycleboard: ["GET /api/cycleboard", "PUT /api/cycleboard"]   # the governance blob inpact/setup read+write
-      signals:    ["GET /api/signals", "POST /api/signals/ingest", "POST /api/signals/{bulk,energy,finance,network,skills}", "POST /api/signals/:id/resolve"]
-      atlas:      ["GET /api/atlas/{cockpit,next-directive,preferences}", "POST /api/atlas/{close-signal,preferences}"]
-      tasks:      ["GET/POST /api/tasks", "POST /api/tasks/status", "PUT/DELETE /api/tasks/:id"]
-      work_lease: ["GET /api/work/{status,history,metrics}", "POST /api/work/{request,claim,complete,heartbeat,cancel}"]
-      timeline:   ["GET /api/timeline", "GET /api/timeline/day/:date", "GET /api/timeline/stats", "POST /api/timeline"]
-      lattice:    ["GET /api/lattice/viewmodel", "POST /api/lattice/correct"]   # the correction loop is load-bearing
-      law_gov:    ["GET /api/governance/config", "POST /api/law/{acknowledge,archive,close_loop,override,refresh,violation}"]
-      actions:    ["GET /api/actions/pending", "POST /api/actions/pending", "POST /api/actions/{confirm,cancel}/:id"]
-      daemon:     ["GET /api/daemon/status", "POST /api/daemon/run"]
-      ingest:     ["POST /api/ingest/cognitive"]
-      misc:       ["GET /api/auth/token (exempt — fetch Bearer key here)", "GET /api/health", "GET /api/ideas", "GET /api/notifications", "GET /api/preparation", "GET /api/daily-brief", "GET /api/stats", "GET /api/{services,executor}/health"]
-    consumes: []                # hub calls no one
-    requires: ["Bearer key on /api/* writes (obtain via exempt GET /api/auth/token)"]
-    speaks: [Signal.v1, CloseSignal.v1, Directive.v1, DirectiveProposed, ModeContract.v1, CompoundState.v1, DailyPayload.v1, DailyProjection.v1, AtlasArtifact.v1, Closures.v1, WorkLedger.v1, AutomationQueue.v1, WorkflowEvent.v1]
-
   aegis-fabric:
-    class: { role: 'spoke', lifecycle: 'active' }
-    props: { lang: 'ts', framework: 'express', port: '3002', loc: '12378', files: '117' }
-    purpose: "Admin gateway · API middleware · policy/approval/metering (multi-package: gateway + kernel)."
-    entry_points: [services/aegis-fabric/src/api/server.ts]
+    class: {role: spoke, lifecycle: active}
+    props: {lang: ts, framework: express, port: 3002, loc: 11951, files: 117}
+    purpose: 'Admin gateway · API middleware · policy/approval/metering (multi-package: gateway + kernel).'
     modules: [packages/gateway, packages/kernel, src/api]
-    provides:                   # verified: packages/{gateway,kernel}/src/routes/*.ts + src/api/routes/*
-      agents:    ["GET/POST /v1/agents", "GET /v1/agents/:id", "PUT /v1/agents/:id"]
-      approvals: ["GET /v1/approvals", "GET /v1/approvals/:id", "POST /v1/approvals/:id"]
-      policies:  ["GET/POST /v1/policies", "POST /v1/policies/simulate", "GET /v1/policies/rules"]
-      state:     ["GET /v1/state/query", "GET /v1/state/snapshot"]
-      delta:     ["POST /v1/delta/append", "GET /v1/delta/{latest,log,verify}"]
-      tenants:   ["GET/POST /v1/tenants", "GET/PUT /v1/tenants/:id"]
-      usage:     ["GET /v1/usage", "GET /v1/usage/totals", "GET /v1/metrics/usage"]
-      webhooks:  ["GET/POST /v1/webhooks", "DELETE /v1/webhooks/:id"]
-      ops:       ["GET /v1/audit", "GET /health", "GET /metrics", "GET /ui"]
-      alt_api:   ["router /api/v1/* mirror in src/api/routes (agents/approvals/deltas/policies/state/tenants/webhooks/metrics)"]
-    consumes: ["delta-kernel"]
-    speaks: [AegisAgent.v1, AegisAgentAction.v1, AegisApproval.v1, AegisPolicy.v1, AegisPolicyDecision.v1, AegisTenant.v1, AegisWebhook.v1, MeteringUsage.v1]
-
-  atlas-map-api:
-    class: { role: 'spoke (substrate)', lifecycle: 'active' }
-    props: { lang: 'py', framework: 'fastapi', port: '3072', loc: '2085', files: '20' }
-    purpose: "GPS substrate API — the live map behind this manifest. Self-describing surfaces + /call gateway + item backbone."
-    entry_points: [services/atlas-map-api/src/atlas_map_api/server.py]
-    modules: [server, loader (reads system-index+atlas-map), describe (capability registry), gateway (/call), items (item backbone), launcher, surfaces, auth, mcp_server]
-    stores: [{ kind: snapshot, reads: "audit/system-index.json + atlas-map.json (no own DB)" }]
-    provides:                   # verified: src/atlas_map_api/server.py
-      map:     ["GET /map/systems", "GET /map/systems/{name}", "GET /map/locate", "GET /map/neighbors/{name}", "GET /map/path", "GET /map/search", "GET /map/viewer", "GET /map/surfaces", "GET /map/signals"]
-      control: ["GET /map/launchables", "POST /map/{start,stop,restart,halt,launch}/{name}"]
-      items:   ["GET /items", "POST /items/{item_id}/status", "GET /items/{item_id}/workflow"]
-      describe: ["GET /describe", "GET /describe/{surface}", "POST /call (read+write+cli gateway, write-scoped)"]
-      admin:   ["POST /admin/reload", "GET /admin/write-token", "GET /healthz", "GET /"]
-    consumes: ["all systems (introspective — reads system-index, probes ports, proxies via /call)"]
-    requires: ["X-Atlas-Token on POST/writes (gitignored .atlas-write-token)"]
-    also: "in-process MCP server (atlas-map) + tools/atlas-cli consume the same snapshot"
-
-  canvas-engine:
-    class: { role: 'spoke', lifecycle: 'active' }
-    props: { lang: 'ts', framework: 'express', port: '3050', loc: '7001', files: '72' }
-    purpose: "URL → live React clone via in-process Vite pool."
-    entry_points: [services/canvas-engine/src/server.ts]
-    provides: ["POST /clone", "POST /clone/stub", "POST /edit", "GET /sessions", "GET /sessions/:id/edits", "GET /sessions/:id/envelope", "DELETE /sessions/:id", "GET /health"]
-    consumes: ["delta-kernel"]
-    deps_notable: ["@anthropic-ai/sdk", vite, react, zod, ajv]
-
-  cognitive-sensor:
-    class: { role: 'spoke (sensor)', lifecycle: 'dormant' }
-    automation: "dormant — triage arm (auto_triage→cortex_bridge→decisions_to_atlas) UNSCHEDULED; hand-cranked via `at`"
-    props: { lang: 'py', framework: 'fastapi', port: '8765 (triage_server)', loc: '~116000*', files: '647' }
-    loc_caveat: "*~half is JSON state dumps (multi-MB), not Python source. Treat as a data store WITH a pipeline."
-    purpose: "Conversation-analysis pipeline · idea registry · behavioral state store. Feeds delta-kernel."
-    entry_points: [services/cognitive-sensor/triage_server.py, "+ many CLI scripts (no single HTTP entry)"]
-    stores:
-      - { kind: sqlite, access: "sqlite3.connect via DB_PATH (atlas_data.py, behavioral_memory.py, directive_engine.py)", holds: "ideas · loops · decisions · metrics" }
-      - { kind: json_dumps, files: "conversations.json · memory_db.json(+bak) · idea_registry.json · ideas_classified.json · ideas_deduplicated.json · excavated_ideas_raw.json · timeline_events.json (2.2MB)", note: "the conversation corpus + registries (gitignored, large)" }
-    provides: ["GET /api/conv/{raw:path}", "POST /api/decide"]   # triage_server only; rest is CLI pipeline
-    consumes: ["delta-kernel"]
-    speaks: [IdeaRegistry.v1, IdeasClassified.v1, IdeasDeduplicated.v1, ExcavatedIdeas.v1, CognitiveMetricsComputed, AnalystDecision.v1, TimelineEvents.v1]
-
-  droplist:
-    class: { role: 'spoke (executor)', lifecycle: 'on_demand' }
-    automation: "on_demand — drop→packet→DAG with tool-verified done_condition; daemon installed (Task Scheduler) but not auto-scheduled work"
-    props: { lang: 'py', framework: 'fastapi', port: '3073', loc: '9151', files: '69' }
-    purpose: "Capture → packet → DAG execution engine."
-    entry_points: [services/droplist/droplist/server.py]
-    stores: [{ kind: storage_layer, access: "storage.save_dag / recompute_states", holds: "DAGs · packets · entities" }]
+    entry_points: [src/api/server.ts]
     provides:
-      capture: ["POST /api/drop", "POST /api/ai/anthropic"]
-      dags:    ["GET /api/dags", "GET /api/dag/{id}", "GET /api/dag/{id}/checklist", "GET /api/dag/sample", "POST /api/dag/{id}/node/{node_id}/complete", "POST /api/dag/{id}/node/{node_id}/reopen"]
-      reads:   ["GET /api/{packets,entities,brief,now,state}"]
-      ui:      ["GET / (line.html)", "GET /chain (chain.html)"]
-    consumes: ["delta-kernel (writes signals → POST /api/signals/ingest, via DROPLIST_ATLAS_SIGNALS_URL)", "search-stack (external retrieval, gated by DROPLIST_EXTERNAL_SEARCH=1)"]
-    speaks: [TaskPrompt.v1, ExecutionSpec.v1, ExecutionResult.v1]
-
+      agent: [POST /v1/agent/action]
+      agents: [GET /v1/agents, POST /v1/agents, 'GET /v1/agents/:id', 'PUT /v1/agents/:id']
+      approvals: [GET /v1/approvals, 'GET /v1/approvals/:id', 'POST /v1/approvals/:id']
+      audit: [GET /v1/audit]
+      delta: [POST /v1/delta/append, GET /v1/delta/latest, GET /v1/delta/log, GET /v1/delta/verify]
+      health: [GET /health]
+      metrics: [GET /metrics, GET /v1/metrics/usage]
+      policies: [GET /v1/policies, POST /v1/policies, GET /v1/policies/rules, POST /v1/policies/simulate]
+      state: [GET /v1/state/query, GET /v1/state/snapshot]
+      tenants: [GET /v1/tenants, POST /v1/tenants, 'GET /v1/tenants/:id', 'PUT /v1/tenants/:id']
+      ui: [GET /ui]
+      usage: [GET /v1/usage, GET /v1/usage/totals]
+      v1: [POST /api/v1/agent/action, GET /api/v1/agents, POST /api/v1/agents, GET /api/v1/approvals, 'POST /api/v1/approvals/:id', GET /api/v1/audit, GET /api/v1/deltas, GET /api/v1/deltas/verify, GET
+          /api/v1/metrics/usage, GET /api/v1/policies, POST /api/v1/policies, POST /api/v1/policies/simulate, GET /api/v1/state/query, GET /api/v1/tenants, POST /api/v1/tenants, POST /api/v1/webhooks/manage]
+      webhooks: [GET /v1/webhooks, POST /v1/webhooks, 'DELETE /v1/webhooks/:id', 'GET /v1/webhooks/:id']
+    consumes: [delta-kernel]
+    speaks: [AegisAgent.v1, AegisAgentAction.v1, AegisApproval.v1, AegisPolicy.v1, AegisPolicyDecision.v1, AegisTenant.v1, AegisWebhook.v1, MeteringUsage.v1]
+  atlas-map-api:
+    class: {role: spoke (substrate), lifecycle: active}
+    props: {lang: py, framework: fastapi, port: 3072, loc: 2932, files: 20}
+    purpose: GPS substrate API — the live map behind this manifest. Self-describing surfaces + /call gateway + item backbone.
+    modules: [server, loader (reads system-index+atlas-map), describe (capability registry), gateway (/call), items (item backbone), launcher, surfaces, auth, mcp_server]
+    stores:
+    - {kind: snapshot, reads: audit/system-index.json + atlas-map.json (no own DB)}
+    provides:
+      admin: [POST /admin/reload, GET /admin/write-token]
+      call: [POST /call]
+      describe: [GET /describe, 'GET /describe/{surface}']
+      healthz: [GET /healthz]
+      items: [GET /items, 'POST /items/{item_id}/status', 'GET /items/{item_id}/workflow']
+      map: ['POST /map/halt/{name}', 'POST /map/launch/{name}', GET /map/launchables, GET /map/locate, 'GET /map/neighbors/{name}', GET /map/path, 'POST /map/restart/{name}', GET /map/search, GET /map/signals,
+        'POST /map/start/{name}', 'POST /map/stop/{name}', GET /map/surfaces, GET /map/systems, 'GET /map/systems/{name}', GET /map/viewer]
+      root: [GET /]
+      seam: [POST /seam/call]
+    consumes: ['all systems (introspective — reads system-index, probes ports, proxies via /call)']
+    requires: [X-Atlas-Token on POST/writes (gitignored .atlas-write-token)]
+    note: in-process MCP server (atlas-map) + tools/atlas-cli consume the same snapshot.
+  canvas-engine:
+    class: {role: spoke, lifecycle: active}
+    props: {lang: ts, framework: express, port: 3050, loc: 7001, files: 72}
+    purpose: URL→React clone via in-process Vite pool
+    entry_points: [src/server.ts]
+    provides:
+      clone: [POST /clone, POST /clone/stub]
+      edit: [POST /edit]
+      health: [GET /health]
+      sessions: [GET /sessions, 'DELETE /sessions/:sessionId', 'GET /sessions/:sessionId/edits', 'GET /sessions/:sessionId/envelope']
+    consumes: [delta-kernel]
+    deps_notable: ['@anthropic-ai/sdk', vite, react, zod, ajv]
+  cognitive-sensor:
+    class: {role: spoke (sensor), lifecycle: dormant}
+    automation: dormant — triage arm (auto_triage->cortex_bridge->decisions_to_atlas) is UNSCHEDULED; runs only when hand-cranked via `at`
+    props: {lang: py, framework: fastapi, port: 8765, loc: 116169, files: 647}
+    purpose: Conversation-analysis pipeline · idea registry · behavioral state store. Feeds delta-kernel.
+    stores:
+    - {kind: sqlite, access: 'sqlite3.connect via DB_PATH (atlas_data.py, behavioral_memory.py, directive_engine.py)', holds: ideas · loops · decisions · metrics}
+    - {kind: json_dumps, files: conversations.json · memory_db.json(+bak) · idea_registry.json · ideas_classified.json · ideas_deduplicated.json · excavated_ideas_raw.json · timeline_events.json (2.2MB),
+      note: 'the conversation corpus + registries (gitignored, large)'}
+    provides: ['GET /api/conv/{raw:path}', POST /api/decide]
+    consumes: [delta-kernel]
+    speaks: [IdeaRegistry.v1, IdeasClassified.v1, IdeasDeduplicated.v1, ExcavatedIdeas.v1, CognitiveMetricsComputed, AnalystDecision.v1, TimelineEvents.v1]
+    note: 'loc is data-inflated: ~half is JSON state dumps (multi-MB), not Python source. Treat as a data store WITH a pipeline.'
   cortex:
-    class: { role: 'spoke (executor)', lifecycle: 'gated' }
-    automation: "gated — executes a directive only when CORTEX_BRIDGE_APPLY=1 + CORTEX_BRIDGE_RUN_PROPOSAL=1 (both default OFF)"
-    props: { lang: 'py', framework: 'fastapi', port: '3009', loc: '3952', files: '40' }
-    purpose: "Autonomous execution layer (gated)."
-    entry_points: [services/cortex/src/cortex/main.py]
-    provides: ["GET /status", "GET /health", "GET /tasks/recent", "POST /tasks/submit", "GET /inpact/status", "POST /inpact/run/{module}"]
-    consumes: ["delta-kernel"]
-    speaks: [CortexTask.v1, TaskExecution.v1, BuildOutput.v1, ContextPackage.v1, ProjectGoal.v1, ValidationVerdict.v1, RiskMitigation.v1]
-
-  optogon:
-    class: { role: 'spoke (executor)', lifecycle: 'gated' }
-    automation: "gated — proposes triage verdicts; writes back only when AUTO_TRIAGE_APPLY=1 (default OFF)"
-    props: { lang: 'py', framework: 'fastapi', port: '3010', loc: '3949', files: '35' }
-    purpose: "Autonomous executor · preference seeding · signal emission."
-    entry_points: ["uvicorn optogon.main:app"]
-    provides: "not enumerated by route sweep (uvicorn app; gated). Surface inferred: triage/preference/signal endpoints."
-    consumes: ["delta-kernel", "cortex"]
-    speaks: [OptogonNode.v1, OptogonPath.v1, OptogonSessionState.v1]
-
-  search-stack:
-    class: { role: 'spoke (router)', lifecycle: 'active (on demand)' }
-    props: { lang: 'py', framework: 'fastapi+fastmcp', port: '3070', loc: '3376', files: '54' }
-    purpose: "Router over 28 search providers across 14 intent kinds (20 enabled, 8 await keys)."
-    entry_points: ["uvicorn search_stack.server:app"]
-    provides: "FastAPI + FastMCP router (REST routes not enumerated by decorator sweep). MCP tools: search_stack_search / extract / budget."
-    consumes: ["28 external providers (web/code/github/academic/social/legal/data/...)"]
-    consumed_by: ["droplist (external retrieval)"]
-
-  uasc-executor:
-    class: { role: 'spoke (executor)', lifecycle: 'active' }
-    props: { lang: 'py', port: '3008', loc: '2248', files: '38' }
-    purpose: "UASC command executor · HMAC auth."
-    entry_points: [services/uasc-executor/server.py]
-    provides: "server.py executor surface (HMAC-signed; routes not enumerated by sweep). Outbound via urlopen (executor.py, daemon.py)."
-    consumes: ["delta-kernel"]
-    requires: ["HMAC signature"]
-
-  memory-hub:
-    class: { role: 'spoke', lifecycle: 'active' }
-    props: { lang: 'py', framework: 'fastapi', port: '3071', loc: '558', files: '9' }
-    purpose: "Memory aggregation."
-    entry_points: ["uvicorn memory_hub.server:app"]
-    provides: ["POST /save", "POST /search", "GET /entity/{name}", "GET /idea/{canonical_id}", "GET /healthz"]
-    consumes: ["aggregates upstream memory stores (urlopen in stores.py)"]
-
+    class: {role: spoke (executor), lifecycle: gated}
+    automation: gated — executes a directive only when CORTEX_BRIDGE_APPLY=1 + CORTEX_BRIDGE_RUN_PROPOSAL=1 (both default off)
+    props: {lang: py, framework: fastapi, port: 3009, loc: 3952, files: 40}
+    purpose: autonomous execution layer
+    provides: [GET /health, 'POST /inpact/run/{module}', GET /inpact/status, GET /status, GET /tasks/recent, POST /tasks/submit]
+    consumes: [delta-kernel]
+    speaks: [CortexTask.v1, TaskExecution.v1, BuildOutput.v1]
   crucix:
-    class: { role: 'spoke (dashboard)', lifecycle: 'active (submodule, habitually -dirty)' }
-    props: { lang: 'html/js', framework: 'express', port: '"standalone (server.mjs; not in launch.json)"', loc: '1951', files: '16' }
-    purpose: "Dashboard server (\"jarvis\")."
-    entry_points: [services/crucix/server.mjs]
-    provides: ["GET /", "GET /api/data", "GET /api/health", "GET /api/locales", "GET /events (SSE)"]
-    consumes: ["canvas-engine"]
-    note: "git SUBMODULE — never bulk `git add -A`; commit inside submodule first."
-
-  ws-gateway:
-    class: { role: 'spoke (bridge)', lifecycle: 'dormant (not autostarted)' }
-    props: { lang: 'ts', port: '3006 (code default)', loc: '122', files: '5' }
-    purpose: "WebSocket gateway (NATS ↔ socket.io)."
-    provides: "socket.io events (no REST surface)."
-    consumes: ["delta-kernel"]
-    deps_notable: [nats, socket.io]
-
+    class: {role: spoke (dashboard), lifecycle: 'active (submodule, habitually -dirty)'}
+    props: {lang: html, framework: express, port: —, loc: 1951, files: 16}
+    purpose: dashboard server (jarvis)
+    provides: [GET /, GET /api/data, GET /api/health, GET /api/locales, GET /events]
+    consumes: [canvas-engine]
+    note: git SUBMODULE — never bulk `git add -A`; commit inside submodule first.
+  delta-kernel:
+    class: {role: hub, lifecycle: active}
+    automation: 'active — governance daemon: 9 cron jobs; */5 heartbeat + preparation; preparation auto-completes auto-tier tasks'
+    props: {lang: ts, framework: express, port: 3001, loc: 35043, files: 111}
+    purpose: Deterministic 6-mode state engine — THE API hub. All durable state lives here.
+    modules: [core (6-mode FSM + types), api (Express routes), cli (atlas.ts), governance (cron/daemon), 'web (delta-web React UI :5173)']
+    entry_points: [src/api/server.ts]
+    stores:
+    - {kind: sqlite, engine: better-sqlite3, holds: state · cycleboard blob · dayplans · journal · history · tasks · signals · timeline · work-ledger}
+    provides:
+      actions: ['POST /api/actions/cancel/:id', 'POST /api/actions/confirm/:id', GET /api/actions/pending, POST /api/actions/pending]
+      atlas: [POST /api/atlas/close-signal, GET /api/atlas/cockpit, GET /api/atlas/next-directive, GET /api/atlas/preferences, POST /api/atlas/preferences]
+      auth: [GET /api/auth/token]
+      cli: [GET /api/cli/manifest, GET /api/cli/manifest.html]
+      cycleboard: [GET /api/cycleboard, PUT /api/cycleboard]
+      daemon: [POST /api/daemon/run, GET /api/daemon/status]
+      daily-brief: [GET /api/daily-brief]
+      executor: [GET /api/executor/health]
+      goals: [GET /api/goals, POST /api/goals, 'GET /api/goals/:id', 'POST /api/goals/:id/close', 'POST /api/goals/:id/criteria/:cid/done', 'POST /api/goals/:id/criteria/:cid/undo']
+      governance: [GET /api/governance/config]
+      health: [GET /api/health]
+      ideas: [GET /api/ideas]
+      ingest: [POST /api/ingest/cognitive]
+      lattice: [POST /api/lattice/correct, GET /api/lattice/viewmodel]
+      law: [POST /api/law/acknowledge, POST /api/law/archive, POST /api/law/close_loop, POST /api/law/override, POST /api/law/refresh, POST /api/law/violation]
+      life-signals: [GET /api/life-signals, POST /api/life-signals/bulk, POST /api/life-signals/energy, POST /api/life-signals/finance, POST /api/life-signals/network, POST /api/life-signals/skills]
+      notifications: [GET /api/notifications]
+      preparation: [GET /api/preparation]
+      services: [GET /api/services/health]
+      signals: [GET /api/signals, POST /api/signals, 'POST /api/signals/:id/resolve', POST /api/signals/ingest]
+      state: [GET /api/state, PUT /api/state, GET /api/state/unified, GET /api/state/unified/stream]
+      stats: [GET /api/stats]
+      tasks: [GET /api/tasks, POST /api/tasks, 'DELETE /api/tasks/:id', 'PUT /api/tasks/:id', POST /api/tasks/status]
+      timeline: [GET /api/timeline, POST /api/timeline, 'GET /api/timeline/day/:date', GET /api/timeline/stats]
+      work: [POST /api/work/cancel, POST /api/work/claim, POST /api/work/complete, POST /api/work/heartbeat, GET /api/work/history, GET /api/work/metrics, POST /api/work/request, GET /api/work/status]
+    requires: [Bearer key on /api/* writes (obtain via exempt GET /api/auth/token)]
+    speaks: [Signal.v1, CloseSignal.v1, Directive.v1, DirectiveProposed, ModeContract.v1, CompoundState.v1, DailyPayload.v1, DailyProjection.v1, AtlasArtifact.v1, Closures.v1, WorkLedger.v1, AutomationQueue.v1,
+      WorkflowEvent.v1, LifeSignals.v1, EnergyLog.v1, FinancialLedger.v1, NetworkRegistry.v1, SkillRegistry.v1, UserPreferenceStore.v1, ContextPackage.v1, ProjectGoal.v1, ValidationVerdict.v1, RiskMitigation.v1]
+  droplist:
+    class: {role: spoke (executor), lifecycle: on_demand}
+    automation: on_demand — drop->packet->DAG with tool-verified done_condition; not auto-scheduled
+    props: {lang: py, framework: fastapi, port: 3073, loc: 9151, files: 69}
+    purpose: Capture → packet → DAG execution engine.
+    stores:
+    - {kind: storage_layer, access: storage.save_dag / recompute_states, holds: DAGs · packets · entities}
+    provides:
+      ai: [POST /api/ai/anthropic, POST /api/ai/complete, GET /api/ai/keys, POST /api/ai/keys, GET /api/ai/models]
+      brief: [GET /api/brief]
+      chain: [GET /chain]
+      dag: [GET /api/dag/sample, 'GET /api/dag/{dag_id}', 'GET /api/dag/{dag_id}/checklist', 'POST /api/dag/{dag_id}/node/{node_id}/complete', 'POST /api/dag/{dag_id}/node/{node_id}/reopen']
+      dags: [GET /api/dags]
+      drop: [POST /api/drop]
+      entities: [GET /api/entities]
+      manifest.webmanifest: [GET /manifest.webmanifest]
+      now: [GET /api/now]
+      packets: [GET /api/packets]
+      root: [GET /]
+      state: [GET /api/state]
+      sw.js: [GET /sw.js]
+    consumes: ['delta-kernel (writes signals → POST /api/signals/ingest, via DROPLIST_ATLAS_SIGNALS_URL)', 'search-stack (external retrieval, gated by DROPLIST_EXTERNAL_SEARCH=1)']
+    speaks: [TaskPrompt.v1, ExecutionSpec.v1, ExecutionResult.v1]
+  memory-hub:
+    class: {role: spoke, lifecycle: active}
+    props: {lang: py, framework: fastapi, port: 3071, loc: 558, files: 9}
+    purpose: memory aggregation
+    provides: ['GET /entity/{name}', GET /healthz, 'GET /idea/{canonical_id}', POST /save, POST /search]
+    consumes: [aggregates upstream memory stores (urlopen in stores.py)]
   mirofish:
-    class: { role: 'spoke', lifecycle: 'retired (legacy)' }
-    props: { lang: 'py', framework: 'fastapi', port: '"— (not launched)"', loc: '2933', files: '34' }
-    purpose: "Prediction engine (neo4j-dep). RETIRED — do not build on."
-    provides: ["GET /api/v1/graph/{stats,topic/{name}}", "GET /api/v1/{predictions,predictions/loop/{convo_id},patterns,health,ingest/status,simulate/exit-path}", "POST /api/v1/{ingest,simulate}"]
+    class: {role: spoke, lifecycle: retired (legacy)}
+    props: {lang: py, framework: fastapi, port: —, loc: 2933, files: 34}
+    purpose: prediction engine, neo4j-dep
+    provides:
+      v1: [GET /api/v1/graph/stats, 'GET /api/v1/graph/topic/{topic_name}', GET /api/v1/health, POST /api/v1/ingest, GET /api/v1/ingest/status, GET /api/v1/patterns, GET /api/v1/predictions, 'GET /api/v1/predictions/loop/{convo_id}',
+        POST /api/v1/simulate, GET /api/v1/simulate/exit-path]
     speaks: [SimulationReport.v1]
-
-  mosaic-orchestrator:
-    class: { role: 'spoke', lifecycle: 'retired (legacy)' }
-    props: { lang: 'py', framework: 'fastapi', port: '3005', loc: '7578', files: '59' }
-    purpose: "FastAPI orchestrator (legacy). RETIRED — do not build on."
-    provides: "not enumerated (legacy uvicorn app)."
-    consumes: ["optogon"]
-    speaks: [OrchestratorEvent.v1]
-
   mosaic-dashboard:
-    class: { role: 'ui', lifecycle: 'retired (legacy)' }
-    props: { lang: 'ts', framework: 'next', port: '3000', loc: '2137', files: '38' }
-    purpose: "Next.js dashboard (legacy). RETIRED."
-    consumes: ["mosaic-orchestrator"]
-    components: [CockpitPanel.tsx, ApprovalPanel.tsx, "lib/{api,proxy}.ts (fetch wrappers)"]
-
+    class: {role: ui, lifecycle: retired (legacy)}
+    props: {lang: ts, framework: next, port: 3000, loc: 2137, files: 38}
+    purpose: next.js dashboard (legacy)
+    consumes: [mosaic-orchestrator]
+  mosaic-orchestrator:
+    class: {role: spoke, lifecycle: retired (legacy)}
+    props: {lang: py, framework: fastapi, port: 3005, loc: 7578, files: 59}
+    purpose: FastAPI orchestrator (legacy)
+    provides:
+      v1: [GET /api/v1/analyst/decisions, 'POST /api/v1/analyst/decisions/{decision_id}/approve', GET /api/v1/analyst/pending, POST /api/v1/analyst/reprioritize, GET /api/v1/automation/due, GET /api/v1/automation/queue,
+        POST /api/v1/automation/tasks, 'POST /api/v1/automation/tasks/{task_id}/run', GET /api/v1/compound/state, GET /api/v1/energy/log, POST /api/v1/energy/log, GET /api/v1/energy/trends, GET /api/v1/finance/alerts,
+        GET /api/v1/finance/forecast, GET /api/v1/finance/ledger, GET /api/v1/finance/summary, POST /api/v1/finance/transactions, GET /api/v1/health, POST /api/v1/metering/pause, GET /api/v1/metering/usage,
+        POST /api/v1/network/contacts, POST /api/v1/network/interactions, GET /api/v1/network/opportunities, GET /api/v1/network/outreach-due, GET /api/v1/network/registry, GET /api/v1/project/goals, 'POST
+          /api/v1/project/goals/{goal_id}/decompose', 'POST /api/v1/project/subtasks/{subtask_id}/complete', 'GET /api/v1/queue/jobs/{job_id}', GET /api/v1/queue/stats, GET /api/v1/risk/interference, GET
+          /api/v1/risk/mitigation, GET /api/v1/risk/state, GET /api/v1/skills/recommendations, GET /api/v1/skills/registry, 'POST /api/v1/skills/{skill_id}/log', GET /api/v1/status, POST /api/v1/tasks/execute,
+        POST /api/v1/workflows/compound, POST /api/v1/workflows/daily, POST /api/v1/workflows/idea-simulation, POST /api/v1/workflows/stall-check]
+    consumes: [optogon]
+    speaks: [OrchestratorEvent.v1]
   openclaw:
-    class: { role: 'spoke', lifecycle: 'retired (legacy)' }
-    props: { lang: 'py', framework: 'fastapi', port: '3004', loc: '918', files: '24' }
-    purpose: "FastAPI service (legacy). RETIRED."
-    provides: "not enumerated (legacy uvicorn openclaw.api:app)."
-
+    class: {role: spoke, lifecycle: retired (legacy)}
+    props: {lang: py, framework: fastapi, port: 3004, loc: 918, files: 24}
+    purpose: FastAPI service (legacy)
+    provides: [GET /api/v1/channels, GET /api/v1/health, POST /api/v1/notify, GET /api/v1/skills, 'POST /api/v1/skills/{skill_name}']
+  optogon:
+    class: {role: spoke (executor), lifecycle: gated}
+    automation: gated — proposes triage verdicts; writes back only when AUTO_TRIAGE_APPLY=1 (default off)
+    props: {lang: py, framework: fastapi, port: 3010, loc: 3949, files: 35}
+    purpose: autonomous executor · preference seeding · signal emission
+    provides:
+      health: [GET /health]
+      paths: [GET /paths]
+      session: [POST /session/from_sitepull, POST /session/run, POST /session/start, 'GET /session/{session_id}', 'POST /session/{session_id}/turn']
+      signals: [GET /signals]
+    consumes: [delta-kernel, cortex]
+    speaks: [OptogonNode.v1, OptogonPath.v1, OptogonSessionState.v1]
   perception:
-    class: { role: 'spoke', lifecycle: 'stub' }
-    props: { lang: 'py', port: '"— (Phase A stub, never launched)"', loc: '832', files: '22' }
-    purpose: "Phase A stub. Do not build on."
-    consumes: ["triangulation"]
-
+    class: {role: spoke, lifecycle: stub}
+    props: {lang: py, port: —, loc: 832, files: 22}
+    purpose: Phase A stub
+    consumes: [triangulation]
+  search-stack:
+    class: {role: spoke (router), lifecycle: active}
+    props: {lang: py, framework: fastapi, port: 3070, loc: 3376, files: 54}
+    purpose: Router over 28 search providers across 14 intent kinds (20 enabled, 8 await keys).
+    provides: [GET /budget, POST /extract, GET /healthz, POST /memory/save, POST /search]
+    consumes: [28 external providers (web/code/github/academic/social/legal/data/...)]
   triangulation:
-    class: { role: 'spoke', lifecycle: 'stub' }
-    props: { lang: 'py', framework: 'fastapi', port: '3075', loc: '1294', files: '17' }
-    purpose: "Phase B stub (never meaningfully launched)."
-    provides: "not enumerated (stub uvicorn triangulation.api:app)."
-
-  # ----- cross-repo node (C:/Users/bruke/pre-atlas, hyphen) -----------------
-
-  delta-scp:
-    class: { role: 'tool-service', lifecycle: 'active' }
-    repo: "C:/Users/bruke/pre-atlas/services/delta-scp (SIBLING repo, not this one)"
-    props: { lang: 'ts', port: '3012 (demo-server, Supabase-free)' }
-    purpose: "Repo URL → compact symbolic JSON map (file tree + top-level symbols). The orient layer for code-recon/groundwork."
-    entry_points: ["src/demo-server.ts"]
-    provides: "compression queue: submit repo → fetch symbolic map (skeleton)."
-    consumed_by: ["hydra-engine (:8899)", "delta-scp-web (:5174)", "code-recon orient gate"]
-
-# =============================================================================
-# surfaces — the UIs specifically: what each one ASKS the backends
-# =============================================================================
-surfaces:
-
-  inpact:
-    props: { path: 'apps/inpact', lang: 'js', port: '3006 (static)', loc: '11066', lifecycle: 'active' }
-    renders: "daily-flow · onboarding · cycleboard"
-    calls:
-      - "delta-kernel GET /api/cycleboard → the governance blob it renders"
-      - "delta-kernel (daily-brief / state / signals family)"
-      - "cortex POST /inpact/run/{module} → proposes/executes module actions"
-    needs: ["cycleboard blob shape", "6-mode enum", "Bearer key from /api/auth/token"]
-
-  lattice:
-    props: { path: 'apps/lattice', lang: 'js', port: '3011 (static)', loc: '12506', lifecycle: 'active' }
-    renders: "viewmodel projection · tree/graph/timeline (vendors Cytoscape)"
-    calls:
-      - "delta-kernel GET /api/lattice/viewmodel → the projection it renders"
-      - "delta-kernel POST /api/lattice/correct → write-back correction loop (load-bearing)"
-      - "delta-kernel GET /api/auth/token, GET /items, GET item/{id}"
-      - "cognitive-sensor (idea/loop data)"
-    needs: ["viewmodel shape (AtlasArtifact.v1 / lattice viewmodel)", "item backbone shape"]
-    note: "apps/lattice also mirrors audit/system-map-data.js (a generated DATA snapshot — not live wiring)."
-
-  atlas-setup:
-    class: { path: 'atlas-setup.html (served by atlas-shell :8888)', lifecycle: 'active' }
-    renders: "clickable boot page — preset/per-service start-stop grid + pick-your-LLM box + write-token fetch"
-    calls:
-      - "atlas-map-api GET /map/launchables, POST /map/{start,stop,restart,halt}/{name}"
-      - "delta-kernel GET /api/auth/token (write token)"
-    note: "Atlas Setup (setup/ folder, apply.py) writes one profile → delta-kernel /api/cycleboard (the hub all surfaces read)."
-
-  delta-scp-web:
-    class: { path: 'apps/delta-scp-web', port: '5174 (vite)', lifecycle: 'active' }
-    renders: "SaaS UI over delta-scp"
-    calls: ["delta-scp demo-server :3012"]
-
-  hydra:
-    class: { path: 'apps/hydra', port: '8898 (static) + engine 8899 (python)', lifecycle: 'active' }
-    renders: "GitHub-crawling snake game (hydra.html)"
-    calls: ["hydra-engine :8899 → delta-scp :3012 (digests eaten repos into symbol maps)"]
-
+    class: {role: spoke, lifecycle: stub}
+    props: {lang: py, framework: fastapi, port: 3075, loc: 1294, files: 17}
+    purpose: Phase B stub
+    provides: [GET /healthz, POST /library/add, GET /library/stats, POST /verify]
+  uasc-executor:
+    class: {role: spoke (executor), lifecycle: active}
+    props: {lang: py, port: 3008, loc: 2173, files: 38}
+    purpose: UASC command executor · HMAC auth.
+    entry_points: [server.py]
+    provides: [GET /commands, POST /exec, GET /health, GET /runs]
+    consumes: [delta-kernel]
+    requires: [HMAC signature]
+  ws-gateway:
+    class: {role: spoke (bridge), lifecycle: dormant (not autostarted)}
+    props: {lang: ts, port: 3011, loc: 122, files: 5}
+    purpose: websocket gateway
+    provides: socket.io events (no REST surface).
+    consumes: [delta-kernel]
+    deps_notable: [nats, socket.io]
+    note: socket.io events (no REST surface).
+  ai-exec-pipeline:
+    class: {role: app, lifecycle: retired (legacy)}
+    props: {lang: py, framework: flask, port: 5000, loc: 455, files: 8}
+    purpose: ai execution pipeline (legacy)
+    entry_points: [server.py]
+    provides: [GET /, GET /chatlog, GET /health, GET /pipeline, POST /pipeline/step, POST /update_chat]
   code-converter:
-    class: { path: 'apps/code-converter', port: '3007', lifecycle: 'active' }
-    renders: "Python → C++ converter UI (AST engine)"
-    provides: ["POST /convert", "GET /patterns", "GET /health", "GET /"]
-    calls: ["canvas-engine"]
-    security_flag: "known RCE risk in converter pipeline (see SHIP_READINESS audit)."
-
-  crucix_ui: { see: "systems.crucix (dashboard server + UI in one)" }
-
+    class: {role: app, lifecycle: active}
+    props: {lang: py, framework: fastapi, port: 3007, loc: 1254, files: 7}
+    purpose: python→C++ converter · AST engine
+    entry_points: [server.py, index.html]
+    provides: [GET /, POST /convert, GET /health, GET /patterns]
+    consumes: [canvas-engine]
+  delta-scp:
+    class: {role: tool-service, lifecycle: active}
+    repo: C:/Users/bruke/pre-atlas/services/delta-scp (SIBLING repo, not this one)
+    props: {lang: ts, port: '3012 (demo-server, Supabase-free)'}
+    purpose: Repo URL → compact symbolic JSON map (file tree + top-level symbols). The orient layer for code-recon/groundwork.
+    entry_points: [src/demo-server.ts]
+    provides: 'compression queue: submit repo → fetch symbolic map (skeleton).'
+    consumed_by: ['hydra-engine (:8899)', 'delta-scp-web (:5174)', code-recon orient gate]
+surfaces:
+  inpact:
+    props:
+      path: apps/inpact
+      lang: js
+      port: 3006 (static)
+      loc: 11066
+      lifecycle: active
+    renders: daily-flow · onboarding · cycleboard
+    calls:
+    - delta-kernel GET /api/cycleboard → the governance blob it renders
+    - delta-kernel (daily-brief / state / signals family)
+    - cortex POST /inpact/run/{module} → proposes/executes module actions
+    needs:
+    - cycleboard blob shape
+    - 6-mode enum
+    - Bearer key from /api/auth/token
+  lattice:
+    props:
+      path: apps/lattice
+      lang: js
+      port: 3011 (static)
+      loc: 12506
+      lifecycle: active
+    renders: viewmodel projection · tree/graph/timeline (vendors Cytoscape)
+    calls:
+    - delta-kernel GET /api/lattice/viewmodel → the projection it renders
+    - delta-kernel POST /api/lattice/correct → write-back correction loop (load-bearing)
+    - delta-kernel GET /api/auth/token, GET /items, GET item/{id}
+    - cognitive-sensor (idea/loop data)
+    needs:
+    - viewmodel shape (AtlasArtifact.v1 / lattice viewmodel)
+    - item backbone shape
+    note: apps/lattice also mirrors audit/system-map-data.js (a generated DATA snapshot — not live wiring).
+  atlas-setup:
+    props:
+      path: atlas-setup.html (served by atlas-shell :8888)
+      lifecycle: active
+    renders: clickable boot page — preset/per-service start-stop grid + pick-your-LLM box + write-token fetch
+    calls:
+    - atlas-map-api GET /map/launchables, POST /map/{start,stop,restart,halt}/{name}
+    - delta-kernel GET /api/auth/token (write token)
+    note: Atlas Setup (setup/ folder, apply.py) writes one profile → delta-kernel /api/cycleboard (the hub all surfaces read).
+  delta-scp-web:
+    props:
+      path: apps/delta-scp-web
+      port: 5174 (vite)
+      lifecycle: active
+    renders: SaaS UI over delta-scp
+    calls:
+    - delta-scp demo-server :3012
+  hydra:
+    props:
+      path: apps/hydra
+      port: 8898 (static) + engine 8899 (python)
+      lifecycle: active
+    renders: GitHub-crawling snake game (hydra.html)
+    calls:
+    - hydra-engine :8899 → delta-scp :3012 (digests eaten repos into symbol maps)
+  code-converter:
+    props:
+      path: apps/code-converter
+      port: 3007
+      lifecycle: active
+    renders: Python → C++ converter UI (AST engine)
+    calls:
+    - canvas-engine
+    security_flag: known RCE risk in converter pipeline (see SHIP_READINESS audit).
+  crucix_ui:
+    see: systems.crucix (dashboard server + UI in one)
   legacy_uis:
-    blueprint-generator: { path: apps/blueprint-generator, port: 3030, lifecycle: retired }
-    ai-exec-pipeline:     { path: apps/ai-exec-pipeline, port: 5000, lifecycle: retired, provides: ["GET /pipeline", "POST /pipeline/step", "POST /update_chat", "GET /chatlog", "GET /health"] }
-    canvas-demo:          { path: apps/canvas-demo, lifecycle: inactive, note: "Remotion render demo; no server" }
-    webos-333:            { path: apps/webos-333, lifecycle: experimental, note: "static HTML experiment" }
-
-# =============================================================================
-# contracts — the typed wire format (50 JSON-Schema draft-07 files)
-#   field-level detail: contracts/schemas/<Name>.json
-# =============================================================================
+    blueprint-generator:
+      path: apps/blueprint-generator
+      port: 3030
+      lifecycle: retired
+    ai-exec-pipeline:
+      path: apps/ai-exec-pipeline
+      port: 5000
+      lifecycle: retired
+    canvas-demo:
+      path: apps/canvas-demo
+      lifecycle: inactive
+      note: Remotion render demo; no server
+    webos-333:
+      path: apps/webos-333
+      lifecycle: experimental
+      note: static HTML experiment
 contracts:
   count: 50
   location: contracts/schemas/
-  by_domain:
-    delta_kernel_core: [Signal.v1, CloseSignal.v1, Directive.v1, DirectiveProposed, ModeContract.v1, CompoundState.v1, DailyPayload.v1, DailyProjection.v1, AtlasArtifact.v1, Closures.v1, WorkLedger.v1, AutomationQueue.v1, WorkflowEvent.v1]
-    aegis_fabric:      [AegisAgent.v1, AegisAgentAction.v1, AegisApproval.v1, AegisPolicy.v1, AegisPolicyDecision.v1, AegisTenant.v1, AegisWebhook.v1, MeteringUsage.v1]
-    execution_cortex_droplist: [CortexTask.v1, TaskPrompt.v1, TaskExecution.v1, ExecutionSpec.v1, ExecutionResult.v1, BuildOutput.v1, ContextPackage.v1, ProjectGoal.v1, ValidationVerdict.v1, RiskMitigation.v1]
-    optogon:           [OptogonNode.v1, OptogonPath.v1, OptogonSessionState.v1]
-    cognitive_sensor:  [IdeaRegistry.v1, IdeasClassified.v1, IdeasDeduplicated.v1, ExcavatedIdeas.v1, CognitiveMetricsComputed, AnalystDecision.v1, TimelineEvents.v1]
-    life_state_signals: [LifeSignals.v1, EnergyLog.v1, FinancialLedger.v1, NetworkRegistry.v1, SkillRegistry.v1, UserPreferenceStore.v1]
-    other:             [SimulationReport.v1 (mirofish), OrchestratorEvent.v1 (mosaic), AnatomyV1.v1 (anatomy)]
+  by_owner:
+    delta-kernel: [Signal.v1, CloseSignal.v1, Directive.v1, DirectiveProposed, ModeContract.v1, CompoundState.v1, DailyPayload.v1, DailyProjection.v1, AtlasArtifact.v1, Closures.v1, WorkLedger.v1, AutomationQueue.v1,
+      WorkflowEvent.v1, LifeSignals.v1, EnergyLog.v1, FinancialLedger.v1, NetworkRegistry.v1, SkillRegistry.v1, UserPreferenceStore.v1, ContextPackage.v1, ProjectGoal.v1, ValidationVerdict.v1, RiskMitigation.v1]
+    aegis-fabric: [AegisAgent.v1, AegisAgentAction.v1, AegisApproval.v1, AegisPolicy.v1, AegisPolicyDecision.v1, AegisTenant.v1, AegisWebhook.v1, MeteringUsage.v1]
+    cortex: [CortexTask.v1, TaskExecution.v1, BuildOutput.v1]
+    droplist: [TaskPrompt.v1, ExecutionSpec.v1, ExecutionResult.v1]
+    optogon: [OptogonNode.v1, OptogonPath.v1, OptogonSessionState.v1]
+    cognitive-sensor: [IdeaRegistry.v1, IdeasClassified.v1, IdeasDeduplicated.v1, ExcavatedIdeas.v1, CognitiveMetricsComputed, AnalystDecision.v1, TimelineEvents.v1]
+    mirofish: [SimulationReport.v1]
+    mosaic-orchestrator: [OrchestratorEvent.v1]
+    anatomy-extension: [AnatomyV1.v1]
   key_contracts:
-    Signal.v1:       "the canonical state-mutation message ingested by delta-kernel /api/signals/ingest"
-    Directive.v1:    "what optogon/cortex propose; delta-kernel commits"
-    AtlasArtifact.v1: "the /show ↔ lattice wire (sibling of Signal.v1)"
-    CloseSignal.v1:  "loop-closure event"
-
-# =============================================================================
-# seams — the directed edge graph (atlas-map.json service_edges, annotated)
-#   "A → B" = A calls/depends on B. Endpoint added where verified.
-# =============================================================================
+    Signal.v1: the canonical state-mutation message ingested by delta-kernel /api/signals/ingest
+    Directive.v1: what optogon/cortex propose; delta-kernel commits
+    AtlasArtifact.v1: the /show ↔ lattice wire (sibling of Signal.v1)
+    CloseSignal.v1: loop-closure event
 seams:
   into_hub:
-    - "lattice   → delta-kernel : GET /api/lattice/viewmodel, POST /api/lattice/correct"
-    - "inpact    → delta-kernel : GET /api/cycleboard (+ daily-brief/state)"
-    - "droplist  → delta-kernel : POST /api/signals/ingest (DROPLIST_ATLAS_SIGNALS_URL)"
-    - "cortex    → delta-kernel"
-    - "optogon   → delta-kernel"
-    - "canvas-engine → delta-kernel"
-    - "ws-gateway → delta-kernel"
-    - "uasc-executor → delta-kernel"
-    - "aegis-fabric → delta-kernel"
-    - "cognitive-sensor → delta-kernel (ingest analyzed state)"
+  - 'lattice → delta-kernel : GET /api/lattice/viewmodel, POST /api/lattice/correct'
+  - 'inpact → delta-kernel : GET /api/cycleboard (+ daily-brief/state)'
+  - 'droplist → delta-kernel : POST /api/signals/ingest (DROPLIST_ATLAS_SIGNALS_URL)'
+  - cortex → delta-kernel
+  - optogon → delta-kernel
+  - canvas-engine → delta-kernel
+  - ws-gateway → delta-kernel
+  - uasc-executor → delta-kernel
+  - aegis-fabric → delta-kernel
+  - 'cognitive-sensor → delta-kernel : ingest analyzed state'
   other:
-    - "optogon → cortex"
-    - "inpact  → cortex : POST /inpact/run/{module}"
-    - "droplist → search-stack (external retrieval, gated)"
-    - "code-converter → canvas-engine"
-    - "crucix   → canvas-engine"
-    - "lattice  → cognitive-sensor"
-    - "mosaic-orchestrator → optogon"
-    - "mosaic-dashboard → mosaic-orchestrator (legacy chain)"
-    - "perception → triangulation (stub chain)"
+  - optogon → cortex
+  - mosaic-orchestrator → optogon
+  - 'mosaic-dashboard → mosaic-orchestrator : legacy chain'
+  - code-converter → canvas-engine
+  - 'perception → triangulation : stub chain'
+  - 'inpact → cortex : POST /inpact/run/{module}'
+  - 'droplist → search-stack : external retrieval, gated'
+  - crucix → canvas-engine
+  - lattice → cognitive-sensor
   cross_repo:
-    - "delta-scp-web → delta-scp :3012"
-    - "hydra → hydra-engine :8899 → delta-scp :3012"
-
-# =============================================================================
-# data_artifacts — the state stores (often gitignored; SHAPE not contents)
-# =============================================================================
+  - delta-scp-web → delta-scp :3012
+  - hydra → hydra-engine :8899 → delta-scp :3012
 data_artifacts:
-  - { system: delta-kernel, kind: sqlite (better-sqlite3), shape: "state · cycleboard · dayplans · journal · history · tasks · signals · timeline · work-ledger", note: "the single source of durable truth" }
-  - { system: cognitive-sensor, kind: sqlite (sqlite3.connect via DB_PATH), shape: "ideas · loops · decisions · metrics" }
-  - { system: cognitive-sensor, kind: json_corpus, shape: "conversations.json · memory_db.json(+bak) · idea_registry.json · ideas_{classified,deduplicated}.json · excavated_ideas_raw.json · timeline_events.json(2.2MB)", note: "large, gitignored — the corpus the pipeline mines" }
-  - { system: droplist, kind: storage_layer, shape: "DAGs · packets · entities (storage.save_dag)" }
-  - { system: atlas-map-api, kind: snapshot, shape: "reads audit/system-index.json + atlas-map.json (no own DB)" }
-  - { system: contracts, kind: json_schema, shape: "50 draft-07 schemas — the typed wire format", path: contracts/schemas/ }
-  - { system: audit, kind: map, shape: "system-index.json (counts/ports) + atlas-map.json (purposes/edges/governance)", note: "the machine-readable map this manifest reconciles" }
-
-# =============================================================================
-# lifecycle_flags — load-bearing tags an agent MUST respect
-# =============================================================================
+- {system: delta-kernel, kind: sqlite (better-sqlite3), shape: state · cycleboard · dayplans · journal · history · tasks · signals · timeline · work-ledger, note: the single source of durable truth}
+- {system: cognitive-sensor, kind: sqlite (sqlite3.connect via DB_PATH), shape: ideas · loops · decisions · metrics}
+- {system: cognitive-sensor, kind: json_corpus, shape: 'conversations.json · memory_db.json(+bak) · idea_registry.json · ideas_{classified,deduplicated}.json · excavated_ideas_raw.json · timeline_events.json(2.2MB)',
+  note: 'large, gitignored — the corpus the pipeline mines'}
+- {system: droplist, kind: storage_layer, shape: DAGs · packets · entities (storage.save_dag)}
+- {system: atlas-map-api, kind: snapshot, shape: reads audit/system-index.json + atlas-map.json (no own DB)}
+- {system: contracts, kind: json_schema, shape: draft-07 schemas — the typed wire format, path: contracts/schemas/}
+- {system: audit, kind: map, shape: system-index.json (counts/ports) + atlas-map.json (purposes/edges/governance), note: the machine-readable map this manifest reconciles}
 lifecycle_flags:
   hub: [delta-kernel]
-  active: [delta-kernel, aegis-fabric, atlas-map-api, canvas-engine, droplist, memory-hub, search-stack, uasc-executor, crucix, inpact, lattice, code-converter, hydra, delta-scp]
-  gated_default_off: [cortex, optogon]            # need explicit env flags to act
-  dormant: [cognitive-sensor (triage unscheduled), ws-gateway (not autostarted)]
+  active: [aegis-fabric, atlas-map-api, canvas-engine, code-converter, crucix, delta-scp, droplist, memory-hub, search-stack, uasc-executor]
+  gated_default_off: [cortex, optogon]
+  dormant: [cognitive-sensor, ws-gateway]
   stub_do_not_build_on: [perception, triangulation]
-  retired_do_not_build_on: [mirofish, openclaw, mosaic-dashboard, mosaic-orchestrator, blueprint-generator, ai-exec-pipeline]
-  security_flags: ["code-converter: RCE risk", "crucix/hydra/webos: XSS (per SHIP_READINESS audit)"]
-
-# =============================================================================
-# verification — provenance + honest confidence
-# =============================================================================
+  retired_do_not_build_on: [ai-exec-pipeline, blueprint-generator, mirofish, mosaic-dashboard, mosaic-orchestrator, openclaw]
+  security_flags: ['code-converter: RCE risk', 'crucix/hydra/webos: XSS (per SHIP_READINESS audit)']
 verification:
-  legend:
-    provides_verified: "route list extracted first-hand via rg from the named entry_point — high confidence."
-    provides_not_enumerated: "service runs but its routes weren't captured by the decorator sweep (uvicorn app / MCP / legacy). Listed honestly as such — NOT fabricated."
-  high_confidence: [delta-kernel, aegis-fabric, atlas-map-api, canvas-engine, cortex, droplist, memory-hub, crucix, mirofish, cognitive-sensor(triage), code-converter, ai-exec-pipeline]
-  surface_only_inferred: [optogon, search-stack, uasc-executor, openclaw, mosaic-orchestrator, triangulation, ws-gateway]
-  known_drift:
-    - "ports: system-index.json code-defaults are stale in 4 places; runtime_ports above (from launch.json) is authoritative."
-    - "lifecycle: 6 systems tagged retired but still present (some still in autostart) — see lifecycle_flags."
-  rebuild: "regenerate by re-running: rg route sweep + read .claude/launch.json + atlas-map.json + audit/system-index.json. See header PROVENANCE."
+  method: mechanical facts derived per run; curated bits from audit/manifest-overlay.yaml. Route surface = regex sweep of source.
+  provides_route_verified: [aegis-fabric, ai-exec-pipeline, atlas-map-api, canvas-engine, code-converter, cognitive-sensor, cortex, crucix, delta-kernel, droplist, memory-hub, mirofish, mosaic-orchestrator,
+    openclaw, optogon, search-stack, triangulation, uasc-executor]
+  no_rest_surface: [ws-gateway]
+  port_drift_resolved: ['aegis-fabric: system-index port 3010 -> runtime 3002 (launch.json)', 'canvas-engine: system-index port 3060 -> runtime 3050 (launch.json)', 'triangulation: system-index port 3010
+      -> runtime 3075 (launch.json)', 'ws-gateway: system-index port 3006 -> runtime 3011 (launch.json)']
+  contract_strays_unassigned: none
+  contract_missing_files: none
+  rebuild: python audit/build_atlas_manifest.py

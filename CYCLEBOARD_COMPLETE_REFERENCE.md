@@ -1,5 +1,19 @@
 # CycleBoard Complete Reference Document
-**Generated: 2026-04-08 | Total Codebase: 10,602 lines across 15 files**
+**Generated: 2026-04-08 | Refreshed: 2026-07-06 | Total Codebase: ~10,257 lines across 15 files**
+
+---
+
+## REFRESH NOTE (2026-07-06)
+
+Verified against current source (`git diff --stat` since the doc's baseline commit `4c45676`, 2026-04-14 → HEAD: **3,872 insertions / 6,329 deletions across 17 files**). Confirmed drift:
+
+- **Calendar screen removed.** `screens[]` nav array and `ScreenRenderers` no longer contain `Calendar` — down to **16 screens**, not 17. Section 5 below is stale on this point.
+- **`screens.js` shrank despite a feature-adding commit.** `fd61a6b` (2026-04-27, "6 new screens") added +986 lines with real `ScreenRenderer` implementations for Daily/AtoZ/WeeklyFocus/Routines/Journal/Reflections — implying those screens were still stub/placeholder-level when this doc was generated on 04-08, three weeks earlier. Net, `screens.js` is now 2,100 lines (was 3,022) — a later refactor/cleanup pass removed more than that commit added.
+- **Dead code found:** `functions.js` still defines a full calendar-oriented function cluster (`calendarSetView`, `calendarSelectDate`, `calendarGoToday`, `calendarPrev/Next`, `createDayPlanForDate`, `setDayTypeForDate`, `showNewEventModal`, etc. — lines ~2307-2515) with **zero call sites** in `screens.js`, `index.html`, or `command.js`. These survived the Calendar screen's removal and are now orphaned.
+- **New, undocumented feature clusters** (verified wired, not dead): AtoZ search/filter (`searchTasks`, `filterTasks`, `_performSearch`, `getAzFilter/setAzFilter` — wired via `onkeyup` in `screens.js:649`), and a keyboard-shortcut quick-entry system (`openQuickEntryModal`, `showKeyboardShortcutsHelp`, bound to a global `keydown` listener at `functions.js:1983`). Neither existed in the April function index.
+- **File manifest line counts below are all stale** — updated inline; see each file's line count for the delta vs. April.
+
+Everything below this note is the original April 8 document, left as-is except where marked; treat section 5 (screen count) and section 2 (file manifest) as superseded by the numbers above.
 
 ---
 
@@ -52,23 +66,23 @@ CycleBoard is a **self-sustaining bullet journal** integrated with the Atlas cog
 ## 2. FILE MANIFEST
 
 ```
-cycleboard/
-├── index.html                    179 lines   Main shell, layout, script loading
+cycleboard/                                  [line counts refreshed 2026-07-06, was 2026-04-08]
+├── index.html                    274 lines   Main shell, layout, script loading (was 179)
 ├── css/
-│   └── styles.css                419 lines   Dark theme, governance styles, animations
+│   └── styles.css                551 lines   Dark theme, governance styles, animations (was 419)
 ├── js/
-│   ├── state.js                  486 lines   CycleBoardState class, persistence, undo/redo
+│   ├── state.js                  492 lines   CycleBoardState class, persistence, undo/redo (was 486)
 │   ├── validator.js              225 lines   DataValidator class, import/export validation
 │   ├── ui.js                     259 lines   UI utilities (toasts, modals, progress rings)
 │   ├── helpers.js                270 lines   Calculations, formatting, activity logging
-│   ├── screens.js              3,022 lines   17 screen renderers + navigation
-│   ├── functions.js            2,648 lines   All CRUD operations (tasks, goals, routines, etc)
+│   ├── screens.js              2,100 lines   16 screen renderers + navigation (was 3,022/17 — Calendar removed, net shrink despite +986 line commit)
+│   ├── functions.js            2,657 lines   All CRUD ops + search/filter + quick-entry + dead calendar-date cluster (was 2,648)
 │   ├── command.js                373 lines   Command screen + preparation engine
 │   ├── cognitive.js              368 lines   Governance policy enforcement, mode detection
 │   ├── strategic.js              452 lines   Strategic priorities routing + reweighting
 │   ├── ai-context.js             512 lines   Context snapshot generation for AI agents
 │   ├── ai-actions.js             654 lines   Safe AI action interface
-│   └── app.js                    192 lines   Initialization, BrainData loading, AtlasNav
+│   └── app.js                    270 lines   Initialization, BrainData loading, AtlasNav (was 192)
 ├── brain/
 │   ├── cognitive_state.json                  Closure ratio, open loops, loop list
 │   ├── daily_payload.json                    Daily mode, build_allowed, predictions
@@ -85,10 +99,10 @@ cycleboard/
 │   ├── osint_feed.json             9 lines   Market, economic, news feeds
 │   ├── compound_state.json                   Compound loop state
 │   └── prediction_results.json               Mode forecast, exit paths
-└── cli.ts                        543 lines   TypeScript CLI (today, plan, complete, status)
+└── cli.ts                        800 lines   TypeScript CLI (today, plan, complete, status) (was 543)
 ```
 
-**Total: ~10,602 lines of code + ~1,200 lines of brain data**
+**Total: ~10,257 lines of code + ~1,200 lines of brain data** (was ~10,602 — net shrink despite several feature-adding commits; see Refresh Note)
 
 ---
 
@@ -223,7 +237,7 @@ cycleboard/
 
 ---
 
-## 5. SCREEN MAP (17 screens)
+## 5. SCREEN MAP (17 screens as of 2026-04-08 — now 16; Calendar removed, see Refresh Note)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -254,15 +268,17 @@ cycleboard/
 │              │ (running late, low energy, free time, disruption).       │
 │              │ Yesterday's reflection.                                  │
 ├──────────────┼───────────────────────────────────────────────────────────┤
-│ Calendar     │ Month grid with clickable dates. Day indicators show     │
-│              │ day type color (A=blue, B=green, C=purple). Click date   │
-│              │ → shows day plan preview in modal. Navigation arrows     │
-│              │ for month switching.                                     │
+│ Calendar     │ REMOVED as of 2026-07-06 refresh — no longer in the nav   │
+│ (GONE)       │ array or ScreenRenderers. Its supporting functions       │
+│              │ (calendarSetView, createDayPlanForDate, etc.) still      │
+│              │ exist in functions.js but are dead code (zero callers).  │
 ├──────────────┼───────────────────────────────────────────────────────────┤
 │ AtoZ         │ Full A-Z task list. Each row: letter badge (colored by   │
 │              │ status), task text, status dropdown, notes expand,       │
 │              │ complete/delete buttons. Add new task modal. Strategic    │
-│              │ A-Z override suggestion at top.                          │
+│              │ A-Z override suggestion at top. UPDATED 2026-07-06:      │
+│              │ live search/filter box added (searchTasks/filterTasks,   │
+│              │ wired via onkeyup) — not in the April doc.               │
 ├──────────────┼───────────────────────────────────────────────────────────┤
 │ WeeklyFocus  │ Focus areas list with strategic leverage badges.         │
 │              │ Each area: name, definition, color, sub-tasks with       │
@@ -310,6 +326,8 @@ cycleboard/
 │              │ Day type template editor.                                │
 └──────────────┴───────────────────────────────────────────────────────────┘
 ```
+
+**NEW as of 2026-07-06, global (not screen-scoped):** a keyboard-shortcut quick-entry system — `?` opens `showKeyboardShortcutsHelp()`, another binding opens `openQuickEntryModal()` for fast task/time-block/goal creation without navigating screens. Bound via a global `keydown` listener in `functions.js` (~line 1983). Not present in the April doc.
 
 ---
 
@@ -727,9 +745,9 @@ class CycleBoardState {
 
 ---
 
-### 6.11 js/screens.js — FUNCTION INDEX (3,022 lines)
+### 6.11 js/screens.js — FUNCTION INDEX (2,100 lines as of 2026-07-06, was 3,022)
 
-**This is the largest file. Contains all 17 screen renderers + navigation.**
+**Contains 16 screen renderers + navigation (Calendar removed — see Refresh Note). `ScreenRenderers.Calendar` no longer exists.**
 
 ```
 EXPORTS:
@@ -762,9 +780,33 @@ HELPER FUNCTIONS IN SCREENS.JS:
 
 ---
 
-### 6.12 js/functions.js — FUNCTION INDEX (2,648 lines)
+### 6.12 js/functions.js — FUNCTION INDEX (2,657 lines)
 
 **Second largest file. All CRUD operations for the application.**
+
+**NOT IN APRIL DOC — verified live 2026-07-06:**
+```
+ATOZ SEARCH/FILTER (wired, screens.js:649 onkeyup):
+  getAzFilter() / setAzFilter(v)    — filter state getter/setter
+  getAzSearch() / setAzSearch(v)    — search string getter/setter
+  debounce(fn, ms)                  — shared debounce helper
+  sortTasks() / filterTasks()       — list transforms
+  _performSearch() / searchTasks(v) — search entry point
+
+QUICK-ENTRY SYSTEM (wired, global keydown listener, functions.js:1983):
+  showKeyboardShortcutsHelp()  — modal listing bindings
+  openQuickEntryModal()        — fast-create overlay
+  quickAddTask() / quickAddTimeBlock() / quickSetGoal() / saveQuickGoal()
+  showRoutineSelector()
+
+DEAD CODE — zero call sites in screens.js/index.html/command.js, orphaned by the Calendar screen's removal:
+  calendarSetView() / calendarSelectDate() / calendarGoToday()
+  calendarPrev() / calendarNext()
+  createDayPlanForDate() / setDayTypeForDate()
+  showApplyTemplateModalForDate() / toggleTimeBlockCompletionForDate()
+  toggleGoalCompletionForDate() / addTimeBlockForDate()
+  showCreatePlanModal() / showNewEventModal()
+```
 
 ```
 TASK MANAGEMENT:
@@ -1135,4 +1177,5 @@ Day Types:
 ---
 
 **END OF DOCUMENT**
-*CycleBoard v2.0 | 10,602 lines | 15 files | 17 screens | 10 brain sources | 3 APIs*
+*CycleBoard v2.0 | 10,602 lines | 15 files | 17 screens | 10 brain sources | 3 APIs (2026-04-08 baseline)*
+*Refreshed 2026-07-06: ~10,257 lines | 15 files | 16 screens (Calendar removed) | 1 dead function cluster found | 2 new feature clusters (AtoZ search/filter, keyboard quick-entry) undocumented until now*

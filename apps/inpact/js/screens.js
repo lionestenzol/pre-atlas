@@ -17,6 +17,12 @@ let _atlasCache = { data: null, fetchedAt: 0 };
 // Projects data cache (60s TTL) - read from inPACT's same-origin projects.json (written by atlas/gen_github.py)
 let _projectsCache = { data: null, fetchedAt: 0 };
 
+// Cortex preparation cache (60s TTL) - powers the "Handle next" card on Home.
+// Was previously only reachable inside the "Ask Atlas" modal (ai-actions.js);
+// promoted to the main screen per the 2026-07-06 completeness assessment so the
+// backend's queued work is visible without an extra click.
+let _prepCache = { data: null, fetchedAt: 0 };
+
 function _renderProjectsCard(projects) {
   if (!projects) return '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">Loading projects...</div>';
   const active = projects.filter(p => p.band === 0);
@@ -358,6 +364,19 @@ const ScreenRenderers = {
 
         <div id="strategic-hud">${_renderStrategicHud()}</div>
 
+        <div id="handle-next-card">${_renderHandleNext(_prepCache.data)}</div>
+        ${(() => {
+          const atlasOnline = typeof AtlasAPI !== 'undefined' && AtlasAPI.online;
+          if (atlasOnline && Date.now() - _prepCache.fetchedAt > 60000) {
+            AtlasAPI.getPreparation().then(prep => {
+              _prepCache = { data: prep, fetchedAt: Date.now() };
+              const el = document.getElementById('handle-next-card');
+              if (el) el.innerHTML = _renderHandleNext(_prepCache.data);
+            }).catch(() => {});
+          }
+          return '';
+        })()}
+
         <div class="td-chapter" style="margin-top:1.5rem;">
           <span class="td-chapter-title">At a Glance</span>
           <span class="td-chapter-sub">Where things stand right now.</span>
@@ -504,6 +523,7 @@ const ScreenRenderers = {
               <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
                 <span style="font-size:0.875rem;font-weight:700;color:var(--ip-gray-300);width:1.25rem;">${i}</span>
                 <input type="text" class="td-input" value="${UI.sanitize(td['p'+i] || '')}" placeholder="Priority ${i}" onblur="saveTodayField('p${i}', this.value)" style="flex:1;" />
+                ${td['p'+i+'TaskId'] ? `<button class="td-btn" style="font-size:0.75rem;padding:0.3rem 0.625rem;flex-shrink:0;" title="Completes the real Atlas task, not just this text" onclick="completeSeededPriority(${i})">Done</button>` : ''}
               </div>
               <div style="display:flex;align-items:center;gap:0.5rem;padding-left:1.75rem;">
                 <input type="text" class="td-input" value="${UI.sanitize(td['p'+i+'why'] || '')}" placeholder="Why this matters" onblur="saveTodayField('p${i}why', this.value)" style="flex:1;font-size:0.8125rem;padding:0.5rem 0.625rem;" />

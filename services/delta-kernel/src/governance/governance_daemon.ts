@@ -459,12 +459,14 @@ export class GovernanceDaemon {
     const titleOf = (t: { state: Record<string, unknown> }): string =>
       (t.state.title as string) || (t.state.title_template as string) || 'Untitled task';
 
+    const idOf = (t: { entity: { entity_id: string } }): string => t.entity.entity_id;
+
     const seededPlan = {
       date,
       winTarget: '',
-      p1: titleOf(openTasks[0]), p1why: '',
-      p2: openTasks[1] ? titleOf(openTasks[1]) : '', p2why: '',
-      p3: openTasks[2] ? titleOf(openTasks[2]) : '', p3why: '',
+      p1: titleOf(openTasks[0]), p1why: '', p1TaskId: idOf(openTasks[0]),
+      p2: openTasks[1] ? titleOf(openTasks[1]) : '', p2why: '', p2TaskId: openTasks[1] ? idOf(openTasks[1]) : '',
+      p3: openTasks[2] ? titleOf(openTasks[2]) : '', p3why: '', p3TaskId: openTasks[2] ? idOf(openTasks[2]) : '',
       x1: '', y1: '', x2: '', y2: '', x3: '', y3: '',
       lever: '', resetMove: '', reflection: '',
       updated_at: null,

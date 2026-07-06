@@ -2839,6 +2839,30 @@ function saveTodayField(field, value) {
   stateManager.update({ Today: state.Today });
 }
 
+// Complete a priority that the daemon seeded from a real backend task entity
+// (governance_daemon.ts's seedTodayPlan stores p{n}TaskId). Marking it done here
+// calls the same completeBackendTask path as the "Ask Atlas" > Handle next panel,
+// so it flows worker (inPACT) -> manager (Atlas) instead of being a local-only edit.
+async function completeSeededPriority(i) {
+  var plan = getTodayFields();
+  var taskId = plan['p' + i + 'TaskId'];
+  if (!taskId) return;
+
+  var ok = false;
+  try { ok = await AtlasAPI.completeBackendTask(taskId); } catch (e) { ok = false; }
+
+  if (ok) {
+    plan['p' + i + 'TaskId'] = '';
+    plan['p' + i] = (plan['p' + i] || '') + ' (done)';
+    plan.updated_at = new Date().toISOString();
+    stateManager.update({ Today: state.Today });
+    if (typeof UI !== 'undefined') UI.showToast('Done', 'Marked complete in Atlas', 'success');
+    if (typeof render === 'function') render();
+  } else {
+    if (typeof UI !== 'undefined') UI.showToast('Could not complete', 'The backend rejected it', 'error');
+  }
+}
+
 function buildLinkSelect(type, prioNum) {
   var plan = getTodayFields();
   var field = type === 'az' ? 'p' + prioNum + 'az' : 'p' + prioNum + 'area';

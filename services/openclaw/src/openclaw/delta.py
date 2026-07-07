@@ -5,6 +5,8 @@ The orchestrator used to proxy delta-kernel's `/api/state/unified` and reshape i
 openclaw now reads delta-kernel directly. delta-kernel enforces bearer auth, so we
 first pull a token from the open `/api/auth/token` route, then read the unified state.
 """
+from urllib.parse import quote
+
 import httpx
 
 from openclaw.config import config
@@ -44,8 +46,13 @@ async def confirm_pending_action(action_id: str) -> tuple[int, dict]:
         tok_resp.raise_for_status()
         token = tok_resp.json()["token"]
 
+        # action_id is raw chat text (`/approve <text>`, skills/approve.py:19) embedded
+        # unencoded into a URL path segment — a value containing `/`, `?`, or `#`
+        # would otherwise redirect this authenticated POST (openclaw's own broadly-
+        # scoped delta-kernel token, not the caller's) to a different route. Percent-
+        # encode so it can only ever be one path segment. See ~/.claude/rules/common/code-as-furniture.md.
         resp = await client.post(
-            f"{config.delta_url}/api/actions/confirm/{action_id}",
+            f"{config.delta_url}/api/actions/confirm/{quote(action_id, safe='')}",
             headers={"Authorization": f"Bearer {token}"},
         )
         try:

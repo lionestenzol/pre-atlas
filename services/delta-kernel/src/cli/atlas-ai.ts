@@ -9,7 +9,7 @@
  * Vendored utilities from atlas.ts (2026-04-10).
  */
 
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -23,6 +23,24 @@ const API = 'http://localhost:3001';
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const BRAIN_DIR = path.resolve(REPO_ROOT, 'services', 'cognitive-sensor', 'cycleboard', 'brain');
 const ATLAS_DIR = path.join(os.homedir(), '.atlas');
+
+/**
+ * Resolve how to invoke the `codex` CLI without ever going through a shell.
+ * On POSIX, npm's bin symlink is directly executable. On Windows, `codex`
+ * resolves to an npm .cmd shim, which cannot be exec'd without a shell — so
+ * this finds the real codex.js the shim wraps (same relative layout the shim
+ * itself uses) and returns invoking node.exe on it directly instead.
+ */
+function resolveCodexEntry(): { cmd: string; prefixArgs: string[] } {
+  if (process.platform !== 'win32') return { cmd: 'codex', prefixArgs: [] };
+  const shim = (process.env.PATH ?? '').split(path.delimiter)
+    .map((dir) => path.join(dir, 'codex.cmd'))
+    .find((p) => fs.existsSync(p));
+  if (!shim) throw new Error('codex.cmd not found on PATH');
+  const entry = path.join(path.dirname(shim), 'node_modules', '@openai', 'codex', 'bin', 'codex.js');
+  if (!fs.existsSync(entry)) throw new Error(`codex entry script not found at expected path: ${entry}`);
+  return { cmd: process.execPath, prefixArgs: [entry] };
+}
 
 // ── Output ──
 
@@ -1306,7 +1324,6 @@ async function compoundWork(args: string[]): Promise<any> {
   }
 
   // 4. Execute via Codex
-  const escapedPrompt = prompt.replace(/"/g, '\\"').replace(/\n/g, '\\n');
   let output = '';
   let outcome = 'completed';
   const t0 = performance.now();
@@ -1315,9 +1332,22 @@ async function compoundWork(args: string[]): Promise<any> {
     // Heartbeat before long execution
     await apiFetch('/api/work/heartbeat', { method: 'POST', body: JSON.stringify({ job_id, executor_id: 'atlas-ai-worker' }) }).catch(() => {});
 
-    output = execSync(
-      `codex exec --dangerously-bypass-approvals-and-sandbox -C "${REPO_ROOT}" "${escapedPrompt}"`,
-      { timeout: 120000, encoding: 'utf-8', maxBuffer: 1024 * 1024 },
+    // Job title/instructions (and therefore `prompt`) originate from the work
+    // queue, not a fixed literal, so it must never be interpolated into a shell
+    // command string. `codex` resolves to an npm .cmd shim on Windows though —
+    // execFileSync(cmd, args, {shell:false}) refuses to run a .cmd at all
+    // (EINVAL), and {shell:true} reopens cmd.exe metacharacter parsing (`&`/`|`/
+    // backtick) even with args passed as an array — verified empirically, not
+    // assumed: a payload containing `& echo x > y.txt` executed the injected
+    // command under shell:true+array. The safe path bypasses cmd.exe entirely —
+    // resolveCodexEntry finds the real codex.js the shim wraps, and it's invoked
+    // via process.execPath (a genuine binary) with shell:false, so the OS never
+    // parses the argument string at all; prompt content cannot break out.
+    const { cmd, prefixArgs } = resolveCodexEntry();
+    output = execFileSync(
+      cmd,
+      [...prefixArgs, 'exec', '--dangerously-bypass-approvals-and-sandbox', '-C', REPO_ROOT, prompt],
+      { shell: false, timeout: 120000, encoding: 'utf-8', maxBuffer: 1024 * 1024 },
     ).trim();
 
     // Cap output

@@ -15,6 +15,7 @@ import { getDaemon, JobName } from '../governance/governance_daemon';
 import { WorkController } from '../core/work-controller';
 import { getTimelineLogger } from '../core/timeline-logger.js';
 import { processClosureEvent as processClosureEventShared } from '../core/closure-engine.js';
+import Database from 'better-sqlite3';
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -1250,6 +1251,31 @@ app.post('/api/law/override', async (req, res) => {
  *
  * Idempotency: duplicate closures (same loop_id) are rejected.
  */
+/**
+ * Records a loop decision into cognitive-sensor's results.db, matching the
+ * exact idempotency + schema of close_loop.py's record_decision(). Without
+ * this, /api/law/close_loop only ever touched the TS-side JSON ledgers
+ * (closures.json etc.) while the Python governor's closure_quality/ratio
+ * gate reads loop_decisions exclusively -- so obeying `atlas-ai close <id>`
+ * (the governor's own recommended command) silently never moved the metric
+ * it was meant to satisfy. See ~/.claude/rules/common/code-as-furniture.md.
+ */
+function recordLoopDecision(loopId: string, decision: 'CLOSE' | 'ARCHIVE'): void {
+  const dbPath = path.join(cognitiveSensorDir, 'results.db');
+  if (!fs.existsSync(dbPath)) return;
+  const db = new Database(dbPath);
+  try {
+    db.pragma('journal_mode = WAL');
+    db.pragma('busy_timeout = 5000');
+    const existing = db.prepare('SELECT decision FROM loop_decisions WHERE convo_id = ?').get(loopId);
+    if (existing) return;
+    const date = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    db.prepare('INSERT INTO loop_decisions (convo_id, decision, date) VALUES (?, ?, ?)').run(loopId, decision, date);
+  } finally {
+    db.close();
+  }
+}
+
 app.post('/api/law/close_loop', async (req, res) => {
   const { loop_id, title, outcome, artifact_path, coverage_score, status } = req.body as {
     loop_id?: string;
@@ -1271,6 +1297,14 @@ app.post('/api/law/close_loop', async (req, res) => {
   if (coverage_score != null && (typeof coverage_score !== 'number' || coverage_score < 0 || coverage_score > 1)) {
     res.status(400).json({ error: 'coverage_score must be a number between 0 and 1' });
     return;
+  }
+
+  if (loop_id) {
+    try {
+      recordLoopDecision(loop_id, outcome === 'closed' ? 'CLOSE' : 'ARCHIVE');
+    } catch (e) {
+      console.error('[close_loop] loop_decisions write failed:', (e as Error).message);
+    }
   }
 
   const timestamp = now();

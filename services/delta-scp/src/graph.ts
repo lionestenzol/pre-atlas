@@ -37,6 +37,7 @@ const KIND_TO_NODE_TYPE: Record<string, string> = {
   enum: 'type_definition',
   struct: 'type_definition',
   trait: 'type_definition',
+  namespace: 'type_definition',
   const: 'variable',
   var: 'variable',
 };

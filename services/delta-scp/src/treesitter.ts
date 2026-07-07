@@ -98,6 +98,52 @@ const LANGS: Record<string, LangSpec> = {
       'function_declaration', 'method_definition', 'function_expression', 'arrow_function',
     ]),
   },
+  cpp: {
+    wasm: 'tree-sitter-cpp.wasm',
+    symbolQuery: `
+      (function_definition declarator: (function_declarator declarator: (identifier) @sym.function))
+      (function_definition declarator: (function_declarator declarator: (field_identifier) @sym.method))
+      (class_specifier name: (type_identifier) @sym.class)
+      (struct_specifier name: (type_identifier) @sym.struct)
+      (enum_specifier name: (type_identifier) @sym.enum)
+      (namespace_definition name: (namespace_identifier) @sym.namespace)
+    `,
+    callQuery: `(call_expression function: (identifier) @callee)`,
+    funcNodeTypes: new Set(['function_definition']),
+  },
+  csharp: {
+    wasm: 'tree-sitter-c_sharp.wasm',
+    symbolQuery: `
+      (class_declaration name: (identifier) @sym.class)
+      (interface_declaration name: (identifier) @sym.interface)
+      (struct_declaration name: (identifier) @sym.struct)
+      (enum_declaration name: (identifier) @sym.enum)
+      (method_declaration name: (identifier) @sym.method)
+    `,
+    callQuery: `(invocation_expression function: (identifier) @callee)`,
+    funcNodeTypes: new Set(['method_declaration', 'constructor_declaration', 'local_function_statement']),
+  },
+  java: {
+    wasm: 'tree-sitter-java.wasm',
+    symbolQuery: `
+      (class_declaration name: (identifier) @sym.class)
+      (interface_declaration name: (identifier) @sym.interface)
+      (enum_declaration name: (identifier) @sym.enum)
+      (method_declaration name: (identifier) @sym.method)
+    `,
+    callQuery: `(method_invocation name: (identifier) @callee)`,
+    funcNodeTypes: new Set(['method_declaration', 'constructor_declaration']),
+  },
+  go: {
+    wasm: 'tree-sitter-go.wasm',
+    symbolQuery: `
+      (function_declaration name: (identifier) @sym.func)
+      (method_declaration name: (field_identifier) @sym.func)
+      (type_declaration (type_spec name: (type_identifier) @sym.type))
+    `,
+    callQuery: `(call_expression function: (identifier) @callee)`,
+    funcNodeTypes: new Set(['function_declaration', 'method_declaration']),
+  },
 };
 
 export function supportsAst(language: string): boolean {

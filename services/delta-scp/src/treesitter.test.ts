@@ -97,6 +97,64 @@ function lookup(id: number): User | null { return null; }
     expect(edges).toContainEqual({ source: 'find', target: 'lookup', type: 'calls' });
   });
 
+  it('C++: functions, methods, class/struct/enum/namespace + call edges', async () => {
+    const cpp = `namespace app {
+class Widget { public: int area() { return compute(); } int compute() { return 1; } };
+struct Point { int x; };
+enum Color { Red, Green };
+int helper(int n) { return n + 1; }
+}`;
+    const syms = await extractSymbolsAst(cpp, 'cpp');
+    const names = syms.map((s) => s.name);
+    expect(names).toEqual(expect.arrayContaining(['app', 'Widget', 'Point', 'Color', 'helper', 'area', 'compute']));
+    const edges = await extractCallEdgesAst(cpp, 'cpp');
+    expect(edges).toContainEqual({ source: 'area', target: 'compute', type: 'calls' });
+  });
+
+  it('C#: class/interface/enum/method + invocation edges', async () => {
+    const cs = `namespace App {
+  interface IShape { int Area(); }
+  class Circle : IShape {
+    public int Area() { return Compute(); }
+    private int Compute() { return 42; }
+  }
+  enum Color { Red, Green }
+}`;
+    const syms = await extractSymbolsAst(cs, 'csharp');
+    const names = syms.map((s) => s.name);
+    expect(names).toEqual(expect.arrayContaining(['IShape', 'Circle', 'Area', 'Compute', 'Color']));
+    const edges = await extractCallEdgesAst(cs, 'csharp');
+    expect(edges).toContainEqual({ source: 'Area', target: 'Compute', type: 'calls' });
+  });
+
+  it('Java: class/interface/enum/method + method-invocation edges', async () => {
+    const java = `package app;
+interface Shape { int area(); }
+class Circle implements Shape {
+  public int area() { return compute(); }
+  private int compute() { return 42; }
+}`;
+    const syms = await extractSymbolsAst(java, 'java');
+    const names = syms.map((s) => s.name);
+    expect(names).toEqual(expect.arrayContaining(['Shape', 'Circle', 'area', 'compute']));
+    const edges = await extractCallEdgesAst(java, 'java');
+    expect(edges).toContainEqual({ source: 'area', target: 'compute', type: 'calls' });
+  });
+
+  it('Go: func/method/type + call edges', async () => {
+    const go = `package main
+type Circle struct { r int }
+func (c Circle) Area() int { return compute(c.r) }
+func compute(n int) int { return n * n }
+func main() { _ = compute(2) }`;
+    const syms = await extractSymbolsAst(go, 'go');
+    const names = syms.map((s) => s.name);
+    expect(names).toEqual(expect.arrayContaining(['Circle', 'Area', 'compute', 'main']));
+    const edges = await extractCallEdgesAst(go, 'go');
+    expect(edges).toContainEqual({ source: 'Area', target: 'compute', type: 'calls' });
+    expect(edges).toContainEqual({ source: 'main', target: 'compute', type: 'calls' });
+  });
+
   it('unknown language degrades to empty (fallback stays with regex)', async () => {
     expect(await extractSymbolsAst('whatever', 'cobol')).toEqual([]);
     expect(await extractCallEdgesAst('whatever', 'cobol')).toEqual([]);

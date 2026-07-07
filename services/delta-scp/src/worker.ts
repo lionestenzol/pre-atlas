@@ -13,8 +13,8 @@ import { loadConfig, type ScpConfig } from './config.js';
 import { getSupabase } from './supabase.js';
 import { claimNextJob, completeJob, failJob, reapStaleJobs } from './queue.js';
 import { fetchSourceFiles } from './source.js';
-import { compressTree } from './compressor.js';
-import { buildGraphRows, persistGraph } from './graph.js';
+import { compressTreeAsync } from './compressor.js';
+import { buildGraphRows, buildGraphRowsAst, persistGraph } from './graph.js';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -39,11 +39,14 @@ function redactRepoUrl(input: string): string {
  */
 async function populateGraph(
   db: SupabaseClient,
+  config: ScpConfig,
   repoUrl: string,
   files: { path: string; content: string }[],
 ): Promise<void> {
   try {
-    const rows = buildGraphRows(repoUrl, files);
+    const rows = config.extractor === 'treesitter'
+      ? await buildGraphRowsAst(repoUrl, files)
+      : buildGraphRows(repoUrl, files);
     const { nodes, edges } = await persistGraph(db, repoUrl, rows);
     console.log(`[delta-scp] graph populated · ${nodes} nodes · ${edges} edges`);
   } catch (err) {
@@ -62,7 +65,9 @@ export async function tick(db: SupabaseClient, config: ScpConfig): Promise<boole
   try {
     // One fetch feeds both compression and graph population.
     const files = await fetchSourceFiles(job.repo_url, config);
-    const compressed = compressTree(job.repo_url, files, new Date().toISOString());
+    const compressed = await compressTreeAsync(
+      job.repo_url, files, new Date().toISOString(), config.extractor,
+    );
     await completeJob(db, job, compressed);
     console.log(
       `[delta-scp] complete ${job.id} · ${compressed.stats.files_included} files · ` +
@@ -70,7 +75,7 @@ export async function tick(db: SupabaseClient, config: ScpConfig): Promise<boole
     );
     // Secondary index, after the job is durably complete.
     if (config.graphAutoPopulate) {
-      await populateGraph(db, job.repo_url, files);
+      await populateGraph(db, config, job.repo_url, files);
     }
   } catch (err) {
     await failJob(db, job, err);

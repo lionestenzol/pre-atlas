@@ -109,16 +109,30 @@ function resolvePyImport(spec: string, known: Set<string>): string | null {
   return candidates.find((c) => known.has(c)) ?? null;
 }
 
+// Intra-file call edge produced by the AST extractor: caller symbol -> callee name.
+interface CallPair { source: string; target: string }
+
 /**
- * Pure: source files -> ast_nodes + ast_edges rows. Deterministic (stable file
- * ordering). Edges only emitted when their target resolves to a known repo file.
+ * Pure core: build ast_nodes + ast_edges rows from precomputed per-file symbols
+ * (and optional per-file call pairs). Both the regex path (buildGraphRows) and the
+ * AST path (buildGraphRowsAst) funnel through here, so the node/edge/dedup contract
+ * lives in one place. Deterministic (stable file ordering).
  */
-export function buildGraphRows(repoName: string, files: SourceFile[]): GraphRows {
+function buildGraphRowsWith(
+  repoName: string,
+  files: SourceFile[],
+  symbolsByPath: Map<string, SymbolEntry[]>,
+  callEdgesByPath?: Map<string, CallPair[]>,
+): GraphRows {
   const sorted = [...files].sort((a, b) => a.path.localeCompare(b.path));
   const known = new Set(sorted.map((f) => f.path));
   const nodes: AstNodeRow[] = [];
   const edges: AstEdgeRow[] = [];
   const fileKey = (p: string): NodeKey => ({ file_path: p, name: basename(p), node_type: 'file' });
+
+  // Indices for call-edge resolution (built across all files first, then used).
+  const funcByFileName = new Map<string, NodeKey>(); // `${file}|${name}` -> key
+  const funcByName = new Map<string, NodeKey[]>(); // name -> keys (repo-wide)
 
   for (const file of sorted) {
     const language = languageForPath(file.path);
@@ -137,12 +151,13 @@ export function buildGraphRows(repoName: string, files: SourceFile[]): GraphRows
       metadata: { language },
     });
 
-    // Symbol nodes (reuse the existing extractor).
-    const symbols: SymbolEntry[] = extractSymbols(file.content, language);
+    // Symbol nodes (from the injected extractor — regex or AST).
+    const symbols: SymbolEntry[] = symbolsByPath.get(file.path) ?? [];
     for (const sym of symbols) {
+      const node_type = KIND_TO_NODE_TYPE[sym.kind] ?? 'variable';
       nodes.push({
         repo_name: repoName,
-        node_type: KIND_TO_NODE_TYPE[sym.kind] ?? 'variable',
+        node_type,
         name: sym.name,
         file_path: file.path,
         start_line: sym.line,
@@ -151,6 +166,13 @@ export function buildGraphRows(repoName: string, files: SourceFile[]): GraphRows
         checksum: null,
         metadata: { kind: sym.kind, language },
       });
+      if (node_type === 'function') {
+        const key: NodeKey = { file_path: file.path, name: sym.name, node_type };
+        funcByFileName.set(`${file.path}|${sym.name}`, key);
+        const list = funcByName.get(sym.name) ?? [];
+        list.push(key);
+        funcByName.set(sym.name, list);
+      }
     }
 
     // Import edges (file -> file), best-effort within the repo.
@@ -171,6 +193,27 @@ export function buildGraphRows(repoName: string, files: SourceFile[]): GraphRows
     }
   }
 
+  // Call edges (AST path only). Caller must be a known function in its file; the
+  // callee resolves to a same-file function first, else a UNIQUE repo-wide function
+  // (ambiguous names are dropped, never mis-wired). Cross-file calls to a uniquely-
+  // named function resolve; calls into external/unknown symbols drop out.
+  if (callEdgesByPath) {
+    for (const file of sorted) {
+      for (const c of callEdgesByPath.get(file.path) ?? []) {
+        const src = funcByFileName.get(`${file.path}|${c.source}`);
+        if (!src) continue;
+        let tgt = funcByFileName.get(`${file.path}|${c.target}`);
+        if (!tgt) {
+          const cands = funcByName.get(c.target);
+          if (cands && cands.length === 1) tgt = cands[0];
+        }
+        if (!tgt) continue;
+        if (tgt.file_path === src.file_path && tgt.name === src.name) continue; // no self-edge
+        edges.push({ source: src, target: tgt, edge_type: 'calls', weight: 1 });
+      }
+    }
+  }
+
   // De-dup nodes by identity (file_path|name|node_type) — the schema's UNIQUE
   // key. Two same-named symbols of the same kind in one file (TS declaration
   // merging, Python overloads, conditional defs) collapse to one, keeping a
@@ -183,16 +226,56 @@ export function buildGraphRows(repoName: string, files: SourceFile[]): GraphRows
     return true;
   });
 
-  // De-dup edges (same source/target/type) so the insert doesn't churn.
+  // De-dup edges by full endpoint identity + type (so distinct intra-file call
+  // edges are kept, while duplicate file->file imports still collapse).
   const seen = new Set<string>();
   const dedupedEdges = edges.filter((e) => {
-    const k = `${e.source.file_path}>${e.target.file_path}:${e.edge_type}`;
+    const k = `${keyId(e.source)}>${keyId(e.target)}:${e.edge_type}`;
     if (seen.has(k)) return false;
     seen.add(k);
     return true;
   });
 
   return { nodes: dedupedNodes, edges: dedupedEdges };
+}
+
+/**
+ * Pure: source files -> ast_nodes + ast_edges rows via the regex extractor.
+ * Deterministic. Edges limited to `imports`, only when the target resolves to a
+ * known repo file. (The AST path, buildGraphRowsAst, adds real `calls` edges.)
+ */
+export function buildGraphRows(repoName: string, files: SourceFile[]): GraphRows {
+  const symbolsByPath = new Map<string, SymbolEntry[]>();
+  for (const f of files) {
+    symbolsByPath.set(f.path, extractSymbols(f.content, languageForPath(f.path)));
+  }
+  return buildGraphRowsWith(repoName, files, symbolsByPath);
+}
+
+/**
+ * AST path: symbols come from tree-sitter for supported languages (covering the
+ * legacy ones the regex has no patterns for), and `calls` edges are emitted from
+ * the real call graph — the fidelity the FIDELITY SEAM above described. Per-file
+ * fail-soft to the regex extractor. WASM runtime is lazy-loaded (dynamic import).
+ */
+export async function buildGraphRowsAst(repoName: string, files: SourceFile[]): Promise<GraphRows> {
+  const { extractSymbolsAst, extractCallEdgesAst, supportsAst } = await import('./treesitter.js');
+  const symbolsByPath = new Map<string, SymbolEntry[]>();
+  const callEdgesByPath = new Map<string, CallPair[]>();
+  for (const f of files) {
+    const lang = languageForPath(f.path);
+    if (supportsAst(lang)) {
+      try {
+        symbolsByPath.set(f.path, await extractSymbolsAst(f.content, lang));
+        callEdgesByPath.set(f.path, await extractCallEdgesAst(f.content, lang));
+        continue;
+      } catch {
+        // fall through to regex for this file
+      }
+    }
+    symbolsByPath.set(f.path, extractSymbols(f.content, lang));
+  }
+  return buildGraphRowsWith(repoName, files, symbolsByPath, callEdgesByPath);
 }
 
 const keyId = (k: NodeKey) => `${k.file_path}|${k.name}|${k.node_type}`;

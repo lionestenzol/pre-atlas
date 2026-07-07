@@ -25,6 +25,9 @@ export interface ScpConfig {
   flueDir: string;
   // Worker auto-populates the AST graph (migration 006) after each job. Fail-soft.
   graphAutoPopulate: boolean;
+  // Symbol extractor: 'regex' (cheap/sync, default) or 'treesitter' (real AST —
+  // covers legacy languages regex misses + call edges). SCP_EXTRACTOR.
+  extractor: 'regex' | 'treesitter';
 }
 
 function num(name: string, fallback: number): number {
@@ -77,6 +80,7 @@ export function loadConfig(): ScpConfig {
     // droplist (point SCP_FLUE_DIR at droplist's watched inbox to wire them up).
     flueDir: process.env.SCP_FLUE_DIR ?? path.join(process.cwd(), 'flue-out'),
     graphAutoPopulate: bool('SCP_GRAPH_AUTOPOPULATE', true),
+    extractor: /^tree.?sitter$/i.test((process.env.SCP_EXTRACTOR ?? '').trim()) ? 'treesitter' : 'regex',
   };
 }
 

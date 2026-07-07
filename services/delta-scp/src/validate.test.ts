@@ -18,6 +18,7 @@ const base: ScpConfig = {
   maxTotalBytes: 1000,
   flueDir: '/tmp/flue',
   graphAutoPopulate: false,
+  extractor: 'regex',
 };
 const cfg = (over: Partial<ScpConfig> = {}): ScpConfig => ({ ...base, ...over });
 

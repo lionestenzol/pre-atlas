@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
-import { compressTree, type CompressedState, type SourceFile } from './compressor.js';
+import { compressTreeAsync, type CompressedState, type SourceFile } from './compressor.js';
 import { loadConfig, type ScpConfig } from './config.js';
 import { validateRepoUrl } from './validate.js';
 
@@ -180,5 +180,5 @@ export async function compressRepository(
   config: ScpConfig = loadConfig(),
 ): Promise<CompressedState> {
   const files = await fetchSourceFiles(repoUrl, config);
-  return compressTree(repoUrl, files, new Date().toISOString());
+  return compressTreeAsync(repoUrl, files, new Date().toISOString(), config.extractor);
 }

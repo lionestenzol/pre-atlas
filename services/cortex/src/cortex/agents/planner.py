@@ -230,7 +230,23 @@ def _port_for(service: str) -> int:
     }.get(service, 8100)
 
 
-# --- Claude Decomposition (fallback for unknown intents) ---
+# --- Claude Decomposition (fallback for unknown/untemplated intents) ---
+
+# task.params reaching this path originates from CortexTask, which any caller of
+# POST /tasks/submit can populate — so the LLM's JSON output here is effectively
+# attacker-influenceable (directly, or via prompt injection through params). Only
+# action types with no direct code-execution or filesystem-write capability may be
+# emitted from this path; shell_exec/file_write/uasc_command must come from
+# developer-authored templates only, never from LLM output derived from external
+# input. See ~/.claude/rules/common/code-as-furniture.md — closes the RCE chain
+# found in this session's injection sweep (unauth submit -> decompose -> shell_exec).
+DECOMPOSITION_ALLOWED_ACTIONS = {
+    ActionType.API_CALL,
+    ActionType.CLAUDE_GENERATE,
+    ActionType.STATE_UPDATE,
+    ActionType.NOOP,
+}
+
 
 async def _claude_decompose(task: CortexTask) -> list[ExecutionStep] | None:
     """Use Claude API to decompose an unknown task into execution steps."""
@@ -241,6 +257,7 @@ async def _claude_decompose(task: CortexTask) -> list[ExecutionStep] | None:
     try:
         import httpx
 
+        allowed = ", ".join(sorted(a.value for a in DECOMPOSITION_ALLOWED_ACTIONS))
         prompt = f"""Decompose this task into deterministic execution steps.
 
 Task:
@@ -250,7 +267,7 @@ Task:
 
 Return a JSON array of steps. Each step must have:
 - step_index (int, 0-based)
-- action_type (one of: uasc_command, api_call, file_write, file_read, state_update, shell_exec, noop)
+- action_type (one of: {allowed})
 - params (object with action-specific parameters)
 - expected_output (object with "type": "json"|"text"|"boolean"|"void")
 
@@ -278,7 +295,15 @@ Maximum 10 steps. Be deterministic. No ambiguity."""
             end = content.rfind("]") + 1
             if start >= 0 and end > start:
                 steps_data = json.loads(content[start:end])
-                return [ExecutionStep(**s) for s in steps_data[:10]]
+                steps = [ExecutionStep(**s) for s in steps_data[:10]]
+                for s in steps:
+                    if s.action_type not in DECOMPOSITION_ALLOWED_ACTIONS:
+                        log.warning(
+                            "Task %s decomposition emitted disallowed action_type %s — rejecting whole plan",
+                            task.task_id, s.action_type,
+                        )
+                        return None
+                return steps
 
     except Exception:
         log.exception("Claude decomposition failed for task %s", task.task_id)

@@ -7,7 +7,8 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from cortex.config import config
 from cortex.clients.delta_client import DeltaClient
@@ -85,6 +86,26 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Cortex", version="0.1.0", lifespan=lifespan)
+
+# Bearer-auth gate, mirroring delta-kernel's `.aegis-tenant-key` model
+# (services/delta-kernel/src/api/server.ts): every route except /health requires
+# `Authorization: Bearer <key>` once DELTA_API_KEY is configured. Dev mode (no key
+# file, no env var) skips auth, same fail-open-locally / fail-closed-once-configured
+# convention already used elsewhere in this repo.
+# Path 2 hardened: /tasks/submit was reachable with zero auth on host="0.0.0.0",
+# and could reach LLM-decomposed shell_exec/api_call steps — see loop.py/planner.py/
+# executor.py fixes in the same change. See ~/.claude/rules/common/code-as-furniture.md.
+_PUBLIC_PATHS = {"/health"}
+
+
+@app.middleware("http")
+async def _require_auth(request: Request, call_next):
+    if not config.DELTA_API_KEY or request.url.path in _PUBLIC_PATHS:
+        return await call_next(request)
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header.startswith("Bearer ") or auth_header[len("Bearer "):] != config.DELTA_API_KEY:
+        return JSONResponse({"error": "Missing or invalid API key"}, status_code=401)
+    return await call_next(request)
 
 
 @app.get("/health")

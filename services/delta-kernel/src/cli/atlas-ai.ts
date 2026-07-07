@@ -65,6 +65,32 @@ async function apiFetch(urlPath: string, options: RequestInit = {}): Promise<any
   return res.json();
 }
 
+// ── memory-hub (Campaign II: history search wired into daily surfaces) ──
+
+const MEMORY_HUB_URL = process.env.MEMORY_HUB_URL || 'http://127.0.0.1:3071/search';
+
+/**
+ * Best-effort lookup against memory-hub's merged search (droplist + cognitive-
+ * sensor conversation history + idea registry). Same doctrine as search-stack's
+ * memory provider: unreachable/empty backend returns [], never throws — the
+ * caller shouldn't degrade just because memory-hub isn't running.
+ */
+async function searchMemoryHub(query: string, maxResults = 3): Promise<any[]> {
+  if (!query) return [];
+  try {
+    const res = await fetch(MEMORY_HUB_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: query, max_results: maxResults }),
+    });
+    if (!res.ok) return [];
+    const body = await res.json() as { results?: any[] };
+    return body.results ?? [];
+  } catch {
+    return [];
+  }
+}
+
 // ── Brain files ──
 
 function readBrainJson(file: string): any {
@@ -633,9 +659,14 @@ async function compoundMorning(): Promise<any> {
   await completeWork(work.job_id);
 
   const decision = decide(state);
+  const memoryQuery = plan.baseline_goal.text || focusAreas[0]?.name || focusAreas[0]?.title || '';
+  const memoryContext = await searchMemoryHub(memoryQuery);
   return {
     executed: true, dayType, date, steps,
-    briefing: { mode: state.mode, energy, directive: state.directive, open_loops: state.open_loops, top_actions: [decision] },
+    briefing: {
+      mode: state.mode, energy, directive: state.directive, open_loops: state.open_loops, top_actions: [decision],
+      memory_context: memoryContext.map((h: any) => ({ source: h.source, snippet: h.snippet, relevance: h.relevance })),
+    },
   };
 }
 

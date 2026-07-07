@@ -102,6 +102,103 @@
     }
   }
 
+  // -- Goldmine card (Campaign I: RITUAL) --
+  // Renders the day's seeded Execute-Now idea + one-tap-closable loop
+  // (governance_daemon.ts seedTodayPlan), or a RECOVER day's past win instead.
+  // "Close" reuses the existing /api/law/close_loop endpoint directly rather
+  // than the pending_action/ActionType machinery (that set is closed by
+  // source per TRUST_BOUNDARY.md; a loop close isn't one of its verbs).
+  var GOLDMINE_DELTA_BASE = 'http://localhost:3001';
+  var _goldmineToken = null;
+  function goldmineToken() {
+    if (_goldmineToken) return Promise.resolve(_goldmineToken);
+    return fetch(GOLDMINE_DELTA_BASE + '/api/auth/token')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (body) { if (body && body.token) { _goldmineToken = body.token; } return _goldmineToken; })
+      .catch(function () { return null; });
+  }
+  function goldmineAuthHeaders() {
+    var h = { 'Content-Type': 'application/json' };
+    if (_goldmineToken) h['Authorization'] = 'Bearer ' + _goldmineToken;
+    return h;
+  }
+
+  function renderGoldmine() {
+    var goldmine = plan.goldmine;
+    var pastWin = plan.pastWin;
+
+    var mount = document.getElementById('goldmine-card');
+    if (!goldmine && !pastWin) {
+      if (mount) mount.style.display = 'none';
+      return;
+    }
+    if (!mount) {
+      var wrap = document.querySelector('.td-wrap');
+      if (!wrap) return;
+      mount = document.createElement('div');
+      mount.id = 'goldmine-card';
+      wrap.insertBefore(mount, wrap.firstChild);
+    }
+    mount.innerHTML = '';
+    mount.style.cssText = 'display:block;background:var(--ip-gray-50);border:1px solid var(--ip-gray-100);border-radius:0.5rem;padding:0.75rem 1rem;margin-bottom:0.75rem;font-size:0.8125rem;';
+
+    if (pastWin) {
+      var winLine = document.createElement('div');
+      winLine.textContent = 'Past win (' + pastWin.date + '): ' + pastWin.description;
+      mount.appendChild(winLine);
+      return;
+    }
+
+    if (goldmine.idea) {
+      var ideaLine = document.createElement('div');
+      ideaLine.style.marginBottom = goldmine.loop ? '0.5rem' : '0';
+      ideaLine.textContent = 'Idea: ' + goldmine.idea.title;
+      mount.appendChild(ideaLine);
+    }
+
+    if (goldmine.loop) {
+      var loopRow = document.createElement('div');
+      loopRow.style.cssText = 'display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;';
+
+      var loopLabel = document.createElement('span');
+      loopLabel.textContent = 'Loop: ' + goldmine.loop.title;
+      loopRow.appendChild(loopLabel);
+
+      var closeBtn = document.createElement('button');
+      closeBtn.textContent = 'Close';
+      closeBtn.style.cssText = 'background:#10b981;color:white;padding:0.25rem 0.625rem;border-radius:0.25rem;border:none;cursor:pointer;font-size:0.75rem;font-weight:600;';
+      closeBtn.addEventListener('click', function () {
+        closeBtn.disabled = true;
+        closeBtn.textContent = 'Closing...';
+        goldmineToken().then(function () {
+          return fetch(GOLDMINE_DELTA_BASE + '/api/law/close_loop', {
+            method: 'POST',
+            headers: goldmineAuthHeaders(),
+            body: JSON.stringify({
+              loop_id: goldmine.loop.convo_id,
+              title: goldmine.loop.title,
+              outcome: 'closed',
+              status: 'RESOLVED',
+            }),
+          });
+        }).then(function (res) {
+          if (res && res.ok) {
+            closeBtn.textContent = 'Closed';
+            loopRow.style.opacity = '0.6';
+          } else {
+            closeBtn.textContent = 'Retry';
+            closeBtn.disabled = false;
+          }
+        }).catch(function () {
+          closeBtn.textContent = 'Retry';
+          closeBtn.disabled = false;
+        });
+      });
+      loopRow.appendChild(closeBtn);
+      mount.appendChild(loopRow);
+    }
+  }
+
   // -- Render yesterday pill --
   function renderYesterday() {
     const y = state.Today.daily[yesterdayISO()] || null;
@@ -222,9 +319,10 @@
     const dateEl = document.getElementById('today-date');
     if (dateEl) dateEl.textContent = fmtDate(new Date());
 
-    // Render mission + yesterday + inputs + linkage selectors
+    // Render mission + yesterday + goldmine + inputs + linkage selectors
     renderMission();
     renderYesterday();
+    renderGoldmine();
     populateInputs();
     renderLinkSelectors();
 

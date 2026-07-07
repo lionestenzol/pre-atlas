@@ -449,19 +449,25 @@ export class GovernanceDaemon {
     // Seed inPACT's Today screen from what Atlas already knows, instead of
     // leaving Bruke to author a blank plan every morning (see TRUST_BOUNDARY.md-
     // adjacent completeness assessment, 2026-07-06).
-    await this.seedTodayPlan(today);
+    await this.seedTodayPlan(today, modeResult.mode);
 
     console.log(`[Daemon] Day start: ${today}, mode: ${modeResult.mode}`);
   }
 
   /**
-   * Pre-fill inPACT's Today.daily[date] with real open tasks (top 3 by priority)
+   * Pre-fill inPACT's Today.daily[date] with real open tasks (top priority)
    * so the screen arrives with content instead of starting blank. Never invents
    * winTarget/why/lever — those need Bruke's own judgment, not a guess. Skips
    * entirely if a plan for `date` already exists (never clobbers in-progress work)
    * or if there's no cycle_board entity yet, or no open tasks to seed with.
+   *
+   * Campaign I (RITUAL): a normal day also carries "goldmine" material — one
+   * Execute-Now idea + one one-tap-closable loop, so the push is a cue+craving,
+   * not just a task list (ATLAS_MASTER_PLAN.md Campaign I). A RECOVER day seeds
+   * a lighter load (one task, not three) and one past win instead of the
+   * goldmine, per the master plan's RECOVER-aware seeding rule.
    */
-  private async seedTodayPlan(date: string): Promise<void> {
+  private async seedTodayPlan(date: string, mode: string): Promise<void> {
     const entities = this.storage.loadEntitiesByType<Record<string, unknown>>('cycle_board');
     if (entities.length === 0) return;
 
@@ -472,6 +478,9 @@ export class GovernanceDaemon {
     const todayBlock = (cbData.Today as Record<string, unknown>) || { mission: '', motto: '', daily: {} };
     const daily = (todayBlock.daily as Record<string, unknown>) || {};
     if (daily[date]) return;
+
+    const isRecover = mode === 'RECOVER';
+    const taskLimit = isRecover ? 1 : 3;
 
     const priorityRank: Record<string, number> = { CRITICAL: 0, HIGH: 1, NORMAL: 2, LOW: 3 };
     const tasks = this.storage.loadEntitiesByType<Record<string, unknown>>('task');
@@ -485,7 +494,7 @@ export class GovernanceDaemon {
         const pb = priorityRank[(b.state as Record<string, unknown>).priority as string] ?? 4;
         return pa - pb;
       })
-      .slice(0, 3);
+      .slice(0, taskLimit);
 
     if (openTasks.length === 0) return;
 
@@ -494,7 +503,7 @@ export class GovernanceDaemon {
 
     const idOf = (t: { entity: { entity_id: string } }): string => t.entity.entity_id;
 
-    const seededPlan = {
+    const seededPlan: Record<string, unknown> = {
       date,
       winTarget: '',
       p1: titleOf(openTasks[0]), p1why: '', p1TaskId: idOf(openTasks[0]),
@@ -505,6 +514,23 @@ export class GovernanceDaemon {
       updated_at: null,
       seeded_from_atlas: true,
     };
+
+    let pushBody = openTasks.map(titleOf).join(' · ');
+
+    if (isRecover) {
+      const pastWin = this.pickPastWin(cbData, date);
+      if (pastWin) {
+        seededPlan.pastWin = pastWin;
+        pushBody += ` · Past win: ${pastWin.description}`;
+      }
+    } else {
+      const goldmine = this.buildGoldmine(date);
+      if (goldmine) {
+        seededPlan.goldmine = goldmine;
+        if (goldmine.idea) pushBody += ` · Idea: ${goldmine.idea.title}`;
+        if (goldmine.loop) pushBody += ` · Loop: ${goldmine.loop.title}`;
+      }
+    }
 
     const newCbData = {
       ...cbData,
@@ -524,8 +550,81 @@ export class GovernanceDaemon {
     this.storage.saveEntity(result.entity, result.state);
     this.storage.appendDelta(result.delta);
 
-    const summary = openTasks.map(titleOf).join(' · ');
-    notifyPhone('Today seeded', summary).catch(() => {});
+    notifyPhone('Today seeded', pushBody).catch(() => {});
+  }
+
+  /**
+   * Pick the day's one Execute-Now idea + one one-tap-closable loop. Rotates
+   * deterministically by day-of-epoch so the same item isn't repeated every
+   * morning (stale cue = the push becomes noise, per the master plan's "no
+   * push inflation" guardrail) without needing randomness or extra state.
+   */
+  private buildGoldmine(date: string): {
+    idea: { canonical_id: string; title: string; priority_score: number } | null;
+    loop: { convo_id: string; title: string; reason: string } | null;
+  } | null {
+    const idea = this.pickExecuteNowIdea(date);
+    const loop = this.pickOneTapLoop(date);
+    if (!idea && !loop) return null;
+    return { idea, loop };
+  }
+
+  private dayIndex(date: string): number {
+    return Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 86400000);
+  }
+
+  private pickExecuteNowIdea(date: string): { canonical_id: string; title: string; priority_score: number } | null {
+    const registryPath = path.join(this.cognitiveSensorDir, 'cycleboard', 'brain', 'idea_registry.json');
+    try {
+      if (!fs.existsSync(registryPath)) return null;
+      const registry = JSON.parse(fs.readFileSync(registryPath, 'utf-8'));
+      const executeNow: any[] = registry.execute_now ?? [];
+      if (executeNow.length === 0) return null;
+      const idea = executeNow[this.dayIndex(date) % executeNow.length];
+      return {
+        canonical_id: idea.canonical_id,
+        title: idea.canonical_title,
+        priority_score: idea.priority_score,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Source: loops_latest.json — the exact list loop_clearer.py / cognitive_api.py
+   * treat as "currently open" (10 entries as of the 001_UNLOCK drain, deliberately
+   * left open as Campaign I fodder rather than bulk-archived). NOT
+   * loop_recommendations.json: that file's `recommendation` vocabulary (NEEDS_WORK/
+   * REVIEW/KEEP) predates the CLOSE/ARCHIVE scheme atlas-ai.ts's
+   * compoundClosureReports() expects, so filtering it for 'CLOSE' silently yields
+   * zero candidates against real data — caught by live verification, not by
+   * inspection (see ATLAS_MASTER_PLAN.md Campaign I / TODO.md 001_UNLOCK note).
+   */
+  private pickOneTapLoop(date: string): { convo_id: string; title: string; reason: string } | null {
+    const loopsPath = path.join(this.cognitiveSensorDir, 'loops_latest.json');
+    try {
+      if (!fs.existsSync(loopsPath)) return null;
+      const candidates: any[] = JSON.parse(fs.readFileSync(loopsPath, 'utf-8'));
+      if (!Array.isArray(candidates) || candidates.length === 0) return null;
+      const loop = candidates[this.dayIndex(date) % candidates.length];
+      return {
+        convo_id: String(loop.convo_id),
+        title: loop.title,
+        reason: `open loop, score ${loop.score ?? '?'}`,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private pickPastWin(cbData: Record<string, unknown>, date: string): { description: string; date: string } | null {
+    const wins = (cbData.MomentumWins as Array<{ description: string; date: string }>) ?? [];
+    const past = wins
+      .filter((w) => w.date && w.date < date)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    if (past.length === 0) return null;
+    return { description: past[0].description, date: past[0].date };
   }
 
   /**
@@ -597,6 +696,32 @@ export class GovernanceDaemon {
     if (streakReset) {
       console.log(`[Daemon] Streak reset to 0 (no productive BUILD closure today)`);
     }
+
+    // Campaign I (RITUAL) reward: MomentumWins had zero consumers before this —
+    // logged wins sat in state and were never echoed back. Evening wrap closes
+    // the habit loop's "Reward" stage. Capped to today's wins only, and skipped
+    // entirely when there's nothing to report, per the master plan's "no push
+    // inflation" guardrail.
+    await this.pushEveningWrap(todayStr, closuresToday);
+  }
+
+  private async pushEveningWrap(dateStr: string, closuresToday: number): Promise<void> {
+    const entities = this.storage.loadEntitiesByType<Record<string, unknown>>('cycle_board');
+    if (entities.length === 0) return;
+
+    const cbData = (entities[0].state as Record<string, unknown>).data as Record<string, unknown> | undefined;
+    const wins = ((cbData?.MomentumWins as Array<{ description: string; date: string }>) ?? [])
+      .filter((w) => w.date === dateStr);
+
+    if (wins.length === 0 && closuresToday === 0) return;
+
+    const loopsPhrase = closuresToday > 0 ? `${closuresToday} loop${closuresToday === 1 ? '' : 's'} closed` : '';
+    const winsPhrase = wins.length > 0
+      ? `${wins.length} win${wins.length === 1 ? '' : 's'}: ${wins.slice(0, 3).map((w) => w.description).join(' · ')}`
+      : '';
+    const body = [winsPhrase, loopsPhrase].filter(Boolean).join(' · ');
+
+    notifyPhone('Evening wrap', body).catch(() => {});
   }
 
   /**

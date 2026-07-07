@@ -13,6 +13,10 @@ $HttpServer = "C:\Users\bruke\AppData\Roaming\npm\node_modules\http-server\bin\h
 # Retired 2026-07-06 (FA0001): mosaic-orchestrator:3005 -> superseded by optogon + cortex (task 01);
 #   mosaic-dashboard:3000 -> retired with its backend (task 02). Archived to services/_retired/.
 #   See festival finish-atlas-fleet-FA0001.
+# Campaign II (LIGHTS_ON, atlas-pivot-AP0001): blueprint-generator removed here -
+#   superseded by canvas-engine per lava-layers.json, census-confirmed dead
+#   (ATLAS_MASTER_PLAN.md Campaign II task 3). memory-hub + atlas-map-api added -
+#   both were built and dark; these are on-switches, not new services.
 $services = @(
     @{ Name = "delta-kernel";     Port = 3001; Cwd = "$RepoRoot\services\delta-kernel";        Cmd = "`$env:DELTA_REPO_ROOT='$RepoRoot'; `$env:DELTA_DATA_DIR='$RepoRoot\.delta-fabric'; npx tsx src/api/server.ts" },
     @{ Name = "aegis-fabric";     Port = 3002; Cwd = "$RepoRoot\services\aegis-fabric";        Cmd = "node --env-file=.env --import tsx/esm src/api/server.ts" },
@@ -22,8 +26,9 @@ $services = @(
     @{ Name = "uasc";             Port = 3008; Cwd = "$RepoRoot\services\uasc-executor";       Cmd = "python server.py --port 3008" },
     @{ Name = "cortex";           Port = 3009; Cwd = "$RepoRoot\services\cortex";              Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn cortex.main:app --host 127.0.0.1 --port 3009" },
     @{ Name = "optogon";          Port = 3010; Cwd = "$RepoRoot\services\optogon";             Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn optogon.main:app --host 127.0.0.1 --port 3010" },
-    @{ Name = "blueprint-gen";    Port = 3030; Cwd = "$RepoRoot\apps\blueprint-generator";     Cmd = "npx next dev -p 3030" },
     @{ Name = "canvas-engine";    Port = 3050; Cwd = "$RepoRoot\services\canvas-engine";       Cmd = "npm run dev" },
+    @{ Name = "memory-hub";       Port = 3071; Cwd = "$RepoRoot\services\memory-hub";          Cmd = "& '$RepoRoot\services\memory-hub\.venv\Scripts\python.exe' -m memory_hub.server" },
+    @{ Name = "atlas-map-api";    Port = 3072; Cwd = "$RepoRoot\services\atlas-map-api";       Cmd = "& '$RepoRoot\services\atlas-map-api\.venv\Scripts\python.exe' -m atlas_map_api.server" },
     # atlas substrate (sibling repo, absolute Cwd): frontend over data the others produce, starts last.
     @{ Name = "atlas-substrate";  Port = 8887; Cwd = "C:\Users\bruke\atlas";                   Cmd = "python serve.py" }
 )

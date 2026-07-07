@@ -384,42 +384,800 @@
     "openscreen/vitest.browser.config.ts": [],
     "openscreen/vitest.config.ts": []
   },
+  "_retired": {
+    "mirofish/README.md": [],
+    "mirofish/RETIRED.md": [],
+    "mirofish/atlas.surface.json": [],
+    "mirofish/docker-compose.yml": [],
+    "mirofish/pyproject.toml": [],
+    "mirofish/src/mirofish/__init__.py": [],
+    "mirofish/src/mirofish/api.py": [
+      "dataclasses.asdict",
+      "datetime.datetime",
+      "datetime.timezone",
+      "fastapi.BackgroundTasks",
+      "fastapi.FastAPI",
+      "fastapi.HTTPException",
+      "fastapi.middleware.cors.CORSMiddleware",
+      "mirofish.config.config",
+      "mirofish.graph.ingester.ConversationIngester",
+      "mirofish.graph.neo4j_client.Neo4jClient",
+      "mirofish.ingest_state.load_state",
+      "mirofish.prediction.insight_engine.InsightEngine",
+      "mirofish.prediction.loop_predictor.LoopPredictor",
+      "mirofish.prediction.mode_simulator.ModeSimulator",
+      "mirofish.prediction.pattern_detector.PatternDetector",
+      "pydantic.BaseModel",
+      "structlog"
+    ],
+    "mirofish/src/mirofish/config.py": [
+      "os",
+      "pathlib.Path",
+      "pydantic.BaseModel"
+    ],
+    "mirofish/src/mirofish/graph/__init__.py": [],
+    "mirofish/src/mirofish/graph/conversation_chunker.py": [
+      "dataclasses.dataclass"
+    ],
+    "mirofish/src/mirofish/graph/conversation_extractor.py": [
+      "httpx",
+      "json",
+      "mirofish.config.config",
+      "structlog"
+    ],
+    "mirofish/src/mirofish/graph/embedder.py": [
+      "asyncio",
+      "httpx",
+      "mirofish.config.config",
+      "structlog"
+    ],
+    "mirofish/src/mirofish/graph/ingester.py": [
+      "datetime.datetime",
+      "json",
+      "mirofish.config.config",
+      "mirofish.graph.conversation_chunker.chunk_conversation",
+      "mirofish.graph.conversation_chunker.get_user_text",
+      "mirofish.graph.conversation_extractor.ConversationExtractor",
+      "mirofish.graph.embedder.OllamaEmbedder",
+      "mirofish.graph.neo4j_client.Neo4jClient",
+      "mirofish.ingest_state.IngestState",
+      "mirofish.ingest_state.load_state",
+      "mirofish.ingest_state.save_state",
+      "pathlib.Path",
+      "structlog"
+    ],
+    "mirofish/src/mirofish/graph/neo4j_client.py": [
+      "dataclasses.dataclass",
+      "mirofish.config.config",
+      "neo4j.AsyncDriver",
+      "neo4j.AsyncGraphDatabase",
+      "structlog"
+    ],
+    "mirofish/src/mirofish/ingest_state.py": [
+      "dataclasses.asdict",
+      "dataclasses.dataclass",
+      "datetime.datetime",
+      "datetime.timezone",
+      "json",
+      "mirofish.config.config",
+      "pathlib.Path",
+      "structlog"
+    ],
+    "mirofish/src/mirofish/main.py": [
+      "dotenv.load_dotenv",
+      "mirofish.api.app",
+      "mirofish.config.config",
+      "structlog",
+      "uvicorn"
+    ],
+    "mirofish/src/mirofish/prediction/__init__.py": [],
+    "mirofish/src/mirofish/prediction/insight_engine.py": [
+      "dataclasses.asdict",
+      "dataclasses.dataclass",
+      "datetime.datetime",
+      "datetime.timezone",
+      "mirofish.graph.neo4j_client.Neo4jClient",
+      "mirofish.prediction.loop_predictor.LoopPrediction",
+      "mirofish.prediction.loop_predictor.LoopPredictor",
+      "mirofish.prediction.mode_simulator.ModeSimulator",
+      "mirofish.prediction.mode_simulator.compute_mode",
+      "mirofish.prediction.pattern_detector.Pattern",
+      "mirofish.prediction.pattern_detector.PatternDetector",
+      "structlog"
+    ],
+    "mirofish/src/mirofish/prediction/loop_predictor.py": [
+      "dataclasses.dataclass",
+      "dataclasses.field",
+      "datetime.datetime",
+      "math",
+      "mirofish.config.config",
+      "mirofish.graph.neo4j_client.Neo4jClient",
+      "structlog"
+    ],
+    "mirofish/src/mirofish/prediction/mode_simulator.py": [
+      "dataclasses.dataclass",
+      "dataclasses.field",
+      "json",
+      "mirofish.config.config",
+      "structlog"
+    ],
+    "mirofish/src/mirofish/prediction/pattern_detector.py": [
+      "dataclasses.dataclass",
+      "mirofish.config.config",
+      "mirofish.graph.neo4j_client.Neo4jClient",
+      "structlog"
+    ],
+    "mirofish/tests/__init__.py": [],
+    "mirofish/tests/conftest.py": [
+      "datetime.datetime",
+      "datetime.timezone",
+      "pathlib.Path",
+      "pytest",
+      "tempfile"
+    ],
+    "mirofish/tests/test_api.py": [
+      "fastapi.testclient.TestClient",
+      "mirofish.api.app",
+      "mirofish.api.store",
+      "pytest",
+      "unittest.mock.AsyncMock",
+      "unittest.mock.patch"
+    ],
+    "mirofish/tests/test_builder.py": [
+      "mirofish.reports.builder.ReportBuilder",
+      "mirofish.swarm.personality.AgentProfile",
+      "mirofish.swarm.simulator.AgentMessage",
+      "mirofish.swarm.simulator.SimulationResult",
+      "pytest",
+      "unittest.mock.AsyncMock"
+    ],
+    "mirofish/tests/test_chunker.py": [
+      "mirofish.graph.chunker.Chunk",
+      "mirofish.graph.chunker.chunk_document"
+    ],
+    "mirofish/tests/test_config.py": [
+      "mirofish.config.MirofishConfig",
+      "pathlib.Path"
+    ],
+    "mirofish/tests/test_embedder.py": [
+      "mirofish.graph.embedder.OllamaEmbedder",
+      "pytest"
+    ],
+    "mirofish/tests/test_export.py": [
+      "jsonschema",
+      "mirofish.reports.export.to_json",
+      "mirofish.reports.export.to_markdown",
+      "pytest"
+    ],
+    "mirofish/tests/test_extractor.py": [
+      "json",
+      "mirofish.graph.extractor.Entity",
+      "mirofish.graph.extractor.EntityExtractor",
+      "mirofish.graph.extractor.ExtractionResult",
+      "mirofish.graph.extractor.Relationship",
+      "mirofish.graph.extractor.VALID_EDGE_TYPES",
+      "mirofish.graph.extractor.VALID_NODE_TYPES",
+      "pytest",
+      "unittest.mock.AsyncMock",
+      "unittest.mock.MagicMock",
+      "unittest.mock.patch"
+    ],
+    "mirofish/tests/test_ingester.py": [
+      "mirofish.graph.extractor.Entity",
+      "mirofish.graph.extractor.ExtractionResult",
+      "mirofish.graph.extractor.Relationship",
+      "mirofish.graph.ingester.DocumentIngester",
+      "pytest",
+      "unittest.mock.AsyncMock",
+      "unittest.mock.MagicMock"
+    ],
+    "mirofish/tests/test_neo4j_client.py": [
+      "mirofish.graph.neo4j_client.Neo4jClient",
+      "mirofish.graph.neo4j_client.VALID_EDGE_LABELS",
+      "mirofish.graph.neo4j_client.VALID_NODE_LABELS",
+      "pytest"
+    ],
+    "mirofish/tests/test_personality.py": [
+      "mirofish.swarm.personality.ARCHETYPES",
+      "mirofish.swarm.personality.AgentProfile",
+      "mirofish.swarm.personality.COMMUNICATION_STYLES",
+      "mirofish.swarm.personality.PersonalityGenerator",
+      "pytest",
+      "random",
+      "unittest.mock.AsyncMock",
+      "unittest.mock.patch"
+    ],
+    "mirofish/tests/test_simulator.py": [
+      "mirofish.swarm.personality.AgentProfile",
+      "mirofish.swarm.simulator.SimulationConfig",
+      "mirofish.swarm.simulator.SimulationResult",
+      "mirofish.swarm.simulator.SimulationRunner",
+      "mirofish.swarm.store.SimulationStore",
+      "pytest",
+      "unittest.mock.AsyncMock"
+    ],
+    "mirofish/tests/test_store.py": [
+      "mirofish.swarm.store.SimulationStore",
+      "pytest"
+    ],
+    "mosaic-dashboard/AGENTS.md": [],
+    "mosaic-dashboard/CLAUDE.md": [],
+    "mosaic-dashboard/README.md": [],
+    "mosaic-dashboard/RETIRED.md": [],
+    "mosaic-dashboard/atlas.surface.json": [],
+    "mosaic-dashboard/next-env.d.ts": [
+      "next/dev/types/routes.d.ts"
+    ],
+    "mosaic-dashboard/next.config.ts": [],
+    "mosaic-dashboard/package-lock.json": [],
+    "mosaic-dashboard/package.json": [],
+    "mosaic-dashboard/src/__tests__/AtlasClusters.test.tsx": [
+      "components/AtlasClusters"
+    ],
+    "mosaic-dashboard/src/__tests__/FestivalPanel.test.tsx": [
+      "components/FestivalPanel"
+    ],
+    "mosaic-dashboard/src/__tests__/ModePanel.test.tsx": [
+      "components/ModePanel"
+    ],
+    "mosaic-dashboard/src/__tests__/SimulationPanel.test.tsx": [
+      "components/SimulationPanel"
+    ],
+    "mosaic-dashboard/src/__tests__/UsageCounter.test.tsx": [
+      "components/UsageCounter"
+    ],
+    "mosaic-dashboard/src/__tests__/page.test.tsx": [
+      "app/page"
+    ],
+    "mosaic-dashboard/src/__tests__/proxy.test.ts": [],
+    "mosaic-dashboard/src/app/api/aegis/[...path]/route.ts": [
+      "lib/proxy"
+    ],
+    "mosaic-dashboard/src/app/api/delta/[...path]/route.ts": [
+      "lib/proxy"
+    ],
+    "mosaic-dashboard/src/app/api/mirofish/[...path]/route.ts": [
+      "lib/proxy"
+    ],
+    "mosaic-dashboard/src/app/api/mosaic/[...path]/route.ts": [
+      "lib/proxy"
+    ],
+    "mosaic-dashboard/src/app/globals.css": [],
+    "mosaic-dashboard/src/app/layout.tsx": [
+      "globals.css"
+    ],
+    "mosaic-dashboard/src/app/page.tsx": [],
+    "mosaic-dashboard/src/components/ApprovalPanel.tsx": [
+      "ModeTag",
+      "Panel"
+    ],
+    "mosaic-dashboard/src/components/AtlasClusters.tsx": [
+      "Panel"
+    ],
+    "mosaic-dashboard/src/components/CockpitPanel.tsx": [
+      "ModeTag",
+      "lib/websocket"
+    ],
+    "mosaic-dashboard/src/components/FestivalPanel.tsx": [
+      "ModeTag",
+      "Panel"
+    ],
+    "mosaic-dashboard/src/components/ModePanel.tsx": [
+      "ModeTag",
+      "Panel",
+      "lib/websocket"
+    ],
+    "mosaic-dashboard/src/components/ModeTag.tsx": [],
+    "mosaic-dashboard/src/components/Panel.tsx": [],
+    "mosaic-dashboard/src/components/QueuePanel.tsx": [
+      "Panel"
+    ],
+    "mosaic-dashboard/src/components/SimulationPanel.tsx": [
+      "Panel"
+    ],
+    "mosaic-dashboard/src/components/UsageCounter.tsx": [
+      "Panel"
+    ],
+    "mosaic-dashboard/src/lib/api.ts": [
+      "types"
+    ],
+    "mosaic-dashboard/src/lib/plotly.d.ts": [],
+    "mosaic-dashboard/src/lib/proxy.ts": [],
+    "mosaic-dashboard/src/lib/types.ts": [],
+    "mosaic-dashboard/src/lib/websocket.ts": [],
+    "mosaic-dashboard/tsconfig.json": [],
+    "mosaic-orchestrator/MOSAIC_FESTIVAL.md": [],
+    "mosaic-orchestrator/README.md": [],
+    "mosaic-orchestrator/RETIRED.md": [],
+    "mosaic-orchestrator/atlas.surface.json": [],
+    "mosaic-orchestrator/fest_status.py": [
+      "subprocess"
+    ],
+    "mosaic-orchestrator/pyproject.toml": [],
+    "mosaic-orchestrator/src/mosaic/__init__.py": [],
+    "mosaic-orchestrator/src/mosaic/adapters/__init__.py": [],
+    "mosaic-orchestrator/src/mosaic/adapters/claude_adapter.py": [
+      "anthropic",
+      "dataclasses.dataclass",
+      "dataclasses.field",
+      "enum.Enum",
+      "httpx",
+      "structlog",
+      "time",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/api.py": [
+      "contextlib.asynccontextmanager",
+      "datetime.datetime",
+      "datetime.timezone",
+      "fastapi.FastAPI",
+      "fastapi.middleware.cors.CORSMiddleware",
+      "json",
+      "mosaic.adapters.claude_adapter.ClaudeAdapter",
+      "mosaic.clients.aegis_client.AegisClient",
+      "mosaic.clients.cognitive_client.CognitiveClient",
+      "mosaic.clients.delta_client.DeltaClient",
+      "mosaic.clients.festival_client.FestivalClient",
+      "mosaic.clients.mirofish_client.MirofishClient",
+      "mosaic.clients.openclaw_client.OpenClawClient",
+      "mosaic.config.config",
+      "mosaic.metering.metering.MeteringStore",
+      "mosaic.queue.client.QueueClient",
+      "mosaic.queue.executor.EmbeddedExecutor",
+      "mosaic.queue.publisher.NatsPublisher",
+      "mosaic.workflows.compound_loop.run_compound_loop",
+      "mosaic.workflows.compound_loops.analyst_engine.compute_analyst_signals",
+      "mosaic.workflows.compound_loops.analyst_engine.evaluate_priority_adjustments",
+      "mosaic.workflows.compound_loops.automation_engine.add_task",
+      "mosaic.workflows.compound_loops.automation_engine.compute_automation_health_signals",
+      "mosaic.workflows.compound_loops.automation_engine.compute_due_tasks",
+      "mosaic.workflows.compound_loops.automation_engine.evaluate_conditions",
+      "mosaic.workflows.compound_loops.automation_engine.log_execution",
+      "mosaic.workflows.compound_loops.energy_engine.compute_energy_health_signals",
+      "mosaic.workflows.compound_loops.energy_engine.log_energy_entry",
+      "mosaic.workflows.compound_loops.finance_engine.add_transaction",
+      "mosaic.workflows.compound_loops.finance_engine.compute_budget_variance",
+      "mosaic.workflows.compound_loops.finance_engine.compute_cash_flow_projection",
+      "mosaic.workflows.compound_loops.finance_engine.compute_finance_health_signals",
+      "mosaic.workflows.compound_loops.finance_engine.compute_monthly_summary",
+      "mosaic.workflows.compound_loops.finance_engine.detect_alerts",
+      "mosaic.workflows.compound_loops.network_engine.add_contact",
+      "mosaic.workflows.compound_loops.network_engine.compute_network_health_signals",
+      "mosaic.workflows.compound_loops.network_engine.compute_outreach_due",
+      "mosaic.workflows.compound_loops.network_engine.log_interaction",
+      "mosaic.workflows.compound_loops.network_engine.match_opportunities_to_contacts",
+      "mosaic.workflows.compound_loops.project_progress.compute_goal_progress",
+      "mosaic.workflows.compound_loops.project_progress.compute_milestone_progress",
+      "mosaic.workflows.compound_loops.skill_progression.apply_skill_usage",
+      "mosaic.workflows.compound_loops.skill_progression.compute_skill_health_signals",
+      "mosaic.workflows.compound_loops.skill_progression.recommend_next_skills",
+      "mosaic.workflows.daily_loop.run_daily_loop",
+      "mosaic.workflows.idea_simulation.run_idea_to_simulation",
+      "mosaic.workflows.stall_detector.detect_stalls",
+      "structlog"
+    ],
+    "mosaic-orchestrator/src/mosaic/clients/__init__.py": [],
+    "mosaic-orchestrator/src/mosaic/clients/aegis_client.py": [
+      "asyncio",
+      "httpx",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/clients/cognitive_client.py": [
+      "asyncio",
+      "json",
+      "pathlib.Path",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/clients/delta_client.py": [
+      "asyncio",
+      "httpx",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/clients/festival_client.py": [
+      "asyncio",
+      "json",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/clients/mirofish_client.py": [
+      "asyncio",
+      "httpx",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/clients/openclaw_client.py": [
+      "asyncio",
+      "httpx",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/config.py": [
+      "os",
+      "pathlib.Path",
+      "pydantic.BaseModel",
+      "uuid"
+    ],
+    "mosaic-orchestrator/src/mosaic/main.py": [
+      "asyncio",
+      "mosaic.api.app",
+      "mosaic.config.config",
+      "structlog",
+      "uvicorn"
+    ],
+    "mosaic-orchestrator/src/mosaic/metering/__init__.py": [
+      "mosaic.metering.metering.MeteringStore"
+    ],
+    "mosaic-orchestrator/src/mosaic/metering/metering.py": [
+      "datetime.datetime",
+      "datetime.timezone",
+      "pathlib.Path",
+      "sqlite3",
+      "structlog"
+    ],
+    "mosaic-orchestrator/src/mosaic/queue/__init__.py": [
+      "mosaic.queue.client.QueueClient",
+      "mosaic.queue.executor.EmbeddedExecutor",
+      "mosaic.queue.publisher.NatsPublisher"
+    ],
+    "mosaic-orchestrator/src/mosaic/queue/client.py": [
+      "__future__.annotations",
+      "asyncpg",
+      "json",
+      "structlog",
+      "typing.Any",
+      "uuid"
+    ],
+    "mosaic-orchestrator/src/mosaic/queue/executor.py": [
+      "__future__.annotations",
+      "asyncio",
+      "mosaic.adapters.claude_adapter.ClaudeAdapter",
+      "mosaic.adapters.claude_adapter.TaskPriority",
+      "mosaic.adapters.claude_adapter.TaskSpec",
+      "mosaic.metering.metering.MeteringStore",
+      "mosaic.queue.client.QueueClient",
+      "mosaic.queue.publisher.NatsPublisher",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/queue/publisher.py": [
+      "__future__.annotations",
+      "json",
+      "nats",
+      "nats.aio.client.Client",
+      "structlog",
+      "time",
+      "typing.Any",
+      "uuid"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/__init__.py": [
+      "mosaic.workflows.daily_loop.run_daily_loop",
+      "mosaic.workflows.idea_simulation.run_idea_to_simulation",
+      "mosaic.workflows.stall_detector.detect_stalls"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loop.py": [
+      ".compound_loops.brief_generator.generate_compound_brief",
+      ".compound_loops.collector.CompoundSnapshot",
+      ".compound_loops.collector.LoopResult",
+      ".compound_loops.collector.collect_snapshot",
+      ".compound_loops.loop_analyst.compute_analyst_decisions",
+      ".compound_loops.loop_automation_health.compute_automation_health",
+      ".compound_loops.loop_closure_skill.compute_closure_to_skill",
+      ".compound_loops.loop_completion_finance.compute_completion_to_finance",
+      ".compound_loops.loop_compound_score.compute_compound_score",
+      ".compound_loops.loop_energy_health.compute_energy_health",
+      ".compound_loops.loop_energy_throttle.compute_energy_throttle",
+      ".compound_loops.loop_finance_health.compute_finance_health",
+      ".compound_loops.loop_network_health.compute_network_health",
+      ".compound_loops.loop_project_health.compute_project_health",
+      ".compound_loops.loop_risk_cascade.compute_risk_cascade",
+      ".compound_loops.loop_risk_mitigation.compute_risk_mitigation",
+      ".compound_loops.loop_skill_health.compute_skill_health",
+      ".compound_loops.loop_skill_network.compute_skill_to_network",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/__init__.py": [],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/analyst_engine.py": [
+      "__future__.annotations",
+      "hashlib",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/automation_engine.py": [
+      "__future__.annotations",
+      "copy",
+      "datetime.datetime",
+      "datetime.timedelta",
+      "datetime.timezone",
+      "hashlib",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/brief_generator.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/collector.py": [
+      "__future__.annotations",
+      "dataclasses.dataclass",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/energy_engine.py": [
+      "__future__.annotations",
+      "copy",
+      "datetime.datetime",
+      "datetime.timedelta",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/finance_engine.py": [
+      "__future__.annotations",
+      "copy",
+      "datetime.datetime",
+      "datetime.timezone",
+      "hashlib",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_analyst.py": [
+      ".analyst_engine.compute_analyst_signals",
+      ".analyst_engine.evaluate_directive_execution",
+      ".analyst_engine.evaluate_lane_violations",
+      ".analyst_engine.evaluate_loop_closures",
+      ".analyst_engine.evaluate_priority_adjustments",
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_automation_health.py": [
+      ".automation_engine.compute_automation_health_signals",
+      ".automation_engine.compute_due_tasks",
+      ".automation_engine.evaluate_conditions",
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_closure_skill.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      "__future__.annotations",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_completion_finance.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      "__future__.annotations",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_compound_score.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      ".energy_engine.compute_energy_health_signals",
+      ".finance_engine.compute_finance_health_signals",
+      ".network_engine.compute_network_health_signals",
+      ".project_progress.compute_project_health_signals",
+      ".skill_progression.compute_skill_health_signals",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_energy_health.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      ".energy_engine.compute_energy_health_signals",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_energy_throttle.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      "__future__.annotations",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_finance_health.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      ".finance_engine.compute_cash_flow_projection",
+      ".finance_engine.compute_finance_health_signals",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_network_health.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      ".network_engine.compute_network_health_signals",
+      ".network_engine.match_opportunities_to_contacts",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timedelta",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_project_health.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      ".project_progress.compute_project_health_signals",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_risk_cascade.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      "__future__.annotations",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_risk_mitigation.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      ".energy_engine.detect_trends",
+      ".risk_engine.compute_adaptive_guardrails",
+      ".risk_engine.compute_recovery_target",
+      ".risk_engine.detect_interference",
+      ".risk_engine.generate_mitigation_plan",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_skill_health.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      ".skill_progression.compute_skill_health_signals",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_skill_network.py": [
+      ".collector.CompoundSnapshot",
+      ".collector.LoopResult",
+      ".skill_progression.compute_skill_health_signals",
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/network_engine.py": [
+      "__future__.annotations",
+      "copy",
+      "datetime.datetime",
+      "datetime.timedelta",
+      "datetime.timezone",
+      "hashlib",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/project_progress.py": [
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timedelta",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/risk_engine.py": [
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timedelta",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/compound_loops/skill_progression.py": [
+      "__future__.annotations",
+      "copy",
+      "datetime.datetime",
+      "datetime.timedelta",
+      "datetime.timezone",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/daily_loop.py": [
+      "datetime.datetime",
+      "datetime.timezone",
+      "mosaic.clients.cognitive_client.CognitiveClient",
+      "mosaic.clients.delta_client.DeltaClient",
+      "mosaic.workflows.compound_loop.run_compound_loop",
+      "structlog",
+      "typing.Any"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/idea_simulation.py": [
+      "datetime.datetime",
+      "datetime.timezone",
+      "json",
+      "mosaic.clients.cognitive_client.CognitiveClient",
+      "mosaic.clients.mirofish_client.MirofishClient",
+      "mosaic.clients.openclaw_client.OpenClawClient",
+      "structlog"
+    ],
+    "mosaic-orchestrator/src/mosaic/workflows/stall_detector.py": [
+      "datetime.datetime",
+      "datetime.timezone",
+      "json",
+      "mosaic.clients.cognitive_client.CognitiveClient",
+      "mosaic.clients.openclaw_client.OpenClawClient",
+      "structlog"
+    ],
+    "mosaic-orchestrator/test_compound.py": [
+      "asyncio",
+      "json",
+      "mosaic.clients.cognitive_client.CognitiveClient",
+      "mosaic.config.config",
+      "mosaic.workflows.compound_loop.run_compound_loop",
+      "pathlib.Path",
+      "sys"
+    ],
+    "mosaic-orchestrator/tests/conftest.py": [
+      "mosaic.clients.cognitive_client.CognitiveClient",
+      "mosaic.clients.delta_client.DeltaClient",
+      "mosaic.clients.mirofish_client.MirofishClient",
+      "mosaic.clients.openclaw_client.OpenClawClient",
+      "pathlib.Path",
+      "pytest",
+      "unittest.mock.AsyncMock",
+      "unittest.mock.MagicMock"
+    ],
+    "mosaic-orchestrator/tests/test_api.py": [
+      "httpx.ASGITransport",
+      "httpx.AsyncClient",
+      "mosaic.api.app",
+      "pytest",
+      "pytest_asyncio",
+      "unittest.mock.AsyncMock",
+      "unittest.mock.MagicMock",
+      "unittest.mock.patch"
+    ],
+    "mosaic-orchestrator/tests/test_metering.py": [
+      "mosaic.metering.metering.MeteringStore",
+      "pathlib.Path",
+      "pytest"
+    ],
+    "mosaic-orchestrator/tests/test_workflows.py": [
+      "mosaic.workflows.daily_loop.run_daily_loop",
+      "mosaic.workflows.idea_simulation.find_eligible_ideas",
+      "mosaic.workflows.idea_simulation.run_idea_to_simulation",
+      "mosaic.workflows.stall_detector.detect_stalls",
+      "pytest"
+    ]
+  },
   "_root": {
     ".aegis-agents.json": [],
     ".mcp.json": [],
-    "ARCHITECTURE_BRIEFING.md": [],
-    "ATLAS_CORE_UI_MAP.md": [],
-    "ATLAS_CORE_UI_VISUAL.md": [],
-    "BACKEND_AUDIT.md": [],
-    "CLAUDE_CODE_PROMPTS.md": [],
-    "CODEBASE_ANALYSIS.md": [],
-    "CODEX_EXECUTION_PLAN.md": [],
+    "ATLAS_HEADLESS_MAP.md": [],
+    "ATLAS_MASTER_PLAN.md": [],
+    "CAPSULES.md": [],
+    "CLAUDE.md": [],
+    "CLAUDE_INVENTORY.md": [],
     "COMPONENT_GRAPH.json": [],
-    "CONTEXT_PACKET.md": [],
-    "CYCLEBOARD_COMPLETE_REFERENCE.md": [],
     "DATAFLOW_GRAPH.json": [],
-    "FILE_MAP.md": [],
-    "FRONTEND_AUDIT.md": [],
-    "HANDOFF_AUTOSTART.md": [],
-    "LEGACY_CODE_AUDIT.md": [],
-    "MACHINE_CONTEXT.md": [],
-    "MOSAIC_README.md": [],
-    "NEXT_SESSION_HANDOFF.md": [],
     "ONBOARDING.md": [],
-    "PHASE_ROADMAP.md": [],
-    "PRE_ATLAS_MAP.md": [],
     "Pre_Atlas_System_Debrief.json": [],
     "README.md": [],
     "REPO_RUNDOWN.md": [],
-    "REPO_SURFACES.md": [],
-    "RISK_ANALYSIS.md": [],
-    "SIMPLIFICATION_CANDIDATES.md": [],
-    "SYSTEM_FREEZE_SPEC.md": [],
     "SYSTEM_MANIFEST.json": [],
+    "TRUST_BOUNDARY.md": [],
+    "atlas-manifest.yaml": [],
     "atlas-map.json": [],
+    "atlas-setup.html": [],
     "atlas_boot.html": [],
     "cc-session-index.json": [],
-    "cc-session-index.md": [],
     "cc-session-index.py": [
       "datetime",
       "json",
@@ -431,6 +1189,7 @@
     "docs_manifest.js": [
       "MyComposition",
       "Thumbnail",
+      "app",
       "assets/happy.json",
       "assets/neutral.json",
       "assets/sad.json",
@@ -439,16 +1198,22 @@
       "binaryConverter",
       "components/HabitDashboard",
       "get-media-metadata",
+      "hooks/useAuth",
+      "middleware/validation",
+      "models",
+      "models/User",
+      "replicache.bundle.mjs",
+      "services/UserService",
       "src/core/camera-stream-test.ts",
       "src/core/control-test.ts",
       "src/core/ui-stream-test.ts",
-      "utils/log.js"
+      "utils/EmailValidator",
+      "utils/log.js",
+      "utils/validation"
     ],
     "docs_manifest.json": [],
-    "forensic-map.md": [],
-    "gap-map.md": [],
-    "inventory.md": [],
     "pre-atlas-pattern-map.html": [],
+    "skills-lock.json": [],
     "sync_bridge.py": [
       "__future__.annotations",
       "argparse",
@@ -460,13 +1225,7 @@
     ],
     "system-map.html": [],
     "system-tour.html": [],
-    "vercel.json": [],
-    "\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c001_PLAN\uf05cPHASE_GOAL.md": [],
-    "\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c001_PLAN\uf05cWORKFLOW.md": [],
-    "\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c002_REPORT_GENERATOR\uf05cPHASE_GOAL.md": [],
-    "\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c003_LESSONS_ENGINE\uf05cPHASE_GOAL.md": [],
-    "\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c004_SKILL_UPDATE\uf05cPHASE_GOAL.md": [],
-    "\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05cFESTIVAL_GOAL.md": []
+    "vercel.json": []
   },
   "aegis-fabric": {
     "README.md": [],
@@ -13668,8 +14427,11 @@
     "README.md": [],
     "atlas.surface.json": [],
     "runs/findings-2026-06-08.json": [],
+    "runs/findings-2026-06-28.json": [],
     "runs/report-2026-06-08.md": [],
-    "runs/snapshot-2026-06-08.json": []
+    "runs/report-2026-06-28.md": [],
+    "runs/snapshot-2026-06-08.json": [],
+    "runs/snapshot-2026-06-28.json": []
   },
   "atlas-cli": {
     "README.md": [],
@@ -13731,10 +14493,23 @@
       "__future__.annotations",
       "fastapi.HTTPException",
       "fastapi.Header",
+      "fastapi.Request",
       "json",
       "os",
       "pathlib.Path",
-      "secrets"
+      "secrets",
+      "typing.Any"
+    ],
+    "src/atlas_map_api/call_counter.py": [
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "json",
+      "os",
+      "pathlib.Path",
+      "threading",
+      "typing.Any",
+      "typing.Literal"
     ],
     "src/atlas_map_api/describe.py": [
       "__future__.annotations",
@@ -13744,8 +14519,26 @@
       "hmac",
       "json",
       "pathlib.Path",
+      "re",
       "typing.Any",
       "typing.Literal"
+    ],
+    "src/atlas_map_api/gateway.py": [
+      "..auth",
+      "..call_counter",
+      "..describe",
+      "..launcher",
+      ".loader.MapSnapshot",
+      "__future__.annotations",
+      "httpx",
+      "os",
+      "re",
+      "shlex",
+      "shutil",
+      "subprocess",
+      "typing.Any",
+      "urllib.parse.quote",
+      "urllib.parse.urlencode"
     ],
     "src/atlas_map_api/graph.py": [
       "__future__.annotations",
@@ -13764,7 +14557,8 @@
       "re",
       "tempfile",
       "typing.Any",
-      "typing.Callable"
+      "typing.Callable",
+      "yaml"
     ],
     "src/atlas_map_api/launcher.py": [
       "__future__.annotations",
@@ -13790,6 +14584,7 @@
     "src/atlas_map_api/mcp_server.py": [
       "..auth",
       "..describe",
+      "..gateway",
       ".graph.ServiceGraph",
       ".loader.MapSnapshot",
       ".loader.load_snapshot",
@@ -13800,11 +14595,23 @@
       "time",
       "typing.Optional"
     ],
+    "src/atlas_map_api/seam.py": [
+      "__future__.annotations",
+      "datetime.datetime",
+      "datetime.timezone",
+      "json",
+      "pydantic.BaseModel",
+      "typing.Any",
+      "typing.Literal"
+    ],
     "src/atlas_map_api/server.py": [
       "..auth",
+      "..call_counter",
       "..describe",
+      "..gateway",
       "..items",
       "..launcher",
+      "..seam",
       "..surfaces",
       ".graph.ServiceGraph",
       ".loader.MapSnapshot",
@@ -13818,6 +14625,7 @@
       "fastapi.HTTPException",
       "fastapi.Header",
       "fastapi.Query",
+      "fastapi.Request",
       "fastapi.middleware.cors.CORSMiddleware",
       "fastapi.responses.PlainTextResponse",
       "rapidfuzz.fuzz",
@@ -13833,6 +14641,13 @@
       "typing.Any"
     ],
     "tests/__init__.py": [],
+    "tests/test_call_counter.py": [
+      "__future__.annotations",
+      "asyncio",
+      "atlas_map_api.call_counter",
+      "atlas_map_api.gateway",
+      "atlas_map_api.loader.MapSnapshot"
+    ],
     "tests/test_describe.py": [
       "__future__.annotations",
       "atlas_map_api.auth",
@@ -13847,11 +14662,37 @@
       "atlas_map_api.mcp_server",
       "pytest"
     ],
+    "tests/test_gateway.py": [
+      "__future__.annotations",
+      "asyncio",
+      "atlas_map_api.auth",
+      "atlas_map_api.describe",
+      "atlas_map_api.gateway",
+      "atlas_map_api.loader.load_snapshot",
+      "atlas_map_api.server.app",
+      "fastapi.testclient.TestClient",
+      "httpx"
+    ],
     "tests/test_mcp.py": [
       "__future__.annotations",
       "asyncio",
       "atlas_map_api.mcp_server",
       "pytest"
+    ],
+    "tests/test_seam.py": [
+      "__future__.annotations",
+      "asyncio",
+      "atlas_map_api.describe",
+      "atlas_map_api.gateway",
+      "atlas_map_api.loader.load_snapshot",
+      "atlas_map_api.seam.Receipt",
+      "atlas_map_api.seam.SEAM_VERSION",
+      "importlib.util",
+      "io",
+      "json",
+      "os",
+      "pytest",
+      "subprocess"
     ],
     "tests/test_server.py": [
       "__future__.annotations",
@@ -13859,12 +14700,14 @@
       "atlas_map_api.items",
       "atlas_map_api.launcher",
       "atlas_map_api.loader.load_snapshot",
+      "atlas_map_api.server",
       "atlas_map_api.server.app",
       "atlas_map_api.surfaces",
       "fastapi.testclient.TestClient",
       "json",
       "pytest"
-    ]
+    ],
+    "var/call_counts.json": []
   },
   "audit": {
     "ATLAS_CONTEXT.md": [],
@@ -13874,6 +14717,15 @@
     "SESSION_2_KICKOFF.md": [],
     "SESSION_3_KICKOFF.md": [],
     "atlas-whitepaper.html": [],
+    "build_atlas_manifest.py": [
+      "__future__.annotations",
+      "datetime",
+      "json",
+      "pathlib.Path",
+      "re",
+      "sys",
+      "yaml"
+    ],
     "build_system_index.py": [
       "__future__.annotations",
       "json",
@@ -13953,6 +14805,7 @@
     "imports/uasc-executor.json": [],
     "lava-layers.json": [],
     "layout-base.js": [],
+    "manifest-overlay.yaml": [],
     "moat-map.md": [],
     "reinvention-A6.json": [],
     "reinvention-surface.json": [],
@@ -13961,11 +14814,269 @@
     "swap-backlog.md": [],
     "swap-candidates.json": [],
     "system-index.json": [],
-    "system-map-data.js": [],
+    "system-map-data.js": [
+      "",
+      "App.jsx",
+      "App.tsx",
+      "Main",
+      "ModeTag",
+      "Panel",
+      "Root",
+      "actuation.js",
+      "adapter/v1-schema.js",
+      "adapter/v1-to-edit-prompt.js",
+      "adapter/v1-to-prompt.js",
+      "adapters/agent-adapter.js",
+      "aegis-storage.js",
+      "agent-registry.js",
+      "agents/action-processor.js",
+      "agents/agent-adapter.js",
+      "agents/agent-registry.js",
+      "api.js",
+      "app",
+      "approval/approval-queue.js",
+      "asset-extract.js",
+      "assets/source.js",
+      "atlas/Y",
+      "atlas/close-signal.js",
+      "atlas/directive.js",
+      "atlas/lattice-projection.js",
+      "atlas/preferences-store.js",
+      "atlas/signals-store.js",
+      "audio-adapter.js",
+      "auth.js",
+      "camera-extractor.js",
+      "camera-renderer.js",
+      "camera-surface.js",
+      "claude-cli.js",
+      "cli/db-driver",
+      "cli/sqlite-storage",
+      "clients/aegis-client.js",
+      "cockpit",
+      "component-names.js",
+      "components/AtlasClusters",
+      "components/ContextBudget.jsx",
+      "components/FestivalPanel",
+      "components/FileTree.jsx",
+      "components/Footer",
+      "components/GraphMemory.jsx",
+      "components/Header",
+      "components/Hero",
+      "components/ModePanel",
+      "components/SimulationPanel",
+      "components/UsageCounter",
+      "compressor.js",
+      "config.js",
+      "control-surface.js",
+      "core/closure-engine.js",
+      "core/cockpit",
+      "core/cockpit.js",
+      "core/delta",
+      "core/delta.js",
+      "core/dictionary",
+      "core/event-emitter.js",
+      "core/executor-bridge.js",
+      "core/notify.js",
+      "core/routing",
+      "core/timeline-logger.js",
+      "core/types",
+      "core/types-core",
+      "core/types-core.js",
+      "core/types.js",
+      "core/work-controller",
+      "core/work-controller.js",
+      "cost/usage-tracker.js",
+      "db-driver",
+      "db/agent-store.js",
+      "db/approval-store.js",
+      "db/audit-store.js",
+      "db/delta-store.js",
+      "db/entity-store.js",
+      "db/policy-store.js",
+      "db/pool-manager.js",
+      "db/snapshot-store.js",
+      "db/tenant-db.js",
+      "db/usage-store.js",
+      "db/webhook-store.js",
+      "decision-cache.js",
+      "delta",
+      "delta-sync",
+      "delta-sync.js",
+      "device-agent.js",
+      "dictionary",
+      "edit-loop.js",
+      "env.js",
+      "event-bus.js",
+      "event-emitter.js",
+      "events/audit-log.js",
+      "events/event-bus.js",
+      "events/webhook-dispatcher.js",
+      "fabric-tests",
+      "fabric-tests.js",
+      "fixtures/anatomy-v1-minimal.json",
+      "fixtures/anatomy-v1-realistic.json",
+      "gate_client.js",
+      "gateway/api-middleware.js",
+      "gateway/rate-limiter.js",
+      "gateway/request-logger.js",
+      "governance/governance_daemon",
+      "hash.js",
+      "image-to-clone-guided.js",
+      "image-to-clone.js",
+      "image-to-envelope.js",
+      "input",
+      "kernel-client.js",
+      "lib/clipboard.js",
+      "lib/format.js",
+      "lib/websocket",
+      "normalize.js",
+      "notify.js",
+      "observability/health.js",
+      "observability/logger.js",
+      "observability/metrics.js",
+      "parse-blocks.js",
+      "patch.js",
+      "pattern-library/index.js",
+      "patterns/card-action.js",
+      "patterns/card-content.js",
+      "patterns/card-stat.js",
+      "patterns/clickable-button.js",
+      "patterns/clickable-cta.js",
+      "patterns/clickable-icon-button.js",
+      "patterns/clickable-link.js",
+      "patterns/clickable-pill.js",
+      "patterns/default-card.js",
+      "patterns/form-inline.js",
+      "patterns/form-newsletter.js",
+      "patterns/form-stacked.js",
+      "patterns/heading-eyebrow.js",
+      "patterns/heading-hero.js",
+      "patterns/heading-tagged.js",
+      "patterns/landmark-aside.js",
+      "patterns/landmark-footer.js",
+      "patterns/landmark-header.js",
+      "patterns/landmark-nav.js",
+      "patterns/landmark-section.js",
+      "patterns/list-grid.js",
+      "patterns/list-tags.js",
+      "patterns/list-vertical.js",
+      "pipeline/edit-loop.js",
+      "pipeline/image-edit.js",
+      "pipeline/image-to-clone-guided.js",
+      "pipeline/image-to-clone.js",
+      "pipeline/image-to-envelope.js",
+      "pipeline/session-store.js",
+      "pipeline/sitepull-resolver.js",
+      "pipeline/url-to-clone.js",
+      "plugins/auth.js",
+      "plugins/idempotency.js",
+      "plugins/rate-limit.js",
+      "policies/decision-cache.js",
+      "policies/policy-engine.js",
+      "policies/policy-store.js",
+      "policy-engine.js",
+      "policy-store.js",
+      "pool-manager.js",
+      "preferences-store.js",
+      "preparation",
+      "queue.js",
+      "rate-limiter.js",
+      "renderer",
+      "request-logger.js",
+      "routes/agent-action.js",
+      "routes/agent-routes.js",
+      "routes/agents.js",
+      "routes/approval-routes.js",
+      "routes/approvals.js",
+      "routes/audit.js",
+      "routes/delta-routes.js",
+      "routes/delta.js",
+      "routes/health.js",
+      "routes/metrics-routes.js",
+      "routes/metrics.js",
+      "routes/policies.js",
+      "routes/policy-routes.js",
+      "routes/state-routes.js",
+      "routes/state.js",
+      "routes/tenant-routes.js",
+      "routes/tenants.js",
+      "routes/usage.js",
+      "routes/webhook-routes.js",
+      "routes/webhooks.js",
+      "routing",
+      "sandbox/vite-pool.js",
+      "server.js",
+      "services/snapshot-service.js",
+      "services/state-materializer.js",
+      "session-store.js",
+      "signals-store.js",
+      "source.js",
+      "src/adapter/v1-schema.js",
+      "src/adapter/v1-to-edit-prompt.js",
+      "src/adapter/v1-to-prompt.js",
+      "src/core/cockpit.js",
+      "src/core/delta.js",
+      "src/core/dictionary.js",
+      "src/core/preparation.js",
+      "src/core/routing.js",
+      "src/core/templates.js",
+      "src/core/types.js",
+      "src/env.js",
+      "src/pattern-library/index.js",
+      "src/pattern-library/util.js",
+      "src/pipeline/edit-loop.js",
+      "src/pipeline/session-store.js",
+      "src/pipeline/url-to-clone.js",
+      "src/sandbox/vite-pool.js",
+      "state-materializer.js",
+      "storage/aegis-storage.js",
+      "storage/snapshot-manager.js",
+      "supabase.js",
+      "system-prompt.js",
+      "templates",
+      "tenants/tenant-registry.js",
+      "test-agent-adapter.js",
+      "test-approval.js",
+      "test-delta.js",
+      "test-integration.js",
+      "test-policy.js",
+      "test-snapshot.js",
+      "timeline-logger.js",
+      "types",
+      "types-core",
+      "types-core.js",
+      "types-extended.js",
+      "types-sync.js",
+      "types.js",
+      "ui-surface.js",
+      "url-to-clone.js",
+      "util.js",
+      "v1-schema.js",
+      "validate.js",
+      "validation.js",
+      "vendor/lovable/VENDOR_SHA.js",
+      "vendor/lovable/generate.js",
+      "vendor/lovable/parse-blocks.js",
+      "vendor/lovable/system-prompt.js",
+      "vision-backend.js",
+      "worker.js"
+    ],
     "system-map.html": [],
     "system-shape.md": [],
     "vocab-collisions.json": [],
     "wall.html": []
+  },
+  "binre": {
+    "atlas.surface.json": [],
+    "report.py": [
+      "__future__.annotations",
+      "hashlib",
+      "json",
+      "os",
+      "pathlib.Path",
+      "re",
+      "sys"
+    ]
   },
   "blueprint-generator": {
     "README.md": [],
@@ -14015,6 +15126,9 @@
     "package-lock.json": [],
     "package.json": [],
     "tsconfig.json": []
+  },
+  "c110-trace": {
+    "index.html": []
   },
   "canvas-demo": {
     "DECISIONS.md": [],
@@ -14359,6 +15473,18 @@
       "pathlib.Path",
       "subprocess",
       "tempfile"
+    ]
+  },
+  "code-recon": {
+    "atlas.surface.json": [],
+    "orient_seam.py": [
+      "__future__.annotations",
+      "hashlib",
+      "json",
+      "os",
+      "pathlib.Path",
+      "subprocess",
+      "sys"
     ]
   },
   "codex-partner": {
@@ -15785,6 +16911,15 @@
       "sys",
       "typing.Any"
     ],
+    "loop_clearer.py": [
+      "close_loop",
+      "http.server.BaseHTTPRequestHandler",
+      "http.server.ThreadingHTTPServer",
+      "json",
+      "threading",
+      "urllib.parse.parse_qs",
+      "urllib.parse.urlparse"
+    ],
     "loop_recommendations.json": [],
     "loops.py": [
       "atlas_config.ROUTING",
@@ -16112,6 +17247,15 @@
       "pathlib.Path",
       "pytest"
     ],
+    "tests/test_closure_quality.py": [
+      "atlas_config.ROUTING",
+      "atlas_config.compute_mode",
+      "cognitive_api",
+      "json",
+      "pathlib.Path",
+      "sqlite3",
+      "sys"
+    ],
     "tests/test_cycleboard_push.py": [
       "__future__.annotations",
       "cycleboard_push",
@@ -16271,6 +17415,7 @@
   },
   "contracts": {
     "README.md": [],
+    "examples/AnatomyV1.v1.example.json": [],
     "examples/BuildOutput.v1.example.json": [],
     "examples/CloseSignal.v1.example.json": [],
     "examples/ContextPackage.v1.example.json": [],
@@ -16435,6 +17580,28 @@
       "time",
       "typing.Any",
       "uuid"
+    ],
+    "src/cortex/dispatcher/__init__.py": [
+      ".poll.poll_loop",
+      ".poll.poll_once",
+      "__future__.annotations"
+    ],
+    "src/cortex/dispatcher/poll.py": [
+      "__future__.annotations",
+      "asyncio",
+      "httpx",
+      "logging",
+      "typing.Awaitable",
+      "typing.Callable",
+      "typing.Optional"
+    ],
+    "src/cortex/dispatcher/tests/__init__.py": [],
+    "src/cortex/dispatcher/tests/test_poll.py": [
+      "__future__.annotations",
+      "cortex.dispatcher.poll.poll_loop",
+      "cortex.dispatcher.poll.poll_once",
+      "httpx",
+      "pytest"
     ],
     "src/cortex/ghost_executor/__init__.py": [
       ".consume.DirectiveInvalidError",
@@ -16710,6 +17877,7 @@
     "package.json": [],
     "runs/latest.json": [],
     "runs/memory/cold/2026-04-07.json": [],
+    "runs/memory/cold/2026-06-25.json": [],
     "runs/memory/hot.json": []
   },
   "data": {
@@ -16762,105 +17930,120 @@
     ],
     "projections/today.json": []
   },
+  "deepwiki": {
+    "ask.py": [
+      "__future__.annotations",
+      "argparse",
+      "hashlib",
+      "json",
+      "os",
+      "pathlib.Path",
+      "sys",
+      "urllib.error",
+      "urllib.parse",
+      "urllib.request"
+    ],
+    "atlas.surface.json": []
+  },
   "delta-kernel": {
     "ARCHITECTURE_MAP.md": [],
     "HASH_CHAIN_FORKS.md": [],
     "PLAN_FIX_CLAIM_TTL.md": [],
     "README.md": [],
     "_deferred/actuation.ts": [
-      "control-surface",
-      "delta",
-      "types"
+      "control-surface.js",
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/audio-adapter.ts": [
-      "delta",
-      "types"
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/audio-renderer.ts": [
-      "audio-adapter",
-      "types"
+      "audio-adapter.js",
+      "src/core/types.js"
     ],
     "_deferred/camera-adapter.ts": [
-      "camera-extractor"
+      "camera-extractor.js"
     ],
     "_deferred/camera-extractor.ts": [
-      "camera-surface",
-      "delta",
-      "types"
+      "camera-surface.js",
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/camera-renderer.ts": [
-      "camera-surface",
-      "delta",
-      "types"
+      "camera-surface.js",
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/camera-stream-test.ts": [
-      "camera-extractor",
-      "camera-renderer",
-      "camera-surface",
-      "delta",
-      "types"
+      "camera-extractor.js",
+      "camera-renderer.js",
+      "camera-surface.js",
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/camera-surface.ts": [
-      "delta",
-      "types"
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/codec2-adapter.ts": [
-      "delta",
-      "types"
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/control-surface.ts": [
-      "delta",
-      "types"
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/control-test.ts": [
-      "actuation",
-      "control-surface",
-      "delta",
-      "device-agent",
-      "types"
+      "actuation.js",
+      "control-surface.js",
+      "device-agent.js",
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/delta-sync.ts": [
-      "delta",
-      "types"
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/device-agent.ts": [
-      "actuation",
-      "control-surface",
-      "delta",
-      "types"
+      "actuation.js",
+      "control-surface.js",
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "_deferred/fabric-tests.ts": [
-      "cockpit",
-      "delta",
-      "delta-sync",
-      "dictionary",
-      "preparation",
-      "routing",
-      "templates",
-      "types"
+      "delta-sync.js",
+      "src/core/cockpit.js",
+      "src/core/delta.js",
+      "src/core/dictionary.js",
+      "src/core/preparation.js",
+      "src/core/routing.js",
+      "src/core/templates.js",
+      "src/core/types.js"
     ],
     "_deferred/off-grid-node.ts": [
-      "delta",
-      "delta-sync",
-      "preparation",
-      "types"
+      "delta-sync.js",
+      "src/core/delta.js",
+      "src/core/preparation.js",
+      "src/core/types.js"
     ],
     "_deferred/run-tests.ts": [
-      "fabric-tests"
+      "fabric-tests.js"
     ],
     "_deferred/ui-stream-test.ts": [
-      "delta",
-      "types",
-      "ui-surface"
+      "src/core/delta.js",
+      "src/core/types.js",
+      "ui-surface.js"
     ],
     "_deferred/ui-stream.ts": [
-      "delta",
-      "types",
-      "ui-surface"
+      "src/core/delta.js",
+      "src/core/types.js",
+      "ui-surface.js"
     ],
     "_deferred/ui-surface.ts": [
-      "delta",
-      "types"
+      "src/core/delta.js",
+      "src/core/types.js"
     ],
     "agent_config.template.json": [],
     "atlas.surface.json": [],
@@ -16894,6 +18077,7 @@
       "atlas/signals-store.js",
       "cli/sqlite-storage",
       "clients/aegis-client.js",
+      "core/closure-engine.js",
       "core/cockpit",
       "core/delta",
       "core/event-emitter.js",
@@ -16914,7 +18098,9 @@
       "core/types-core.js",
       "signals-store.js"
     ],
-    "src/atlas/preferences-store.ts": [],
+    "src/atlas/preferences-store.ts": [
+      "cli/db-driver"
+    ],
     "src/atlas/signals-store.ts": [],
     "src/cli/app.ts": [
       "core/types",
@@ -16923,6 +18109,7 @@
     ],
     "src/cli/atlas-ai.ts": [],
     "src/cli/atlas.ts": [],
+    "src/cli/db-driver.ts": [],
     "src/cli/index.ts": [
       "app"
     ],
@@ -16933,7 +18120,8 @@
     ],
     "src/cli/sqlite-storage.ts": [
       "core/dictionary",
-      "core/types"
+      "core/types",
+      "db-driver"
     ],
     "src/cli/storage.ts": [
       "core/dictionary",
@@ -16947,6 +18135,11 @@
     ],
     "src/core/audio-live-test.html": [],
     "src/core/camera-live-test.html": [],
+    "src/core/closure-engine.ts": [
+      "cli/sqlite-storage",
+      "delta",
+      "timeline-logger.js"
+    ],
     "src/core/cockpit.ts": [
       "delta",
       "routing",
@@ -16986,6 +18179,7 @@
       "delta",
       "types"
     ],
+    "src/core/notify.ts": [],
     "src/core/preparation.ts": [
       "delta",
       "routing",
@@ -17025,13 +18219,17 @@
     "src/core/voice-live-test.html": [],
     "src/core/work-controller.ts": [
       "event-emitter.js",
+      "notify.js",
       "timeline-logger.js"
     ],
     "src/governance/governance_daemon.ts": [
       "cli/sqlite-storage",
+      "core/closure-engine.js",
       "core/cockpit.js",
       "core/delta",
       "core/event-emitter.js",
+      "core/executor-bridge.js",
+      "core/notify.js",
       "core/routing",
       "core/timeline-logger.js",
       "core/types",
@@ -17044,6 +18242,9 @@
       "atlas/signals-store.js",
       "core/types-core.js"
     ],
+    "src/tests/signals-store-tests.ts": [
+      "atlas/signals-store.js"
+    ],
     "src/tests/work-controller-tests.ts": [
       "core/work-controller.js"
     ],
@@ -17055,6 +18256,7 @@
       "cli/sqlite-storage",
       "core/types"
     ],
+    "src/tools/validate-anatomy-v1.ts": [],
     "src/ui/control.html": [],
     "src/ui/timeline.html": [],
     "tsconfig.json": [],
@@ -17077,8 +18279,163 @@
     "web/tsconfig.node.json": [],
     "web/vite.config.ts": []
   },
+  "delta-scp": {
+    "README.md": [],
+    "package-lock.json": [],
+    "package.json": [],
+    "scripts/migrate.ts": [
+      "src/env.js"
+    ],
+    "src/auth.ts": [
+      "config.js"
+    ],
+    "src/cli.ts": [
+      "config.js",
+      "source.js"
+    ],
+    "src/compressor.test.ts": [
+      "compressor.js"
+    ],
+    "src/compressor.ts": [],
+    "src/config.ts": [
+      "env.js"
+    ],
+    "src/env.ts": [],
+    "src/index.ts": [
+      "config.js",
+      "server.js",
+      "supabase.js",
+      "worker.js"
+    ],
+    "src/queue.ts": [],
+    "src/server.ts": [
+      "auth.js",
+      "config.js",
+      "queue.js",
+      "supabase.js",
+      "validate.js"
+    ],
+    "src/source.ts": [
+      "compressor.js",
+      "config.js",
+      "validate.js"
+    ],
+    "src/supabase.ts": [
+      "config.js"
+    ],
+    "src/validate.test.ts": [
+      "config.js",
+      "validate.js"
+    ],
+    "src/validate.ts": [
+      "config.js"
+    ],
+    "src/worker.ts": [
+      "config.js",
+      "queue.js",
+      "source.js",
+      "supabase.js"
+    ],
+    "test/queue.integration.test.ts": [],
+    "tsconfig.json": []
+  },
+  "delta-scp-demo": {
+    "atlas.surface.json": []
+  },
+  "delta-scp-web": {
+    ".last-deploy.json": [],
+    "README.md": [],
+    "index.html": [],
+    "package-lock.json": [],
+    "package.json": [],
+    "src/App.jsx": [
+      "api.js",
+      "components/ContextBudget.jsx",
+      "components/FileTree.jsx",
+      "components/GraphMemory.jsx",
+      "lib/clipboard.js"
+    ],
+    "src/api.js": [],
+    "src/components/ContextBudget.jsx": [
+      "lib/format.js"
+    ],
+    "src/components/FileTree.jsx": [
+      "lib/format.js"
+    ],
+    "src/components/GraphMemory.jsx": [
+      "lib/format.js"
+    ],
+    "src/lib/clipboard.js": [],
+    "src/lib/format.js": [],
+    "src/main.jsx": [
+      "App.jsx",
+      "styles.css"
+    ],
+    "src/styles.css": [],
+    "vite.config.js": []
+  },
   "docs": {
     "CLI_REFERENCE.md": [],
+    "archive/2026-07/ARCHITECTURE_BRIEFING.md": [],
+    "archive/2026-07/ATLAS_ATM_UASC_ANALYSIS.md": [],
+    "archive/2026-07/ATLAS_ATM_UASC_PREP.md": [],
+    "archive/2026-07/ATLAS_CORE_UI_MAP.md": [],
+    "archive/2026-07/ATLAS_CORE_UI_VISUAL.md": [],
+    "archive/2026-07/BACKEND_AUDIT.md": [],
+    "archive/2026-07/BEARINGS_2026-06-25.md": [],
+    "archive/2026-07/BRANCH_CONSOLIDATION_PLAN_2026-07-06.md": [],
+    "archive/2026-07/CAPSULE_self-mirror-saas.md": [],
+    "archive/2026-07/CLAUDE_CODE_PROMPTS.md": [],
+    "archive/2026-07/CODEBASE_ANALYSIS.md": [],
+    "archive/2026-07/CODEX_EXECUTION_PLAN.md": [],
+    "archive/2026-07/CONTEXT_PACKET.md": [],
+    "archive/2026-07/CYCLEBOARD_COMPLETE_REFERENCE.md": [],
+    "archive/2026-07/DROPLIST_AUTOPILOT_KICKOFF.md": [],
+    "archive/2026-07/DROPLIST_MARKET_READY_SPEC.md": [],
+    "archive/2026-07/DROPLIST_SHIP_2026-06-26.md": [],
+    "archive/2026-07/DROPLIST_SHIP_SPEC_2026-06-25.md": [],
+    "archive/2026-07/FILE_MAP.md": [],
+    "archive/2026-07/FORENSIC_DOSSIER_2026-06-26.md": [],
+    "archive/2026-07/FRONTEND_AUDIT.md": [],
+    "archive/2026-07/GEMINI_ATM_MAP.md": [],
+    "archive/2026-07/GEMINI_ATM_TRANSCRIPT.md": [],
+    "archive/2026-07/GIT_SESSION_INVENTORY_2026-06-28.md": [],
+    "archive/2026-07/HANDOFF_AUTOSTART.md": [],
+    "archive/2026-07/HANDOFF_close-it-out-strong_2026-06-26.md": [],
+    "archive/2026-07/HANDOFF_compile-seed-repos_2026-06-27.md": [],
+    "archive/2026-07/LEGACY_CODE_AUDIT.md": [],
+    "archive/2026-07/MACHINE_CONTEXT.md": [],
+    "archive/2026-07/MOSAIC_README.md": [],
+    "archive/2026-07/NEXT_SESSION_HANDOFF.md": [],
+    "archive/2026-07/PHASE_ROADMAP.md": [],
+    "archive/2026-07/PNG_SUBSTRATE_SEED.md": [],
+    "archive/2026-07/PRE_ATLAS_MAP.md": [],
+    "archive/2026-07/REPO_FORENSIC_TRACE_2026-06-26.md": [],
+    "archive/2026-07/REPO_SURFACES.md": [],
+    "archive/2026-07/RISK_ANALYSIS.md": [],
+    "archive/2026-07/SAAS_SHIP_PLAN_2026-06-25.md": [],
+    "archive/2026-07/SCRAPER_AUDIT_CODEX_REVIEW.md": [],
+    "archive/2026-07/SCRAPER_PIPELINE_AUDIT.md": [],
+    "archive/2026-07/SEAM.md": [],
+    "archive/2026-07/SHIP_READINESS_AND_MARKET_2026-06-25.md": [],
+    "archive/2026-07/SIMPLIFICATION_CANDIDATES.md": [],
+    "archive/2026-07/STACK_INTEGRATION_AUDIT_2026-06-26.md": [],
+    "archive/2026-07/START-HERE.md": [],
+    "archive/2026-07/SYSTEM_FREEZE_SPEC.md": [],
+    "archive/2026-07/UASC_LANGUAGE_REPORT.md": [],
+    "archive/2026-07/cc-session-index.md": [],
+    "archive/2026-07/codex_audit_trail_2026-06-24.md": [],
+    "archive/2026-07/conversation_full.md": [],
+    "archive/2026-07/forensic-map.md": [],
+    "archive/2026-07/gap-map.md": [],
+    "archive/2026-07/inventory.md": [],
+    "archive/2026-07/\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c001_PLAN\uf05cPHASE_GOAL.md": [],
+    "archive/2026-07/\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c001_PLAN\uf05cWORKFLOW.md": [],
+    "archive/2026-07/\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c002_REPORT_GENERATOR\uf05cPHASE_GOAL.md": [],
+    "archive/2026-07/\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c003_LESSONS_ENGINE\uf05cPHASE_GOAL.md": [],
+    "archive/2026-07/\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05c004_SKILL_UPDATE\uf05cPHASE_GOAL.md": [],
+    "archive/2026-07/\uf05croot\uf05cfestival-project\uf05cfestivals\uf05cplanning\uf05cfestival-reports-FR0001\uf05cFESTIVAL_GOAL.md": [],
+    "archive/INDEX.md": [],
     "lifecycle-propagation-2026-04-21.md": [],
     "repo-search-stack.md": [],
     "search-protocol.md": [],
@@ -17179,15 +18536,37 @@
     "PACKETS/008_lattice_consumer_wire.md": [],
     "PACKETS/009_lattice_ui_droplist_consumer.md": [],
     "PACKETS/010_atlas_artifact_contract.md": [],
+    "PACKETS/011_markoff_and_checklist.md": [],
     "README.md": [],
+    "SMOKE_AND_DOD.md": [],
     "atlas.surface.json": [],
+    "chains/daily_ready_nudge.json": [],
+    "data/dags/DAG-233f21e8.json": [],
+    "data/dags/DAG-48799015.json": [],
     "data/dags/DAG-4bbd2113.json": [],
+    "data/dags/DAG-93eb8c71.json": [],
+    "data/dags/DAG-BRIEF.json": [],
+    "data/dags/DAG-CHK01.json": [],
+    "data/dags/DAG-CMP404.json": [],
+    "data/dags/DAG-CMP409.json": [],
+    "data/dags/DAG-FLOW.json": [],
+    "data/dags/DAG-IDEMP.json": [],
+    "data/dags/DAG-LOCK.json": [],
+    "data/dags/DAG-NOBODY.json": [],
+    "data/dags/DAG-OFFICIAL.json": [],
+    "data/dags/DAG-RACE.json": [],
+    "data/dags/DAG-REOPEN-NOOP.json": [],
+    "data/dags/DAG-REOPEN.json": [],
+    "data/dags/DAG-ad95e8b0.json": [],
     "data/dags/DAG-b9aa8dbf.json": [],
+    "data/dags/DAG-branchaudit.json": [],
     "data/entities/ANIMAL-DOE.json": [],
     "data/entities/ANIMAL-GOAT-3.json": [],
     "data/entities/ANIMAL-GOATS.json": [],
     "data/results/DAG-4bbd2113_N4.md": [],
     "data/results/DAG-b9aa8dbf_N4.md": [],
+    "data/schedules.json": [],
+    "data/state/do_not_reopen.json": [],
     "droplist/__init__.py": [],
     "droplist/__main__.py": [
       ".cli.main"
@@ -17210,6 +18589,30 @@
       "typing.Any",
       "urllib.error",
       "urllib.request",
+      "uuid"
+    ],
+    "droplist/auth.py": [
+      "__future__.annotations",
+      "fastapi.HTTPException",
+      "fastapi.Header",
+      "os",
+      "pathlib.Path",
+      "secrets"
+    ],
+    "droplist/chain_runner.py": [
+      "..atlas_signal",
+      "..clock",
+      "..dag_update",
+      "..intake",
+      "..llm",
+      "..scheduler",
+      "..storage",
+      "__future__.annotations",
+      "datetime",
+      "glob",
+      "json",
+      "os",
+      "typing.Any",
       "uuid"
     ],
     "droplist/classifier.py": [
@@ -17257,6 +18660,20 @@
       "__future__.annotations",
       "time"
     ],
+    "droplist/daemon.py": [
+      "..chain_runner",
+      "..clock",
+      "..dispatcher",
+      "..graph_engine",
+      "..intake",
+      "..scheduler",
+      "..storage",
+      "..watcher",
+      "__future__.annotations",
+      "argparse",
+      "os",
+      "time"
+    ],
     "droplist/dag_builder.py": [
       ".schema.WorkPacket",
       "__future__.annotations",
@@ -17270,6 +18687,15 @@
     "droplist/daily.py": [
       "..storage",
       "__future__.annotations"
+    ],
+    "droplist/desktop.py": [
+      "__future__.annotations",
+      "droplist.server",
+      "socket",
+      "threading",
+      "time",
+      "urllib.request",
+      "webview"
     ],
     "droplist/dispatcher.py": [
       "__future__.annotations"
@@ -17347,11 +18773,20 @@
       "time",
       "uuid"
     ],
+    "droplist/keys.py": [
+      "..storage",
+      "__future__.annotations",
+      "json",
+      "os",
+      "pathlib.Path"
+    ],
     "droplist/llm.py": [
       "..storage",
       "__future__.annotations",
       "anthropic",
+      "hashlib",
       "json",
+      "litellm",
       "os",
       "time",
       "typing.Any",
@@ -17392,6 +18827,14 @@
     "droplist/router.py": [
       "__future__.annotations"
     ],
+    "droplist/scheduler.py": [
+      "__future__.annotations",
+      "croniter.croniter",
+      "datetime",
+      "json",
+      "os",
+      "typing.Any"
+    ],
     "droplist/schema.py": [
       "__future__.annotations",
       "dataclasses.asdict",
@@ -17401,19 +18844,45 @@
     ],
     "droplist/server.py": [
       "..atlas_signal",
+      "..auth",
+      "..clock",
       "..command_brief",
+      "..daemon",
       "..dag_builder",
+      "..dag_update",
+      "..dispatcher",
       "..entities",
       "..intake",
+      "..keys",
+      "..llm",
       "..state",
       "..storage",
       "__future__.annotations",
+      "contextlib.asynccontextmanager",
+      "fastapi.Depends",
       "fastapi.FastAPI",
       "fastapi.HTTPException",
       "fastapi.Request",
+      "fastapi.concurrency.run_in_threadpool",
       "fastapi.middleware.cors.CORSMiddleware",
+      "fastapi.responses.FileResponse",
+      "fastapi.responses.HTMLResponse",
+      "fastapi.responses.Response",
+      "fastapi.staticfiles.StaticFiles",
+      "json",
+      "os",
       "pathlib.Path",
+      "slowapi.Limiter",
+      "slowapi._rate_limit_exceeded_handler",
+      "slowapi.errors.RateLimitExceeded",
+      "slowapi.util.get_remote_address",
+      "threading",
+      "time",
+      "typing.Any",
+      "typing.AsyncIterator",
       "typing.Optional",
+      "urllib.error",
+      "urllib.request",
       "uvicorn"
     ],
     "droplist/state.py": [
@@ -17455,6 +18924,21 @@
       "uuid"
     ],
     "pyproject.toml": [],
+    "scripts/gen_pwa_icons.py": [
+      "PIL.Image",
+      "PIL.ImageDraw",
+      "__future__.annotations",
+      "pathlib.Path"
+    ],
+    "test_ai.py": [
+      "__future__.annotations",
+      "droplist.auth",
+      "droplist.server",
+      "droplist.server.app",
+      "fastapi.testclient.TestClient",
+      "litellm",
+      "pytest"
+    ],
     "test_atlas_emit.py": [
       "__future__.annotations",
       "droplist.graph_engine",
@@ -17508,6 +18992,48 @@
       "test_atlas_signal.fixture_animal_needs_human",
       "threading"
     ],
+    "test_auth.py": [
+      "__future__.annotations",
+      "droplist.auth",
+      "droplist.server.app",
+      "fastapi.testclient.TestClient",
+      "pytest"
+    ],
+    "test_budget_guard.py": [
+      "__future__.annotations",
+      "droplist.llm",
+      "droplist.server",
+      "os"
+    ],
+    "test_chains.py": [
+      "__future__.annotations",
+      "datetime",
+      "droplist.atlas_signal",
+      "droplist.chain_runner",
+      "droplist.daemon",
+      "droplist.dropstore",
+      "droplist.storage",
+      "json",
+      "os",
+      "pytest",
+      "shutil",
+      "tempfile"
+    ],
+    "test_daemon.py": [
+      "__future__.annotations",
+      "datetime",
+      "droplist.daemon",
+      "droplist.graph_engine",
+      "droplist.server",
+      "droplist.state",
+      "droplist.storage",
+      "json",
+      "os",
+      "pytest",
+      "shutil",
+      "tempfile",
+      "threading"
+    ],
     "test_drops.py": [
       "__future__.annotations",
       "droplist.cli.print_packet",
@@ -17537,6 +19063,7 @@
     ],
     "test_intake.py": [
       "__future__.annotations",
+      "droplist.auth.require_write_token",
       "droplist.intake",
       "droplist.server.app",
       "droplist.storage",
@@ -17552,6 +19079,31 @@
       "urllib.request",
       "uvicorn"
     ],
+    "test_keys.py": [
+      "__future__.annotations",
+      "droplist.auth",
+      "droplist.keys",
+      "droplist.server.app",
+      "fastapi.testclient.TestClient",
+      "os",
+      "pytest"
+    ],
+    "test_markoff.py": [
+      "__future__.annotations",
+      "concurrent.futures.ThreadPoolExecutor",
+      "droplist.auth.require_write_token",
+      "droplist.dag_update",
+      "droplist.server._complete_node_core",
+      "droplist.server.app",
+      "droplist.state",
+      "droplist.storage",
+      "fastapi.testclient.TestClient",
+      "os",
+      "pytest",
+      "shutil",
+      "tempfile",
+      "time"
+    ],
     "test_persist.py": [
       "__future__.annotations",
       "datetime",
@@ -17565,6 +19117,12 @@
       "shutil",
       "tempfile"
     ],
+    "test_pwa.py": [
+      "__future__.annotations",
+      "droplist.server.app",
+      "fastapi.testclient.TestClient",
+      "json"
+    ],
     "test_retrieval_external.py": [
       "__future__.annotations",
       "droplist.retrieval",
@@ -17574,12 +19132,24 @@
       "pytest",
       "threading"
     ],
+    "test_scheduler.py": [
+      "__future__.annotations",
+      "datetime",
+      "droplist.scheduler",
+      "json",
+      "os",
+      "pytest",
+      "shutil",
+      "tempfile"
+    ],
     "test_server.py": [
       "__future__.annotations",
+      "droplist.auth",
       "droplist.entities",
       "droplist.graph_engine",
       "droplist.server.app",
       "droplist.state",
+      "droplist.storage",
       "json",
       "os",
       "shutil",
@@ -17592,6 +19162,13 @@
       "urllib.request",
       "uvicorn"
     ],
+    "test_smoke_gates.py": [
+      "__future__.annotations",
+      "pathlib.Path",
+      "pytest",
+      "subprocess",
+      "sys"
+    ],
     "test_tools.py": [
       "__future__.annotations",
       "droplist.graph_engine",
@@ -17601,7 +19178,8 @@
       "tempfile"
     ],
     "ui/chain.html": [],
-    "ui/line.html": []
+    "ui/line.html": [],
+    "ui/sw.js": []
   },
   "experiments": {
     "manual-skill-trial/README.md": [],
@@ -17774,6 +19352,27 @@
       "sys"
     ]
   },
+  "groundwork-cli": {
+    "atlas.surface.json": []
+  },
+  "hydra": {
+    "README.md": [],
+    "REVIEW-web-2026-06-25.md": [],
+    "engine.py": [
+      "http.server.BaseHTTPRequestHandler",
+      "http.server.ThreadingHTTPServer",
+      "json",
+      "os",
+      "pathlib.Path",
+      "re",
+      "urllib.error",
+      "urllib.request"
+    ],
+    "hydra.html": [],
+    "vault/https-github-com-sindresorhus-quick-look-plugins.json": [],
+    "vault/https-github-com-sindresorhus-slugify.json": [],
+    "vault/https-github-com-sindresorhus-type-fest.json": []
+  },
   "inpact": {
     "README.md": [],
     "ROADMAP.md": [],
@@ -17813,11 +19412,261 @@
     "atlas.surface.json": [],
     "cose-base.js": [],
     "cytoscape-cose-bilkent.js": [],
+    "cytoscape-dagre.js": [],
     "cytoscape.min.js": [],
     "index.html": [],
     "layout-base.js": [],
-    "system-map-data.js": [],
+    "package-lock.json": [],
+    "package.json": [],
+    "system-map-data.js": [
+      "",
+      "App.jsx",
+      "App.tsx",
+      "Main",
+      "ModeTag",
+      "Panel",
+      "Root",
+      "actuation.js",
+      "adapter/v1-schema.js",
+      "adapter/v1-to-edit-prompt.js",
+      "adapter/v1-to-prompt.js",
+      "adapters/agent-adapter.js",
+      "aegis-storage.js",
+      "agent-registry.js",
+      "agents/action-processor.js",
+      "agents/agent-adapter.js",
+      "agents/agent-registry.js",
+      "api.js",
+      "app",
+      "approval/approval-queue.js",
+      "asset-extract.js",
+      "assets/source.js",
+      "atlas/Y",
+      "atlas/close-signal.js",
+      "atlas/directive.js",
+      "atlas/lattice-projection.js",
+      "atlas/preferences-store.js",
+      "atlas/signals-store.js",
+      "audio-adapter.js",
+      "auth.js",
+      "camera-extractor.js",
+      "camera-renderer.js",
+      "camera-surface.js",
+      "claude-cli.js",
+      "cli/db-driver",
+      "cli/sqlite-storage",
+      "clients/aegis-client.js",
+      "cockpit",
+      "component-names.js",
+      "components/AtlasClusters",
+      "components/ContextBudget.jsx",
+      "components/FestivalPanel",
+      "components/FileTree.jsx",
+      "components/Footer",
+      "components/GraphMemory.jsx",
+      "components/Header",
+      "components/Hero",
+      "components/ModePanel",
+      "components/SimulationPanel",
+      "components/UsageCounter",
+      "compressor.js",
+      "config.js",
+      "control-surface.js",
+      "core/closure-engine.js",
+      "core/cockpit",
+      "core/cockpit.js",
+      "core/delta",
+      "core/delta.js",
+      "core/dictionary",
+      "core/event-emitter.js",
+      "core/executor-bridge.js",
+      "core/notify.js",
+      "core/routing",
+      "core/timeline-logger.js",
+      "core/types",
+      "core/types-core",
+      "core/types-core.js",
+      "core/types.js",
+      "core/work-controller",
+      "core/work-controller.js",
+      "cost/usage-tracker.js",
+      "db-driver",
+      "db/agent-store.js",
+      "db/approval-store.js",
+      "db/audit-store.js",
+      "db/delta-store.js",
+      "db/entity-store.js",
+      "db/policy-store.js",
+      "db/pool-manager.js",
+      "db/snapshot-store.js",
+      "db/tenant-db.js",
+      "db/usage-store.js",
+      "db/webhook-store.js",
+      "decision-cache.js",
+      "delta",
+      "delta-sync",
+      "delta-sync.js",
+      "device-agent.js",
+      "dictionary",
+      "edit-loop.js",
+      "env.js",
+      "event-bus.js",
+      "event-emitter.js",
+      "events/audit-log.js",
+      "events/event-bus.js",
+      "events/webhook-dispatcher.js",
+      "fabric-tests",
+      "fabric-tests.js",
+      "fixtures/anatomy-v1-minimal.json",
+      "fixtures/anatomy-v1-realistic.json",
+      "gate_client.js",
+      "gateway/api-middleware.js",
+      "gateway/rate-limiter.js",
+      "gateway/request-logger.js",
+      "governance/governance_daemon",
+      "hash.js",
+      "image-to-clone-guided.js",
+      "image-to-clone.js",
+      "image-to-envelope.js",
+      "input",
+      "kernel-client.js",
+      "lib/clipboard.js",
+      "lib/format.js",
+      "lib/websocket",
+      "normalize.js",
+      "notify.js",
+      "observability/health.js",
+      "observability/logger.js",
+      "observability/metrics.js",
+      "parse-blocks.js",
+      "patch.js",
+      "pattern-library/index.js",
+      "patterns/card-action.js",
+      "patterns/card-content.js",
+      "patterns/card-stat.js",
+      "patterns/clickable-button.js",
+      "patterns/clickable-cta.js",
+      "patterns/clickable-icon-button.js",
+      "patterns/clickable-link.js",
+      "patterns/clickable-pill.js",
+      "patterns/default-card.js",
+      "patterns/form-inline.js",
+      "patterns/form-newsletter.js",
+      "patterns/form-stacked.js",
+      "patterns/heading-eyebrow.js",
+      "patterns/heading-hero.js",
+      "patterns/heading-tagged.js",
+      "patterns/landmark-aside.js",
+      "patterns/landmark-footer.js",
+      "patterns/landmark-header.js",
+      "patterns/landmark-nav.js",
+      "patterns/landmark-section.js",
+      "patterns/list-grid.js",
+      "patterns/list-tags.js",
+      "patterns/list-vertical.js",
+      "pipeline/edit-loop.js",
+      "pipeline/image-edit.js",
+      "pipeline/image-to-clone-guided.js",
+      "pipeline/image-to-clone.js",
+      "pipeline/image-to-envelope.js",
+      "pipeline/session-store.js",
+      "pipeline/sitepull-resolver.js",
+      "pipeline/url-to-clone.js",
+      "plugins/auth.js",
+      "plugins/idempotency.js",
+      "plugins/rate-limit.js",
+      "policies/decision-cache.js",
+      "policies/policy-engine.js",
+      "policies/policy-store.js",
+      "policy-engine.js",
+      "policy-store.js",
+      "pool-manager.js",
+      "preferences-store.js",
+      "preparation",
+      "queue.js",
+      "rate-limiter.js",
+      "renderer",
+      "request-logger.js",
+      "routes/agent-action.js",
+      "routes/agent-routes.js",
+      "routes/agents.js",
+      "routes/approval-routes.js",
+      "routes/approvals.js",
+      "routes/audit.js",
+      "routes/delta-routes.js",
+      "routes/delta.js",
+      "routes/health.js",
+      "routes/metrics-routes.js",
+      "routes/metrics.js",
+      "routes/policies.js",
+      "routes/policy-routes.js",
+      "routes/state-routes.js",
+      "routes/state.js",
+      "routes/tenant-routes.js",
+      "routes/tenants.js",
+      "routes/usage.js",
+      "routes/webhook-routes.js",
+      "routes/webhooks.js",
+      "routing",
+      "sandbox/vite-pool.js",
+      "server.js",
+      "services/snapshot-service.js",
+      "services/state-materializer.js",
+      "session-store.js",
+      "signals-store.js",
+      "source.js",
+      "src/adapter/v1-schema.js",
+      "src/adapter/v1-to-edit-prompt.js",
+      "src/adapter/v1-to-prompt.js",
+      "src/core/cockpit.js",
+      "src/core/delta.js",
+      "src/core/dictionary.js",
+      "src/core/preparation.js",
+      "src/core/routing.js",
+      "src/core/templates.js",
+      "src/core/types.js",
+      "src/env.js",
+      "src/pattern-library/index.js",
+      "src/pattern-library/util.js",
+      "src/pipeline/edit-loop.js",
+      "src/pipeline/session-store.js",
+      "src/pipeline/url-to-clone.js",
+      "src/sandbox/vite-pool.js",
+      "state-materializer.js",
+      "storage/aegis-storage.js",
+      "storage/snapshot-manager.js",
+      "supabase.js",
+      "system-prompt.js",
+      "templates",
+      "tenants/tenant-registry.js",
+      "test-agent-adapter.js",
+      "test-approval.js",
+      "test-delta.js",
+      "test-integration.js",
+      "test-policy.js",
+      "test-snapshot.js",
+      "timeline-logger.js",
+      "types",
+      "types-core",
+      "types-core.js",
+      "types-extended.js",
+      "types-sync.js",
+      "types.js",
+      "ui-surface.js",
+      "url-to-clone.js",
+      "util.js",
+      "v1-schema.js",
+      "validate.js",
+      "validation.js",
+      "vendor/lovable/VENDOR_SHA.js",
+      "vendor/lovable/generate.js",
+      "vendor/lovable/parse-blocks.js",
+      "vendor/lovable/system-prompt.js",
+      "vision-backend.js",
+      "worker.js"
+    ],
     "system-map.html": [],
+    "test-results/.last-run.json": [],
     "wall.html": [],
     "zod.umd.js": []
   },
@@ -17844,6 +19693,8 @@
       "__future__.annotations",
       "fastapi.FastAPI",
       "fastapi.HTTPException",
+      "fastapi.middleware.cors.CORSMiddleware",
+      "os",
       "uvicorn"
     ],
     "src/memory_hub/stores.py": [
@@ -17857,7 +19708,6 @@
       "re",
       "sys",
       "time",
-      "urllib.request",
       "uuid"
     ],
     "tests/__init__.py": [],
@@ -17871,780 +19721,6 @@
   "mini-ship": {
     "DEFERRED.md": [],
     "atlas.surface.json": []
-  },
-  "mirofish": {
-    "README.md": [],
-    "atlas.surface.json": [],
-    "docker-compose.yml": [],
-    "pyproject.toml": [],
-    "src/mirofish/__init__.py": [],
-    "src/mirofish/api.py": [
-      "dataclasses.asdict",
-      "datetime.datetime",
-      "datetime.timezone",
-      "fastapi.BackgroundTasks",
-      "fastapi.FastAPI",
-      "fastapi.HTTPException",
-      "fastapi.middleware.cors.CORSMiddleware",
-      "mirofish.config.config",
-      "mirofish.graph.ingester.ConversationIngester",
-      "mirofish.graph.neo4j_client.Neo4jClient",
-      "mirofish.ingest_state.load_state",
-      "mirofish.prediction.insight_engine.InsightEngine",
-      "mirofish.prediction.loop_predictor.LoopPredictor",
-      "mirofish.prediction.mode_simulator.ModeSimulator",
-      "mirofish.prediction.pattern_detector.PatternDetector",
-      "pydantic.BaseModel",
-      "structlog"
-    ],
-    "src/mirofish/config.py": [
-      "os",
-      "pathlib.Path",
-      "pydantic.BaseModel"
-    ],
-    "src/mirofish/graph/__init__.py": [],
-    "src/mirofish/graph/conversation_chunker.py": [
-      "dataclasses.dataclass"
-    ],
-    "src/mirofish/graph/conversation_extractor.py": [
-      "httpx",
-      "json",
-      "mirofish.config.config",
-      "structlog"
-    ],
-    "src/mirofish/graph/embedder.py": [
-      "asyncio",
-      "httpx",
-      "mirofish.config.config",
-      "structlog"
-    ],
-    "src/mirofish/graph/ingester.py": [
-      "datetime.datetime",
-      "json",
-      "mirofish.config.config",
-      "mirofish.graph.conversation_chunker.chunk_conversation",
-      "mirofish.graph.conversation_chunker.get_user_text",
-      "mirofish.graph.conversation_extractor.ConversationExtractor",
-      "mirofish.graph.embedder.OllamaEmbedder",
-      "mirofish.graph.neo4j_client.Neo4jClient",
-      "mirofish.ingest_state.IngestState",
-      "mirofish.ingest_state.load_state",
-      "mirofish.ingest_state.save_state",
-      "pathlib.Path",
-      "structlog"
-    ],
-    "src/mirofish/graph/neo4j_client.py": [
-      "dataclasses.dataclass",
-      "mirofish.config.config",
-      "neo4j.AsyncDriver",
-      "neo4j.AsyncGraphDatabase",
-      "structlog"
-    ],
-    "src/mirofish/ingest_state.py": [
-      "dataclasses.asdict",
-      "dataclasses.dataclass",
-      "datetime.datetime",
-      "datetime.timezone",
-      "json",
-      "mirofish.config.config",
-      "pathlib.Path",
-      "structlog"
-    ],
-    "src/mirofish/main.py": [
-      "dotenv.load_dotenv",
-      "mirofish.api.app",
-      "mirofish.config.config",
-      "structlog",
-      "uvicorn"
-    ],
-    "src/mirofish/prediction/__init__.py": [],
-    "src/mirofish/prediction/insight_engine.py": [
-      "dataclasses.asdict",
-      "dataclasses.dataclass",
-      "datetime.datetime",
-      "datetime.timezone",
-      "mirofish.graph.neo4j_client.Neo4jClient",
-      "mirofish.prediction.loop_predictor.LoopPrediction",
-      "mirofish.prediction.loop_predictor.LoopPredictor",
-      "mirofish.prediction.mode_simulator.ModeSimulator",
-      "mirofish.prediction.mode_simulator.compute_mode",
-      "mirofish.prediction.pattern_detector.Pattern",
-      "mirofish.prediction.pattern_detector.PatternDetector",
-      "structlog"
-    ],
-    "src/mirofish/prediction/loop_predictor.py": [
-      "dataclasses.dataclass",
-      "dataclasses.field",
-      "datetime.datetime",
-      "math",
-      "mirofish.config.config",
-      "mirofish.graph.neo4j_client.Neo4jClient",
-      "structlog"
-    ],
-    "src/mirofish/prediction/mode_simulator.py": [
-      "dataclasses.dataclass",
-      "dataclasses.field",
-      "json",
-      "mirofish.config.config",
-      "structlog"
-    ],
-    "src/mirofish/prediction/pattern_detector.py": [
-      "dataclasses.dataclass",
-      "mirofish.config.config",
-      "mirofish.graph.neo4j_client.Neo4jClient",
-      "structlog"
-    ],
-    "tests/__init__.py": [],
-    "tests/conftest.py": [
-      "datetime.datetime",
-      "datetime.timezone",
-      "pathlib.Path",
-      "pytest",
-      "tempfile"
-    ],
-    "tests/test_api.py": [
-      "fastapi.testclient.TestClient",
-      "mirofish.api.app",
-      "mirofish.api.store",
-      "pytest",
-      "unittest.mock.AsyncMock",
-      "unittest.mock.patch"
-    ],
-    "tests/test_builder.py": [
-      "mirofish.reports.builder.ReportBuilder",
-      "mirofish.swarm.personality.AgentProfile",
-      "mirofish.swarm.simulator.AgentMessage",
-      "mirofish.swarm.simulator.SimulationResult",
-      "pytest",
-      "unittest.mock.AsyncMock"
-    ],
-    "tests/test_chunker.py": [
-      "mirofish.graph.chunker.Chunk",
-      "mirofish.graph.chunker.chunk_document"
-    ],
-    "tests/test_config.py": [
-      "mirofish.config.MirofishConfig",
-      "pathlib.Path"
-    ],
-    "tests/test_embedder.py": [
-      "mirofish.graph.embedder.OllamaEmbedder",
-      "pytest"
-    ],
-    "tests/test_export.py": [
-      "jsonschema",
-      "mirofish.reports.export.to_json",
-      "mirofish.reports.export.to_markdown",
-      "pytest"
-    ],
-    "tests/test_extractor.py": [
-      "json",
-      "mirofish.graph.extractor.Entity",
-      "mirofish.graph.extractor.EntityExtractor",
-      "mirofish.graph.extractor.ExtractionResult",
-      "mirofish.graph.extractor.Relationship",
-      "mirofish.graph.extractor.VALID_EDGE_TYPES",
-      "mirofish.graph.extractor.VALID_NODE_TYPES",
-      "pytest",
-      "unittest.mock.AsyncMock",
-      "unittest.mock.MagicMock",
-      "unittest.mock.patch"
-    ],
-    "tests/test_ingester.py": [
-      "mirofish.graph.extractor.Entity",
-      "mirofish.graph.extractor.ExtractionResult",
-      "mirofish.graph.extractor.Relationship",
-      "mirofish.graph.ingester.DocumentIngester",
-      "pytest",
-      "unittest.mock.AsyncMock",
-      "unittest.mock.MagicMock"
-    ],
-    "tests/test_neo4j_client.py": [
-      "mirofish.graph.neo4j_client.Neo4jClient",
-      "mirofish.graph.neo4j_client.VALID_EDGE_LABELS",
-      "mirofish.graph.neo4j_client.VALID_NODE_LABELS",
-      "pytest"
-    ],
-    "tests/test_personality.py": [
-      "mirofish.swarm.personality.ARCHETYPES",
-      "mirofish.swarm.personality.AgentProfile",
-      "mirofish.swarm.personality.COMMUNICATION_STYLES",
-      "mirofish.swarm.personality.PersonalityGenerator",
-      "pytest",
-      "random",
-      "unittest.mock.AsyncMock",
-      "unittest.mock.patch"
-    ],
-    "tests/test_simulator.py": [
-      "mirofish.swarm.personality.AgentProfile",
-      "mirofish.swarm.simulator.SimulationConfig",
-      "mirofish.swarm.simulator.SimulationResult",
-      "mirofish.swarm.simulator.SimulationRunner",
-      "mirofish.swarm.store.SimulationStore",
-      "pytest",
-      "unittest.mock.AsyncMock"
-    ],
-    "tests/test_store.py": [
-      "mirofish.swarm.store.SimulationStore",
-      "pytest"
-    ]
-  },
-  "mosaic-dashboard": {
-    "AGENTS.md": [],
-    "CLAUDE.md": [],
-    "README.md": [],
-    "atlas.surface.json": [],
-    "next-env.d.ts": [
-      "next/dev/types/routes.d.ts"
-    ],
-    "next.config.ts": [],
-    "package-lock.json": [],
-    "package.json": [],
-    "src/__tests__/AtlasClusters.test.tsx": [
-      "components/AtlasClusters"
-    ],
-    "src/__tests__/FestivalPanel.test.tsx": [
-      "components/FestivalPanel"
-    ],
-    "src/__tests__/ModePanel.test.tsx": [
-      "components/ModePanel"
-    ],
-    "src/__tests__/SimulationPanel.test.tsx": [
-      "components/SimulationPanel"
-    ],
-    "src/__tests__/UsageCounter.test.tsx": [
-      "components/UsageCounter"
-    ],
-    "src/__tests__/page.test.tsx": [
-      "app/page"
-    ],
-    "src/__tests__/proxy.test.ts": [],
-    "src/app/api/aegis/[...path]/route.ts": [
-      "lib/proxy"
-    ],
-    "src/app/api/delta/[...path]/route.ts": [
-      "lib/proxy"
-    ],
-    "src/app/api/mirofish/[...path]/route.ts": [
-      "lib/proxy"
-    ],
-    "src/app/api/mosaic/[...path]/route.ts": [
-      "lib/proxy"
-    ],
-    "src/app/globals.css": [],
-    "src/app/layout.tsx": [
-      "globals.css"
-    ],
-    "src/app/page.tsx": [],
-    "src/components/ApprovalPanel.tsx": [
-      "ModeTag",
-      "Panel"
-    ],
-    "src/components/AtlasClusters.tsx": [
-      "Panel"
-    ],
-    "src/components/CockpitPanel.tsx": [
-      "ModeTag",
-      "lib/websocket"
-    ],
-    "src/components/FestivalPanel.tsx": [
-      "ModeTag",
-      "Panel"
-    ],
-    "src/components/ModePanel.tsx": [
-      "ModeTag",
-      "Panel",
-      "lib/websocket"
-    ],
-    "src/components/ModeTag.tsx": [],
-    "src/components/Panel.tsx": [],
-    "src/components/QueuePanel.tsx": [
-      "Panel"
-    ],
-    "src/components/SimulationPanel.tsx": [
-      "Panel"
-    ],
-    "src/components/UsageCounter.tsx": [
-      "Panel"
-    ],
-    "src/lib/api.ts": [
-      "types"
-    ],
-    "src/lib/plotly.d.ts": [],
-    "src/lib/proxy.ts": [],
-    "src/lib/types.ts": [],
-    "src/lib/websocket.ts": [],
-    "tsconfig.json": []
-  },
-  "mosaic-orchestrator": {
-    "MOSAIC_FESTIVAL.md": [],
-    "README.md": [],
-    "atlas.surface.json": [],
-    "fest_status.py": [
-      "subprocess"
-    ],
-    "pyproject.toml": [],
-    "src/mosaic/__init__.py": [],
-    "src/mosaic/adapters/__init__.py": [],
-    "src/mosaic/adapters/claude_adapter.py": [
-      "anthropic",
-      "dataclasses.dataclass",
-      "dataclasses.field",
-      "enum.Enum",
-      "httpx",
-      "structlog",
-      "time",
-      "typing.Any"
-    ],
-    "src/mosaic/api.py": [
-      "contextlib.asynccontextmanager",
-      "datetime.datetime",
-      "datetime.timezone",
-      "fastapi.FastAPI",
-      "fastapi.middleware.cors.CORSMiddleware",
-      "json",
-      "mosaic.adapters.claude_adapter.ClaudeAdapter",
-      "mosaic.clients.aegis_client.AegisClient",
-      "mosaic.clients.cognitive_client.CognitiveClient",
-      "mosaic.clients.delta_client.DeltaClient",
-      "mosaic.clients.festival_client.FestivalClient",
-      "mosaic.clients.mirofish_client.MirofishClient",
-      "mosaic.clients.openclaw_client.OpenClawClient",
-      "mosaic.config.config",
-      "mosaic.metering.metering.MeteringStore",
-      "mosaic.queue.client.QueueClient",
-      "mosaic.queue.executor.EmbeddedExecutor",
-      "mosaic.queue.publisher.NatsPublisher",
-      "mosaic.workflows.compound_loop.run_compound_loop",
-      "mosaic.workflows.compound_loops.analyst_engine.compute_analyst_signals",
-      "mosaic.workflows.compound_loops.analyst_engine.evaluate_priority_adjustments",
-      "mosaic.workflows.compound_loops.automation_engine.add_task",
-      "mosaic.workflows.compound_loops.automation_engine.compute_automation_health_signals",
-      "mosaic.workflows.compound_loops.automation_engine.compute_due_tasks",
-      "mosaic.workflows.compound_loops.automation_engine.evaluate_conditions",
-      "mosaic.workflows.compound_loops.automation_engine.log_execution",
-      "mosaic.workflows.compound_loops.energy_engine.compute_energy_health_signals",
-      "mosaic.workflows.compound_loops.energy_engine.log_energy_entry",
-      "mosaic.workflows.compound_loops.finance_engine.add_transaction",
-      "mosaic.workflows.compound_loops.finance_engine.compute_budget_variance",
-      "mosaic.workflows.compound_loops.finance_engine.compute_cash_flow_projection",
-      "mosaic.workflows.compound_loops.finance_engine.compute_finance_health_signals",
-      "mosaic.workflows.compound_loops.finance_engine.compute_monthly_summary",
-      "mosaic.workflows.compound_loops.finance_engine.detect_alerts",
-      "mosaic.workflows.compound_loops.network_engine.add_contact",
-      "mosaic.workflows.compound_loops.network_engine.compute_network_health_signals",
-      "mosaic.workflows.compound_loops.network_engine.compute_outreach_due",
-      "mosaic.workflows.compound_loops.network_engine.log_interaction",
-      "mosaic.workflows.compound_loops.network_engine.match_opportunities_to_contacts",
-      "mosaic.workflows.compound_loops.project_progress.compute_goal_progress",
-      "mosaic.workflows.compound_loops.project_progress.compute_milestone_progress",
-      "mosaic.workflows.compound_loops.skill_progression.apply_skill_usage",
-      "mosaic.workflows.compound_loops.skill_progression.compute_skill_health_signals",
-      "mosaic.workflows.compound_loops.skill_progression.recommend_next_skills",
-      "mosaic.workflows.daily_loop.run_daily_loop",
-      "mosaic.workflows.idea_simulation.run_idea_to_simulation",
-      "mosaic.workflows.stall_detector.detect_stalls",
-      "structlog"
-    ],
-    "src/mosaic/clients/__init__.py": [],
-    "src/mosaic/clients/aegis_client.py": [
-      "asyncio",
-      "httpx",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/clients/cognitive_client.py": [
-      "asyncio",
-      "json",
-      "pathlib.Path",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/clients/delta_client.py": [
-      "asyncio",
-      "httpx",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/clients/festival_client.py": [
-      "asyncio",
-      "json",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/clients/mirofish_client.py": [
-      "asyncio",
-      "httpx",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/clients/openclaw_client.py": [
-      "asyncio",
-      "httpx",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/config.py": [
-      "os",
-      "pathlib.Path",
-      "pydantic.BaseModel",
-      "uuid"
-    ],
-    "src/mosaic/main.py": [
-      "asyncio",
-      "mosaic.api.app",
-      "mosaic.config.config",
-      "structlog",
-      "uvicorn"
-    ],
-    "src/mosaic/metering/__init__.py": [
-      "mosaic.metering.metering.MeteringStore"
-    ],
-    "src/mosaic/metering/metering.py": [
-      "datetime.datetime",
-      "datetime.timezone",
-      "pathlib.Path",
-      "sqlite3",
-      "structlog"
-    ],
-    "src/mosaic/queue/__init__.py": [
-      "mosaic.queue.client.QueueClient",
-      "mosaic.queue.executor.EmbeddedExecutor",
-      "mosaic.queue.publisher.NatsPublisher"
-    ],
-    "src/mosaic/queue/client.py": [
-      "__future__.annotations",
-      "asyncpg",
-      "json",
-      "structlog",
-      "typing.Any",
-      "uuid"
-    ],
-    "src/mosaic/queue/executor.py": [
-      "__future__.annotations",
-      "asyncio",
-      "mosaic.adapters.claude_adapter.ClaudeAdapter",
-      "mosaic.adapters.claude_adapter.TaskPriority",
-      "mosaic.adapters.claude_adapter.TaskSpec",
-      "mosaic.metering.metering.MeteringStore",
-      "mosaic.queue.client.QueueClient",
-      "mosaic.queue.publisher.NatsPublisher",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/queue/publisher.py": [
-      "__future__.annotations",
-      "json",
-      "nats",
-      "nats.aio.client.Client",
-      "structlog",
-      "time",
-      "typing.Any",
-      "uuid"
-    ],
-    "src/mosaic/workflows/__init__.py": [
-      "mosaic.workflows.daily_loop.run_daily_loop",
-      "mosaic.workflows.idea_simulation.run_idea_to_simulation",
-      "mosaic.workflows.stall_detector.detect_stalls"
-    ],
-    "src/mosaic/workflows/compound_loop.py": [
-      ".compound_loops.brief_generator.generate_compound_brief",
-      ".compound_loops.collector.CompoundSnapshot",
-      ".compound_loops.collector.LoopResult",
-      ".compound_loops.collector.collect_snapshot",
-      ".compound_loops.loop_analyst.compute_analyst_decisions",
-      ".compound_loops.loop_automation_health.compute_automation_health",
-      ".compound_loops.loop_closure_skill.compute_closure_to_skill",
-      ".compound_loops.loop_completion_finance.compute_completion_to_finance",
-      ".compound_loops.loop_compound_score.compute_compound_score",
-      ".compound_loops.loop_energy_health.compute_energy_health",
-      ".compound_loops.loop_energy_throttle.compute_energy_throttle",
-      ".compound_loops.loop_finance_health.compute_finance_health",
-      ".compound_loops.loop_network_health.compute_network_health",
-      ".compound_loops.loop_project_health.compute_project_health",
-      ".compound_loops.loop_risk_cascade.compute_risk_cascade",
-      ".compound_loops.loop_risk_mitigation.compute_risk_mitigation",
-      ".compound_loops.loop_skill_health.compute_skill_health",
-      ".compound_loops.loop_skill_network.compute_skill_to_network",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/__init__.py": [],
-    "src/mosaic/workflows/compound_loops/analyst_engine.py": [
-      "__future__.annotations",
-      "hashlib",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/automation_engine.py": [
-      "__future__.annotations",
-      "copy",
-      "datetime.datetime",
-      "datetime.timedelta",
-      "datetime.timezone",
-      "hashlib",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/brief_generator.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/collector.py": [
-      "__future__.annotations",
-      "dataclasses.dataclass",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/energy_engine.py": [
-      "__future__.annotations",
-      "copy",
-      "datetime.datetime",
-      "datetime.timedelta",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/finance_engine.py": [
-      "__future__.annotations",
-      "copy",
-      "datetime.datetime",
-      "datetime.timezone",
-      "hashlib",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_analyst.py": [
-      ".analyst_engine.compute_analyst_signals",
-      ".analyst_engine.evaluate_directive_execution",
-      ".analyst_engine.evaluate_lane_violations",
-      ".analyst_engine.evaluate_loop_closures",
-      ".analyst_engine.evaluate_priority_adjustments",
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_automation_health.py": [
-      ".automation_engine.compute_automation_health_signals",
-      ".automation_engine.compute_due_tasks",
-      ".automation_engine.evaluate_conditions",
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_closure_skill.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      "__future__.annotations",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_completion_finance.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      "__future__.annotations",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_compound_score.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      ".energy_engine.compute_energy_health_signals",
-      ".finance_engine.compute_finance_health_signals",
-      ".network_engine.compute_network_health_signals",
-      ".project_progress.compute_project_health_signals",
-      ".skill_progression.compute_skill_health_signals",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_energy_health.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      ".energy_engine.compute_energy_health_signals",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_energy_throttle.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      "__future__.annotations",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_finance_health.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      ".finance_engine.compute_cash_flow_projection",
-      ".finance_engine.compute_finance_health_signals",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_network_health.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      ".network_engine.compute_network_health_signals",
-      ".network_engine.match_opportunities_to_contacts",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timedelta",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_project_health.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      ".project_progress.compute_project_health_signals",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_risk_cascade.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      "__future__.annotations",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_risk_mitigation.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      ".energy_engine.detect_trends",
-      ".risk_engine.compute_adaptive_guardrails",
-      ".risk_engine.compute_recovery_target",
-      ".risk_engine.detect_interference",
-      ".risk_engine.generate_mitigation_plan",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_skill_health.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      ".skill_progression.compute_skill_health_signals",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/loop_skill_network.py": [
-      ".collector.CompoundSnapshot",
-      ".collector.LoopResult",
-      ".skill_progression.compute_skill_health_signals",
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/network_engine.py": [
-      "__future__.annotations",
-      "copy",
-      "datetime.datetime",
-      "datetime.timedelta",
-      "datetime.timezone",
-      "hashlib",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/project_progress.py": [
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timedelta",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/risk_engine.py": [
-      "__future__.annotations",
-      "datetime.datetime",
-      "datetime.timedelta",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/compound_loops/skill_progression.py": [
-      "__future__.annotations",
-      "copy",
-      "datetime.datetime",
-      "datetime.timedelta",
-      "datetime.timezone",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/daily_loop.py": [
-      "datetime.datetime",
-      "datetime.timezone",
-      "mosaic.clients.cognitive_client.CognitiveClient",
-      "mosaic.clients.delta_client.DeltaClient",
-      "mosaic.workflows.compound_loop.run_compound_loop",
-      "structlog",
-      "typing.Any"
-    ],
-    "src/mosaic/workflows/idea_simulation.py": [
-      "datetime.datetime",
-      "datetime.timezone",
-      "json",
-      "mosaic.clients.cognitive_client.CognitiveClient",
-      "mosaic.clients.mirofish_client.MirofishClient",
-      "mosaic.clients.openclaw_client.OpenClawClient",
-      "structlog"
-    ],
-    "src/mosaic/workflows/stall_detector.py": [
-      "datetime.datetime",
-      "datetime.timezone",
-      "json",
-      "mosaic.clients.cognitive_client.CognitiveClient",
-      "mosaic.clients.openclaw_client.OpenClawClient",
-      "structlog"
-    ],
-    "test_compound.py": [
-      "asyncio",
-      "json",
-      "mosaic.clients.cognitive_client.CognitiveClient",
-      "mosaic.config.config",
-      "mosaic.workflows.compound_loop.run_compound_loop",
-      "pathlib.Path",
-      "sys"
-    ],
-    "tests/conftest.py": [
-      "mosaic.clients.cognitive_client.CognitiveClient",
-      "mosaic.clients.delta_client.DeltaClient",
-      "mosaic.clients.mirofish_client.MirofishClient",
-      "mosaic.clients.openclaw_client.OpenClawClient",
-      "pathlib.Path",
-      "pytest",
-      "unittest.mock.AsyncMock",
-      "unittest.mock.MagicMock"
-    ],
-    "tests/test_api.py": [
-      "httpx.ASGITransport",
-      "httpx.AsyncClient",
-      "mosaic.api.app",
-      "pytest",
-      "pytest_asyncio",
-      "unittest.mock.AsyncMock",
-      "unittest.mock.MagicMock",
-      "unittest.mock.patch"
-    ],
-    "tests/test_metering.py": [
-      "mosaic.metering.metering.MeteringStore",
-      "pathlib.Path",
-      "pytest"
-    ],
-    "tests/test_workflows.py": [
-      "mosaic.workflows.daily_loop.run_daily_loop",
-      "mosaic.workflows.idea_simulation.find_eligible_ideas",
-      "mosaic.workflows.idea_simulation.run_idea_to_simulation",
-      "mosaic.workflows.stall_detector.detect_stalls",
-      "pytest"
-    ]
   },
   "openclaw": {
     "atlas.surface.json": [],
@@ -18668,6 +19744,7 @@
       "openclaw.skills.approve.handle_approve",
       "openclaw.skills.brief.handle_brief",
       "openclaw.skills.fest.handle_fest",
+      "openclaw.skills.pending.handle_pending",
       "openclaw.skills.simulate.handle_simulate",
       "openclaw.skills.status.handle_status",
       "pydantic.BaseModel",
@@ -18711,6 +19788,10 @@
       "os",
       "pydantic.BaseModel"
     ],
+    "src/openclaw/delta.py": [
+      "httpx",
+      "openclaw.config.config"
+    ],
     "src/openclaw/main.py": [
       "openclaw.config.config",
       "structlog",
@@ -18722,13 +19803,14 @@
       "datetime.timezone",
       "httpx",
       "openclaw.config.config",
+      "openclaw.delta.fetch_delta_derived",
       "structlog"
     ],
     "src/openclaw/skills/__init__.py": [],
     "src/openclaw/skills/approve.py": [
       "httpx",
       "openclaw.channels.base.Message",
-      "openclaw.config.config",
+      "openclaw.delta.confirm_pending_action",
       "structlog"
     ],
     "src/openclaw/skills/brief.py": [
@@ -18738,21 +19820,21 @@
       "structlog"
     ],
     "src/openclaw/skills/fest.py": [
-      "httpx",
       "openclaw.channels.base.Message",
-      "openclaw.config.config",
+      "structlog"
+    ],
+    "src/openclaw/skills/pending.py": [
+      "openclaw.channels.base.Message",
+      "openclaw.delta.fetch_pending_actions",
       "structlog"
     ],
     "src/openclaw/skills/simulate.py": [
-      "httpx",
       "openclaw.channels.base.Message",
-      "openclaw.config.config",
       "structlog"
     ],
     "src/openclaw/skills/status.py": [
-      "httpx",
       "openclaw.channels.base.Message",
-      "openclaw.config.config",
+      "openclaw.delta.fetch_delta_derived",
       "structlog"
     ],
     "tests/__init__.py": [],
@@ -18782,9 +19864,13 @@
     ],
     "tests/test_skills.py": [
       "openclaw.channels.base.Message",
+      "openclaw.config",
+      "openclaw.skills.approve",
       "openclaw.skills.approve.handle_approve",
       "openclaw.skills.brief.handle_brief",
       "openclaw.skills.fest.handle_fest",
+      "openclaw.skills.pending",
+      "openclaw.skills.pending.handle_pending",
       "openclaw.skills.simulate.handle_simulate",
       "openclaw.skills.status.handle_status",
       "pytest"
@@ -18853,6 +19939,7 @@
     "src/optogon/main.py": [
       "..signals",
       ".adapters.sitepull_adapter.build_context_package",
+      ".adapters.sitepull_adapter.load_context_package",
       ".config.PATHS_DIR",
       ".config.SCHEMAS_DIR",
       ".contract_validator.ContractError",
@@ -18866,6 +19953,7 @@
       "fastapi.middleware.cors.CORSMiddleware",
       "fastapi.responses.JSONResponse",
       "json",
+      "os",
       "pathlib.Path",
       "pydantic.BaseModel",
       "time",
@@ -18936,13 +20024,18 @@
       "uuid"
     ],
     "src/optogon/signals.py": [
+      "..config",
       ".contract_validator.validate",
       "__future__.annotations",
       "datetime.datetime",
       "datetime.timezone",
+      "json",
+      "logging",
       "threading",
       "typing.Any",
       "typing.Optional",
+      "urllib.error",
+      "urllib.request",
       "uuid"
     ],
     "tests/__init__.py": [],
@@ -18956,6 +20049,8 @@
       "pytest",
       "tempfile"
     ],
+    "tests/fixtures/anatomy-minimal.json": [],
+    "tests/fixtures/anatomy-realistic.json": [],
     "tests/test_action_handlers.py": [
       "__future__.annotations",
       "optogon.action_handlers",
@@ -19038,6 +20133,14 @@
       "pytest",
       "typing.Any"
     ],
+    "tests/test_session_close_propagation.py": [
+      "__future__.annotations",
+      "datetime.datetime",
+      "fastapi.testclient.TestClient",
+      "optogon.main.app",
+      "optogon.session_store.get_store",
+      "pytest"
+    ],
     "tests/test_session_start_sitepull.py": [
       "__future__.annotations",
       "fastapi.testclient.TestClient",
@@ -19048,11 +20151,28 @@
       "pytest",
       "typing.Any"
     ],
+    "tests/test_signals_emit.py": [
+      "__future__.annotations",
+      "http.server.BaseHTTPRequestHandler",
+      "http.server.HTTPServer",
+      "json",
+      "optogon.config",
+      "optogon.signals",
+      "pytest",
+      "threading",
+      "time"
+    ],
+    "tests/test_signals_no_id_leak.py": [
+      "__future__.annotations",
+      "pathlib.Path",
+      "re"
+    ],
     "tests/test_sitepull_adapter.py": [
       "__future__.annotations",
       "json",
       "optogon.adapters.sitepull_adapter.MANIFEST_NAME",
       "optogon.adapters.sitepull_adapter.build_context_package",
+      "optogon.adapters.sitepull_adapter.load_context_package",
       "optogon.contract_validator.validate",
       "pathlib.Path",
       "pytest"
@@ -19190,6 +20310,33 @@
   },
   "reminders": {
     "atlas.surface.json": []
+  },
+  "repo-inventory": {
+    "atlas.surface.json": [],
+    "inv.py": [
+      "__future__.annotations",
+      "hashlib",
+      "importlib.util",
+      "json",
+      "os",
+      "pathlib.Path",
+      "sys"
+    ]
+  },
+  "repomix": {
+    "atlas.surface.json": [],
+    "pack.py": [
+      "__future__.annotations",
+      "argparse",
+      "hashlib",
+      "json",
+      "os",
+      "pathlib.Path",
+      "shutil",
+      "subprocess",
+      "sys",
+      "tempfile"
+    ]
   },
   "research": {
     "uasc-m2m/AI-README.MD": [],
@@ -19565,6 +20712,29 @@
       "os",
       "urllib.error",
       "urllib.request"
+    ]
+  },
+  "seam": {
+    "README.md": [],
+    "docs/README.md": [],
+    "docs/architecture.md": [],
+    "docs/extending.md": [],
+    "docs/usage.md": [],
+    "run.py": [
+      "__future__.annotations",
+      "argparse",
+      "asyncio",
+      "atlas_map_api.gateway",
+      "atlas_map_api.loader.load_snapshot",
+      "atlas_map_api.seam.Receipt",
+      "datetime.datetime",
+      "datetime.timezone",
+      "importlib.util",
+      "json",
+      "os",
+      "pathlib.Path",
+      "subprocess",
+      "sys"
     ]
   },
   "search-stack": {
@@ -19986,6 +21156,12 @@
       "search_stack.router.classify"
     ]
   },
+  "sigil": {
+    "atlas.surface.json": []
+  },
+  "st3gg": {
+    "atlas.surface.json": []
+  },
   "triangulation": {
     "BUILD_LOG.md": [],
     "README.md": [],
@@ -20003,7 +21179,14 @@
       ".visual.ReferenceLibrary"
     ],
     "src/triangulation/api.py": [
-      "__future__.annotations"
+      "..config",
+      "..visual",
+      ".verify.verify",
+      "__future__.annotations",
+      "fastapi.Body",
+      "fastapi.FastAPI",
+      "fastapi.HTTPException",
+      "uvicorn"
     ],
     "src/triangulation/config.py": [
       "__future__.annotations",
@@ -20061,6 +21244,13 @@
       "sys",
       "typing.Callable"
     ],
+    "tests/test_api.py": [
+      "__future__.annotations",
+      "fastapi.testclient.TestClient",
+      "pytest",
+      "triangulation.api",
+      "triangulation.api.app"
+    ],
     "tests/test_consensus.py": [
       "__future__.annotations",
       "pytest",
@@ -20104,6 +21294,7 @@
     "daemon.py": [
       "__future__.annotations",
       "datetime.datetime",
+      "dotenv.load_dotenv",
       "hashlib",
       "hmac",
       "json",
@@ -20118,7 +21309,9 @@
       "dataclasses.dataclass",
       "dataclasses.field",
       "datetime.datetime",
+      "dotenv.load_dotenv",
       "json",
+      "os",
       "platform",
       "subprocess",
       "time",

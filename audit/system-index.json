@@ -1,9 +1,22 @@
 {
-  "generated_at": "2026-06-24",
+  "generated_at": "2026-07-07",
   "repo_root": "C:\\Users\\bruke\\Pre Atlas",
-  "subsystem_count": 49,
-  "autostart_count": 10,
+  "subsystem_count": 61,
+  "autostart_count": 12,
   "entries": [
+    {
+      "path": "services/_retired",
+      "name": "_retired",
+      "group": "services",
+      "language": "mixed",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 134,
+      "total_loc": 12648,
+      "port": 3000,
+      "in_autostart": true
+    },
     {
       "path": "services/aegis-fabric",
       "name": "aegis-fabric",
@@ -25,7 +38,7 @@
         "src/api/server.ts"
       ],
       "file_count": 117,
-      "total_loc": 11951,
+      "total_loc": 11993,
       "port": 3010,
       "in_autostart": true
     },
@@ -37,10 +50,10 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 20,
-      "total_loc": 2932,
+      "file_count": 27,
+      "total_loc": 5143,
       "port": 3072,
-      "in_autostart": false
+      "in_autostart": true
     },
     {
       "path": "services/canvas-engine",
@@ -95,9 +108,9 @@
         "uvicorn"
       ],
       "entry_points": [],
-      "file_count": 647,
-      "total_loc": 116169,
-      "port": null,
+      "file_count": 649,
+      "total_loc": 116713,
+      "port": 3077,
       "in_autostart": false
     },
     {
@@ -108,8 +121,8 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 40,
-      "total_loc": 3952,
+      "file_count": 44,
+      "total_loc": 4242,
       "port": null,
       "in_autostart": true
     },
@@ -123,7 +136,7 @@
         "express"
       ],
       "entry_points": [],
-      "file_count": 16,
+      "file_count": 17,
       "total_loc": 1951,
       "port": null,
       "in_autostart": false
@@ -145,6 +158,7 @@
         "better-sqlite3",
         "cors",
         "express",
+        "libsql",
         "nats",
         "node-cron",
         "tsx",
@@ -154,10 +168,36 @@
       "entry_points": [
         "src/api/server.ts"
       ],
-      "file_count": 111,
-      "total_loc": 35043,
+      "file_count": 116,
+      "total_loc": 36911,
       "port": 3001,
       "in_autostart": true
+    },
+    {
+      "path": "services/delta-scp",
+      "name": "delta-scp",
+      "group": "services",
+      "language": "ts",
+      "framework": "express",
+      "deps": [
+        "@supabase/supabase-js",
+        "@types/express",
+        "@types/node",
+        "@types/pg",
+        "express",
+        "pg",
+        "tsx",
+        "typescript",
+        "vitest"
+      ],
+      "entry_points": [
+        "src/server.ts",
+        "src/index.ts"
+      ],
+      "file_count": 20,
+      "total_loc": 1507,
+      "port": 3012,
+      "in_autostart": false
     },
     {
       "path": "services/droplist",
@@ -167,9 +207,9 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 69,
-      "total_loc": 9151,
-      "port": 3073,
+      "file_count": 109,
+      "total_loc": 13422,
+      "port": null,
       "in_autostart": false
     },
     {
@@ -181,71 +221,9 @@
       "deps": [],
       "entry_points": [],
       "file_count": 9,
-      "total_loc": 558,
+      "total_loc": 543,
       "port": 3071,
-      "in_autostart": false
-    },
-    {
-      "path": "services/_retired/mirofish",
-      "name": "mirofish",
-      "group": "services",
-      "language": "py",
-      "framework": "fastapi",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 34,
-      "total_loc": 2933,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "services/_retired/mosaic-dashboard",
-      "name": "mosaic-dashboard",
-      "group": "services",
-      "language": "ts",
-      "framework": "next",
-      "deps": [
-        "@tailwindcss/postcss",
-        "@testing-library/dom",
-        "@testing-library/react",
-        "@types/d3",
-        "@types/node",
-        "@types/react",
-        "@types/react-dom",
-        "@vitejs/plugin-react",
-        "d3",
-        "eslint",
-        "eslint-config-next",
-        "jsdom",
-        "next",
-        "plotly.js-dist-min",
-        "react",
-        "react-dom",
-        "react-plotly.js",
-        "socket.io-client",
-        "tailwindcss",
-        "typescript",
-        "vite-tsconfig-paths",
-        "vitest"
-      ],
-      "entry_points": [],
-      "file_count": 38,
-      "total_loc": 2137,
-      "port": 3000,
-      "in_autostart": false
-    },
-    {
-      "path": "services/_retired/mosaic-orchestrator",
-      "name": "mosaic-orchestrator",
-      "group": "services",
-      "language": "py",
-      "framework": "fastapi",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 59,
-      "total_loc": 7578,
-      "port": null,
-      "in_autostart": false
+      "in_autostart": true
     },
     {
       "path": "services/openclaw",
@@ -255,8 +233,8 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 24,
-      "total_loc": 918,
+      "file_count": 26,
+      "total_loc": 1121,
       "port": null,
       "in_autostart": true
     },
@@ -268,8 +246,8 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 35,
-      "total_loc": 3949,
+      "file_count": 40,
+      "total_loc": 4946,
       "port": null,
       "in_autostart": true
     },
@@ -295,7 +273,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 54,
-      "total_loc": 3376,
+      "total_loc": 3374,
       "port": null,
       "in_autostart": false
     },
@@ -307,9 +285,9 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 17,
-      "total_loc": 1294,
-      "port": 3010,
+      "file_count": 18,
+      "total_loc": 1459,
+      "port": 3074,
       "in_autostart": false
     },
     {
@@ -317,13 +295,17 @@
       "name": "uasc-executor",
       "group": "services",
       "language": "py",
-      "framework": "unknown",
-      "deps": [],
+      "framework": "fastapi",
+      "deps": [
+        "fastapi",
+        "python-dotenv",
+        "uvicorn"
+      ],
       "entry_points": [
         "server.py"
       ],
       "file_count": 38,
-      "total_loc": 2173,
+      "total_loc": 2249,
       "port": 3008,
       "in_autostart": true
     },
@@ -343,7 +325,7 @@
       "entry_points": [],
       "file_count": 5,
       "total_loc": 122,
-      "port": 3006,
+      "port": 3011,
       "in_autostart": false
     },
     {
@@ -384,7 +366,22 @@
       "file_count": 35,
       "total_loc": 998,
       "port": null,
-      "in_autostart": true
+      "in_autostart": false
+    },
+    {
+      "path": "apps/c110-trace",
+      "name": "c110-trace",
+      "group": "apps",
+      "language": "html",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [
+        "index.html"
+      ],
+      "file_count": 1,
+      "total_loc": 446,
+      "port": null,
+      "in_autostart": false
     },
     {
       "path": "apps/canvas-demo",
@@ -432,6 +429,39 @@
       "in_autostart": true
     },
     {
+      "path": "apps/delta-scp-web",
+      "name": "delta-scp-web",
+      "group": "apps",
+      "language": "js",
+      "framework": "vite",
+      "deps": [
+        "@vitejs/plugin-react",
+        "react",
+        "react-dom",
+        "vite"
+      ],
+      "entry_points": [
+        "index.html"
+      ],
+      "file_count": 15,
+      "total_loc": 1073,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/hydra",
+      "name": "hydra",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 7,
+      "total_loc": 1017,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "apps/inpact",
       "name": "inpact",
       "group": "apps",
@@ -442,7 +472,7 @@
         "index.html"
       ],
       "file_count": 32,
-      "total_loc": 11066,
+      "total_loc": 11525,
       "port": null,
       "in_autostart": true
     },
@@ -452,12 +482,14 @@
       "group": "apps",
       "language": "js",
       "framework": "unknown",
-      "deps": [],
+      "deps": [
+        "@playwright/test"
+      ],
       "entry_points": [
         "index.html"
       ],
-      "file_count": 11,
-      "total_loc": 12506,
+      "file_count": 15,
+      "total_loc": 13156,
       "port": null,
       "in_autostart": false
     },
@@ -483,7 +515,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 20,
-      "total_loc": 5293,
+      "total_loc": 5381,
       "port": null,
       "in_autostart": false
     },
@@ -521,7 +553,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 5,
+      "file_count": 8,
       "total_loc": 0,
       "port": null,
       "in_autostart": false
@@ -540,6 +572,32 @@
       "in_autostart": false
     },
     {
+      "path": "tools/binre",
+      "name": "binre",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 2,
+      "total_loc": 85,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/code-recon",
+      "name": "code-recon",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 2,
+      "total_loc": 76,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "tools/codex-partner",
       "name": "codex-partner",
       "group": "tools",
@@ -553,6 +611,32 @@
       "in_autostart": false
     },
     {
+      "path": "tools/deepwiki",
+      "name": "deepwiki",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 2,
+      "total_loc": 148,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/delta-scp-demo",
+      "name": "delta-scp-demo",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "tools/fest-reconcile",
       "name": "fest-reconcile",
       "group": "tools",
@@ -562,6 +646,19 @@
       "entry_points": [],
       "file_count": 49,
       "total_loc": 3169,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/groundwork-cli",
+      "name": "groundwork-cli",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 0,
       "port": null,
       "in_autostart": false
     },
@@ -581,6 +678,71 @@
     {
       "path": "tools/reminders",
       "name": "reminders",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/repo-inventory",
+      "name": "repo-inventory",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 2,
+      "total_loc": 70,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/repomix",
+      "name": "repomix",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 2,
+      "total_loc": 137,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/seam",
+      "name": "seam",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 6,
+      "total_loc": 487,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/sigil",
+      "name": "sigil",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/st3gg",
+      "name": "st3gg",
       "group": "tools",
       "language": "unknown",
       "framework": "unknown",
@@ -625,8 +787,8 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 48,
-      "total_loc": 15229,
+      "file_count": 50,
+      "total_loc": 15612,
       "port": null,
       "in_autostart": false
     },
@@ -638,7 +800,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 63,
+      "file_count": 64,
       "total_loc": 128,
       "port": null,
       "in_autostart": false
@@ -664,7 +826,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 7,
+      "file_count": 67,
       "total_loc": 0,
       "port": null,
       "in_autostart": false
@@ -768,8 +930,8 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 53,
-      "total_loc": 4324,
+      "file_count": 30,
+      "total_loc": 4893,
       "port": null,
       "in_autostart": false
     }

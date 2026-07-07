@@ -31,15 +31,19 @@ class GitHubProvider(SearchProvider):
         return await self._gh_code(q, max_results)
 
     async def _gh_code(self, query: str, max_results: int) -> list[SearchResult]:
+        # `--` end-of-options guard — `query` is unauthenticated request input; same
+        # positional-arg-injection class as the other providers in this sweep.
+        # See ~/.claude/rules/common/code-as-furniture.md.
         cmd = [
             "gh",
             "search",
             "code",
-            query,
             "--limit",
             str(max_results),
             "--json",
             "path,repository,url,textMatches",
+            "--",
+            query,
         ]
         proc = await asyncio.create_subprocess_exec(
             *cmd,
@@ -81,11 +85,12 @@ class GitHubProvider(SearchProvider):
             "gh",
             "search",
             "repos",
-            query,
             "--limit",
             str(max_results),
             "--json",
             "fullName,description,url,stargazersCount,updatedAt",
+            "--",
+            query,
         ]
         proc = await asyncio.create_subprocess_exec(
             *cmd,

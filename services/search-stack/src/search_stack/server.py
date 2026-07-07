@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Optional
+from urllib.parse import urlparse
 
 import httpx
 import uvicorn
@@ -14,6 +15,24 @@ from .providers.base import BudgetSnapshot, ExtractResult
 from .settings import settings
 
 app = FastAPI(title="search-stack", version="0.1.0")
+
+# /memory/save's `drop_to` override must stay inside the local Atlas service mesh.
+# This route has no auth, so an unvalidated `drop_to` is a full SSRF + response-
+# reflection primitive (POST any body to any URL, read the response back) — found
+# in this session's injection sweep. Restrict to loopback + the configured
+# intake host, matching the same allowlist pattern applied to cortex's api_call
+# handler in the same sweep. See ~/.claude/rules/common/code-as-furniture.md.
+_LOOPBACK_HOSTS = {"localhost", "127.0.0.1"}
+
+
+def _is_allowed_drop_target(url: str) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        return False
+    if parsed.hostname in _LOOPBACK_HOSTS:
+        return True
+    configured = urlparse(settings.droplist_intake_url) if settings.droplist_intake_url else None
+    return bool(configured and configured.hostname and parsed.hostname == configured.hostname)
 
 
 class SearchRequest(BaseModel):
@@ -83,6 +102,8 @@ async def memory_save(req: MemorySaveRequest) -> dict:
             status_code=400,
             detail="no drop_to URL provided and DROPLIST_INTAKE_URL not configured",
         )
+    if not _is_allowed_drop_target(target):
+        raise HTTPException(status_code=400, detail=f"drop_to target not in allowlist: {target}")
     payload = {
         "type": "intel_drop",
         "source": "search-stack",

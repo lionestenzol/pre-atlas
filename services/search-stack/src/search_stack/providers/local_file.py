@@ -23,7 +23,11 @@ class LocalFileProvider(SearchProvider):
         if q.startswith("path:") or q.startswith("file:"):
             q = q.split(":", 1)[1].strip()
 
-        cmd = ["es", "-n", str(max_results), "-p", q]
+        # `--` end-of-options guard (verified empirically: `es -x` errors "Unknown
+        # switch", `es -- -x` treats "-x" as a literal search term) — `q` is
+        # unauthenticated request input, same positional-arg-injection class as
+        # _rg/_fd in repo_search.py. See ~/.claude/rules/common/code-as-furniture.md.
+        cmd = ["es", "-n", str(max_results), "-p", "--", q]
         proc = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,

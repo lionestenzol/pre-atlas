@@ -29,7 +29,12 @@ class RepoSearchProvider(SearchProvider):
         return await self._rg(query, max_results)
 
     async def _rg(self, pattern: str, max_results: int) -> list[SearchResult]:
-        cmd = ["rg", "-n", "--max-count", str(max_results), "--json", pattern]
+        # `--` end-of-options: `pattern` is unauthenticated request input (POST /search
+        # {"q": "rg:<pattern>"}) — without it, a pattern like "--files" is parsed by
+        # rg's own arg parser as a flag, turning a text-search endpoint into
+        # unauthenticated filesystem enumeration. Same CVE-2017-1000117-shaped class as
+        # the git clone fix earlier in this sweep. See ~/.claude/rules/common/code-as-furniture.md.
+        cmd = ["rg", "-n", "--max-count", str(max_results), "--json", "--", pattern]
         proc = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,
@@ -66,7 +71,9 @@ class RepoSearchProvider(SearchProvider):
         return out
 
     async def _fd(self, pattern: str, max_results: int) -> list[SearchResult]:
-        cmd = ["fd", "--max-results", str(max_results), pattern]
+        # See _rg's comment — same positional-arg-injection guard (e.g. "-uu" would
+        # otherwise bypass .gitignore excludes and enumerate hidden/ignored files).
+        cmd = ["fd", "--max-results", str(max_results), "--", pattern]
         proc = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,

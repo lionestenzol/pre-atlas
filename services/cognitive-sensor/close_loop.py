@@ -268,6 +268,10 @@ def refresh_pipeline():
         ("completion_stats.py", "Counting closures"),
         ("export_cognitive_state.py", "Exporting state"),
         ("route_today.py", "Computing mode"),
+        # daily_payload.json is the mode source delta-kernel's unified state
+        # serves once data/projections/today.json goes stale -- regenerate it
+        # on every closure so the served mode tracks the ledger.
+        ("export_daily_payload.py", "Exporting daily payload"),
         ("governor_daily.py", "Generating brief"),
     ]
     for script, desc in scripts:

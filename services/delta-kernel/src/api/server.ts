@@ -184,12 +184,34 @@ const buildUnifiedState = () => {
   const cognitiveStatePath = path.join(cognitiveSensorDir, 'cognitive_state.json');
   const loopsLatestPath = path.join(cognitiveSensorDir, 'loops_latest.json');
   const todayPath = path.join(repoRoot, 'data/projections/today.json');
+  const dailyPayloadPath = path.join(cognitiveSensorDir, 'cycleboard', 'brain', 'daily_payload.json');
   const closuresPath = path.join(cognitiveSensorDir, 'closures.json');
 
   const cognitiveState = readJsonFile(cognitiveStatePath, 'cognitive_state.json') as Record<string, unknown> | null;
   const loopsLatest = readJsonFile(loopsLatestPath, 'loops_latest.json') as unknown[] | null;
   const today = readJsonFile(todayPath, 'today.json') as Record<string, unknown> | null;
+  const dailyPayload = readJsonFile(dailyPayloadPath, 'daily_payload.json') as Record<string, unknown> | null;
   const closuresRegistry = readJsonFile(closuresPath, 'closures.json') as { closures: unknown[]; stats: Record<string, unknown> } | null;
+
+  // Staleness guard: a *daily* directive is only authoritative while recent.
+  // data/projections/today.json (dormant projection pipeline, last written
+  // 2026-01-12) sat at the top of the mode cascade for six months, overriding
+  // the live governor: the served mode stayed CLOSURE no matter what the
+  // Python side computed. A dated directive older than 48h is void; the
+  // cascade then falls through to daily_payload.json, which the cognitive
+  // pipeline regenerates via atlas_config.compute_mode (single source of
+  // truth). See ~/.claude/rules/common/code-as-furniture.md.
+  const DAILY_DIRECTIVE_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+  const isFreshDaily = (obj: Record<string, unknown> | null): boolean => {
+    const stamp = (obj?.generated_at ?? obj?.date) as string | undefined;
+    if (!stamp) return false;
+    const t = Date.parse(stamp);
+    return Number.isFinite(t) && Date.now() - t <= DAILY_DIRECTIVE_MAX_AGE_MS;
+  };
+  const freshToday = isFreshDaily(today) ? today : null;
+  if (today && !freshToday) errors.push('today.json stale (>48h) - directive ignored');
+  const freshPayload = isFreshDaily(dailyPayload) ? dailyPayload : null;
+  if (dailyPayload && !freshPayload) errors.push('daily_payload.json stale (>48h) - directive ignored');
 
   // D) Derive unified values
   //
@@ -205,16 +227,18 @@ const buildUnifiedState = () => {
   // and contains the most granular loop/closure data. today.json is the daily
   // directive (mode routing output). delta state is the persistent store.
   // If files are missing or stale, later sources provide a safe fallback.
-  const todayDirective = today?.directive as Record<string, unknown> | undefined;
-  const todayCognitive = today?.cognitive as Record<string, unknown> | undefined;
+  const todayDirective = freshToday?.directive as Record<string, unknown> | undefined;
+  const todayCognitive = freshToday?.cognitive as Record<string, unknown> | undefined;
 
-  // Mode: today.json > delta state > default
+  // Mode: fresh today.json > fresh daily_payload > delta state > default
   const mode = (todayDirective?.mode as string)
+    ?? (freshPayload?.mode as string)
     ?? (deltaState?.mode as string)
     ?? 'RECOVER';
 
-  // Risk: today.json > delta state > default
+  // Risk: fresh today.json > fresh daily_payload > delta state > default
   const risk = (todayDirective?.risk as string)
+    ?? (freshPayload?.risk as string)
     ?? (deltaState?.risk as string)
     ?? 'MEDIUM';
 
@@ -233,16 +257,19 @@ const buildUnifiedState = () => {
     ?? 0;
   const closureRatio = rawRatio > 1 ? rawRatio / 100 : rawRatio;
 
-  // Primary order: today.json > delta state > default
+  // Primary order: fresh today.json > fresh daily_payload > delta state > default
   const primaryOrder = (todayDirective?.primary_action as string)
+    ?? (freshPayload?.primary_action as string)
     ?? (deltaState?.primary_action as string)
     ?? 'Run refresh to get today\'s order';
 
-  // Build allowed: today.json > delta state > compute from mode
+  // Build allowed: fresh today.json > fresh daily_payload > delta state > compute from mode
   const buildAllowedFromDirective = todayDirective?.build_allowed as boolean | undefined;
+  const buildAllowedFromPayload = freshPayload?.build_allowed as boolean | undefined;
   const buildAllowedFromDelta = deltaState?.build_allowed as boolean | undefined;
   // Default: build allowed unless mode is CLOSURE
   const buildAllowed = buildAllowedFromDirective
+    ?? buildAllowedFromPayload
     ?? buildAllowedFromDelta
     ?? (mode !== 'CLOSURE');
 

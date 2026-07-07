@@ -149,7 +149,13 @@ def lookup_idea(canonical_id: str) -> dict | None:
 async def search_atlas_query(query: str, k: int) -> list[MemoryHit]:
     if not ATLAS_QUERY.exists():
         return []
-    cmd = [sys.executable, str(ATLAS_QUERY), "search", query, "--limit", str(k)]
+    # `--` end-of-options guard: not exploitable today (a leading "--root"/etc
+    # takeover would leave the required `query` positional unfilled and argparse
+    # errors -> empty result), but that safety is incidental to atlas_query.py's
+    # current flag set, not deliberate. `query` is unauthenticated POST /search
+    # input; guard it structurally rather than rely on argparse arity by accident.
+    # See ~/.claude/rules/common/code-as-furniture.md.
+    cmd = [sys.executable, str(ATLAS_QUERY), "search", "--limit", str(k), "--", query]
     try:
         proc = await asyncio.create_subprocess_exec(
             *cmd,

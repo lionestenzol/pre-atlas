@@ -5,10 +5,10 @@ from __future__ import annotations
 import os
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import stores
+from . import auth, stores
 from .schemas import (
     MemoryHit,
     MemorySearchRequest,
@@ -106,7 +106,7 @@ async def graph_entity(name: str, max_results: int = 10) -> list[MemoryHit]:
     return await stores.graph_neighbors(name, k=max_results)
 
 
-@app.post("/save")
+@app.post("/save", dependencies=[Depends(auth.require_write_token)])
 async def save(req: SavePacketRequest) -> dict:
     try:
         record = stores.append_to_droplist(

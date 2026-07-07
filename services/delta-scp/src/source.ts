@@ -121,9 +121,19 @@ async function cloneRepo(repoUrl: string, config: ScpConfig): Promise<string> {
   const baseDir = path.resolve(config.cloneDir);
   await mkdir(baseDir, { recursive: true });
   const target = await mkdtemp(clonePrefix(baseDir, repoUrl));
+  // The `--` end-of-options marker is load-bearing: repoUrl is the job queue's
+  // external input (POST /jobs {repo_url}), and validateRepoUrl's scp-like
+  // parser (user@host:path) only checks the extracted host, not that the full
+  // string doesn't start with `-`. Without `--`, a crafted repoUrl such as
+  // `-oProxyCommand=... @host:path` is parsed by `git clone` as an OPTION, not
+  // a positional URL (verified: `git clone -x` -> "unknown switch 'x'" without
+  // `--`, vs. correctly literal `repository '-x' does not exist` with `--`) —
+  // the classic CVE-2017-1000117-shaped git argument-injection class. `--`
+  // forces every remaining argument (repoUrl AND target) to be positional
+  // regardless of leading dashes, closing it independent of the URL's shape.
   await execFileAsync(
     'git',
-    ['clone', '--depth', '1', '--quiet', repoUrl, target],
+    ['clone', '--depth', '1', '--quiet', '--', repoUrl, target],
     {
       timeout: 120_000,
       maxBuffer: 16 * 1024 * 1024,

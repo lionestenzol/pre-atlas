@@ -278,6 +278,7 @@ services/cognitive-sensor/cycleboard/brain/strategic_priorities.json
 
 # === Forensic / recon artifacts (regenerable, large) ===
 forensic-map.md
+docs/archive/2026-07/forensic-map.md
 .delta-scp/
 .weapon/
 

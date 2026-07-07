@@ -9,9 +9,18 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any, Iterator
 
 DATA_DIR = os.environ.get("DROPLIST_DATA", "data")
+
+# Real dag_ids are "DAG-" + 8 hex chars (dag_builder.py:180). GET /api/dag/{dag_id}
+# is unauthenticated and Starlette's path-param regex ([^/]+) excludes "/" but not
+# "\" — on Windows, os.path.join treats "\" as a separator too, so an unvalidated
+# dag_id could traverse outside data/dags/ and read an arbitrary .json file.
+# Single choke point: both /api/dag/{id} and /api/dag/{id}/checklist call load_dag.
+# See ~/.claude/rules/common/code-as-furniture.md.
+_DAG_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
 
 PACKETS = "packets.jsonl"
 MINI_SHIPS = "mini_ships.jsonl"
@@ -144,6 +153,8 @@ def save_dag(dag: dict) -> str:
 
 
 def load_dag(dag_id: str) -> dict | None:
+    if not _DAG_ID_RE.match(dag_id):
+        return None
     p = os.path.join(DATA_DIR, "dags", f"{dag_id}.json")
     if not os.path.exists(p):
         return None

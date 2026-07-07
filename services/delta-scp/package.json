@@ -8,6 +8,7 @@
     "worker": "tsx src/worker.ts",
     "api": "tsx src/server.ts",
     "compress": "tsx src/cli.ts",
+    "modernize": "tsx src/modernize.ts",
     "migrate": "tsx scripts/migrate.ts",
     "deploy": "tsx scripts/migrate.ts && tsx src/index.ts",
     "build": "tsc",

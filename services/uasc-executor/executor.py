@@ -147,7 +147,7 @@ class ProfileExecutor:
         return result
 
     def _execute_shell(self, step: dict) -> StepResult:
-        cmd = self._interpolate(step.get('cmd', ''))
+        cmd = self._interpolate_shell(step.get('cmd', ''))
         timeout = step.get('timeout_seconds', 60)
 
         try:
@@ -299,6 +299,32 @@ class ProfileExecutor:
     def _interpolate(self, text: str) -> str:
         for key, value in self.variables.items():
             text = text.replace(f'{{{key}}}', str(value))
+        return text
+
+    # Characters that let a value escape its intended token position when the
+    # resulting string is handed to subprocess.run(..., shell=True) — cmd.exe on
+    # Windows (& | < > ^ " %) or /bin/sh elsewhere (& | < > ; ` $ "). `inputs` on
+    # a `shell` step's variables originate from POST /exec's request body (any
+    # HMAC-authenticated caller's free-text fields, e.g. BRIEF_v1.json's `goal`/
+    # `context`), so plain str.replace with no escaping is direct shell injection.
+    # Path 2 hardened: reject rather than attempt to escape (cmd.exe quoting has
+    # no fully-safe form — proven this session: shell:true+array still lets `&`
+    # through). See ~/.claude/rules/common/code-as-furniture.md.
+    _SHELL_METACHARACTERS = set('&|<>^"%`$;\n\r')
+
+    def _interpolate_shell(self, text: str) -> str:
+        for key, value in self.variables.items():
+            token = f'{{{key}}}'
+            if token not in text:
+                continue
+            str_value = str(value)
+            bad = self._SHELL_METACHARACTERS & set(str_value)
+            if bad:
+                raise ValueError(
+                    f"input '{key}' contains shell metacharacter(s) {sorted(bad)!r} — "
+                    "rejected to prevent shell injection"
+                )
+            text = text.replace(token, str_value)
         return text
 
     def _interpolate_body(self, body: Any) -> Any:

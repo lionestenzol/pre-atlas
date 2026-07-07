@@ -395,8 +395,33 @@ def call_claude(goal: str, context: str, sys_state: dict) -> Optional[list[dict]
 # Generic fallback (no AI, no template match)
 # ---------------------------------------------------------------------------
 
+# generic_actions() is the only place in this file that embeds a free-text `goal`
+# directly into a double-quoted shell payload string (`echo "...{goal}..."`).
+# Today the sole caller path is executor.py's `_execute_shell`, which now rejects
+# shell metacharacters in `{goal}`/`{context}` before they ever reach this script
+# (BRIEF_v1.json's `build_brief` step) — but that upstream guard is a separate file
+# and a future refactor could add another way to invoke this script. Defense in
+# depth: reject here too, at the actual embed site, rather than trust the caller.
+# A `"` in `goal` breaks out of the quoted echo argument (`echo "DONE WHEN: x" &
+# calc.exe & echo " is verified working"`), after which `&`/`|`/etc. become live
+# cmd.exe operators — the exact mechanism verified in this session's sweep.
+# See ~/.claude/rules/common/code-as-furniture.md.
+_SHELL_METACHARACTERS = set('&|<>^"%`$;\n\r')
+
+
+def _reject_shell_metacharacters(label: str, value: str) -> None:
+    bad = _SHELL_METACHARACTERS & set(value)
+    if bad:
+        raise ValueError(
+            f"{label} contains shell metacharacter(s) {sorted(bad)!r} — refusing to "
+            "build a shell payload from it"
+        )
+
+
 def generic_actions(goal: str, context: str) -> list[dict]:
     """Last-resort generic actions when no template matches and Claude is unavailable."""
+    _reject_shell_metacharacters("goal", goal)
+    _reject_shell_metacharacters("context", context)
     return [
         {
             "step": 1,

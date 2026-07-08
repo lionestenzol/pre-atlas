@@ -740,6 +740,10 @@ export class GovernanceDaemon {
   private async runWorkQueue(): Promise<void> {
     const result = this.workController.checkTimeouts();
 
+    if (result.retried.length > 0) {
+      console.log(`[Daemon] Work queue: ${result.retried.length} job(s) retried after timeout: ${result.retried.join(', ')}`);
+    }
+
     if (result.timed_out.length > 0) {
       console.log(`[Daemon] Work queue: ${result.timed_out.length} job(s) timed out: ${result.timed_out.join(', ')}`);
     }

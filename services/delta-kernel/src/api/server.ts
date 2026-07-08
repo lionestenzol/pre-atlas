@@ -1852,12 +1852,16 @@ app.post('/api/work/cancel', (req, res) => {
 
 /**
  * GET /api/work/history
- * Get completed jobs history.
+ * Get completed jobs history, most recent first.
  */
 app.get('/api/work/history', (req, res) => {
   const ledger = workController.getLedger();
+  // `completed` is append-order (oldest first); slice(0, 20) here used to
+  // return the OLDEST 20 of the retained window, not the most recent — found
+  // live while proving AGENT_SUBSTRATE.md's DoD (a just-completed job didn't
+  // show up in its own history). Fixed inline per code-as-furniture doctrine.
   res.json({
-    completed: ledger.completed.slice(0, 20),
+    completed: ledger.completed.slice(-20).reverse(),
     stats: ledger.stats,
   });
 });
@@ -1869,6 +1873,41 @@ app.get('/api/work/history', (req, res) => {
 app.get('/api/work/metrics', (_req, res) => {
   res.json({
     claims: workController.getClaimMetrics(),
+  });
+});
+
+/**
+ * GET /api/work/subscribe
+ * Server-Sent Events stream of work-queue timeline events (WORK_REQUESTED,
+ * WORK_APPROVED, WORK_QUEUED, WORK_COMPLETED, WORK_FAILED, WORK_RETRIED,
+ * WORK_TIMEOUT, WORK_CANCELLED, AUTO_EXECUTED) as they happen.
+ *
+ * Campaign III (SUBSTRATE) task 03: lets an agent hold one open connection
+ * here instead of polling /api/work/status in a loop — "Either ends polling"
+ * (ATLAS_MASTER_PLAN.md). Backed by TimelineLogger's in-process pub-sub, not
+ * NATS — no broker/Docker dependency, scoped to this delta-kernel instance.
+ */
+app.get('/api/work/subscribe', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.write(': connected\n\n');
+
+  const unsubscribe = timeline.subscribe((event) => {
+    if (event.source !== 'work_controller') return;
+    res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
+  });
+
+  // Keep the connection alive through proxies/load balancers that time out
+  // idle connections before the next real event arrives.
+  const keepAlive = setInterval(() => res.write(': ping\n\n'), 15000);
+
+  req.on('close', () => {
+    clearInterval(keepAlive);
+    unsubscribe();
   });
 });
 

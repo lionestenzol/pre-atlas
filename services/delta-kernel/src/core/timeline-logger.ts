@@ -7,6 +7,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { EventEmitter } from 'events';
 
 // === TYPES ===
 
@@ -19,6 +20,7 @@ export type TimelineEventType =
   | 'WORK_FAILED'
   | 'WORK_ABANDONED'
   | 'WORK_TIMEOUT'
+  | 'WORK_RETRIED'
   | 'WORK_CANCELLED'
   | 'LOOP_OPENED'
   | 'LOOP_CLOSED'
@@ -78,6 +80,13 @@ export class TimelineLogger {
   private filePath: string;
   private log: TimelineLog;
   private maxEvents: number;
+  // Campaign III (SUBSTRATE): live in-process pub-sub alongside the existing
+  // append-only file log. Lets /api/work/subscribe (SSE) push events to
+  // agents as they happen instead of every agent polling /api/work/status —
+  // "Either ends polling" (ATLAS_MASTER_PLAN.md Campaign III task 3). No
+  // NATS/Docker dependency; this is in-process only, one subscriber list per
+  // delta-kernel instance, same scope as the file log it rides alongside.
+  private liveEvents = new EventEmitter();
 
   constructor(repoRoot: string, maxEvents: number = 10000) {
     const cognitiveSensorDir = process.env.COGNITIVE_SENSOR_DIR || path.join(repoRoot, 'services', 'cognitive-sensor');
@@ -166,7 +175,21 @@ export class TimelineLogger {
     // Persist
     this.save(this.log);
 
+    // Push to live subscribers (best-effort — a throwing listener must never
+    // break event logging, so isolate each one).
+    this.liveEvents.emit('event', event);
+
     return event;
+  }
+
+  /**
+   * Subscribe to events as they're emitted. Returns an unsubscribe function.
+   * Node's EventEmitter already isolates listener exceptions per-call, so one
+   * bad SSE connection can't take down another subscriber or the emitter.
+   */
+  subscribe(listener: (event: TimelineEvent) => void): () => void {
+    this.liveEvents.on('event', listener);
+    return () => this.liveEvents.off('event', listener);
   }
 
   /**

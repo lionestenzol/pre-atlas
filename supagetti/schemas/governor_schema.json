@@ -1,0 +1,73 @@
+{
+  "$defs": {
+    "GovernorCheck": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "notes": {
+          "default": "",
+          "title": "Notes",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "passed"
+      ],
+      "title": "GovernorCheck",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "approved",
+        "needs_review",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "checklist": {
+      "items": {
+        "$ref": "#/$defs/GovernorCheck"
+      },
+      "title": "Checklist",
+      "type": "array"
+    },
+    "blocking_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocking Reasons",
+      "type": "array"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    }
+  },
+  "required": [
+    "case_id",
+    "generated_at",
+    "status",
+    "summary"
+  ],
+  "title": "GovernorReport",
+  "type": "object"
+}

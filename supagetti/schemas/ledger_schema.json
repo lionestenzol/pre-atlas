@@ -1,0 +1,113 @@
+{
+  "$defs": {
+    "TopFinding": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "severity": {
+          "title": "Severity",
+          "type": "string"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Confidence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "severity",
+        "confidence"
+      ],
+      "title": "TopFinding",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "project_name": {
+      "title": "Project Name",
+      "type": "string"
+    },
+    "created_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Created At"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "phases_completed": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Phases Completed",
+      "type": "array"
+    },
+    "top_findings": {
+      "items": {
+        "$ref": "#/$defs/TopFinding"
+      },
+      "title": "Top Findings",
+      "type": "array"
+    },
+    "governor_status": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Governor Status"
+    },
+    "report_generated": {
+      "default": false,
+      "title": "Report Generated",
+      "type": "boolean"
+    },
+    "scan_duration_seconds": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Scan Duration Seconds"
+    }
+  },
+  "required": [
+    "case_id",
+    "project_name",
+    "generated_at"
+  ],
+  "title": "LedgerEntry",
+  "type": "object"
+}

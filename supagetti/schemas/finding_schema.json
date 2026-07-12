@@ -1,0 +1,80 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "category": {
+      "minLength": 1,
+      "title": "Category",
+      "type": "string"
+    },
+    "severity": {
+      "enum": [
+        "info",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "confidence": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Confidence",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+    },
+    "plain_language": {
+      "minLength": 1,
+      "title": "Plain Language",
+      "type": "string"
+    },
+    "technical_finding": {
+      "minLength": 1,
+      "title": "Technical Finding",
+      "type": "string"
+    },
+    "why_it_matters": {
+      "minLength": 1,
+      "title": "Why It Matters",
+      "type": "string"
+    },
+    "recommended_next_action": {
+      "minLength": 1,
+      "title": "Recommended Next Action",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "category",
+    "severity",
+    "confidence",
+    "evidence",
+    "plain_language",
+    "technical_finding",
+    "why_it_matters",
+    "recommended_next_action"
+  ],
+  "title": "Finding",
+  "type": "object"
+}

@@ -1,0 +1,100 @@
+{
+  "description": "Phase 1 (new-case) writes this schema-valid but with required fields\nempty. Phase 2 (intake) fills them in via a re-prompting terminal loop\nand re-validates. Because case creation must produce a schema-valid\n*empty* placeholder, required-field non-emptiness is enforced by\nis_complete() rather than a pydantic min_length constraint \u2014 downstream\nphases call is_complete() as their Law 3 prerequisite check.",
+  "properties": {
+    "case_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Case Id"
+    },
+    "project_name": {
+      "default": "",
+      "title": "Project Name",
+      "type": "string"
+    },
+    "source_type": {
+      "default": "folder",
+      "enum": [
+        "folder",
+        "zip",
+        "repo"
+      ],
+      "title": "Source Type",
+      "type": "string"
+    },
+    "user_claim": {
+      "default": "",
+      "title": "User Claim",
+      "type": "string"
+    },
+    "user_pain": {
+      "default": "",
+      "title": "User Pain",
+      "type": "string"
+    },
+    "desired_outcome": {
+      "default": "",
+      "title": "Desired Outcome",
+      "type": "string"
+    },
+    "audience": {
+      "default": "",
+      "title": "Audience",
+      "type": "string"
+    },
+    "privacy_level": {
+      "default": "internal",
+      "enum": [
+        "public",
+        "internal",
+        "confidential"
+      ],
+      "title": "Privacy Level",
+      "type": "string"
+    },
+    "scope_limit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Scope Limit"
+    },
+    "source_reference": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Reference"
+    },
+    "created_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Created At"
+    }
+  },
+  "title": "Intake",
+  "type": "object"
+}

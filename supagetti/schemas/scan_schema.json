@@ -1,0 +1,178 @@
+{
+  "$defs": {
+    "Detection": {
+      "properties": {
+        "detected": {
+          "title": "Detected",
+          "type": "boolean"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Confidence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "detected",
+        "confidence"
+      ],
+      "title": "Detection",
+      "type": "object"
+    },
+    "LargeFile": {
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "size_bytes": {
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "size_bytes"
+      ],
+      "title": "LargeFile",
+      "type": "object"
+    },
+    "ManifestDetections": {
+      "properties": {
+        "package_json": {
+          "$ref": "#/$defs/Detection"
+        },
+        "requirements_txt": {
+          "$ref": "#/$defs/Detection"
+        },
+        "pyproject_toml": {
+          "$ref": "#/$defs/Detection"
+        },
+        "dockerfile": {
+          "$ref": "#/$defs/Detection"
+        },
+        "ci_config": {
+          "$ref": "#/$defs/Detection"
+        },
+        "readme": {
+          "$ref": "#/$defs/Detection"
+        },
+        "license_file": {
+          "$ref": "#/$defs/Detection"
+        },
+        "tests_dir": {
+          "$ref": "#/$defs/Detection"
+        },
+        "env_example": {
+          "$ref": "#/$defs/Detection"
+        },
+        "gitignore": {
+          "$ref": "#/$defs/Detection"
+        }
+      },
+      "required": [
+        "package_json",
+        "requirements_txt",
+        "pyproject_toml",
+        "dockerfile",
+        "ci_config",
+        "readme",
+        "license_file",
+        "tests_dir",
+        "env_example",
+        "gitignore"
+      ],
+      "title": "ManifestDetections",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Started At"
+    },
+    "file_count": {
+      "minimum": 0,
+      "title": "File Count",
+      "type": "integer"
+    },
+    "dir_count": {
+      "minimum": 0,
+      "title": "Dir Count",
+      "type": "integer"
+    },
+    "total_size_bytes": {
+      "minimum": 0,
+      "title": "Total Size Bytes",
+      "type": "integer"
+    },
+    "extension_counts": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Extension Counts",
+      "type": "object"
+    },
+    "languages_detected": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Languages Detected",
+      "type": "array"
+    },
+    "manifests": {
+      "$ref": "#/$defs/ManifestDetections"
+    },
+    "largest_files": {
+      "items": {
+        "$ref": "#/$defs/LargeFile"
+      },
+      "title": "Largest Files",
+      "type": "array"
+    },
+    "top_level_entries": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Top Level Entries",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "case_id",
+    "generated_at",
+    "file_count",
+    "dir_count",
+    "total_size_bytes",
+    "manifests"
+  ],
+  "title": "ScanResult",
+  "type": "object"
+}

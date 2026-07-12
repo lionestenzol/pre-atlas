@@ -9,9 +9,12 @@ schema-validated end to end.
 ## Setup
 
 ```
-pip install pydantic anthropic
-export ANTHROPIC_API_KEY=sk-ant-...   # required for `analyze` and `govern`
+pip install pydantic openai
+export NVIDIA_API_KEY=nvapi-...   # required for `analyze` and `govern`
 ```
+
+Uses NVIDIA's OpenAI-compatible endpoint (`https://integrate.api.nvidia.com/v1`),
+default model `z-ai/glm-5.2`. Override with `SUPAGETTI_LLM_MODEL`.
 
 ## Usage
 
@@ -45,7 +48,7 @@ See the build spec for the full list of structural laws. In short:
 - `core/case_manager.py` is the only place CASE_ID resolution happens.
 - Each `core/*.py` phase module writes exactly one output file.
 - Every phase checks its own prerequisites before doing anything.
-- `core/llm.py` is the only module that calls the Anthropic API.
+- `core/llm.py` is the only module that calls the LLM API.
 - All artifacts are `pydantic` models in `core/models.py`; malformed output
   cannot be written.
 - Only the Governor (`core/governor.py`) can block `report` from running.

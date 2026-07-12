@@ -41,6 +41,11 @@ don't block distribution.
 
 blocking_reasons must be empty unless status is "blocked", and must name \
 the specific finding id(s) and checklist item(s) at fault.
+
+`summary` must be 3-6 sentences, under 800 characters. State the verdict and \
+the specific issues found — nothing else. Do not draft multiple versions, \
+narrate your own writing process, or include meta-commentary; output only \
+the final summary text.
 """
 
 

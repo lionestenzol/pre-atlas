@@ -137,7 +137,7 @@ class GovernorReport(BaseModel):
     status: Literal["approved", "needs_review", "blocked"]
     checklist: list[GovernorCheck] = Field(default_factory=list)
     blocking_reasons: list[str] = Field(default_factory=list)
-    summary: str = Field(min_length=1)
+    summary: str = Field(min_length=1, max_length=1200)
 
 
 # ---------------------------------------------------------------------------

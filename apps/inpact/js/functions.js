@@ -815,7 +815,7 @@ function handleFileImport(event) {
 
 function clearData() {
   if (confirm('Are you sure you want to delete ALL data? This cannot be undone.')) {
-    localStorage.removeItem('inpact-state');
+    stateManager.storage.clear();
     // Clear current state and replace with defaults
     const defaultState = stateManager.getDefaultState();
     Object.keys(stateManager.state).forEach(key => delete stateManager.state[key]);

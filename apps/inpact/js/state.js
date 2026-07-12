@@ -24,7 +24,13 @@ const REFLECTION_PERIOD = Object.freeze({
 });
 
 class CycleBoardState {
-  constructor() {
+  constructor(options = {}) {
+    // Persistence goes through a StorageAdapter (see js/storage.js). Defaults to
+    // localStorage; a SupabaseAdapter is injected here after sign-in (block D).
+    this.storage = options.storage ||
+      (typeof LocalStorageAdapter !== 'undefined'
+        ? new LocalStorageAdapter()
+        : null);
     this.saveDebounceTimer = null;
     this.history = [];
     this.historyIndex = -1;
@@ -200,9 +206,9 @@ class CycleBoardState {
 
   loadFromStorage() {
     try {
-      const saved = localStorage.getItem('inpact-state');
-      if (saved) {
-        this.state = JSON.parse(saved);
+      const loaded = this.storage.loadSync();
+      if (loaded) {
+        this.state = loaded;
         if (this.state && !('Today' in this.state)) {
           this.state.Today = { mission: '', motto: '', daily: {} };
         }
@@ -278,7 +284,7 @@ class CycleBoardState {
   saveToStorage() {
     try {
       this.state._localUpdatedAt = new Date().toISOString();
-      localStorage.setItem('inpact-state', JSON.stringify(this.state));
+      this.storage.save(this.state);
       // Async push to Atlas API (fire-and-forget)
       if (typeof AtlasAPI !== 'undefined' && AtlasAPI.online) {
         AtlasAPI.putCycleBoardState(this.state).catch(() => {});
@@ -289,7 +295,7 @@ class CycleBoardState {
       if (e.name === 'QuotaExceededError') {
         this.cleanupOldData();
         try {
-          localStorage.setItem('inpact-state', JSON.stringify(this.state));
+          this.storage.save(this.state);
           if (typeof UI !== 'undefined') {
             UI.showToast('Storage Warning', 'Cleaned up old data to save space', 'warning');
           }
@@ -414,10 +420,10 @@ class CycleBoardState {
     return await AtlasAPI.putCycleBoardState(this.state);
   }
 
-  // Save to localStorage only (no API push, avoids recursion in syncFromApi)
+  // Save through the adapter only (no API push, avoids recursion in syncFromApi)
   saveToStorageLocal() {
     try {
-      localStorage.setItem('inpact-state', JSON.stringify(this.state));
+      this.storage.save(this.state);
     } catch (e) {
       console.error('Failed to save state:', e);
     }

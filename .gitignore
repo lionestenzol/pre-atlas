@@ -81,6 +81,9 @@ logs/
 .env.*.local
 .aegis-tenant-key
 
+# inPACT browser runtime config (holds Supabase/Stripe publishable keys)
+apps/inpact/js/config.js
+
 # === Temporary files ===
 *.tmp
 *.temp

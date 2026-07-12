@@ -51,7 +51,62 @@ class LocalStorageAdapter {
   }
 }
 
+const APP_STATE_TABLE = 'app_state';
+
+class SupabaseAdapter {
+  // Takes an already-authenticated Supabase client and the signed-in user's
+  // id. Auth itself (magic link, session handling) is AuthController's job
+  // (block C) — this adapter only knows how to move state bytes once a
+  // session exists. Row-level security (migrations/006_inpact_mvp.sql) is
+  // the actual access boundary; this class does not re-check ownership.
+  constructor(supabaseClient, userId) {
+    if (!supabaseClient) throw new Error('SupabaseAdapter requires a Supabase client');
+    if (!userId) throw new Error('SupabaseAdapter requires a userId');
+    this.client = supabaseClient;
+    this.userId = userId;
+    this.isRemote = true;
+  }
+
+  // No synchronous remote read exists. CycleBoardState's constructor boot
+  // path only ever uses LocalStorageAdapter; swapping in SupabaseAdapter
+  // happens after sign-in via the async migration flow (block D), which
+  // calls load()/save() directly rather than going through the constructor.
+  loadSync() {
+    throw new Error('SupabaseAdapter has no synchronous load — use load() (async)');
+  }
+
+  async load() {
+    const { data, error } = await this.client
+      .from(APP_STATE_TABLE)
+      .select('state, updated_at')
+      .eq('user_id', this.userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    // Surface the row's updated_at on the returned state so callers (the
+    // block D migration step) can compare it against local's _localUpdatedAt
+    // without a second round trip.
+    return { ...data.state, _remoteUpdatedAt: data.updated_at };
+  }
+
+  async save(state) {
+    const { _remoteUpdatedAt, ...persisted } = state;
+    const { error } = await this.client
+      .from(APP_STATE_TABLE)
+      .upsert({ user_id: this.userId, state: persisted }, { onConflict: 'user_id' });
+    if (error) throw error;
+  }
+
+  async clear() {
+    const { error } = await this.client
+      .from(APP_STATE_TABLE)
+      .delete()
+      .eq('user_id', this.userId);
+    if (error) throw error;
+  }
+}
+
 // Export for Node-based tests; harmless in the browser.
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { LocalStorageAdapter, INPACT_STATE_KEY };
+  module.exports = { LocalStorageAdapter, SupabaseAdapter, INPACT_STATE_KEY, APP_STATE_TABLE };
 }

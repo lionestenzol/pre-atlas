@@ -1,0 +1,12 @@
+{
+  "name": "inpact-supabase-tools",
+  "private": true,
+  "type": "module",
+  "description": "One-off scripts to provision and verify inPACT's Supabase backend (SPEC_MVP_36H.md block B). Not part of the browser app bundle.",
+  "scripts": {
+    "test:rls": "node test-rls.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

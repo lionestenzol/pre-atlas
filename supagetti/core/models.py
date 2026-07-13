@@ -85,6 +85,36 @@ class LargeFile(BaseModel):
     size_bytes: int
 
 
+class SymbolEntry(BaseModel):
+    kind: str
+    name: str
+    line: int = Field(ge=1)
+
+
+class SymbolicNode(BaseModel):
+    path: str
+    language: str
+    bytes: int = Field(ge=0)
+    tokens_est: int = Field(ge=0)
+    symbols: list[SymbolEntry] = Field(default_factory=list)
+
+
+class SymbolicCompression(BaseModel):
+    """
+    Symbolic map of the codebase's source files, ported from delta-scp's
+    compressTree() (services/delta-scp/src/compressor.ts). Only files
+    matching delta-scp's INCLUDE_EXT allowlist are read here — images,
+    binaries, and lockfiles never reach this list. scan.json's own
+    file_count/extension_counts above still cover 100% of source/.
+    """
+    files_included: int = Field(ge=0)
+    raw_tokens_est: int = Field(ge=0)
+    compressed_tokens_est: int = Field(ge=0)
+    token_yield: int
+    compression_ratio: float = Field(ge=0)
+    symbolic_nodes: list[SymbolicNode] = Field(default_factory=list)
+
+
 class ScanResult(BaseModel):
     case_id: str
     generated_at: str
@@ -97,6 +127,7 @@ class ScanResult(BaseModel):
     manifests: ManifestDetections
     largest_files: list[LargeFile] = Field(default_factory=list)
     top_level_entries: list[str] = Field(default_factory=list)
+    symbolic_compression: SymbolicCompression
     warnings: list[str] = Field(default_factory=list)
 
 

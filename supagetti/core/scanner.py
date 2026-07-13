@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from core import case_manager
+from core import case_manager, symbols
 from core.models import Detection, LargeFile, ManifestDetections, PhaseStatus, ScanResult
 
 IGNORE_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv", ".mypy_cache"}
@@ -74,6 +74,7 @@ def run_scan(case_id: str) -> PhaseStatus:
     total_size = 0
     extension_counts: dict[str, int] = {}
     largest_files: list[LargeFile] = []
+    symbol_rel_paths: list[str] = []
     warnings: list[str] = []
     has_tests_dir = False
 
@@ -98,7 +99,10 @@ def run_scan(case_id: str) -> PhaseStatus:
         total_size += size
         ext = path.suffix.lower() or "(no extension)"
         extension_counts[ext] = extension_counts.get(ext, 0) + 1
-        largest_files.append(LargeFile(path=str(path.relative_to(source_dir)), size_bytes=size))
+        rel_path = str(path.relative_to(source_dir))
+        largest_files.append(LargeFile(path=rel_path, size_bytes=size))
+        if symbols.include_file(path.name):
+            symbol_rel_paths.append(rel_path)
 
     largest_files.sort(key=lambda f: f.size_bytes, reverse=True)
     largest_files = largest_files[:10]
@@ -127,6 +131,8 @@ def run_scan(case_id: str) -> PhaseStatus:
         gitignore=_detect((source_dir / ".gitignore").is_file()),
     )
 
+    symbolic_compression = symbols.compress_tree(source_dir, symbol_rel_paths, warnings)
+
     try:
         scan = ScanResult(
             case_id=case_manager.case_short_id(case_dir),
@@ -140,6 +146,7 @@ def run_scan(case_id: str) -> PhaseStatus:
             manifests=manifests,
             largest_files=largest_files,
             top_level_entries=top_level_entries,
+            symbolic_compression=symbolic_compression,
             warnings=warnings,
         )
     except ValidationError as exc:

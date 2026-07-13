@@ -35,12 +35,19 @@ Or run phases individually: `scan`, `analyze`, `govern`, `report`, `ledger`.
 /cases/CASE_0001_project_name/
   intake.json
   source/
-  scan.json
+  scan.json          # includes symbolic_compression: per-file symbols, token yield
   findings.json
   governor_report.json
   report.md
   ledger_entry.json
 ```
+
+`scan.json`'s `symbolic_compression` block is a symbolic map of the codebase's
+source files (functions/classes/etc. with line numbers, plus an estimated
+token-yield from compressing the raw source into that map) — ported from
+`services/delta-scp/src/compressor.ts` in the Pre Atlas monorepo. Zero LLM
+calls; same INCLUDE_EXT allowlist and per-language regex patterns as the
+original, so results are deterministic and reproducible across runs.
 
 ## Architecture
 

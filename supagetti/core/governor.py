@@ -46,6 +46,25 @@ the specific finding id(s) and checklist item(s) at fault.
 the specific issues found — nothing else. Do not draft multiple versions, \
 narrate your own writing process, or include meta-commentary; output only \
 the final summary text.
+
+GOOD summary (real output from this system, 479 characters — use this as \
+your target length and register):
+"Six findings were reviewed against all six checklist items. No privacy \
+leaks, no scope creep, and no detection-conflation issues were found. \
+F-002, F-004, and F-005 contain minor unsupported claims where inferences \
+are stated as fact without corresponding evidence entries. F-002 also has \
+lightly overconfident language ('implying', 'likely') embedded in \
+technical_finding without flagging them as assumptions. These are \
+non-blocking but warrant human review before distribution."
+
+Notice what that summary does: states the verdict in sentence one, names \
+specific finding IDs and specific checklist items for every issue raised, \
+and stops. It does not restate the full checklist, does not explain its \
+own reasoning process, and does not hedge with meta-commentary like "let me \
+reconsider" or "on reflection." An earlier unconstrained version of this \
+field produced several thousand words of rambling self-critique with \
+leaked draft text before this length cap and this instruction existed — \
+that failure mode is exactly what you must not reproduce.
 """
 
 

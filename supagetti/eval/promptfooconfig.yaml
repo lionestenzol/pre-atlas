@@ -1,0 +1,47 @@
+# Eval suite for supagetti's two LLM-touched phases (analyze, govern).
+# Everything else in the pipeline is deterministic by construction and
+# doesn't need an LLM eval — this exists to shrink the non-determinism in
+# the two phases that can't be made fully deterministic.
+#
+# Run:
+#   NVIDIA_API_KEY must be set (same key core/llm.py uses).
+#   cd supagetti/eval && npx promptfoo eval -c promptfooconfig.yaml
+#   npx promptfoo view   # inspect results in the browser
+#
+# provider.py drives the real core.scanner/analyzer/governor phase
+# functions against a cached Express.js clone (fetched once into
+# .fixture-cache/, gitignored) — the same production code path the CLI
+# uses, not a reimplementation for eval purposes.
+
+description: supagetti analyze/govern eval against the real Express.js fixture
+
+prompts:
+  - "Run the {{phase}} phase for case {{case_id}}"
+
+providers:
+  - id: file://provider.py
+
+defaultTest:
+  vars:
+    case_id: CASE_9001
+
+tests:
+  - description: analyze phase produces schema-valid, evidence-grounded findings
+    vars:
+      phase: analyze
+    assert:
+      - type: python
+        value: file://assertions.py:schema_valid
+      - type: python
+        value: file://assertions.py:findings_grounded
+
+  - description: govern phase produces a schema-valid, brief, non-fabricating audit
+    vars:
+      phase: govern
+    assert:
+      - type: python
+        value: file://assertions.py:schema_valid
+      - type: python
+        value: file://assertions.py:summary_under_cap
+      - type: python
+        value: file://assertions.py:no_forced_blocks_from_fabrication

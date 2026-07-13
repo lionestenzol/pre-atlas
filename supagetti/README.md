@@ -9,12 +9,33 @@ schema-validated end to end.
 ## Setup
 
 ```
-pip install pydantic openai
+pip install pydantic openai instructor
 export NVIDIA_API_KEY=nvapi-...   # required for `analyze` and `govern`
 ```
 
 Uses NVIDIA's OpenAI-compatible endpoint (`https://integrate.api.nvidia.com/v1`),
 default model `z-ai/glm-5.2`. Override with `SUPAGETTI_LLM_MODEL`.
+`core/llm.py`'s `structured_call()` goes through
+[Instructor](https://github.com/jxnl/instructor) for schema-conformant
+output: on a validation failure it feeds the Pydantic error back to the
+model as part of the retry, instead of blindly resending the same prompt.
+Temperature for these calls defaults to `0.3` (override with
+`SUPAGETTI_LLM_TEMPERATURE`) — low enough to keep audit-style output
+reproducible without the wording going fully deterministic/stilted.
+
+## Eval
+
+```
+cd eval && npx promptfoo eval -c promptfooconfig.yaml   # then: npx promptfoo view
+```
+
+Runs `analyze` and `govern` against a cached Express.js clone (fetched once
+into `eval/.fixture-cache/`, gitignored) through the real phase functions —
+same code path as the CLI. Assertions re-validate the output against the
+actual `core/models.py` schemas and re-run `core/verifier.py`'s
+contradiction checks, so a pass means the production pipeline produced
+schema-valid, evidence-grounded output on a real codebase, not that some
+eval-only stand-in did.
 
 ## Usage
 

@@ -10,8 +10,8 @@ from datetime import datetime, timezone
 
 from pydantic import ValidationError
 
-from core import case_manager, llm
-from core.models import FindingsResult, GovernorReport, Intake, PhaseStatus
+from core import case_manager, llm, verifier
+from core.models import FindingsResult, GovernorReport, Intake, PhaseStatus, ScanResult
 
 SYSTEM_PROMPT = """You are the Governor: a strict editorial gate that reviews \
 findings before they are allowed into a client-facing report. You do not \
@@ -66,9 +66,12 @@ def run_govern(case_id: str) -> PhaseStatus:
 
     # Law 3: govern verifies its own prerequisites.
     intake_path = case_dir / "intake.json"
+    scan_path = case_dir / "scan.json"
     findings_path = case_dir / "findings.json"
     if not intake_path.exists():
         return PhaseStatus(status="failed", phase="govern", reason="intake.json missing. Run 'intake' first.")
+    if not scan_path.exists():
+        return PhaseStatus(status="failed", phase="govern", reason="scan.json missing. Run 'scan' first.")
     if not findings_path.exists():
         return PhaseStatus(status="failed", phase="govern", reason="findings.json missing. Run 'analyze' first.")
 
@@ -78,6 +81,10 @@ def run_govern(case_id: str) -> PhaseStatus:
         return PhaseStatus(status="failed", phase="govern", reason=f"intake.json invalid: {exc}")
     if not intake.is_complete():
         return PhaseStatus(status="failed", phase="govern", reason="intake.json is incomplete. Run 'intake' first.")
+    try:
+        scan = ScanResult.model_validate(case_manager.read_json(scan_path))
+    except ValidationError as exc:
+        return PhaseStatus(status="failed", phase="govern", reason=f"scan.json invalid: {exc}")
     try:
         findings = FindingsResult.model_validate(case_manager.read_json(findings_path))
     except ValidationError as exc:
@@ -98,6 +105,13 @@ def run_govern(case_id: str) -> PhaseStatus:
 
     if report.status == "blocked" and not report.blocking_reasons:
         report.blocking_reasons = ["Governor returned status=blocked without specific reasons."]
+
+    # Verify-or-it-didn't-happen: re-derive each finding's checkable claims
+    # (manifest state, file paths, symbol names) straight from scan.json,
+    # independent of what the LLM audit above concluded. Trust sits with the
+    # source data, not with a second model's opinion of the first model's
+    # work — see apply_verification()'s docstring for the severity policy.
+    report = verifier.apply_verification(report, verifier.verify_findings(findings, scan))
 
     case_manager.write_json(case_dir / "governor_report.json", report.model_dump())
     return PhaseStatus(status="ok", phase="govern", reason=None)

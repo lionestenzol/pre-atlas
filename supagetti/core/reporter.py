@@ -93,9 +93,20 @@ def run_report(case_id: str) -> PhaseStatus:
     ) or "No privacy-specific checklist items recorded."
     confidence_limitations = "\n".join(f"- {f.title}: confidence={f.confidence}" for f in sorted_findings) or "None."
     recommended_next_actions = "\n".join(f"- {f.recommended_next_action}" for f in sorted_findings) or "None."
+    checked = [v for v in governor.verification if v.checks_run > 0]
+    contradicted = [v for v in governor.verification if v.contradictions]
+    verification_notes = (
+        f"Code-verified evidence: {sum(v.checks_run for v in governor.verification)} checkable claim(s) "
+        f"across {len(checked)} finding(s), {len(contradicted)} contradicted.\n" +
+        "\n".join(
+            f"- {v.finding_id}: \"{c.claim}\" — {c.detail}"
+            for v in contradicted for c in v.contradictions
+        )
+    ) if governor.verification else "No claims were re-derivable from scan.json for this case."
     governor_notes = (
         f"Status: **{governor.status}**\n\n" +
-        "\n".join(f"- {c.name}: {'PASS' if c.passed else 'FAIL'} — {c.notes}" for c in governor.checklist)
+        "\n".join(f"- {c.name}: {'PASS' if c.passed else 'FAIL'} — {c.notes}" for c in governor.checklist) +
+        "\n\n**Verify-or-it-didn't-happen (deterministic, not LLM-audited):**\n" + verification_notes
     )
     case_metadata = (
         f"- Case ID: {case_manager.case_short_id(case_dir)}\n"

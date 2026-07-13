@@ -49,6 +49,16 @@ token-yield from compressing the raw source into that map) — ported from
 calls; same INCLUDE_EXT allowlist and per-language regex patterns as the
 original, so results are deterministic and reproducible across runs.
 
+`governor_report.json`'s `verification` block is a "verify-or-it-didn't-
+happen" re-derivation of each finding's checkable claims (manifest state,
+file paths, symbol names) straight from `scan.json` — ported from the
+code-recon skill's evidence-citation discipline (`core/verifier.py`, zero
+LLM calls). It runs after the LLM audit and can only tighten the result: a
+contradicted manifest claim or a fully-ungrounded finding forces
+`status="blocked"`; a citation slip inside an otherwise well-grounded
+finding downgrades to `needs_review` and is logged in `checklist`, never
+silently passed through as `approved`.
+
 ## Architecture
 
 See the build spec for the full list of structural laws. In short:

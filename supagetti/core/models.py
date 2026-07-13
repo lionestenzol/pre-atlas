@@ -162,6 +162,30 @@ class GovernorCheck(BaseModel):
     notes: str = ""
 
 
+class VerificationCheck(BaseModel):
+    """One checkable claim extracted from a finding's own text and its verdict
+    against real scan.json data — never against the LLM's self-report."""
+    claim: str
+    kind: Literal["manifest", "path", "symbol"]
+    verdict: Literal["verified", "contradicted"]
+    detail: str
+
+
+class FindingVerification(BaseModel):
+    """
+    Deterministic, code-level re-derivation of a finding's checkable claims —
+    ported from code-recon's "verify-or-it-didn't-happen" discipline
+    (services/code-recon skill). `grounded` is True only if at least one
+    claim was independently checkable AND none were contradicted; an
+    unverifiable claim never inherits the confidence of a verified one.
+    """
+    finding_id: str
+    checks_run: int = Field(ge=0)
+    verified: int = Field(ge=0)
+    contradictions: list[VerificationCheck] = Field(default_factory=list)
+    grounded: bool
+
+
 class GovernorReport(BaseModel):
     case_id: str
     generated_at: str
@@ -169,6 +193,7 @@ class GovernorReport(BaseModel):
     checklist: list[GovernorCheck] = Field(default_factory=list)
     blocking_reasons: list[str] = Field(default_factory=list)
     summary: str = Field(min_length=1, max_length=1200)
+    verification: list[FindingVerification] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

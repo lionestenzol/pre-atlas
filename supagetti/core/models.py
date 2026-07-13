@@ -206,6 +206,41 @@ class TopFinding(BaseModel):
     confidence: Confidence
 
 
+class CategoryTally(BaseModel):
+    category: str
+    count: int = Field(ge=0)
+
+
+class SourceSplit(BaseModel):
+    """
+    Honest split of the scanned codebase by file-content category — the
+    headline file_count is a lie until split this way. Ported from
+    bearings' LOC-split classifier
+    (~/.claude/scripts/bearings/bearings.py:classify_path), adapted to
+    scan.json's aggregate extension_counts (per-path markers for
+    generated/vendored bloat aren't available at that granularity — noted
+    as a known scope gap, not silently dropped).
+    """
+    product: int = Field(ge=0)
+    docs: int = Field(ge=0)
+    data: int = Field(ge=0)
+    other: int = Field(ge=0)
+
+
+class GovernanceTax(BaseModel):
+    """
+    Ported from bearings' shipped-vs-oriented split and orientation tax:
+    did the LLM-touched phases (analyze, govern) actually convert into a
+    distributable report, or was that effort spent and blocked before
+    reaching the user? checks_run/checks_verified come from govern's own
+    verify-or-it-didn't-happen layer (core/verifier.py).
+    """
+    shipped: bool
+    checks_run: int = Field(ge=0)
+    checks_verified: int = Field(ge=0)
+    blocked_reasons: list[str] = Field(default_factory=list)
+
+
 class LedgerEntry(BaseModel):
     case_id: str
     project_name: str
@@ -213,6 +248,9 @@ class LedgerEntry(BaseModel):
     generated_at: str
     phases_completed: list[str] = Field(default_factory=list)
     top_findings: list[TopFinding] = Field(default_factory=list)
+    findings_by_category: list[CategoryTally] = Field(default_factory=list)
+    source_split: Optional[SourceSplit] = None
+    governance_tax: Optional[GovernanceTax] = None
     governor_status: Optional[str] = None
     report_generated: bool = False
     scan_duration_seconds: Optional[float] = None

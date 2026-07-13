@@ -59,6 +59,21 @@ contradicted manifest claim or a fully-ungrounded finding forces
 finding downgrades to `needs_review` and is logged in `checklist`, never
 silently passed through as `approved`.
 
+`ledger_entry.json` carries three fields ported from bearings' zero-LLM
+"where am I" digest (`~/.claude/scripts/bearings/bearings.py`) — same
+discipline (a deterministic parse of what's already on disk, never a
+re-derivation), applied to a case instead of a day's git/transcript
+history:
+- `findings_by_category` — a categorized tally (bearings: commits by
+  conventional-commit type).
+- `source_split` — an honest product/docs/data/other split of the scanned
+  file count (bearings: the honest LOC split; the headline file count is a
+  lie until split this way).
+- `governance_tax` — whether the LLM-touched phases (`analyze`, `govern`)
+  actually converted into a shipped report or got blocked before reaching
+  the user, plus the verify-or-it-didn't-happen check tally (bearings:
+  shipped-vs-oriented conversations and the orientation tax).
+
 ## Architecture
 
 See the build spec for the full list of structural laws. In short:

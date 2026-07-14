@@ -492,8 +492,9 @@ def run_codex_exec(session_state: dict[str, Any], action: dict[str, Any]) -> Han
         "-C", cwd,
     ]
     if sandbox == "workspace-write":
-        # add --full-auto's other half (-a on-request); never combine with -s read-only
-        cmd += ["-a", "on-request"]
+        # Codex 0.118: --full-auto replaces the old -a on-request pair.
+        # Never combine with -s read-only.
+        cmd += ["--full-auto"]
 
     # Optional structured-output mode
     output_file: Path | None = None

@@ -7,8 +7,10 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import Optional
 
 from cortex.config import config
 from cortex.clients.delta_client import DeltaClient
@@ -185,6 +187,32 @@ async def submit_task(task: dict):
     from cortex.loop import enqueue_local_task
     task_id = await enqueue_local_task(task)
     return {"status": "queued", "task_id": task_id}
+
+
+class CodexExecRequest(BaseModel):
+    user_intent: str
+    cwd: Optional[str] = None
+    output_schema_path: Optional[str] = None
+
+
+@app.post("/codex/exec")
+async def codex_exec(req: CodexExecRequest):
+    """Classify a user intent and dispatch to Codex CLI.
+
+    Per doctrine/02_ROSETTA_STONE.md, Cortex is the layer that owns Codex
+    delegation. This endpoint is the HTTP surface for that — callers POST
+    a user_intent instead of invoking Codex directly.
+    """
+    from cortex.codex_dispatcher import DispatchError, dispatch_codex
+    try:
+        result = dispatch_codex(
+            user_intent=req.user_intent,
+            cwd=req.cwd,
+            output_schema_path=req.output_schema_path,
+        )
+    except DispatchError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 
 
 def start():

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-13",
+  "generated_at": "2026-07-14",
   "repo_root": "C:\\Users\\bruke\\Pre Atlas",
   "subsystem_count": 73,
   "autostart_count": 12,
@@ -121,8 +121,8 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 44,
-      "total_loc": 4308,
+      "file_count": 46,
+      "total_loc": 4657,
       "port": null,
       "in_autostart": true
     },
@@ -247,7 +247,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 40,
-      "total_loc": 4946,
+      "total_loc": 4947,
       "port": null,
       "in_autostart": true
     },

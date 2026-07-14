@@ -17694,6 +17694,26 @@
       "cortex.config.config",
       "httpx"
     ],
+    "src/cortex/codex_dispatcher/__init__.py": [
+      ".dispatcher.DispatchError",
+      ".dispatcher.classify_intent",
+      ".dispatcher.dispatch_codex",
+      ".dispatcher.run_codex_exec"
+    ],
+    "src/cortex/codex_dispatcher/dispatcher.py": [
+      "__future__.annotations",
+      "json",
+      "jsonschema.Draft7Validator",
+      "logging",
+      "os",
+      "pathlib.Path",
+      "re",
+      "shutil",
+      "subprocess",
+      "tempfile",
+      "typing.Any",
+      "typing.Optional"
+    ],
     "src/cortex/config.py": [
       "__future__.annotations",
       "os",
@@ -17889,6 +17909,8 @@
       "cortex.clients.aegis_client.AegisClient",
       "cortex.clients.delta_client.DeltaClient",
       "cortex.clients.uasc_client.UascClient",
+      "cortex.codex_dispatcher.DispatchError",
+      "cortex.codex_dispatcher.dispatch_codex",
       "cortex.config.config",
       "cortex.inpact.git_wins",
       "cortex.inpact.mode_actuator",
@@ -17905,10 +17927,13 @@
       "cortex.recovery.CircuitBreaker",
       "cortex.recovery.StaleLockRecovery",
       "fastapi.FastAPI",
+      "fastapi.HTTPException",
       "fastapi.Request",
       "fastapi.responses.JSONResponse",
       "logging",
+      "pydantic.BaseModel",
       "time",
+      "typing.Optional",
       "uvicorn"
     ],
     "src/cortex/recovery.py": [

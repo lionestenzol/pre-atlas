@@ -270,3 +270,82 @@ def test_daemon_gating_enabled(data_dir, monkeypatch):
         if server._daemon_thread is not None:
             server._daemon_thread.join(timeout=5)
         server._daemon_thread = None
+
+
+# --- DN0001 01_spine/01: schedule dispatch chain_id/dag_id fix -------------
+# The bug: a `run_chain` schedule authored with `dag_id` (an older convention)
+# was silently swallowed forever, because `_dispatch_schedule` only ever read
+# `chain_id`. Fixed 2026-07-07 (droplist/daemon.py:85-98): `chain_id` is
+# canonical; `dag_id` is accepted as a deprecated fallback and flagged.
+
+
+def _write_chain(data_dir: str, chain_id: str = "test_chain") -> str:
+    """Minimal valid chain per validate_chain (chain_runner.py); written to its
+    own tempdir so DROPLIST_CHAINS_DIR can point at just this fixture."""
+    chains_dir = os.path.join(data_dir, "chains")
+    os.makedirs(chains_dir, exist_ok=True)
+    chain = {
+        "id": chain_id,
+        "title": "Test chain",
+        "trigger": {"on": "cron", "expr": "0 8 * * *"},
+        "steps": [{
+            "prompt": "test prompt",
+            "target_query": {"status": "running"},
+            "expect": "non_empty",
+        }],
+        "on_report": {"action": "drop", "params": {"title_prefix": "Test"}},
+    }
+    with open(os.path.join(chains_dir, f"{chain_id}.json"), "w", encoding="utf-8") as f:
+        json.dump(chain, f)
+    return chains_dir
+
+
+def test_dispatch_schedule_legacy_dag_id_key_still_dispatches(data_dir, monkeypatch):
+    """A schedule authored with the legacy `dag_id` key still resolves the
+    chain (not `chain_not_found`), and the result flags the fallback."""
+    from droplist import daemon
+
+    chains_dir = _write_chain(data_dir, "legacy_target")
+    monkeypatch.setenv("DROPLIST_CHAINS_DIR", chains_dir)
+
+    job = {"id": "legacy_sched", "action": {"kind": "run_chain", "dag_id": "legacy_target"}}
+    result = daemon._dispatch_schedule(job, dt.datetime(2026, 7, 8, 9, 0, 0))
+
+    assert result["chain"] == "legacy_target"
+    assert result.get("reason") != "chain_not_found"
+    assert result["deprecated_key"] == "dag_id"
+
+
+def test_dispatch_schedule_chain_id_key_no_deprecation_flag(data_dir, monkeypatch):
+    """The canonical `chain_id` key dispatches with no deprecation flag."""
+    from droplist import daemon
+
+    chains_dir = _write_chain(data_dir, "canonical_target")
+    monkeypatch.setenv("DROPLIST_CHAINS_DIR", chains_dir)
+
+    job = {"id": "canon_sched", "action": {"kind": "run_chain", "chain_id": "canonical_target"}}
+    result = daemon._dispatch_schedule(job, dt.datetime(2026, 7, 8, 9, 0, 0))
+
+    assert result["chain"] == "canonical_target"
+    assert "deprecated_key" not in result
+
+
+def test_dispatch_schedule_nonexistent_chain_warns_and_reports_not_found(data_dir, monkeypatch):
+    """A `run_chain` schedule naming a chain that doesn't exist returns
+    fired:false / reason:chain_not_found (fail-loud, never crash) AND leaves a
+    warning trace in run_log.jsonl."""
+    from droplist import daemon, storage
+
+    chains_dir = _write_chain(data_dir, "real_chain")  # some chain exists, just not the one asked for
+    monkeypatch.setenv("DROPLIST_CHAINS_DIR", chains_dir)
+
+    job = {"id": "typo_sched", "action": {"kind": "run_chain", "chain_id": "does_not_exist"}}
+    result = daemon._dispatch_schedule(job, dt.datetime(2026, 7, 8, 9, 0, 0))
+
+    assert result["fired"] is False
+    assert result["reason"] == "chain_not_found"
+
+    runs = list(storage.read_all(storage.RUN_LOG))
+    warnings = [r for r in runs if r.get("status") == "warning"
+                and "chain_not_found" in (r.get("result_summary") or "")]
+    assert warnings, "expected a warning run_log entry for the unresolved chain"

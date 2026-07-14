@@ -70,12 +70,14 @@ def chain_intake(raw: str, make_ship: bool = False) -> dict:
     if ship is not None:
         storage.append(storage.MINI_SHIPS, ship.to_dict())
 
-    # Spine wire (Option A): when the Atlas/lattice signal wire is active, settle
-    # the secured packet into a DAG so graph_engine emits a Signal.v1 downstream
-    # (delta-kernel -> lattice). Gated on the SAME env var as emission so default
-    # capture behavior is unchanged; fail-soft so a graph fault never undoes a
+    # Spine wire: a nervous system builds the graph by default, not only when
+    # the Atlas/lattice signal wire is on. DROPLIST_AUTOBUILD_DAGS (default on)
+    # settles every secured drop into a DAG; DROPLIST_ATLAS_SIGNALS_URL still
+    # gates Signal.v1 *emission* independently inside graph_engine, so build
+    # and emit stay decoupled. Fail-soft so a graph fault never undoes a
     # secured drop. See ~/.claude/rules/common/code-as-furniture.md.
-    if os.environ.get("DROPLIST_ATLAS_SIGNALS_URL"):
+    if (os.environ.get("DROPLIST_AUTOBUILD_DAGS", "1") != "0"
+            or os.environ.get("DROPLIST_ATLAS_SIGNALS_URL")):
         try:
             from . import graph_engine
             graph_engine.run_graph_from_packet(packet)

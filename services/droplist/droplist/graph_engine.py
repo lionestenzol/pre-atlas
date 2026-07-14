@@ -244,6 +244,13 @@ def run_graph_from_packet(packet) -> dict:
     would double-store the packet. run_graph stays behavior-identical: process_drop
     then this. This is the wire that lets an HTTP /api/drop reach Atlas/lattice.
     See ~/.claude/rules/common/assemble-first.md.
+
+    DROPLIST_AUTOPILOT_DEFAULT (default on) controls whether the built DAG
+    auto-advances its ready nodes here. When "0", the DAG is stamped
+    autopilot:false (same flag daemon.py._advance_stored_dags already honors,
+    per Bruke's 2026-06-25 call) and only settled via dag_update.recompute_states
+    — no advance_dag loop — so its ready node stays visible for a human
+    (server.py /api/now) instead of being auto-run.
     """
     dag = dag_builder.build_dag(packet)
     dag_errs = dag_builder.validate_dag(dag)
@@ -266,10 +273,17 @@ def run_graph_from_packet(packet) -> dict:
         "tool_runs": [],
     }
 
-    delta = advance_dag(dag)
-    trace["cycles"] = delta["cycles"]
-    trace["tool_runs"] = delta["tool_runs"]
-    recursive_updates = delta["recursive_updates"]
+    autopilot = os.environ.get("DROPLIST_AUTOPILOT_DEFAULT", "1") != "0"
+    dag["autopilot"] = autopilot
+    if autopilot:
+        delta = advance_dag(dag)
+        trace["cycles"] = delta["cycles"]
+        trace["tool_runs"] = delta["tool_runs"]
+        recursive_updates = delta["recursive_updates"]
+    else:
+        dag_update.recompute_states(dag)
+        storage.save_dag(dag)
+        recursive_updates = 0
 
     _finalize(dag)
     summary = state_summary(dag)

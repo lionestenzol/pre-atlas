@@ -83,12 +83,33 @@ def _dispatch_schedule(job: dict, now) -> dict:
         raw = action.get("raw") or action.get("text") or action.get("title") or job["id"]
         return {"kind": "drop", **intake.chain_intake(str(raw))}
     if kind == "run_chain":
+        # `chain_id` is the correct key; `dag_id` is a deprecated fallback from
+        # an earlier schedules.json convention (fixed 2026-07-07, PKT/DN0001
+        # spine task 01 — a schedule authored with dag_id silently returned
+        # chain_not_found forever, since chain_runner keys chains by chain id,
+        # not dag id). Accept both so an un-migrated schedules.json still fires,
+        # but flag the fallback so it's visible in schedule_runs.jsonl.
         cid = action.get("chain_id")
+        result_extra: dict = {}
+        if cid is None and action.get("dag_id") is not None:
+            cid = action.get("dag_id")
+            result_extra["deprecated_key"] = "dag_id"
         chains = {c["id"]: c for c in chain_runner.load_chains()}
         if cid not in chains:
+            # Fail-loud, never crash: a schedule naming a chain that doesn't
+            # exist (typo, un-migrated dag_id, deleted chain file) must not
+            # silently vanish — it goes into run_log.jsonl as a warning so an
+            # operator (or the daily report, once DN0001 05_report lands) sees
+            # it, while the tick itself continues unharmed.
+            storage.log_run(
+                tool="daemon", command="daemon._dispatch_schedule",
+                goal=f"run_chain schedule {job.get('id')!r}",
+                result_summary=f"chain_not_found: {cid!r} is not a loaded chain id",
+                status="warning",
+            )
             return {"kind": "run_chain", "chain": cid, "fired": False,
-                    "reason": "chain_not_found"}
-        return {"kind": "run_chain", "chain": cid,
+                    "reason": "chain_not_found", **result_extra}
+        return {"kind": "run_chain", "chain": cid, **result_extra,
                 **chain_runner.run_chain(chains[cid], now, last_run=None)}
     return {"kind": "tick", "served_by": "daemon._run_once"}
 

@@ -156,7 +156,61 @@ def run() -> int:
         ok = 400 <= st < 500
         check("POST bad body -> 4xx", f"status={st}", ok)
 
-        # 5) direct unit check of chain_intake (no HTTP)
+        # 5) autobuild default (no atlas env, no autopilot override): a fresh
+        # secured drop settles a DAG that shows up in GET /api/dags, even
+        # though DROPLIST_ATLAS_SIGNALS_URL is unset for this whole file.
+        st, body, err = _post_json(base, "/api/drop", {"rawInput": "Autobuild default check unique phrase one."})
+        drop_id = body.get("drop_id") if isinstance(body, dict) else None
+        with urllib.request.urlopen(base + "/api/dags?limit=200", timeout=5) as r:
+            dags_body = json.loads(r.read().decode("utf-8"))
+        matched = [d for d in dags_body.get("dags", []) if d.get("source_drop") == drop_id]
+        ok = st == 200 and bool(drop_id) and len(matched) == 1
+        check("autobuild default -> DAG in /api/dags", err or f"drop_id={drop_id} matched={len(matched)}", ok)
+
+        # 6) DROPLIST_AUTOBUILD_DAGS=0 (and no atlas env) -> packet only, no DAG.
+        os.environ["DROPLIST_AUTOBUILD_DAGS"] = "0"
+        try:
+            st, body, err = _post_json(base, "/api/drop", {"rawInput": "Autobuild disabled check unique phrase two."})
+            drop_id = body.get("drop_id") if isinstance(body, dict) else None
+            with urllib.request.urlopen(base + "/api/dags?limit=200", timeout=5) as r:
+                dags_body = json.loads(r.read().decode("utf-8"))
+            matched = [d for d in dags_body.get("dags", []) if d.get("source_drop") == drop_id]
+            ok = st == 200 and bool(drop_id) and len(matched) == 0
+            check("DROPLIST_AUTOBUILD_DAGS=0 -> packet only", err or f"drop_id={drop_id} matched={len(matched)}", ok)
+        finally:
+            os.environ.pop("DROPLIST_AUTOBUILD_DAGS", None)
+
+        # 7) DROPLIST_AUTOPILOT_DEFAULT=0 -> DAG built but not advanced: the
+        # source packet's DAG is autopilot:false with >=1 ready node still
+        # visible via /api/now instead of being auto-run to completion.
+        os.environ["DROPLIST_AUTOPILOT_DEFAULT"] = "0"
+        try:
+            st, body, err = _post_json(base, "/api/drop", {"rawInput": "Autopilot off check unique phrase three."})
+            drop_id = body.get("drop_id") if isinstance(body, dict) else None
+            with urllib.request.urlopen(base + "/api/dags?limit=200", timeout=5) as r:
+                dags_body = json.loads(r.read().decode("utf-8"))
+            matched = [d for d in dags_body.get("dags", []) if d.get("source_drop") == drop_id]
+            dag_id = matched[0]["dag_id"] if matched else None
+            stored = storage.load_dag(dag_id) if dag_id else None
+            ready_count = sum(1 for n in (stored or {}).get("nodes", []) if n.get("status") == "ready")
+            with urllib.request.urlopen(base + "/api/now", timeout=5) as r:
+                now_body = json.loads(r.read().decode("utf-8"))
+            job = now_body.get("job") or {}
+            ok = (
+                bool(dag_id) and stored is not None
+                and stored.get("autopilot") is False
+                and ready_count >= 1
+                and job.get("id") == dag_id
+            )
+            check(
+                "DROPLIST_AUTOPILOT_DEFAULT=0 -> autopilot:false, ready node surfaced",
+                f"dag_id={dag_id} autopilot={(stored or {}).get('autopilot')} ready={ready_count} now_job={job.get('id')}",
+                ok,
+            )
+        finally:
+            os.environ.pop("DROPLIST_AUTOPILOT_DEFAULT", None)
+
+        # 8) direct unit check of chain_intake (no HTTP)
         u_secured = intake.chain_intake("A brand new unique idea about goat bedding rotation.")
         u_dup = intake.chain_intake("A brand new unique idea about goat bedding rotation.")
         u_noise = intake.chain_intake("  ")

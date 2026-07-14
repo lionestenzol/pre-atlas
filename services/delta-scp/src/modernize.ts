@@ -23,6 +23,8 @@ import { compressTreeAsync, type CompressedState, type SourceFile } from './comp
 import { buildGraphRows, buildGraphRowsAst, type GraphRows, type NodeKey } from './graph.js';
 import { fetchSourceFilesDetailed, type SkippedFile } from './source.js';
 import { loadConfig, type ScpConfig } from './config.js';
+import { collectSecretFindings, type SecretFinding } from './secrets.js';
+import { bundleDeployablePackage, sealArtifact } from './packaging.js';
 
 export const DOSSIER_VERSION = 'modernize.v1';
 
@@ -93,6 +95,20 @@ export interface Hotspots {
   core_utilities: FnStat[]; // highest fan-in — anchor a rewrite here
   orchestrators: FnStat[]; // highest fan-out — map a subsystem's control flow
   god_files: Array<{ path: string; language: string; symbols: number }>;
+}
+
+// Functions nobody in the repo calls (fan_in === 0). NOT a claim of confirmed-dead
+// code — an exported API, a framework entry point (route handler, event listener),
+// or a call from outside the analyzed set (a test file, a caller in another repo)
+// all show fan_in 0 too. Same "review-first candidate list" framing as risky
+// surfaces: a human/Claude pass still has to confirm before deleting anything —
+// this scanner never removes code itself (destructive, needs judgment a static
+// call-graph can't supply).
+export function findDeadCodeCandidates(stats: Map<string, FnStat>, top = 20): FnStat[] {
+  return [...stats.values()]
+    .filter((f) => f.fan_in === 0)
+    .sort((a, b) => a.file.localeCompare(b.file) || a.name.localeCompare(b.name))
+    .slice(0, top);
 }
 
 export function buildHotspots(compressed: CompressedState, stats: Map<string, FnStat>, top = 15): Hotspots {
@@ -191,6 +207,7 @@ function countByType(graph: GraphRows): Record<string, number> {
 export function renderReport(
   repo: string, ident: Identity, graph: GraphRows, hot: Hotspots, risky: RiskySurface[],
   extractor: 'regex' | 'treesitter', skipped: SkippedFile[] = [],
+  secrets: SecretFinding[] = [], deadCode: FnStat[] = [],
 ): string {
   const L: string[] = [];
   const types = countByType(graph);
@@ -273,15 +290,43 @@ export function renderReport(
   }
   L.push('');
 
-  L.push('## 5. Modernization roadmap');
+  L.push('## 5. Secrets');
+  L.push('');
+  if (secrets.length) {
+    L.push(`**${secrets.length} possible credential(s) found** — hardcoded, not environment-loaded (scanned via secretlint's recommend preset; source files only, see coverage note in Section 1 for what wasn't scanned):`);
+    for (const s of secrets.slice(0, 25)) {
+      L.push(`- ${s.message} (${s.file}:${s.line})`);
+    }
+    if (secrets.length > 25) L.push(`- …and ${secrets.length - 25} more`);
+    L.push('- **Rotate every credential found here before or immediately after any code goes public.** A rewritten repo does not un-leak a key that was ever committed.');
+  } else {
+    L.push('- no hardcoded credentials detected in the analyzed source (does not cover .env/.pem/key files outside the analyzable set — see Section 1 coverage note).');
+  }
+  L.push('');
+
+  L.push('## 6. Dead-code candidates');
+  L.push('');
+  if (deadCode.length) {
+    L.push(`**${deadCode.length} function(s) with zero in-repo callers** — review before relying on this list; an exported API, a framework entry point (route/handler/listener), or a caller outside the analyzed set all show zero fan-in too. Not auto-removed:`);
+    for (const f of deadCode.slice(0, 20)) {
+      L.push(`- \`${f.name}\` (${f.file}${f.line != null ? ':' + f.line : ''})`);
+    }
+    if (deadCode.length > 20) L.push(`- …and ${deadCode.length - 20} more`);
+  } else {
+    L.push('- no zero-fan-in functions found (or the call graph is empty for this extractor).');
+  }
+  L.push('');
+
+  L.push('## 7. Modernization roadmap');
   L.push('');
   L.push('1. **Read the orchestrators, rewrite the core utilities.** Section 3 orders the codebase by dependency: orchestrators are the map, core utilities are the load-bearing walls. Rewrite core utilities first behind characterization tests — they de-risk everything downstream.');
   L.push('2. **Decompose the god-files.** The largest-by-symbol files (Section 3) concentrate the most surface area; split them along the call graph before porting.');
-  L.push('3. **Quarantine the risk surfaces** (Section 4): exec/injection, unsafe C string ops, dynamic loading, and unsafe deserialization rarely survive a lift-and-shift. Wrap each behind a thin adapter, then replace with a supported, audited equivalent.');
+  L.push('3. **Quarantine the risk surfaces and rotate any secrets** (Sections 4-5): exec/injection, unsafe C string ops, dynamic loading, and unsafe deserialization rarely survive a lift-and-shift — wrap each behind a thin adapter, then replace with a supported, audited equivalent. Any credential in Section 5 gets rotated regardless of what else changes.');
+  L.push('4. **Confirm the dead-code candidates** (Section 6) against real usage — exported APIs and framework entry points are false positives; genuine dead code is safe to drop once confirmed.');
   if (ident.legacy_languages.length) {
-    L.push(`4. **Plan the legacy-language exit.** ${ident.legacy_languages.join('/')} carry the modernization weight here — decide per subsystem: retarget in place, port, or rewrite, using the call graph to size the blast radius.`);
+    L.push(`5. **Plan the legacy-language exit.** ${ident.legacy_languages.join('/')} carry the modernization weight here — decide per subsystem: retarget in place, port, or rewrite, using the call graph to size the blast radius.`);
   }
-  L.push(`${ident.legacy_languages.length ? 5 : 4}. **Re-run this dossier as you go.** It is deterministic — a re-run on the same tree reproduces the map, so you can track the call graph and risk surface shrinking as the rewrite lands.`);
+  L.push(`${ident.legacy_languages.length ? 6 : 5}. **Re-run this dossier as you go.** It is deterministic — a re-run on the same tree reproduces the map, so you can track the call graph and risk surface shrinking as the rewrite lands.`);
   L.push('');
   L.push('---');
   L.push(`_Generated by delta-scp modernize · ${DOSSIER_VERSION} · extractor=${extractor}._`);
@@ -317,12 +362,23 @@ export async function modernizeRepo(
   const stats = computeFnStats(graph);
   const hot = buildHotspots(compressed, stats);
   const risky = await collectRiskySurfaces(files, config.extractor);
-  const report = renderReport(repoUrl, ident, graph, hot, risky, config.extractor, skipped);
+  const secrets = await collectSecretFindings(files);
+  const deadCode = findDeadCodeCandidates(stats);
+  const report = renderReport(repoUrl, ident, graph, hot, risky, config.extractor, skipped, secrets, deadCode);
 
   await fs.mkdir(outDir, { recursive: true });
   await fs.writeFile(path.join(outDir, 'symbolic_map.json'), JSON.stringify(compressed, null, 2));
   await fs.writeFile(path.join(outDir, 'dependency_graph.json'), JSON.stringify(graph, null, 2));
   await fs.writeFile(path.join(outDir, 'MODERNIZATION_REPORT.md'), report);
+
+  // The deliverable: one file a customer opens (dossier.zip), plus a sealed,
+  // content-addressed receipt (dossier.zip.sgl) proving what was delivered.
+  // Closes the gap the proof-run named — up to here this function produced a
+  // MAP, not a package.
+  const pkg = await bundleDeployablePackage(
+    outDir, ['symbolic_map.json', 'dependency_graph.json', 'MODERNIZATION_REPORT.md'],
+  );
+  const seal = await sealArtifact(pkg.zip_path);
 
   return {
     tool: 'delta-scp-modernize',
@@ -342,6 +398,10 @@ export async function modernizeRepo(
       },
       risky_surfaces: risky.length,
       skipped_files: skipped.length,
+      possible_secrets: secrets.length,
+      dead_code_candidates: deadCode.length,
+      package: pkg,
+      seal,
     },
   };
 }

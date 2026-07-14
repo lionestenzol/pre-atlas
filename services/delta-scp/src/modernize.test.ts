@@ -3,12 +3,16 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-  computeFnStats, buildHotspots, buildIdentity, collectRiskySurfaces, renderReport,
-  modernizeRepo, DOSSIER_VERSION,
+  computeFnStats, buildHotspots, buildIdentity, collectRiskySurfaces, findDeadCodeCandidates,
+  renderReport, modernizeRepo, DOSSIER_VERSION,
 } from './modernize.js';
 import { buildGraphRowsAst } from './graph.js';
 import { compressTreeAsync, type SourceFile } from './compressor.js';
+import { collectSecretFindings } from './secrets.js';
 import type { ScpConfig } from './config.js';
+
+// See secrets.test.ts for why this is joined rather than a literal.
+const FAKE_STRIPE_KEY = ['sk', 'test', '4eC39HqLyjWDarjtT1zdp7dc'].join('_');
 
 // A C repo: helper is called by two functions (fan-in 2); run calls strcpy (risk).
 const FILES: SourceFile[] = [
@@ -122,13 +126,64 @@ describe('modernize dossier · builders', () => {
     const hot = buildHotspots(compressed, computeFnStats(graph));
     const risky = await collectRiskySurfaces(FILES, 'treesitter');
     const md = renderReport('repo', ident, graph, hot, risky, 'treesitter');
-    for (const h of ['## 1.', '## 2.', '## 3.', '## 4.', '## 5.']) expect(md).toContain(h);
+    for (const h of ['## 1.', '## 2.', '## 3.', '## 4.', '## 5.', '## 6.', '## 7.']) expect(md).toContain(h);
     expect(md).toContain('strcpy');
+  });
+
+  it('finds dead-code candidates: zero-fan-in functions, sorted, capped', async () => {
+    const graph = await buildGraphRowsAst('repo', FILES);
+    const stats = computeFnStats(graph);
+    const dead = findDeadCodeCandidates(stats);
+    // `run` and `twice` are never called by anything else in the repo -> fan_in 0.
+    // `helper` IS called (by twice and run) -> fan_in > 0 -> not a candidate.
+    expect(dead.some((f) => f.name === 'run')).toBe(true);
+    expect(dead.some((f) => f.name === 'twice')).toBe(true);
+    expect(dead.some((f) => f.name === 'helper')).toBe(false);
+  });
+
+  it('secrets section renders findings; dead-code section renders candidates', { timeout: 20000 }, async () => {
+    const jsFiles: SourceFile[] = [{
+      path: 'src/config.js',
+      content: `function unused() { return 1; }
+const stripeKey = '${FAKE_STRIPE_KEY}';
+function main() { return 2; }
+`,
+    }];
+    const graph = await buildGraphRowsAst('repo', jsFiles);
+    const compressed = await compressTreeAsync('repo', jsFiles, 'T', 'treesitter');
+    const ident = buildIdentity(compressed);
+    const stats = computeFnStats(graph);
+    const hot = buildHotspots(compressed, stats);
+    const risky = await collectRiskySurfaces(jsFiles, 'treesitter');
+    const dead = findDeadCodeCandidates(stats);
+    const secrets = await collectSecretFindings(jsFiles);
+
+    expect(secrets.length).toBeGreaterThanOrEqual(1);
+    expect(dead.some((f) => f.name === 'unused')).toBe(true);
+
+    const md = renderReport('repo', ident, graph, hot, risky, 'treesitter', [], secrets, dead);
+    expect(md).toContain('possible credential(s) found');
+    expect(md).toContain('Rotate every credential');
+    expect(md).toContain('src/config.js:2');
+    expect(md).toContain('zero in-repo callers');
+    expect(md).toContain('`unused`');
+  });
+
+  it('empty secrets/dead-code render an honest "none found" line, not a blank section', async () => {
+    const graph = await buildGraphRowsAst('repo', FILES);
+    const compressed = await compressTreeAsync('repo', FILES, 'T', 'treesitter');
+    const ident = buildIdentity(compressed);
+    const hot = buildHotspots(compressed, computeFnStats(graph));
+    const md = renderReport('repo', ident, graph, hot, [], 'treesitter', [], [], []);
+    expect(md).toContain('no hardcoded credentials detected');
+    expect(md).toContain('no zero-fan-in functions found');
   });
 });
 
 describe('modernize dossier · end-to-end', () => {
-  it('writes all three artifacts and a content-addressed receipt', async () => {
+  // modernizeRepo now also runs the secretlint engine (cold-start init cost),
+  // and this test calls it twice — give it headroom past vitest's 5s default.
+  it('writes all three artifacts and a content-addressed receipt', { timeout: 20000 }, async () => {
     const repo = await fs.mkdtemp(path.join(os.tmpdir(), 'scp-mod-'));
     const out = await fs.mkdtemp(path.join(os.tmpdir(), 'scp-out-'));
     try {
@@ -141,10 +196,25 @@ describe('modernize dossier · end-to-end', () => {
       expect(receipt.dossier_version).toBe(DOSSIER_VERSION);
       expect(receipt.sha256).toMatch(/^[0-9a-f]{64}$/);
       expect(receipt.data.risky_surfaces).toBeGreaterThanOrEqual(1);
+      expect(receipt.data.dead_code_candidates).toBeGreaterThanOrEqual(1);
+      expect(typeof receipt.data.possible_secrets).toBe('number');
 
       for (const f of ['symbolic_map.json', 'dependency_graph.json', 'MODERNIZATION_REPORT.md']) {
         await expect(fs.stat(path.join(out, f))).resolves.toBeTruthy();
       }
+
+      // the deliverable: a real zip a customer can open, plus a sealed receipt.
+      const pkg = receipt.data.package as { zip_path: string; zip_bytes: number };
+      expect(pkg.zip_bytes).toBeGreaterThan(0);
+      await expect(fs.stat(pkg.zip_path)).resolves.toBeTruthy();
+      const zipHead = await fs.readFile(pkg.zip_path);
+      expect(zipHead.subarray(0, 2).toString('latin1')).toBe('PK');
+
+      const seal = receipt.data.seal as { sealed: boolean; sealed_path?: string; sha256?: string };
+      expect(seal.sealed).toBe(true);
+      expect(seal.sha256).toMatch(/^[0-9a-f]{64}$/);
+      await expect(fs.stat(seal.sealed_path!)).resolves.toBeTruthy();
+
       // deterministic content-address: a second run over the same tree matches.
       const out2 = await fs.mkdtemp(path.join(os.tmpdir(), 'scp-out2-'));
       const receipt2 = await modernizeRepo(repo, out2, cfg('treesitter'));

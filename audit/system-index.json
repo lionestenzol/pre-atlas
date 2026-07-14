@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-07-07",
+  "generated_at": "2026-07-13",
   "repo_root": "C:\\Users\\bruke\\Pre Atlas",
-  "subsystem_count": 61,
+  "subsystem_count": 73,
   "autostart_count": 12,
   "entries": [
     {
@@ -108,7 +108,7 @@
         "uvicorn"
       ],
       "entry_points": [],
-      "file_count": 649,
+      "file_count": 724,
       "total_loc": 116713,
       "port": 3077,
       "in_autostart": false
@@ -122,7 +122,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 44,
-      "total_loc": 4242,
+      "total_loc": 4308,
       "port": null,
       "in_autostart": true
     },
@@ -168,8 +168,8 @@
       "entry_points": [
         "src/api/server.ts"
       ],
-      "file_count": 116,
-      "total_loc": 36911,
+      "file_count": 117,
+      "total_loc": 37210,
       "port": 3001,
       "in_autostart": true
     },
@@ -208,7 +208,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 109,
-      "total_loc": 13422,
+      "total_loc": 13603,
       "port": null,
       "in_autostart": false
     },
@@ -220,8 +220,8 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 9,
-      "total_loc": 543,
+      "file_count": 10,
+      "total_loc": 644,
       "port": 3071,
       "in_autostart": true
     },
@@ -234,7 +234,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 26,
-      "total_loc": 1121,
+      "total_loc": 1128,
       "port": null,
       "in_autostart": true
     },
@@ -273,7 +273,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 54,
-      "total_loc": 3374,
+      "total_loc": 3411,
       "port": null,
       "in_autostart": false
     },
@@ -305,7 +305,7 @@
         "server.py"
       ],
       "file_count": 38,
-      "total_loc": 2249,
+      "total_loc": 2300,
       "port": 3008,
       "in_autostart": true
     },
@@ -329,6 +329,19 @@
       "in_autostart": false
     },
     {
+      "path": "apps/ahk-activity-logger",
+      "name": "ahk-activity-logger",
+      "group": "apps",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "apps/ai-exec-pipeline",
       "name": "ai-exec-pipeline",
       "group": "apps",
@@ -344,6 +357,32 @@
       ],
       "file_count": 8,
       "total_loc": 455,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/ai-png-execution-precursor",
+      "name": "ai-png-execution-precursor",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 78,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/binary-fingerprint",
+      "name": "binary-fingerprint",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 130,
       "port": null,
       "in_autostart": false
     },
@@ -429,6 +468,19 @@
       "in_autostart": true
     },
     {
+      "path": "apps/code-module-memory",
+      "name": "code-module-memory",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 91,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "apps/delta-scp-web",
       "name": "delta-scp-web",
       "group": "apps",
@@ -445,6 +497,19 @@
       ],
       "file_count": 15,
       "total_loc": 1073,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/habit-xp-tracker",
+      "name": "habit-xp-tracker",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 108,
       "port": null,
       "in_autostart": false
     },
@@ -494,6 +559,84 @@
       "in_autostart": false
     },
     {
+      "path": "apps/learned-execution-router",
+      "name": "learned-execution-router",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 126,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/novenary-encoding",
+      "name": "novenary-encoding",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 145,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/png-code-carrier",
+      "name": "png-code-carrier",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 99,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/png-lookup-calculator",
+      "name": "png-lookup-calculator",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 85,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/python-docs-dictionary",
+      "name": "python-docs-dictionary",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 104,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/quiz-grader",
+      "name": "quiz-grader",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 121,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "apps/webos-333",
       "name": "webos-333",
       "group": "apps",
@@ -503,6 +646,19 @@
       "entry_points": [],
       "file_count": 3,
       "total_loc": 3442,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/workflow-execution-log",
+      "name": "workflow-execution-log",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 3,
+      "total_loc": 137,
       "port": null,
       "in_autostart": false
     },
@@ -839,7 +995,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 61,
+      "file_count": 64,
       "total_loc": 2019,
       "port": null,
       "in_autostart": false
@@ -930,7 +1086,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 30,
+      "file_count": 31,
       "total_loc": 4893,
       "port": null,
       "in_autostart": false

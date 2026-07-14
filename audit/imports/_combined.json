@@ -1160,6 +1160,7 @@
   "_root": {
     ".aegis-agents.json": [],
     ".mcp.json": [],
+    "AGENT_SUBSTRATE.md": [],
     "ATLAS_HEADLESS_MAP.md": [],
     "ATLAS_MASTER_PLAN.md": [],
     "CAPSULES.md": [],
@@ -1629,6 +1630,9 @@
     "src/ui/dashboard.html": [],
     "tsconfig.json": []
   },
+  "ahk-activity-logger": {
+    "README.md": []
+  },
   "ai-exec-pipeline": {
     "README.md": [],
     "atlas.surface.json": [],
@@ -1663,6 +1667,24 @@
       "time"
     ],
     "static/index.html": []
+  },
+  "ai-png-execution-precursor": {
+    "README.md": [],
+    "ai_png_execution.py": [
+      "PIL.Image",
+      "PIL.PngImagePlugin",
+      "__future__.annotations",
+      "base64",
+      "json",
+      "pathlib.Path"
+    ],
+    "test_ai_png_execution.py": [
+      "PIL.Image",
+      "ai_png_execution.retrieve_execution_from_png",
+      "ai_png_execution.store_execution_in_png",
+      "pathlib.Path",
+      "tempfile"
+    ]
   },
   "anatomy": {
     "_build_today.py": [
@@ -14878,6 +14900,7 @@
       "core/executor-bridge.js",
       "core/notify.js",
       "core/routing",
+      "core/routing.js",
       "core/timeline-logger.js",
       "core/types",
       "core/types-core",
@@ -15065,6 +15088,20 @@
     "system-shape.md": [],
     "vocab-collisions.json": [],
     "wall.html": []
+  },
+  "binary-fingerprint": {
+    "README.md": [],
+    "fingerprint.py": [
+      "collections.Counter",
+      "hashlib",
+      "math"
+    ],
+    "test_fingerprint.py": [
+      "fingerprint.ExecutionCache",
+      "fingerprint.calculate_entropy",
+      "fingerprint.fingerprint_bytes",
+      "pytest"
+    ]
   },
   "binre": {
     "atlas.surface.json": [],
@@ -15473,6 +15510,20 @@
       "pathlib.Path",
       "subprocess",
       "tempfile"
+    ]
+  },
+  "code-module-memory": {
+    "README.md": [],
+    "module_memory.py": [
+      "base64",
+      "json",
+      "os"
+    ],
+    "test_module_memory.py": [
+      "module_memory.list_modules",
+      "module_memory.load_module",
+      "module_memory.save_module",
+      "pytest"
     ]
   },
   "code-recon": {
@@ -16662,12 +16713,22 @@
       "lifecycle_summary.summarize",
       "pathlib.Path"
     ],
+    "harvest/1039_coding-gpt-framework-plan/build_plan.json": [],
     "harvest/1039_coding-gpt-framework-plan/code_blocks.md": [],
+    "harvest/1039_coding-gpt-framework-plan/concepts.json": [],
+    "harvest/1039_coding-gpt-framework-plan/concepts.md": [],
+    "harvest/1039_coding-gpt-framework-plan/coverage.json": [],
+    "harvest/1039_coding-gpt-framework-plan/coverage.md": [],
     "harvest/1039_coding-gpt-framework-plan/final_output.md": [],
     "harvest/1039_coding-gpt-framework-plan/key_quotes.md": [],
     "harvest/1039_coding-gpt-framework-plan/manifest.json": [],
     "harvest/1039_coding-gpt-framework-plan/summary.md": [],
+    "harvest/215_png-based-calculator-overview/build_plan.json": [],
     "harvest/215_png-based-calculator-overview/code_blocks.md": [],
+    "harvest/215_png-based-calculator-overview/concepts.json": [],
+    "harvest/215_png-based-calculator-overview/concepts.md": [],
+    "harvest/215_png-based-calculator-overview/coverage.json": [],
+    "harvest/215_png-based-calculator-overview/coverage.md": [],
     "harvest/215_png-based-calculator-overview/final_output.md": [],
     "harvest/215_png-based-calculator-overview/key_quotes.md": [],
     "harvest/215_png-based-calculator-overview/manifest.json": [],
@@ -16677,12 +16738,22 @@
     "harvest/255_binary-coding-references/key_quotes.md": [],
     "harvest/255_binary-coding-references/manifest.json": [],
     "harvest/255_binary-coding-references/summary.md": [],
+    "harvest/266_chatgpt-o1-overview/build_plan.json": [],
     "harvest/266_chatgpt-o1-overview/code_blocks.md": [],
+    "harvest/266_chatgpt-o1-overview/concepts.json": [],
+    "harvest/266_chatgpt-o1-overview/concepts.md": [],
+    "harvest/266_chatgpt-o1-overview/coverage.json": [],
+    "harvest/266_chatgpt-o1-overview/coverage.md": [],
     "harvest/266_chatgpt-o1-overview/final_output.md": [],
     "harvest/266_chatgpt-o1-overview/key_quotes.md": [],
     "harvest/266_chatgpt-o1-overview/manifest.json": [],
     "harvest/266_chatgpt-o1-overview/summary.md": [],
+    "harvest/316_fast-language-creation-guide/build_plan.json": [],
     "harvest/316_fast-language-creation-guide/code_blocks.md": [],
+    "harvest/316_fast-language-creation-guide/concepts.json": [],
+    "harvest/316_fast-language-creation-guide/concepts.md": [],
+    "harvest/316_fast-language-creation-guide/coverage.json": [],
+    "harvest/316_fast-language-creation-guide/coverage.md": [],
     "harvest/316_fast-language-creation-guide/final_output.md": [],
     "harvest/316_fast-language-creation-guide/key_quotes.md": [],
     "harvest/316_fast-language-creation-guide/manifest.json": [],
@@ -16697,22 +16768,42 @@
     "harvest/356_static-decision-tree-app/key_quotes.md": [],
     "harvest/356_static-decision-tree-app/manifest.json": [],
     "harvest/356_static-decision-tree-app/summary.md": [],
+    "harvest/359_introduction-to-binary-code/build_plan.json": [],
     "harvest/359_introduction-to-binary-code/code_blocks.md": [],
+    "harvest/359_introduction-to-binary-code/concepts.json": [],
+    "harvest/359_introduction-to-binary-code/concepts.md": [],
+    "harvest/359_introduction-to-binary-code/coverage.json": [],
+    "harvest/359_introduction-to-binary-code/coverage.md": [],
     "harvest/359_introduction-to-binary-code/final_output.md": [],
     "harvest/359_introduction-to-binary-code/key_quotes.md": [],
     "harvest/359_introduction-to-binary-code/manifest.json": [],
     "harvest/359_introduction-to-binary-code/summary.md": [],
+    "harvest/360_decimal-vs-binary-logic/build_plan.json": [],
     "harvest/360_decimal-vs-binary-logic/code_blocks.md": [],
+    "harvest/360_decimal-vs-binary-logic/concepts.json": [],
+    "harvest/360_decimal-vs-binary-logic/concepts.md": [],
+    "harvest/360_decimal-vs-binary-logic/coverage.json": [],
+    "harvest/360_decimal-vs-binary-logic/coverage.md": [],
     "harvest/360_decimal-vs-binary-logic/final_output.md": [],
     "harvest/360_decimal-vs-binary-logic/key_quotes.md": [],
     "harvest/360_decimal-vs-binary-logic/manifest.json": [],
     "harvest/360_decimal-vs-binary-logic/summary.md": [],
+    "harvest/361_chatbot-preload-optimization/build_plan.json": [],
     "harvest/361_chatbot-preload-optimization/code_blocks.md": [],
+    "harvest/361_chatbot-preload-optimization/concepts.json": [],
+    "harvest/361_chatbot-preload-optimization/concepts.md": [],
+    "harvest/361_chatbot-preload-optimization/coverage.json": [],
+    "harvest/361_chatbot-preload-optimization/coverage.md": [],
     "harvest/361_chatbot-preload-optimization/final_output.md": [],
     "harvest/361_chatbot-preload-optimization/key_quotes.md": [],
     "harvest/361_chatbot-preload-optimization/manifest.json": [],
     "harvest/361_chatbot-preload-optimization/summary.md": [],
+    "harvest/363_quiz-template-creation/build_plan.json": [],
     "harvest/363_quiz-template-creation/code_blocks.md": [],
+    "harvest/363_quiz-template-creation/concepts.json": [],
+    "harvest/363_quiz-template-creation/concepts.md": [],
+    "harvest/363_quiz-template-creation/coverage.json": [],
+    "harvest/363_quiz-template-creation/coverage.md": [],
     "harvest/363_quiz-template-creation/final_output.md": [],
     "harvest/363_quiz-template-creation/key_quotes.md": [],
     "harvest/363_quiz-template-creation/manifest.json": [],
@@ -16733,37 +16824,72 @@
     "harvest/487_marketing-for-beginners/key_quotes.md": [],
     "harvest/487_marketing-for-beginners/manifest.json": [],
     "harvest/487_marketing-for-beginners/summary.md": [],
+    "harvest/490_ai-execution-optimization/build_plan.json": [],
     "harvest/490_ai-execution-optimization/code_blocks.md": [],
+    "harvest/490_ai-execution-optimization/concepts.json": [],
+    "harvest/490_ai-execution-optimization/concepts.md": [],
+    "harvest/490_ai-execution-optimization/coverage.json": [],
+    "harvest/490_ai-execution-optimization/coverage.md": [],
     "harvest/490_ai-execution-optimization/final_output.md": [],
     "harvest/490_ai-execution-optimization/key_quotes.md": [],
     "harvest/490_ai-execution-optimization/manifest.json": [],
     "harvest/490_ai-execution-optimization/summary.md": [],
+    "harvest/496_morning-routine-assistance/build_plan.json": [],
     "harvest/496_morning-routine-assistance/code_blocks.md": [],
+    "harvest/496_morning-routine-assistance/concepts.json": [],
+    "harvest/496_morning-routine-assistance/concepts.md": [],
+    "harvest/496_morning-routine-assistance/coverage.json": [],
+    "harvest/496_morning-routine-assistance/coverage.md": [],
     "harvest/496_morning-routine-assistance/final_output.md": [],
     "harvest/496_morning-routine-assistance/key_quotes.md": [],
     "harvest/496_morning-routine-assistance/manifest.json": [],
     "harvest/496_morning-routine-assistance/summary.md": [],
+    "harvest/522_ai-strategy-execution-plan/build_plan.json": [],
     "harvest/522_ai-strategy-execution-plan/code_blocks.md": [],
+    "harvest/522_ai-strategy-execution-plan/concepts.json": [],
+    "harvest/522_ai-strategy-execution-plan/concepts.md": [],
+    "harvest/522_ai-strategy-execution-plan/coverage.json": [],
+    "harvest/522_ai-strategy-execution-plan/coverage.md": [],
     "harvest/522_ai-strategy-execution-plan/final_output.md": [],
     "harvest/522_ai-strategy-execution-plan/key_quotes.md": [],
     "harvest/522_ai-strategy-execution-plan/manifest.json": [],
     "harvest/522_ai-strategy-execution-plan/summary.md": [],
+    "harvest/528_tamagotchi-code-syncing-explained/build_plan.json": [],
     "harvest/528_tamagotchi-code-syncing-explained/code_blocks.md": [],
+    "harvest/528_tamagotchi-code-syncing-explained/concepts.json": [],
+    "harvest/528_tamagotchi-code-syncing-explained/concepts.md": [],
+    "harvest/528_tamagotchi-code-syncing-explained/coverage.json": [],
+    "harvest/528_tamagotchi-code-syncing-explained/coverage.md": [],
     "harvest/528_tamagotchi-code-syncing-explained/final_output.md": [],
     "harvest/528_tamagotchi-code-syncing-explained/key_quotes.md": [],
     "harvest/528_tamagotchi-code-syncing-explained/manifest.json": [],
     "harvest/528_tamagotchi-code-syncing-explained/summary.md": [],
+    "harvest/557_phase-3-ai-system/build_plan.json": [],
     "harvest/557_phase-3-ai-system/code_blocks.md": [],
+    "harvest/557_phase-3-ai-system/concepts.json": [],
+    "harvest/557_phase-3-ai-system/concepts.md": [],
+    "harvest/557_phase-3-ai-system/coverage.json": [],
+    "harvest/557_phase-3-ai-system/coverage.md": [],
     "harvest/557_phase-3-ai-system/final_output.md": [],
     "harvest/557_phase-3-ai-system/key_quotes.md": [],
     "harvest/557_phase-3-ai-system/manifest.json": [],
     "harvest/557_phase-3-ai-system/summary.md": [],
+    "harvest/78_python-documentation-as-dictionary/build_plan.json": [],
     "harvest/78_python-documentation-as-dictionary/code_blocks.md": [],
+    "harvest/78_python-documentation-as-dictionary/concepts.json": [],
+    "harvest/78_python-documentation-as-dictionary/concepts.md": [],
+    "harvest/78_python-documentation-as-dictionary/coverage.json": [],
+    "harvest/78_python-documentation-as-dictionary/coverage.md": [],
     "harvest/78_python-documentation-as-dictionary/final_output.md": [],
     "harvest/78_python-documentation-as-dictionary/key_quotes.md": [],
     "harvest/78_python-documentation-as-dictionary/manifest.json": [],
     "harvest/78_python-documentation-as-dictionary/summary.md": [],
+    "harvest/81_universal-programming-table-setup/build_plan.json": [],
     "harvest/81_universal-programming-table-setup/code_blocks.md": [],
+    "harvest/81_universal-programming-table-setup/concepts.json": [],
+    "harvest/81_universal-programming-table-setup/concepts.md": [],
+    "harvest/81_universal-programming-table-setup/coverage.json": [],
+    "harvest/81_universal-programming-table-setup/coverage.md": [],
     "harvest/81_universal-programming-table-setup/final_output.md": [],
     "harvest/81_universal-programming-table-setup/key_quotes.md": [],
     "harvest/81_universal-programming-table-setup/manifest.json": [],
@@ -17513,7 +17639,8 @@
       "json",
       "logging",
       "pathlib.Path",
-      "time"
+      "time",
+      "urllib.parse.urlparse"
     ],
     "src/cortex/agents/planner.py": [
       "__future__.annotations",
@@ -17778,6 +17905,8 @@
       "cortex.recovery.CircuitBreaker",
       "cortex.recovery.StaleLockRecovery",
       "fastapi.FastAPI",
+      "fastapi.Request",
+      "fastapi.responses.JSONResponse",
       "logging",
       "time",
       "uvicorn"
@@ -18242,6 +18371,10 @@
       "atlas/signals-store.js",
       "core/types-core.js"
     ],
+    "src/tests/routing-tests.ts": [
+      "core/routing.js",
+      "core/types.js"
+    ],
     "src/tests/signals-store-tests.ts": [
       "atlas/signals-store.js"
     ],
@@ -18449,6 +18582,9 @@
     "03_OPTOGON_SPEC.md": [],
     "04_BUILD_PLAN.md": [],
     "05_FEST_PLAN.md": [],
+    "06_PROACTIVE_EXECUTION_ORIGIN.md": [],
+    "07_MESH_OFFLINE_SYNC_NOTES.md": [],
+    "08_UNICODEX_EMERGENCY_PROMPT.md": [],
     "AUDIT_BUNDLE.md": [],
     "AUDIT_REPORT.md": [],
     "AUTO_SHIPPING.md": [],
@@ -18897,6 +19033,7 @@
       "__future__.annotations",
       "json",
       "os",
+      "re",
       "time",
       "typing.Any",
       "typing.Iterator",
@@ -19355,6 +19492,18 @@
   "groundwork-cli": {
     "atlas.surface.json": []
   },
+  "habit-xp-tracker": {
+    "README.md": [],
+    "habit_tracker.py": [],
+    "test_habit_tracker.py": [
+      "habit_tracker.COMPLETED",
+      "habit_tracker.PARTIAL",
+      "habit_tracker.SKIPPED",
+      "habit_tracker.run_check_in",
+      "habit_tracker.update_habit",
+      "pytest"
+    ]
+  },
   "hydra": {
     "README.md": [],
     "REVIEW-web-2026-06-25.md": [],
@@ -19482,6 +19631,7 @@
       "core/executor-bridge.js",
       "core/notify.js",
       "core/routing",
+      "core/routing.js",
       "core/timeline-logger.js",
       "core/types",
       "core/types-core",
@@ -19670,11 +19820,31 @@
     "wall.html": [],
     "zod.umd.js": []
   },
+  "learned-execution-router": {
+    "README.md": [],
+    "router.py": [
+      "__future__.annotations",
+      "dataclasses.dataclass",
+      "dataclasses.field"
+    ],
+    "test_router.py": [
+      "pytest",
+      "router.LearnedExecutionRouter"
+    ]
+  },
   "memory-hub": {
     "README.md": [],
     "atlas.surface.json": [],
     "pyproject.toml": [],
     "src/memory_hub/__init__.py": [],
+    "src/memory_hub/auth.py": [
+      "__future__.annotations",
+      "fastapi.HTTPException",
+      "fastapi.Header",
+      "os",
+      "pathlib.Path",
+      "secrets"
+    ],
     "src/memory_hub/schemas.py": [
       "__future__.annotations",
       "datetime.datetime",
@@ -19684,6 +19854,7 @@
       "typing.Any"
     ],
     "src/memory_hub/server.py": [
+      "..auth",
       "..stores",
       ".schemas.MemoryHit",
       ".schemas.MemorySearchRequest",
@@ -19691,6 +19862,7 @@
       ".schemas.SavePacketRequest",
       ".schemas.StoreStatus",
       "__future__.annotations",
+      "fastapi.Depends",
       "fastapi.FastAPI",
       "fastapi.HTTPException",
       "fastapi.middleware.cors.CORSMiddleware",
@@ -19721,6 +19893,21 @@
   "mini-ship": {
     "DEFERRED.md": [],
     "atlas.surface.json": []
+  },
+  "novenary-encoding": {
+    "README.md": [],
+    "novenary.py": [
+      "__future__.annotations"
+    ],
+    "test_novenary.py": [
+      "novenary.base9_to_int",
+      "novenary.digit_to_ternary_pair",
+      "novenary.int_to_base9",
+      "novenary.novenary_to_trits",
+      "novenary.ternary_pair_to_digit",
+      "novenary.trits_to_novenary",
+      "pytest"
+    ]
   },
   "openclaw": {
     "atlas.surface.json": [],
@@ -19790,7 +19977,8 @@
     ],
     "src/openclaw/delta.py": [
       "httpx",
-      "openclaw.config.config"
+      "openclaw.config.config",
+      "urllib.parse.quote"
     ],
     "src/openclaw/main.py": [
       "openclaw.config.config",
@@ -20301,12 +20489,65 @@
       "typing"
     ]
   },
+  "png-code-carrier": {
+    "README.md": [],
+    "png_code_carrier.py": [
+      "PIL.Image",
+      "PIL.PngImagePlugin.PngInfo",
+      "base64"
+    ],
+    "test_png_code_carrier.py": [
+      "PIL.Image",
+      "os",
+      "png_code_carrier.embed_script",
+      "png_code_carrier.extract_script",
+      "png_code_carrier.run_extracted_script",
+      "pytest",
+      "tempfile"
+    ]
+  },
+  "png-lookup-calculator": {
+    "README.md": [],
+    "png_calculator.py": [
+      "PIL.Image"
+    ],
+    "test_png_calculator.py": [
+      "os",
+      "png_calculator.generate_lookup_png",
+      "png_calculator.retrieve_precomputed_operations",
+      "pytest",
+      "tempfile"
+    ]
+  },
   "public": {
     "apps/webos-333/web-os-simulator.html": [],
     "index.html": [],
     "services/cognitive-sensor/control_panel.html": [],
     "services/cognitive-sensor/cycleboard_app3.html": [],
     "services/cognitive-sensor/dashboard.html": []
+  },
+  "python-docs-dictionary": {
+    "README.md": [],
+    "docs_dictionary.py": [
+      "__future__.annotations",
+      "fitz",
+      "pathlib.Path",
+      "sqlite3"
+    ],
+    "test_docs_dictionary.py": [
+      "docs_dictionary.build_docs_db",
+      "docs_dictionary.search_docs",
+      "pathlib.Path",
+      "tempfile"
+    ]
+  },
+  "quiz-grader": {
+    "README.md": [],
+    "quiz_grader.py": [],
+    "test_quiz_grader.py": [
+      "pytest",
+      "quiz_grader.grade_quiz"
+    ]
   },
   "reminders": {
     "atlas.surface.json": []
@@ -21090,6 +21331,7 @@
       "pydantic.BaseModel",
       "pydantic.Field",
       "typing.Optional",
+      "urllib.parse.urlparse",
       "uvicorn"
     ],
     "src/search_stack/settings.py": [
@@ -21415,6 +21657,19 @@
     "WEB-OS-DOCUMENTATION.md": [],
     "atlas.surface.json": [],
     "web-os-simulator.html": []
+  },
+  "workflow-execution-log": {
+    "README.md": [],
+    "test_workflow_log.py": [
+      "pytest",
+      "workflow_log.get_logs",
+      "workflow_log.init_log_db",
+      "workflow_log.log_execution",
+      "workflow_log.run_with_recovery"
+    ],
+    "workflow_log.py": [
+      "sqlite3"
+    ]
   },
   "workflows": {
     "droplist-remediation.js": []

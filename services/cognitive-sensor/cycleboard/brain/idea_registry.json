@@ -1,15 +1,39 @@
 {
   "metadata": {
-    "generated_at": "2026-07-05T06:23:06.856823",
+    "generated_at": "2026-07-12T06:20:46.182055",
     "total_ideas": 1335,
     "tier_breakdown": {
       "execute_now": 7,
-      "next_up": 116,
-      "backlog": 907,
-      "archive": 305
+      "next_up": 105,
+      "backlog": 921,
+      "archive": 302
     }
   },
   "execute_now": [
+    {
+      "canonical_id": "canon_0435",
+      "canonical_title": "GPT-5 features overview",
+      "priority_score": 0.569,
+      "priority_breakdown": {
+        "frequency": 0.2,
+        "recency": 0.0,
+        "alignment": 0.082,
+        "feasibility": 0.128,
+        "compounding": 0.16
+      },
+      "category": "ai_automation",
+      "status": "stalled",
+      "complexity": "massive",
+      "mention_count": 65,
+      "alignment_score": 0.326,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0436",
+        "canon_0827",
+        "canon_0897",
+        "canon_1145"
+      ]
+    },
     {
       "canonical_id": "canon_0247",
       "canonical_title": "Venture Portfolio Architecture",
@@ -53,42 +77,14 @@
       ]
     },
     {
-      "canonical_id": "canon_0435",
-      "canonical_title": "GPT-5 features overview",
-      "priority_score": 0.539,
-      "priority_breakdown": {
-        "frequency": 0.2,
-        "recency": 0.0,
-        "alignment": 0.082,
-        "feasibility": 0.098,
-        "compounding": 0.16
-      },
-      "category": "ai_automation",
-      "status": "stalled",
-      "complexity": "massive",
-      "mention_count": 65,
-      "alignment_score": 0.326,
-      "dependencies": [
-        "canon_0534",
-        "canon_0535",
-        "canon_0536"
-      ],
-      "child_ideas": [
-        "canon_0436",
-        "canon_0827",
-        "canon_0897",
-        "canon_1145"
-      ]
-    },
-    {
       "canonical_id": "canon_0045",
       "canonical_title": "Etch A Sketch Constraints",
-      "priority_score": 0.492,
+      "priority_score": 0.514,
       "priority_breakdown": {
         "frequency": 0.006,
-        "recency": 0.129,
+        "recency": 0.121,
         "alignment": 0.079,
-        "feasibility": 0.078,
+        "feasibility": 0.108,
         "compounding": 0.2
       },
       "category": "technical_project",
@@ -96,11 +92,7 @@
       "complexity": "massive",
       "mention_count": 2,
       "alignment_score": 0.315,
-      "dependencies": [
-        "canon_0534",
-        "canon_0535",
-        "canon_0536"
-      ],
+      "dependencies": [],
       "child_ideas": [
         "canon_0057",
         "canon_0180",
@@ -155,30 +147,6 @@
       ]
     },
     {
-      "canonical_id": "canon_0015",
-      "canonical_title": "Website Design Process",
-      "priority_score": 0.461,
-      "priority_breakdown": {
-        "frequency": 0.009,
-        "recency": 0.137,
-        "alignment": 0.031,
-        "feasibility": 0.124,
-        "compounding": 0.16
-      },
-      "category": "ecommerce",
-      "status": "idea",
-      "complexity": "complex",
-      "mention_count": 3,
-      "alignment_score": 0.124,
-      "dependencies": [],
-      "child_ideas": [
-        "canon_0017",
-        "canon_0018",
-        "canon_0026",
-        "canon_0648"
-      ]
-    },
-    {
       "canonical_id": "canon_0614",
       "canonical_title": "Model Introduction Summary",
       "priority_score": 0.457,
@@ -229,6 +197,30 @@
         "canon_1029",
         "canon_1033",
         "canon_1045"
+      ]
+    },
+    {
+      "canonical_id": "canon_0015",
+      "canonical_title": "Website Design Process",
+      "priority_score": 0.453,
+      "priority_breakdown": {
+        "frequency": 0.009,
+        "recency": 0.129,
+        "alignment": 0.031,
+        "feasibility": 0.124,
+        "compounding": 0.16
+      },
+      "category": "ecommerce",
+      "status": "idea",
+      "complexity": "complex",
+      "mention_count": 3,
+      "alignment_score": 0.124,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0017",
+        "canon_0018",
+        "canon_0026",
+        "canon_0648"
       ]
     }
   ],
@@ -306,55 +298,30 @@
       ]
     },
     {
-      "canonical_id": "canon_0037",
-      "canonical_title": "Semantic Command Architecture",
-      "priority_score": 0.421,
+      "canonical_id": "canon_0257",
+      "canonical_title": "Branch · Branch · Branch · Screen visibility check",
+      "priority_score": 0.426,
       "priority_breakdown": {
-        "frequency": 0.003,
-        "recency": 0.13,
-        "alignment": 0.092,
-        "feasibility": 0.116,
-        "compounding": 0.08
-      },
-      "category": "technical_project",
-      "status": "idea",
-      "complexity": "complex",
-      "mention_count": 1,
-      "alignment_score": 0.368,
-      "dependencies": [],
-      "child_ideas": [
-        "canon_0036",
-        "canon_0553"
-      ]
-    },
-    {
-      "canonical_id": "canon_0139",
-      "canonical_title": "Sheet Music to Piano Tutorial",
-      "priority_score": 0.417,
-      "priority_breakdown": {
-        "frequency": 0.006,
-        "recency": 0.051,
-        "alignment": 0.047,
-        "feasibility": 0.112,
+        "frequency": 0.012,
+        "recency": 0.0,
+        "alignment": 0.081,
+        "feasibility": 0.132,
         "compounding": 0.2
       },
-      "category": "technical_project",
-      "status": "idea",
+      "category": "ai_automation",
+      "status": "started",
       "complexity": "massive",
-      "mention_count": 2,
-      "alignment_score": 0.189,
+      "mention_count": 4,
+      "alignment_score": 0.325,
       "dependencies": [],
       "child_ideas": [
-        "canon_0022",
-        "canon_0359",
-        "canon_0384",
-        "canon_0517",
-        "canon_0801",
-        "canon_0818",
-        "canon_0987",
-        "canon_1067",
-        "canon_1087",
-        "canon_1295"
+        "canon_1118",
+        "canon_0301",
+        "canon_0448",
+        "canon_0976",
+        "canon_1157",
+        "canon_1158",
+        "canon_1159"
       ]
     },
     {
@@ -414,28 +381,6 @@
       ]
     },
     {
-      "canonical_id": "canon_0021",
-      "canonical_title": "Website Design Process",
-      "priority_score": 0.41,
-      "priority_breakdown": {
-        "frequency": 0.006,
-        "recency": 0.137,
-        "alignment": 0.064,
-        "feasibility": 0.123,
-        "compounding": 0.08
-      },
-      "category": "technical_project",
-      "status": "started",
-      "complexity": "complex",
-      "mention_count": 2,
-      "alignment_score": 0.256,
-      "dependencies": [],
-      "child_ideas": [
-        "canon_0020",
-        "canon_0027"
-      ]
-    },
-    {
       "canonical_id": "canon_0637",
       "canonical_title": "Peanut Butter Instructions Exercise",
       "priority_score": 0.409,
@@ -466,25 +411,33 @@
       ]
     },
     {
-      "canonical_id": "canon_0049",
-      "canonical_title": "Branch · Branch · Branch · Math and Geometry",
+      "canonical_id": "canon_0139",
+      "canonical_title": "Sheet Music to Piano Tutorial",
       "priority_score": 0.409,
       "priority_breakdown": {
-        "frequency": 0.003,
-        "recency": 0.128,
-        "alignment": 0.075,
-        "feasibility": 0.124,
-        "compounding": 0.08
+        "frequency": 0.006,
+        "recency": 0.043,
+        "alignment": 0.047,
+        "feasibility": 0.112,
+        "compounding": 0.2
       },
-      "category": "ai_automation",
+      "category": "technical_project",
       "status": "idea",
-      "complexity": "complex",
-      "mention_count": 1,
-      "alignment_score": 0.299,
+      "complexity": "massive",
+      "mention_count": 2,
+      "alignment_score": 0.189,
       "dependencies": [],
       "child_ideas": [
-        "canon_0044",
-        "canon_0347"
+        "canon_0022",
+        "canon_0359",
+        "canon_0384",
+        "canon_0517",
+        "canon_0801",
+        "canon_0818",
+        "canon_0987",
+        "canon_1067",
+        "canon_1087",
+        "canon_1295"
       ]
     },
     {
@@ -505,6 +458,50 @@
       "alignment_score": 0.314,
       "dependencies": [],
       "child_ideas": []
+    },
+    {
+      "canonical_id": "canon_0021",
+      "canonical_title": "Website Design Process",
+      "priority_score": 0.402,
+      "priority_breakdown": {
+        "frequency": 0.006,
+        "recency": 0.129,
+        "alignment": 0.064,
+        "feasibility": 0.123,
+        "compounding": 0.08
+      },
+      "category": "technical_project",
+      "status": "started",
+      "complexity": "complex",
+      "mention_count": 2,
+      "alignment_score": 0.256,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0020",
+        "canon_0027"
+      ]
+    },
+    {
+      "canonical_id": "canon_0049",
+      "canonical_title": "Branch · Branch · Branch · Math and Geometry",
+      "priority_score": 0.402,
+      "priority_breakdown": {
+        "frequency": 0.003,
+        "recency": 0.12,
+        "alignment": 0.075,
+        "feasibility": 0.124,
+        "compounding": 0.08
+      },
+      "category": "ai_automation",
+      "status": "idea",
+      "complexity": "complex",
+      "mention_count": 1,
+      "alignment_score": 0.299,
+      "dependencies": [],
+      "child_ideas": [
+        "canon_0044",
+        "canon_0347"
+      ]
     }
   ]
 }

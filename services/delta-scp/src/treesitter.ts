@@ -31,6 +31,12 @@ export interface AstEdge {
   source: string; // caller symbol name
   target: string; // callee name
   type: 'calls';
+  // true when this call's callee was a member/attribute access (`obj.exec()`),
+  // absent (falsy) for a bare identifier call (`exec()`). Lets a risk-target
+  // denylist require receiver qualification for names that collide with common,
+  // unrelated methods (RegExp.exec, better-sqlite3's Database.exec) once member
+  // calls are in scope — see RISKY_QUALIFIED_TARGETS in modernize.ts.
+  qualified?: boolean;
 }
 
 interface LangSpec {
@@ -46,15 +52,17 @@ interface LangSpec {
   // property name, e.g. `el.innerHTML = x` -> prop.text === 'innerHTML'. Absent
   // for languages where this isn't a meaningful risk shape.
   assignQuery?: string;
-  // Qualified-call query (JS/TS only): captures the WHOLE `object.property` text
-  // when the receiver is a plain identifier, e.g. `document.write(x)` ->
-  // 'document.write'. Exists because some sinks (document.write) are only
-  // dangerous for a SPECIFIC receiver — the bare property name ('write') is far
-  // too generic to safely denylist (fs.write/socket.write/res.write are ordinary
-  // and common). callQuery's bare-property capture stays generic (needed so
-  // in-repo method calls resolve against declared symbol names in the call
-  // graph); this is a separate, precision-scoped view used only for risk-target
-  // matching against qualified names.
+  // Qualified-call query: captures the WHOLE receiver chain + property text,
+  // e.g. `document.write(x)` -> 'document.write', `this.db.exec(x)` ->
+  // 'this.db.exec' — not restricted to a bare-identifier receiver. Exists
+  // because some sinks (document.write, child_process.exec) are only dangerous
+  // for a SPECIFIC receiver — the bare property name ('write', 'exec') is far
+  // too generic to safely denylist against every member call (fs.write,
+  // res.write, a DB's .exec(), RegExp.exec are ordinary and common). callQuery's
+  // bare-property capture stays generic (needed so in-repo method calls resolve
+  // against declared symbol names in the call graph); this is a separate,
+  // precision-scoped view used only for risk-target matching against qualified
+  // names.
   qualifiedCallQuery?: string;
 }
 
@@ -86,10 +94,15 @@ const LANGS: Record<string, LangSpec> = {
       (class_definition name: (identifier) @sym.class)
     `,
     callQuery: `
-      (call function: (identifier) @callee)
-      (call function: (attribute attribute: (identifier) @callee))
+      (call function: (identifier) @callee.bare)
+      (call function: (attribute attribute: (identifier) @callee.member))
     `,
     funcNodeTypes: new Set(['function_definition']),
+    // Captures the full attribute chain (`os.system` -> 'os.system',
+    // `pickle.loads` -> 'pickle.loads') so exec/deserialization names that
+    // collide with unrelated methods (json.loads vs pickle.loads) can require
+    // receiver qualification — see RISKY_QUALIFIED_TARGETS in modernize.ts.
+    qualifiedCallQuery: `(call function: (attribute) @qualified)`,
   },
   typescript: {
     wasm: 'tree-sitter-typescript.wasm',
@@ -101,18 +114,23 @@ const LANGS: Record<string, LangSpec> = {
       (type_alias_declaration name: (type_identifier) @sym.type)
       (method_definition name: (property_identifier) @sym.method)
     `,
-    // Two call shapes: bare identifier (eval(x)) and member/method (document.write(x),
+    // Two call shapes, captured under DIFFERENT names so callers can tell them
+    // apart: bare identifier (eval(x)) vs member/method (document.write(x),
     // child_process.exec(x)) — the latter is how most real-world risky sinks are
-    // actually called, and was invisible before this query existed.
+    // actually called, and was invisible before this query existed. The
+    // distinction matters because a member callee name alone (e.g. 'exec') can't
+    // tell RegExp.exec() apart from child_process.exec() — see extractCallEdgesAst.
     callQuery: `
-      (call_expression function: (identifier) @callee)
-      (call_expression function: (member_expression property: (property_identifier) @callee))
+      (call_expression function: (identifier) @callee.bare)
+      (call_expression function: (member_expression property: (property_identifier) @callee.member))
     `,
     funcNodeTypes: new Set([
       'function_declaration', 'method_definition', 'function_expression', 'arrow_function',
     ]),
     assignQuery: `(assignment_expression left: (member_expression property: (property_identifier) @prop))`,
-    qualifiedCallQuery: `(call_expression function: (member_expression object: (identifier)) @qualified)`,
+    // Whole receiver chain, not just a bare-identifier object — `this.db.exec`
+    // captures as 'this.db.exec', not just 'db.exec' or missed entirely.
+    qualifiedCallQuery: `(call_expression function: (member_expression) @qualified)`,
   },
   javascript: {
     wasm: 'tree-sitter-javascript.wasm',
@@ -122,14 +140,14 @@ const LANGS: Record<string, LangSpec> = {
       (method_definition name: (property_identifier) @sym.method)
     `,
     callQuery: `
-      (call_expression function: (identifier) @callee)
-      (call_expression function: (member_expression property: (property_identifier) @callee))
+      (call_expression function: (identifier) @callee.bare)
+      (call_expression function: (member_expression property: (property_identifier) @callee.member))
     `,
     funcNodeTypes: new Set([
       'function_declaration', 'method_definition', 'function_expression', 'arrow_function',
     ]),
     assignQuery: `(assignment_expression left: (member_expression property: (property_identifier) @prop))`,
-    qualifiedCallQuery: `(call_expression function: (member_expression object: (identifier)) @qualified)`,
+    qualifiedCallQuery: `(call_expression function: (member_expression) @qualified)`,
   },
   cpp: {
     wasm: 'tree-sitter-cpp.wasm',
@@ -341,7 +359,7 @@ export async function extractCallEdgesAst(content: string, language: string): Pr
     const seen = new Set<string>();
     for (const s of await inlineScripts(content)) {
       for (const e of await extractCallEdgesAst(s.code, 'javascript')) {
-        const key = `${e.source}->${e.target}`;
+        const key = `${e.source}->${e.target}->${e.qualified ?? false}`;
         if (seen.has(key)) continue;
         seen.add(key);
         edges.push(e);
@@ -359,10 +377,14 @@ export async function extractCallEdgesAst(content: string, language: string): Pr
     const callee = cap.node.text;
     const caller = enclosingFunctionName(cap.node, p.spec);
     if (!caller) continue;
-    const key = `${caller}->${callee}`;
+    // Capture name is 'callee.member' for a member/attribute call (split query,
+    // see LANGS.typescript/javascript/python), 'callee.bare' or plain 'callee'
+    // (single-form languages) otherwise.
+    const qualified = cap.name.endsWith('.member');
+    const key = `${caller}->${callee}->${cap.name}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    edges.push({ source: caller, target: callee, type: 'calls' });
+    edges.push({ source: caller, target: callee, type: 'calls', ...(qualified ? { qualified: true } : {}) });
   }
   edges.sort((a, b) => a.source.localeCompare(b.source) || a.target.localeCompare(b.target));
   return edges;

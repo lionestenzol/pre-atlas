@@ -112,6 +112,63 @@ describe('modernize dossier · builders', () => {
     expect(md).toContain('`document.write` called by `updateZoneLogsUI`');
   });
 
+  // The exact bug found live 2026-07-14 running the dossier against a real repo
+  // (delta-kernel): `this.db.exec(DDL)` (better-sqlite3's schema-exec method) got
+  // misflagged as shell-exec/injection risk, because a bare 'exec'/'spawn' member
+  // callee name can't tell RegExp.exec()/db.exec() apart from child_process.exec()
+  // without checking the receiver.
+  it('does NOT flag a receiver-ambiguous .exec()/.spawn() member call (this.db.exec, RegExp.exec) — no known-dangerous receiver, no flag', async () => {
+    const jsFiles: SourceFile[] = [{
+      path: 'src/store.js',
+      content: `class Store {
+  constructor(db) {
+    this.db = db;
+    this.db.exec('CREATE TABLE t (id)');
+  }
+}
+function run(re, s) {
+  return re.exec(s);
+}`,
+    }];
+    const risky = await collectRiskySurfaces(jsFiles, 'treesitter');
+    expect(risky.some((r) => r.target.toLowerCase().includes('exec'))).toBe(false);
+  });
+
+  it('flags bare exec/spawn calls AND qualified child_process.exec/cp.spawn', async () => {
+    const jsFiles: SourceFile[] = [{
+      path: 'src/run.js',
+      content: `function a(cmd) { exec(cmd); }
+function b(cmd) { spawn(cmd); }
+function c(cmd) { child_process.exec(cmd); }
+function d(cmd) { cp.spawn(cmd); }`,
+    }];
+    const risky = await collectRiskySurfaces(jsFiles, 'treesitter');
+    const targets = risky.map((r) => r.target.toLowerCase());
+    expect(targets).toContain('exec');
+    expect(targets).toContain('spawn');
+    expect(targets).toContain('child_process.exec');
+    expect(targets).toContain('cp.spawn');
+  });
+
+  it('Python: flags os.system/pickle.loads (qualified, receiver-specific) but NOT json.loads (precision — same bare property name, different receiver)', async () => {
+    const pyFiles: SourceFile[] = [{
+      path: 'src/run.py',
+      content: `import os, json, pickle
+def run(cmd, raw, blob):
+    os.system(cmd)
+    data = json.loads(raw)
+    obj = pickle.loads(blob)
+    return data, obj
+`,
+    }];
+    const risky = await collectRiskySurfaces(pyFiles, 'treesitter');
+    const targets = risky.map((r) => r.target.toLowerCase());
+    expect(targets).toContain('os.system');
+    expect(targets).toContain('pickle.loads');
+    expect(risky.some((r) => r.target.toLowerCase() === 'json.loads')).toBe(false);
+    expect(risky.some((r) => r.target.toLowerCase() === 'loads')).toBe(false);
+  });
+
   it('identity flags legacy languages present', async () => {
     const compressed = await compressTreeAsync('repo', FILES, 'T', 'treesitter');
     const ident = buildIdentity(compressed);

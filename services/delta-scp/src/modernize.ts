@@ -28,20 +28,35 @@ import { bundleDeployablePackage, sealArtifact } from './packaging.js';
 
 export const DOSSIER_VERSION = 'modernize.v1';
 
-// Call targets that mark a surface a modernization team should review first:
-// injection/exec, unsafe C string ops, dynamic loading, unsafe deserialization,
-// DOM-injection. Matched by the (lowercased) callee name from the call graph.
+// Call targets that mark a surface a modernization team should review first,
+// matched by the (lowercased) callee name on ANY call shape — bare identifier
+// OR member/attribute call. Safe to match unconditionally because these names
+// are essentially never legitimate as an ordinary method on an unrelated
+// object: unsafe C string / memory ops, dynamic loading, unambiguous
+// deserialization, and call-form DOM injection.
 const RISKY_CALL_TARGETS = new Set([
-  // exec / injection
-  'eval', 'exec', 'execsync', 'system', 'popen', 'spawn', 'spawnsync', 'execfile',
+  'eval',
   // unsafe C string / memory
   'strcpy', 'strcat', 'sprintf', 'vsprintf', 'gets', 'scanf', 'memcpy', 'alloca',
   // dynamic loading
   'dlopen', 'loadlibrary', 'loadlibrarya', 'loadlibraryw', 'getprocaddress',
-  // unsafe deserialization
-  'unserialize', 'unmarshal', 'loads', 'load_pickle',
+  // unsafe deserialization (unambiguous names)
+  'unserialize', 'unmarshal', 'load_pickle',
   // DOM injection (call-form: dangerouslySetInnerHTML(...) as a function/prop-call)
   'dangerouslysetinnerhtml', 'innerhtml',
+]);
+
+// Exec/injection + generic-deserialization names that COLLIDE with common,
+// benign method names once member/attribute calls are in scope (added by the
+// JS-sink fix): RegExp.exec(), better-sqlite3's Database.exec(), json.loads()
+// vs pickle.loads(), etc. Found live 2026-07-14 running the dossier against a
+// real production repo (delta-kernel) — `this.db.exec(DDL)`, a SQLite
+// schema-exec call, was misflagged as shell-exec/injection risk. Matched ONLY
+// as a BARE identifier call here (`import { exec } from 'child_process'; exec(x)`
+// — unambiguous without a receiver); member/attribute calls with these names
+// are matched ONLY via the receiver-qualified pairs in RISKY_QUALIFIED_TARGETS.
+const EXEC_FAMILY_TARGETS = new Set([
+  'exec', 'execsync', 'system', 'popen', 'spawn', 'spawnsync', 'execfile', 'loads',
 ]);
 
 // DOM-injection sink PROPERTIES — `el.innerHTML = x`, not a call at all, so
@@ -52,12 +67,22 @@ const RISKY_CALL_TARGETS = new Set([
 // streams) and would drown real findings in false positives.
 const DOM_SINK_PROPS = new Set(['innerhtml', 'outerhtml']);
 
-// Qualified call targets — sinks that are only dangerous for a SPECIFIC receiver.
-// document.write is a classic direct-DOM-write XSS vector, but the bare property
-// name 'write' is far too generic to put in RISKY_CALL_TARGETS (fs.write,
-// socket.write, res.write are ordinary and would flood false positives). Matched
-// against extractQualifiedCallEdgesAst's "object.property" text, lowercased.
-const RISKY_QUALIFIED_TARGETS = new Set(['document.write', 'document.writeln']);
+// Qualified call targets — sinks that are only dangerous for a SPECIFIC
+// receiver. A bare property/attribute name alone ('write', 'exec', 'loads',
+// 'system') is far too generic to denylist against every member call (fs.write,
+// res.write, a DB's .exec(), RegExp.exec(), json.loads are all ordinary and
+// common) — matched against extractQualifiedCallEdgesAst's full receiver-chain
+// text (e.g. "document.write", "this.db.exec"), lowercased. 'cp' covers the
+// common `import * as cp from 'child_process'` alias.
+const RISKY_QUALIFIED_TARGETS = new Set([
+  'document.write', 'document.writeln',
+  'child_process.exec', 'child_process.execsync', 'child_process.spawn',
+  'child_process.spawnsync', 'child_process.execfile',
+  'cp.exec', 'cp.execsync', 'cp.spawn', 'cp.spawnsync', 'cp.execfile',
+  'os.system', 'os.popen',
+  'subprocess.call', 'subprocess.run', 'subprocess.popen',
+  'pickle.loads', 'pickle.load', 'marshal.loads',
+]);
 
 // Languages that typically anchor a legacy-modernization engagement.
 const LEGACY_LANGS = new Set(['c', 'cpp', 'csharp', 'java']);
@@ -131,7 +156,11 @@ export interface RiskySurface { file: string; caller: string; target: string; ki
 //   - CALLS: raw call pairs (external targets the graph drops when resolving
 //     edges are exactly the risky ones — eval/system/strcpy live in libc/stdlib,
 //     not the repo — so we read the unresolved pairs directly). Includes both
-//     bare-identifier calls (eval(x)) and member/method calls (document.write(x)).
+//     bare-identifier calls (eval(x)) and member/method calls (document.write(x)),
+//     but exec-family names (exec/spawn/system/loads/...) only count as risky
+//     bare — as a member call they need a specific dangerous receiver, checked
+//     separately via RISKY_QUALIFIED_TARGETS (a bare '.exec()' could just as
+//     easily be RegExp.exec() or a DB's schema-exec method).
 //   - ASSIGNMENTS: property writes (el.innerHTML = x). Not a call at all — a
 //     call-only scan is structurally blind to this, the dominant JS/web XSS shape.
 export async function collectRiskySurfaces(
@@ -147,7 +176,11 @@ export async function collectRiskySurfaces(
     if (!supportsAst(lang)) continue;
     try {
       for (const e of await extractCallEdgesAst(f.content, lang)) {
-        if (RISKY_CALL_TARGETS.has(e.target.toLowerCase())) {
+        const t = e.target.toLowerCase();
+        // Unambiguous targets match any call shape; exec-family targets only
+        // match as a BARE call — a qualified/member call needs a specific
+        // dangerous receiver (RISKY_QUALIFIED_TARGETS below) to count.
+        if (RISKY_CALL_TARGETS.has(t) || (!e.qualified && EXEC_FAMILY_TARGETS.has(t))) {
           out.push({ file: f.path, caller: e.source, target: e.target, kind: 'call' });
         }
       }

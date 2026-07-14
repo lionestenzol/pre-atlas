@@ -196,9 +196,12 @@ function helper() {}`;
     const targets = edges.map((e) => e.target);
     expect(targets).toContain('write');
     expect(targets).toContain('exec');
-    expect(edges).toContainEqual({ source: 'render', target: 'write', type: 'calls' });
-    expect(edges).toContainEqual({ source: 'render', target: 'exec', type: 'calls' });
-    // bare-identifier calls still work (no regression)
+    // member calls are tagged `qualified: true` — distinguishes child_process.exec
+    // from a bare exec(x), so a receiver-check can be required for collision-prone
+    // names (see modernize.ts RISKY_QUALIFIED_TARGETS / EXEC_FAMILY_TARGETS).
+    expect(edges).toContainEqual({ source: 'render', target: 'write', type: 'calls', qualified: true });
+    expect(edges).toContainEqual({ source: 'render', target: 'exec', type: 'calls', qualified: true });
+    // bare-identifier calls still work (no regression) and are NOT tagged qualified
     expect(edges).toContainEqual({ source: 'render', target: 'helper', type: 'calls' });
   });
 
@@ -213,6 +216,30 @@ function helper() {}`;
     expect(targets).toContain('res.write'); // extractor is unfiltered; modernize.ts's
     // RISKY_QUALIFIED_TARGETS denylist is what keeps only document.write flagged as risky.
     expect(qualified.every((e) => e.source === 'render')).toBe(true);
+  });
+
+  it('JS/TS: qualified-call capture handles a CHAINED receiver (this.db.exec), not just a bare-identifier object — the exact delta-kernel false-positive shape', async () => {
+    const js = `class Store {
+  constructor(db) {
+    this.db = db;
+    this.db.exec('CREATE TABLE t (id)');
+  }
+}`;
+    const qualified = await extractQualifiedCallEdgesAst(js, 'javascript');
+    expect(qualified.map((e) => e.target)).toContain('this.db.exec');
+  });
+
+  it('Python: qualified-call extraction captures the full attribute chain (os.system, pickle.loads) — previously unsupported, python had no qualifiedCallQuery at all', async () => {
+    const py = `import os, pickle
+def run(cmd, blob):
+    os.system(cmd)
+    pickle.loads(blob)
+`;
+    const qualified = await extractQualifiedCallEdgesAst(py, 'python');
+    const targets = qualified.map((e) => e.target);
+    expect(targets).toContain('os.system');
+    expect(targets).toContain('pickle.loads');
+    expect(qualified.every((e) => e.source === 'run')).toBe(true);
   });
 
   it('JS/TS: property-assignment sinks (el.innerHTML = x) are now visible — a call-only scan cannot see an assignment', async () => {

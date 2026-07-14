@@ -3,6 +3,8 @@ import { extractSymbols } from './compressor.js';
 import {
   extractSymbolsAst,
   extractCallEdgesAst,
+  extractQualifiedCallEdgesAst,
+  extractPropertyAssignmentsAst,
   supportsAst,
   astLanguages,
 } from './treesitter.js';
@@ -183,9 +185,116 @@ function render() { return 1; }
     expect(edges).toContainEqual({ source: 'init', target: 'render', type: 'calls' });
   });
 
+  it('JS/TS: member-style calls (document.write, child_process.exec) are now visible — the call query was blind to anything but a bare identifier', async () => {
+    const js = `function render(data) {
+  document.write(data);
+  child_process.exec(data);
+  helper();
+}
+function helper() {}`;
+    const edges = await extractCallEdgesAst(js, 'javascript');
+    const targets = edges.map((e) => e.target);
+    expect(targets).toContain('write');
+    expect(targets).toContain('exec');
+    expect(edges).toContainEqual({ source: 'render', target: 'write', type: 'calls' });
+    expect(edges).toContainEqual({ source: 'render', target: 'exec', type: 'calls' });
+    // bare-identifier calls still work (no regression)
+    expect(edges).toContainEqual({ source: 'render', target: 'helper', type: 'calls' });
+  });
+
+  it('JS/TS: qualified-call extraction distinguishes document.write from an unrelated res.write (bare "write" is too generic to denylist alone)', async () => {
+    const js = `function render(data) {
+  document.write(data);
+  res.write(data);
+}`;
+    const qualified = await extractQualifiedCallEdgesAst(js, 'javascript');
+    const targets = qualified.map((e) => e.target);
+    expect(targets).toContain('document.write');
+    expect(targets).toContain('res.write'); // extractor is unfiltered; modernize.ts's
+    // RISKY_QUALIFIED_TARGETS denylist is what keeps only document.write flagged as risky.
+    expect(qualified.every((e) => e.source === 'render')).toBe(true);
+  });
+
+  it('JS/TS: property-assignment sinks (el.innerHTML = x) are now visible — a call-only scan cannot see an assignment', async () => {
+    const js = `function updateZoneLogsUI(container, log) {
+  container.innerHTML = '';
+  const item = document.createElement('div');
+  item.innerHTML = log.location;
+}`;
+    const assigns = await extractPropertyAssignmentsAst(js, 'javascript');
+    const props = assigns.map((a) => a.property);
+    expect(props).toContain('innerHTML');
+    expect(assigns.every((a) => a.source === 'updateZoneLogsUI')).toBe(true);
+  });
+
+  it('assignment attribution walks PAST an anonymous forEach/arrow callback to the nearest NAMED function — not "(module scope)"', async () => {
+    // The exact real-world shape from URBANNOMAD's historical S1 finding: the
+    // sink sits inside an anonymous forEach callback nested in a named function.
+    const js = `function updateZoneLogsUI(container, logs) {
+    logs.forEach((log) => {
+        const item = document.createElement('div');
+        item.innerHTML = log.location;
+        container.appendChild(item);
+    });
+}`;
+    const assigns = await extractPropertyAssignmentsAst(js, 'javascript');
+    const hit = assigns.find((a) => a.property === 'innerHTML');
+    expect(hit?.source).toBe('updateZoneLogsUI');
+  });
+
+  it('property-assignment scan stays precise: ordinary properties are captured but NOT the DOM-sink denylist test (that filtering lives in modernize.ts)', async () => {
+    // extractPropertyAssignmentsAst is a raw extractor — it returns every property
+    // assignment, unfiltered. Precision (only innerHTML/outerHTML count as risky)
+    // is enforced by DOM_SINK_PROPS in modernize.ts's collectRiskySurfaces, not
+    // here. This test just proves ordinary assignments (e.g. .href, .value) are
+    // captured too, so the denylist filter downstream has real data to filter.
+    const js = `function nav(a) { a.href = '/x'; a.value = 1; }`;
+    const assigns = await extractPropertyAssignmentsAst(js, 'javascript');
+    const props = assigns.map((a) => a.property);
+    expect(props).toEqual(expect.arrayContaining(['href', 'value']));
+  });
+
+  it('TypeScript: member-call and assignment sinks both work (not just JS)', async () => {
+    const ts = `function render(data: string) {
+  document.write(data);
+  const el: HTMLElement = document.body;
+  el.innerHTML = data;
+}`;
+    const edges = await extractCallEdgesAst(ts, 'typescript');
+    expect(edges.map((e) => e.target)).toContain('write');
+    const qualified = await extractQualifiedCallEdgesAst(ts, 'typescript');
+    expect(qualified.map((e) => e.target)).toContain('document.write');
+    const assigns = await extractPropertyAssignmentsAst(ts, 'typescript');
+    expect(assigns.map((a) => a.property)).toContain('innerHTML');
+  });
+
+  it('HTML: inline <script> member-calls and assignment sinks both surface through the html delegation path', async () => {
+    const html = `<html><body>
+<script>
+function render(data) {
+  document.write(data);
+  el.innerHTML = data;
+}
+</script>
+</body></html>`;
+    const edges = await extractCallEdgesAst(html, 'html');
+    expect(edges.map((e) => e.target)).toContain('write');
+    const qualified = await extractQualifiedCallEdgesAst(html, 'html');
+    expect(qualified.map((e) => e.target)).toContain('document.write');
+    const assigns = await extractPropertyAssignmentsAst(html, 'html');
+    expect(assigns.map((a) => a.property)).toContain('innerHTML');
+  });
+
+  it('languages without assignQuery/qualifiedCallQuery (C) return empty rather than throwing', async () => {
+    expect(await extractPropertyAssignmentsAst('int x = 1;', 'c')).toEqual([]);
+    expect(await extractQualifiedCallEdgesAst('int x = 1;', 'c')).toEqual([]);
+  });
+
   it('unknown language degrades to empty (fallback stays with regex)', async () => {
     expect(await extractSymbolsAst('whatever', 'cobol')).toEqual([]);
     expect(await extractCallEdgesAst('whatever', 'cobol')).toEqual([]);
+    expect(await extractQualifiedCallEdgesAst('whatever', 'cobol')).toEqual([]);
+    expect(await extractPropertyAssignmentsAst('whatever', 'cobol')).toEqual([]);
   });
 
   it('is deterministic: same input -> identical output', async () => {

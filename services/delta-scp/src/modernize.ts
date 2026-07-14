@@ -38,9 +38,24 @@ const RISKY_CALL_TARGETS = new Set([
   'dlopen', 'loadlibrary', 'loadlibrarya', 'loadlibraryw', 'getprocaddress',
   // unsafe deserialization
   'unserialize', 'unmarshal', 'loads', 'load_pickle',
-  // DOM injection
+  // DOM injection (call-form: dangerouslySetInnerHTML(...) as a function/prop-call)
   'dangerouslysetinnerhtml', 'innerhtml',
 ]);
+
+// DOM-injection sink PROPERTIES — `el.innerHTML = x`, not a call at all, so
+// RISKY_CALL_TARGETS (matched against call edges) can never see it. This is the
+// dominant real-world JS/web XSS shape (see collectRiskySurfaces). Kept narrow
+// (just the two raw-HTML-write properties) rather than also flagging e.g. `.href`
+// or `.write` — those are common on ordinary, non-DOM objects (route configs,
+// streams) and would drown real findings in false positives.
+const DOM_SINK_PROPS = new Set(['innerhtml', 'outerhtml']);
+
+// Qualified call targets — sinks that are only dangerous for a SPECIFIC receiver.
+// document.write is a classic direct-DOM-write XSS vector, but the bare property
+// name 'write' is far too generic to put in RISKY_CALL_TARGETS (fs.write,
+// socket.write, res.write are ordinary and would flood false positives). Matched
+// against extractQualifiedCallEdgesAst's "object.property" text, lowercased.
+const RISKY_QUALIFIED_TARGETS = new Set(['document.write', 'document.writeln']);
 
 // Languages that typically anchor a legacy-modernization engagement.
 const LEGACY_LANGS = new Set(['c', 'cpp', 'csharp', 'java']);
@@ -94,16 +109,21 @@ export function buildHotspots(compressed: CompressedState, stats: Map<string, Fn
   return { core_utilities: core, orchestrators, god_files };
 }
 
-export interface RiskySurface { file: string; caller: string; target: string }
+export interface RiskySurface { file: string; caller: string; target: string; kind: 'call' | 'assignment' }
 
-// Risky call surfaces from RAW call pairs (external targets the graph drops when
-// resolving edges are exactly the risky ones — eval/system/strcpy live in libc/
-// stdlib, not the repo — so we read the unresolved pairs directly).
+// Risky surfaces from two structurally different AST shapes:
+//   - CALLS: raw call pairs (external targets the graph drops when resolving
+//     edges are exactly the risky ones — eval/system/strcpy live in libc/stdlib,
+//     not the repo — so we read the unresolved pairs directly). Includes both
+//     bare-identifier calls (eval(x)) and member/method calls (document.write(x)).
+//   - ASSIGNMENTS: property writes (el.innerHTML = x). Not a call at all — a
+//     call-only scan is structurally blind to this, the dominant JS/web XSS shape.
 export async function collectRiskySurfaces(
   files: SourceFile[], extractor: 'regex' | 'treesitter',
 ): Promise<RiskySurface[]> {
   if (extractor !== 'treesitter') return [];
-  const { extractCallEdgesAst, supportsAst } = await import('./treesitter.js');
+  const { extractCallEdgesAst, extractQualifiedCallEdgesAst, extractPropertyAssignmentsAst, supportsAst } =
+    await import('./treesitter.js');
   const { languageForPath } = await import('./compressor.js');
   const out: RiskySurface[] = [];
   for (const f of files) {
@@ -112,7 +132,17 @@ export async function collectRiskySurfaces(
     try {
       for (const e of await extractCallEdgesAst(f.content, lang)) {
         if (RISKY_CALL_TARGETS.has(e.target.toLowerCase())) {
-          out.push({ file: f.path, caller: e.source, target: e.target });
+          out.push({ file: f.path, caller: e.source, target: e.target, kind: 'call' });
+        }
+      }
+      for (const e of await extractQualifiedCallEdgesAst(f.content, lang)) {
+        if (RISKY_QUALIFIED_TARGETS.has(e.target.toLowerCase())) {
+          out.push({ file: f.path, caller: e.source, target: e.target, kind: 'call' });
+        }
+      }
+      for (const a of await extractPropertyAssignmentsAst(f.content, lang)) {
+        if (DOM_SINK_PROPS.has(a.property.toLowerCase())) {
+          out.push({ file: f.path, caller: a.source ?? '(module scope)', target: a.property, kind: 'assignment' });
         }
       }
     } catch { /* fail-soft: skip this file's risk scan */ }
@@ -228,9 +258,12 @@ export function renderReport(
   L.push('## 4. Risk surfaces');
   L.push('');
   if (risky.length) {
-    L.push(`**${risky.length} review-first call sites** (exec/injection · unsafe C string ops · dynamic loading · unsafe deserialization · DOM injection):`);
+    L.push(`**${risky.length} review-first surfaces** (exec/injection · unsafe C string ops · dynamic loading · unsafe deserialization · DOM injection):`);
     for (const r of risky.slice(0, 25)) {
-      L.push(`- \`${r.target}\` called by \`${r.caller}\` (${r.file})`);
+      const desc = r.kind === 'assignment'
+        ? `\`.${r.target}\` assigned in \`${r.caller}\` (${r.file})`
+        : `\`${r.target}\` called by \`${r.caller}\` (${r.file})`;
+      L.push(`- ${desc}`);
     }
     if (risky.length > 25) L.push(`- …and ${risky.length - 25} more`);
   } else if (extractor !== 'treesitter') {

@@ -42,6 +42,26 @@ interface LangSpec {
   callQuery: string;
   // Node types that count as an enclosing function/method for caller attribution.
   funcNodeTypes: Set<string>;
+  // Property-assignment query (JS/TS only): captures `prop` on the assigned
+  // property name, e.g. `el.innerHTML = x` -> prop.text === 'innerHTML'. Absent
+  // for languages where this isn't a meaningful risk shape.
+  assignQuery?: string;
+  // Qualified-call query (JS/TS only): captures the WHOLE `object.property` text
+  // when the receiver is a plain identifier, e.g. `document.write(x)` ->
+  // 'document.write'. Exists because some sinks (document.write) are only
+  // dangerous for a SPECIFIC receiver — the bare property name ('write') is far
+  // too generic to safely denylist (fs.write/socket.write/res.write are ordinary
+  // and common). callQuery's bare-property capture stays generic (needed so
+  // in-repo method calls resolve against declared symbol names in the call
+  // graph); this is a separate, precision-scoped view used only for risk-target
+  // matching against qualified names.
+  qualifiedCallQuery?: string;
+}
+
+export interface AstAssignment {
+  source: string | null; // enclosing function name, or null at file scope
+  property: string; // assigned property name
+  type: 'assigns';
 }
 
 // delta-scp language name (compressor.EXT_LANGUAGE) -> tree-sitter spec.
@@ -81,10 +101,18 @@ const LANGS: Record<string, LangSpec> = {
       (type_alias_declaration name: (type_identifier) @sym.type)
       (method_definition name: (property_identifier) @sym.method)
     `,
-    callQuery: `(call_expression function: (identifier) @callee)`,
+    // Two call shapes: bare identifier (eval(x)) and member/method (document.write(x),
+    // child_process.exec(x)) — the latter is how most real-world risky sinks are
+    // actually called, and was invisible before this query existed.
+    callQuery: `
+      (call_expression function: (identifier) @callee)
+      (call_expression function: (member_expression property: (property_identifier) @callee))
+    `,
     funcNodeTypes: new Set([
       'function_declaration', 'method_definition', 'function_expression', 'arrow_function',
     ]),
+    assignQuery: `(assignment_expression left: (member_expression property: (property_identifier) @prop))`,
+    qualifiedCallQuery: `(call_expression function: (member_expression object: (identifier)) @qualified)`,
   },
   javascript: {
     wasm: 'tree-sitter-javascript.wasm',
@@ -93,10 +121,15 @@ const LANGS: Record<string, LangSpec> = {
       (class_declaration name: (identifier) @sym.class)
       (method_definition name: (property_identifier) @sym.method)
     `,
-    callQuery: `(call_expression function: (identifier) @callee)`,
+    callQuery: `
+      (call_expression function: (identifier) @callee)
+      (call_expression function: (member_expression property: (property_identifier) @callee))
+    `,
     funcNodeTypes: new Set([
       'function_declaration', 'method_definition', 'function_expression', 'arrow_function',
     ]),
+    assignQuery: `(assignment_expression left: (member_expression property: (property_identifier) @prop))`,
+    qualifiedCallQuery: `(call_expression function: (member_expression object: (identifier)) @qualified)`,
   },
   cpp: {
     wasm: 'tree-sitter-cpp.wasm',
@@ -274,6 +307,32 @@ function enclosingFunctionName(node: any, spec: LangSpec): string | null {
   return null;
 }
 
+// Like enclosingFunctionName, but does not stop at the first (possibly anonymous)
+// enclosing function — it keeps walking outward until it finds a NAMED one. Used
+// only for property-assignment risk attribution (not the call graph, whose fan-in/
+// fan-out semantics other tests depend on and which stays on enclosingFunctionName
+// unchanged). A sink buried in an anonymous forEach/map callback should still name
+// the outer named function an operator can actually navigate to (e.g.
+// "updateZoneLogsUI"), not the uninformative "(module scope)".
+function nearestNamedFunctionName(node: any, spec: LangSpec): string | null {
+  let n = node.parent;
+  while (n) {
+    if (spec.funcNodeTypes.has(n.type)) {
+      const named = n.childForFieldName?.('name');
+      if (named) return named.text;
+      const decl = n.childForFieldName?.('declarator');
+      if (decl) {
+        const inner = decl.childForFieldName?.('declarator');
+        if (inner) return inner.text;
+        if (decl.type === 'identifier') return decl.text;
+      }
+      // anonymous — keep walking past it instead of stopping here
+    }
+    n = n.parent;
+  }
+  return null;
+}
+
 export async function extractCallEdgesAst(content: string, language: string): Promise<AstEdge[]> {
   if (language === 'html') {
     // Call edges from each inline <script>, deduped across scripts. Edges carry
@@ -307,4 +366,77 @@ export async function extractCallEdgesAst(content: string, language: string): Pr
   }
   edges.sort((a, b) => a.source.localeCompare(b.source) || a.target.localeCompare(b.target));
   return edges;
+}
+
+// Qualified calls (`document.write(x)` -> target 'document.write'), for languages
+// where qualifiedCallQuery is defined (JS/TS). See LangSpec.qualifiedCallQuery for
+// why this exists as a separate view from extractCallEdgesAst's bare-property
+// target: a sink like document.write is only dangerous for that specific
+// receiver, and 'write' alone is too generic to denylist safely.
+export async function extractQualifiedCallEdgesAst(content: string, language: string): Promise<AstEdge[]> {
+  if (language === 'html') {
+    const edges: AstEdge[] = [];
+    const seen = new Set<string>();
+    for (const s of await inlineScripts(content)) {
+      for (const e of await extractQualifiedCallEdgesAst(s.code, 'javascript')) {
+        const key = `${e.source}->${e.target}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        edges.push(e);
+      }
+    }
+    return edges;
+  }
+  const p = await parse(content, language);
+  if (!p || !p.spec.qualifiedCallQuery) return [];
+  const query = p.lang.query(p.spec.qualifiedCallQuery);
+  const edges: AstEdge[] = [];
+  const seen = new Set<string>();
+  for (const cap of query.captures(p.tree.rootNode)) {
+    const target = cap.node.text; // "object.property"
+    const caller = enclosingFunctionName(cap.node, p.spec);
+    if (!caller) continue;
+    const key = `${caller}->${target}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    edges.push({ source: caller, target, type: 'calls' });
+  }
+  return edges;
+}
+
+// Property assignments (`obj.prop = value`), for languages where assignQuery is
+// defined (JS/TS). This is a DIFFERENT risk shape than a call: `el.innerHTML = x`
+// is the dominant real-world JS/web XSS pattern and a call-only scan is
+// structurally blind to it (verified: proof-run 2026-07-13 on URBANNOMAD — a repo
+// with real innerHTML-assignment XSS reported "0 risky surfaces" because this
+// shape was invisible). Risk-target filtering happens in modernize.ts, same
+// separation as extractCallEdgesAst / RISKY_CALL_TARGETS.
+export async function extractPropertyAssignmentsAst(content: string, language: string): Promise<AstAssignment[]> {
+  if (language === 'html') {
+    const out: AstAssignment[] = [];
+    const seen = new Set<string>();
+    for (const s of await inlineScripts(content)) {
+      for (const a of await extractPropertyAssignmentsAst(s.code, 'javascript')) {
+        const key = `${a.source}=${a.property}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(a);
+      }
+    }
+    return out;
+  }
+  const p = await parse(content, language);
+  if (!p || !p.spec.assignQuery) return [];
+  const query = p.lang.query(p.spec.assignQuery);
+  const out: AstAssignment[] = [];
+  const seen = new Set<string>();
+  for (const cap of query.captures(p.tree.rootNode)) {
+    const property = cap.node.text;
+    const source = nearestNamedFunctionName(cap.node, p.spec);
+    const key = `${source}=${property}=${cap.node.startPosition.row}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ source, property, type: 'assigns' });
+  }
+  return out;
 }

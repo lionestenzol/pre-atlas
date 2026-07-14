@@ -69,6 +69,45 @@ describe('modernize dossier · builders', () => {
     expect(await collectRiskySurfaces(FILES, 'regex')).toEqual([]);
   });
 
+  // Mirrors the real bug the proof-run found (2026-07-13, URBANNOMAD): a call-only
+  // risk scan reported "0 risky surfaces" on code with real innerHTML-assignment
+  // XSS and member-called sinks (document.write), because both shapes were
+  // structurally invisible to a bare-identifier call query.
+  it('finds JS assignment-form DOM sinks AND member-style calls (both were invisible before)', async () => {
+    const jsFiles: SourceFile[] = [{
+      path: 'src/ui.js',
+      content: `function updateZoneLogsUI(container, log) {
+  container.innerHTML = '';
+  document.write(log.raw);
+  const link = document.createElement('a');
+  link.href = log.url;
+}`,
+    }];
+    const risky = await collectRiskySurfaces(jsFiles, 'treesitter');
+
+    const assign = risky.find((r) => r.kind === 'assignment' && r.target === 'innerHTML');
+    expect(assign).toBeTruthy();
+    expect(assign!.caller).toBe('updateZoneLogsUI');
+
+    // qualified name, not the generic 'write' — bare property names are too
+    // common (fs.write, res.write) to safely denylist on their own
+    const call = risky.find((r) => r.kind === 'call' && r.target === 'document.write');
+    expect(call).toBeTruthy();
+    expect(call!.caller).toBe('updateZoneLogsUI');
+    expect(risky.some((r) => r.target === 'write')).toBe(false);
+
+    // precision: `.href = ` is NOT in the DOM-sink denylist — must not false-positive
+    expect(risky.some((r) => r.target === 'href')).toBe(false);
+
+    const graph = await buildGraphRowsAst('repo', jsFiles);
+    const compressed = await compressTreeAsync('repo', jsFiles, 'T', 'treesitter');
+    const ident = buildIdentity(compressed);
+    const hot = buildHotspots(compressed, computeFnStats(graph));
+    const md = renderReport('repo', ident, graph, hot, risky, 'treesitter');
+    expect(md).toContain('.innerHTML` assigned in `updateZoneLogsUI`');
+    expect(md).toContain('`document.write` called by `updateZoneLogsUI`');
+  });
+
   it('identity flags legacy languages present', async () => {
     const compressed = await compressTreeAsync('repo', FILES, 'T', 'treesitter');
     const ident = buildIdentity(compressed);

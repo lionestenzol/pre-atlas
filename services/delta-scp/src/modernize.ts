@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { compressTreeAsync, type CompressedState, type SourceFile } from './compressor.js';
 import { buildGraphRows, buildGraphRowsAst, type GraphRows, type NodeKey } from './graph.js';
-import { fetchSourceFiles } from './source.js';
+import { fetchSourceFilesDetailed, type SkippedFile } from './source.js';
 import { loadConfig, type ScpConfig } from './config.js';
 
 export const DOSSIER_VERSION = 'modernize.v1';
@@ -160,7 +160,7 @@ function countByType(graph: GraphRows): Record<string, number> {
 
 export function renderReport(
   repo: string, ident: Identity, graph: GraphRows, hot: Hotspots, risky: RiskySurface[],
-  extractor: 'regex' | 'treesitter',
+  extractor: 'regex' | 'treesitter', skipped: SkippedFile[] = [],
 ): string {
   const L: string[] = [];
   const types = countByType(graph);
@@ -182,6 +182,18 @@ export function renderReport(
     L.push(`- **legacy-heavy languages present:** ${ident.legacy_languages.join(', ')} — these typically anchor the engagement.`);
   }
   L.push(`- symbolic compression: ${ident.raw_tokens} → ${ident.compressed_tokens} est. tokens (ratio ${ident.compression_ratio}) — the whole repo fits an LLM context as this map.`);
+  const unsupported = skipped.filter((s) => s.reason === 'unsupported-ext');
+  const oversize = skipped.filter((s) => s.reason === 'too-large');
+  if (unsupported.length) {
+    const byExt = new Map<string, number>();
+    for (const s of unsupported) byExt.set(s.ext || '(no ext)', (byExt.get(s.ext || '(no ext)') ?? 0) + 1);
+    const tally = [...byExt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([e, n]) => `${e}×${n}`).join(' · ');
+    L.push(`- **coverage: ${unsupported.length} file(s) NOT analyzed** (unsupported type): ${tally}. This dossier describes only the analyzable set above.`);
+  }
+  if (oversize.length) {
+    L.push(`- **${oversize.length} file(s) skipped** (exceeded size cap): ${oversize.slice(0, 5).map((s) => s.path).join(', ')}${oversize.length > 5 ? ', …' : ''}`);
+  }
   L.push('');
 
   L.push('## 2. Structure');
@@ -261,7 +273,7 @@ export interface DossierReceipt {
 export async function modernizeRepo(
   repoUrl: string, outDir: string, config: ScpConfig = loadConfig(),
 ): Promise<DossierReceipt> {
-  const files = await fetchSourceFiles(repoUrl, config);
+  const { files, skipped } = await fetchSourceFilesDetailed(repoUrl, config);
   const generatedAt = new Date().toISOString();
   const compressed = await compressTreeAsync(repoUrl, files, generatedAt, config.extractor);
   const graph = config.extractor === 'treesitter'
@@ -272,7 +284,7 @@ export async function modernizeRepo(
   const stats = computeFnStats(graph);
   const hot = buildHotspots(compressed, stats);
   const risky = await collectRiskySurfaces(files, config.extractor);
-  const report = renderReport(repoUrl, ident, graph, hot, risky, config.extractor);
+  const report = renderReport(repoUrl, ident, graph, hot, risky, config.extractor, skipped);
 
   await fs.mkdir(outDir, { recursive: true });
   await fs.writeFile(path.join(outDir, 'symbolic_map.json'), JSON.stringify(compressed, null, 2));
@@ -296,6 +308,7 @@ export async function modernizeRepo(
         god_files: hot.god_files.length,
       },
       risky_surfaces: risky.length,
+      skipped_files: skipped.length,
     },
   };
 }

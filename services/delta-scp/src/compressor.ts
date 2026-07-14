@@ -80,6 +80,7 @@ const EXT_LANGUAGE: Record<string, string> = {
   kt: 'kotlin',
   sql: 'sql',
   sh: 'shell',
+  html: 'html',
   md: 'markdown',
   json: 'json',
   yaml: 'yaml',

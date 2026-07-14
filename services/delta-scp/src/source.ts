@@ -39,12 +39,27 @@ const INCLUDE_EXT = new Set([
   'ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs',
   'py', 'go', 'rs', 'java', 'rb', 'php',
   'c', 'h', 'cpp', 'hpp', 'cs', 'swift', 'kt',
-  'sql', 'sh', 'md', 'json', 'yaml', 'yml', 'toml',
+  'sql', 'sh', 'html', 'md', 'json', 'yaml', 'yml', 'toml',
 ]);
 
 function includeFile(name: string): boolean {
   const ext = name.split('.').pop()?.toLowerCase() ?? '';
   return INCLUDE_EXT.has(ext);
+}
+
+// A file present in the repo but not analyzed, and why. Surfaced in the dossier
+// so a coverage hole is NAMED, never silently hidden. An unnamed skip (the old
+// behaviour) let the report imply full coverage it didn't have.
+// See ~/.claude/rules/common/code-as-furniture.md — fail loud, don't degrade silently.
+export interface SkippedFile {
+  path: string;
+  ext: string;
+  reason: 'unsupported-ext' | 'too-large';
+}
+
+export interface WalkResult {
+  files: SourceFile[];
+  skipped: SkippedFile[];
 }
 
 // Mirrors validate.ts' notion of a local path so a repo_url accepted as "local"
@@ -66,8 +81,9 @@ function localDir(repoUrl: string): string {
  * Aborts (throws) if the repo blows past the file-count or total-byte caps —
  * a guardrail against a hostile or accidentally enormous repo.
  */
-async function walk(root: string, config: ScpConfig): Promise<SourceFile[]> {
+async function walk(root: string, config: ScpConfig): Promise<WalkResult> {
   const files: SourceFile[] = [];
+  const skipped: SkippedFile[] = [];
   let totalBytes = 0;
 
   async function recurse(dir: string): Promise<void> {
@@ -77,9 +93,20 @@ async function walk(root: string, config: ScpConfig): Promise<SourceFile[]> {
       if (entry.isDirectory()) {
         if (IGNORE_DIRS.has(entry.name)) continue;
         await recurse(abs);
-      } else if (entry.isFile() && includeFile(entry.name)) {
+      } else if (entry.isFile()) {
+        const rel = path.relative(root, abs).split(path.sep).join('/');
+        const ext = entry.name.split('.').pop()?.toLowerCase() ?? '';
+        if (!includeFile(entry.name)) {
+          // Record instead of silently dropping — an unnamed coverage hole is
+          // the worst kind. Aggregated by extension in the dossier.
+          skipped.push({ path: rel, ext, reason: 'unsupported-ext' });
+          continue;
+        }
         const info = await stat(abs);
-        if (info.size > config.maxFileBytes) continue;
+        if (info.size > config.maxFileBytes) {
+          skipped.push({ path: rel, ext, reason: 'too-large' });
+          continue;
+        }
         if (files.length >= config.maxFiles) {
           throw new Error(`repo exceeds maxFiles (${config.maxFiles})`);
         }
@@ -88,16 +115,13 @@ async function walk(root: string, config: ScpConfig): Promise<SourceFile[]> {
           throw new Error(`repo exceeds maxTotalBytes (${config.maxTotalBytes})`);
         }
         const content = await readFile(abs, 'utf8');
-        files.push({
-          path: path.relative(root, abs).split(path.sep).join('/'),
-          content,
-        });
+        files.push({ path: rel, content });
       }
     }
   }
 
   await recurse(root);
-  return files;
+  return { files, skipped };
 }
 
 function clonePrefix(cloneDir: string, repoUrl: string): string {
@@ -152,10 +176,10 @@ async function cloneRepo(repoUrl: string, config: ScpConfig): Promise<string> {
  * Extracted so consumers that need the raw files — e.g. the worker populating
  * the AST graph — can reuse a single fetch instead of cloning twice.
  */
-export async function fetchSourceFiles(
+export async function fetchSourceFilesDetailed(
   repoUrl: string,
   config: ScpConfig = loadConfig(),
-): Promise<SourceFile[]> {
+): Promise<WalkResult> {
   // Defense in depth: the API gateway validates too, but the worker may be fed
   // jobs from other producers, so re-check before touching the network/disk.
   const verdict = validateRepoUrl(repoUrl, config);
@@ -180,6 +204,17 @@ export async function fetchSourceFiles(
       await rm(root, { recursive: true, force: true }).catch(() => {});
     }
   }
+}
+
+/**
+ * Back-compat convenience: the analyzable files only (drops the skip list).
+ * Callers that need the coverage tally use fetchSourceFilesDetailed.
+ */
+export async function fetchSourceFiles(
+  repoUrl: string,
+  config: ScpConfig = loadConfig(),
+): Promise<SourceFile[]> {
+  return (await fetchSourceFilesDetailed(repoUrl, config)).files;
 }
 
 /**

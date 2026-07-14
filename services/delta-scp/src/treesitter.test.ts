@@ -155,6 +155,34 @@ func main() { _ = compute(2) }`;
     expect(edges).toContainEqual({ source: 'main', target: 'compute', type: 'calls' });
   });
 
+  it('HTML: extracts INLINE <script> JS with HTML-relative line numbers, skips external', async () => {
+    expect(supportsAst('html')).toBe(true);
+    expect(astLanguages()).toContain('html');
+
+    // <script> opens on line 5, so init is on line 6 and render on line 7.
+    const html = `<!DOCTYPE html>
+<html>
+<head><title>t</title></head>
+<body>
+<script>
+function init() { render(); }
+function render() { return 1; }
+</script>
+<script src="vendor.js"></script>
+</body>
+</html>
+`;
+    const syms = await extractSymbolsAst(html, 'html');
+    const byName = new Map(syms.map((s) => [s.name, s.line]));
+    expect(byName.get('init')).toBe(6);   // line-offset maps inline JS back to HTML
+    expect(byName.get('render')).toBe(7);
+    // the external <script src=...> body is empty -> contributes no phantom symbols
+    expect(syms.length).toBe(2);
+
+    const edges = await extractCallEdgesAst(html, 'html');
+    expect(edges).toContainEqual({ source: 'init', target: 'render', type: 'calls' });
+  });
+
   it('unknown language degrades to empty (fallback stays with regex)', async () => {
     expect(await extractSymbolsAst('whatever', 'cobol')).toEqual([]);
     expect(await extractCallEdgesAst('whatever', 'cobol')).toEqual([]);

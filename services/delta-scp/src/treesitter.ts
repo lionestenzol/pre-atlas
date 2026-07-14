@@ -144,6 +144,19 @@ const LANGS: Record<string, LangSpec> = {
     callQuery: `(call_expression function: (identifier) @callee)`,
     funcNodeTypes: new Set(['function_declaration', 'method_declaration']),
   },
+  // HTML is special-cased: its own grammar has no functions/classes, so the two
+  // queries below are unused (the `html` branch in extract*Ast handles it before
+  // the generic path). The value in an HTML file is the INLINE <script> JS —
+  // where a vibe-coded app's logic and bugs actually live. The branch parses
+  // <script> bodies and delegates to the javascript extractor with a line offset,
+  // so inline JS surfaces as real symbols + call edges. wasm is present so
+  // loadGrammar(LANGS.html) resolves the html parser.
+  html: {
+    wasm: 'tree-sitter-html.wasm',
+    symbolQuery: '',
+    callQuery: '',
+    funcNodeTypes: new Set<string>(),
+  },
 };
 
 export function supportsAst(language: string): boolean {
@@ -171,6 +184,26 @@ async function loadGrammar(spec: LangSpec): Promise<unknown> {
   return lang;
 }
 
+// Inline <script> bodies from an HTML document, each tagged with the 0-based row
+// where its text begins, so JS symbols/edges map back to real HTML line numbers
+// (htmlLine = jsLocalLine + rowOffset). External scripts (<script src=...>) have
+// empty bodies and are skipped. Deterministic: same HTML -> same scripts, in order.
+async function inlineScripts(content: string): Promise<Array<{ code: string; rowOffset: number }>> {
+  await ensureInit();
+  const lang = await loadGrammar(LANGS.html) as any;
+  const parser = new Parser();
+  parser.setLanguage(lang);
+  const tree = parser.parse(content);
+  const query = lang.query('(script_element (raw_text) @js)');
+  const out: Array<{ code: string; rowOffset: number }> = [];
+  for (const cap of query.captures(tree.rootNode)) {
+    const code = cap.node.text;
+    if (!code.trim()) continue; // external or empty <script>
+    out.push({ code, rowOffset: cap.node.startPosition.row });
+  }
+  return out;
+}
+
 // Deterministic: same (content, language) -> same symbols/edges, every run.
 async function parse(content: string, language: string): Promise<{ tree: any; lang: any; spec: LangSpec } | null> {
   const spec = LANGS[language];
@@ -184,6 +217,23 @@ async function parse(content: string, language: string): Promise<{ tree: any; la
 }
 
 export async function extractSymbolsAst(content: string, language: string): Promise<SymbolEntry[]> {
+  if (language === 'html') {
+    // Parse inline <script> bodies as JavaScript, offsetting each symbol's line
+    // back to its position in the HTML file.
+    const out: SymbolEntry[] = [];
+    const seen = new Set<string>();
+    for (const s of await inlineScripts(content)) {
+      for (const sym of await extractSymbolsAst(s.code, 'javascript')) {
+        const line = sym.line + s.rowOffset;
+        const key = `${sym.kind}:${sym.name}:${line}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ kind: sym.kind, name: sym.name, line });
+      }
+    }
+    out.sort((a, b) => a.line - b.line || a.name.localeCompare(b.name));
+    return out;
+  }
   const p = await parse(content, language);
   if (!p) return [];
   const query = p.lang.query(p.spec.symbolQuery);
@@ -225,6 +275,22 @@ function enclosingFunctionName(node: any, spec: LangSpec): string | null {
 }
 
 export async function extractCallEdgesAst(content: string, language: string): Promise<AstEdge[]> {
+  if (language === 'html') {
+    // Call edges from each inline <script>, deduped across scripts. Edges carry
+    // no line number, so no offset is needed — only the caller/callee names.
+    const edges: AstEdge[] = [];
+    const seen = new Set<string>();
+    for (const s of await inlineScripts(content)) {
+      for (const e of await extractCallEdgesAst(s.code, 'javascript')) {
+        const key = `${e.source}->${e.target}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        edges.push(e);
+      }
+    }
+    edges.sort((a, b) => a.source.localeCompare(b.source) || a.target.localeCompare(b.target));
+    return edges;
+  }
   const p = await parse(content, language);
   if (!p) return [];
   const query = p.lang.query(p.spec.callQuery);

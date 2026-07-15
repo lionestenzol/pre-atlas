@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -36,6 +37,7 @@ from . import describe as describe_mod
 from . import gateway as gateway_mod
 from . import items as items_backbone
 from . import launcher
+from . import receipt_store
 from . import seam as seam_mod
 from . import surfaces as surfaces_mod
 from .graph import ServiceGraph
@@ -659,6 +661,7 @@ async def seam_call_endpoint(
     capability: str = Body(...),
     args: dict[str, Any] | None = Body(default=None),
     sha256: str | None = Body(default=None),
+    run_id: str | None = Body(default=None),
     x_atlas_token: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """The perceive -> compile -> carry seam's front door: invoke any tool capability
@@ -670,12 +673,31 @@ async def seam_call_endpoint(
     'ok' carries the tool's parsed payload in `data` plus the `sha256` join key. A
     caller-supplied `sha256` (the known join key for this artifact) is authoritative;
     otherwise it is lifted from the tool's own receipt when present.
+
+    Every Receipt is persisted to the durable store (receipt_store.py), tagged with
+    `run_id` — the eventual LangGraph `thread_id` (docs/LANGGRAPH_SKILL_LATTICE_PLAN.md,
+    Seq 1). Omit `run_id` on the first call of a chain; the response echoes back the
+    one used (generated if you didn't supply it) so later calls can pass it forward
+    and land in the same group. Read a chain back via GET /seam/receipts?run_id=...
     """
     snap, _ = _ensure_loaded()
     env = await gateway_mod.call_capability(snap, surface, capability, args, x_atlas_token)
     if "surface" not in env:  # gateway refusals carry no surface — stamp the requested one
         env = {**env, "surface": surface}
-    return seam_mod.Receipt.from_envelope(env, sha256=sha256).model_dump()
+    receipt = seam_mod.Receipt.from_envelope(env, sha256=sha256)
+    resolved_run_id = run_id or uuid.uuid4().hex
+    receipt_store.append(snap.repo_root, resolved_run_id, receipt.model_dump())
+    return {"run_id": resolved_run_id, **receipt.model_dump()}
+
+
+@app.get("/seam/receipts")
+async def seam_receipts_endpoint(
+    run_id: str = Query(..., description="The run_id from a prior /seam/call response"),
+) -> dict[str, Any]:
+    """Read back every Receipt persisted under one run_id — the durable trace a
+    crashed chain resumes from (docs/LANGGRAPH_SKILL_LATTICE_PLAN.md, Seq 1)."""
+    snap, _ = _ensure_loaded()
+    return {"run_id": run_id, "receipts": receipt_store.read(snap.repo_root, run_id)}
 
 
 @app.get("/map/signals")

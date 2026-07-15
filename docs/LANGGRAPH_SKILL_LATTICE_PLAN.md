@@ -1,6 +1,6 @@
 # LangGraph Skill Lattice — LOCKED PLAN
 
-**Date:** 2026-07-14 · **Branch:** `feat/atlas-setup-ui` · **Status:** PLAN LOCKED, NOT BUILT
+**Date:** 2026-07-14 · **Branch:** `feat/atlas-setup-ui` · **Status:** IN PROGRESS — Seq 1 DONE (2026-07-15)
 
 ---
 
@@ -90,7 +90,7 @@ def invoke_skill(name: str, args: dict) -> dict:   # checkpointed; NOT re-run on
 
 | # | Seq | DoD (tool-provable) |
 |---|---|---|
-| **1** | **Receipt store.** Persist what atlas-map already mints. Add `run_id` + a receipt table/JSONL. | `POST /call` twice → both receipts readable from the store by `run_id`; `sha256` stable across runs. |
+| **1** | ✅ **Receipt store.** Persist what atlas-map already mints. Add `run_id` + a receipt table/JSONL. | `POST /call` twice → both receipts readable from the store by `run_id`; `sha256` stable across runs. **DONE 2026-07-15**: `receipt_store.py` (append-only JSONL, `services/atlas-map-api/var/receipts.jsonl`); `/seam/call` now accepts optional `run_id` (auto-generated + echoed if omitted) and persists every Receipt; new `GET /seam/receipts?run_id=...` reads a chain back. Verified live (two POSTs sharing one `run_id`, both readable back) + 8 unit tests (`tests/test_receipt_store.py`, incl. sha256-persisted-verbatim and corrupt-line resilience). |
 | **2** | **Skill→Receipt adapters.** An `output_format` JSON schema per graph-participating skill, for the ~8 with real ledger `n` (code-recon, delta-scp, repo-inventory, groundwork-cli, fest, bearings, seam surfaces). | Each skill invoked via `claude-agent-sdk` returns `structured_output` validating against its schema; emits a `seam.v1` Receipt with a real `sha256`. |
 | **3** | **LangGraph spine.** `State` with `operator.add` receipts reducer; `@task`-wrapped skill nodes; `SqliteSaver`; `durability="sync"`. | Kill the process mid-chain → `graph.invoke(None, config)` resumes at the interrupted node; **already-completed `@task`s do not re-run** (proven by receipt CIDs being identical, not regenerated). |
 | **4** | **Bandit node.** `combo.py` as a NODE (constraint 1); pure `route` edge. | `get_state_history()` shows the drawn arm recorded as a receipt; replaying the same `thread_id` produces the **same** arm. |

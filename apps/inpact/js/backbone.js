@@ -28,7 +28,24 @@
     inpact:     ['#993C1D', 'projects', ''],
   };
 
+  // Which sections are expanded. Everything starts collapsed: the panel's job is to
+  // say "your stuff is here and here's how much", not to spend 1500px saying it.
+  // Native <details> does the collapsing, so there's no toggle state machine here —
+  // only the remembering, which the browser doesn't do for us.
+  var OPEN_KEY = 'inpact-backbone-open';
+
+  function openMap() {
+    try { return JSON.parse(localStorage.getItem(OPEN_KEY)) || {}; } catch (e) { return {}; }
+  }
+
+  function setOpen(key, isOpen) {
+    var m = openMap();
+    m[key] = isOpen;
+    try { localStorage.setItem(OPEN_KEY, JSON.stringify(m)); } catch (e) { /* quota: forget it */ }
+  }
+
   function html() {
+    var open = openMap();
     var groups = {};
     (data.items || []).forEach(function (it) { (groups[it.source] = groups[it.source] || []).push(it); });
     var body = Object.keys(groups).map(function (src) {
@@ -36,8 +53,11 @@
       var label = (META[src] || ['', ''])[1];
       var url = (META[src] || ['', '', ''])[2];
       var list = groups[src];
+      // stopPropagation: this link lives inside <summary>, so a bare click would
+      // follow the link AND toggle the group underneath it.
       var openLink = url
-        ? '<a href="' + url + '" target="_blank" rel="noopener" style="margin-left:auto;font-size:12px;color:' + color + ';text-decoration:none;">open ↗</a>'
+        ? '<a href="' + url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()"'
+          + ' style="margin-left:auto;font-size:12px;color:' + color + ';text-decoration:none;">open ↗</a>'
         : '';
       var rows = list.slice(0, 6).map(function (it) {
         return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f0efe9;">'
@@ -45,19 +65,26 @@
           + '<span style="color:#888780;font-size:11px;white-space:nowrap;">' + esc(it.status) + '</span></div>';
       }).join('');
       var more = list.length > 6 ? '<div style="font-size:11px;color:#888780;padding-top:8px;">+ ' + (list.length - 6) + ' more</div>' : '';
-      return '<div style="margin-bottom:20px;">'
-        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
-        + '<span style="width:10px;height:10px;border-radius:50%;background:' + color + ';display:inline-block;"></span>'
+      return '<details class="ab-group" data-ab-key="' + esc(src) + '"' + (open[src] ? ' open' : '') + '>'
+        + '<summary style="display:flex;align-items:center;gap:8px;padding:9px 0;cursor:pointer;list-style:none;">'
+        + '<span style="width:10px;height:10px;border-radius:50%;background:' + color + ';display:inline-block;flex-shrink:0;"></span>'
         + '<strong style="font-size:14px;color:#1d1d1b;">' + esc(src) + '</strong>'
         + '<span style="font-size:12px;color:#888780;">' + list.length + ' · ' + esc(label) + '</span>'
-        + openLink + '</div>'
-        + rows + more + '</div>';
+        + openLink + '</summary>'
+        + '<div style="padding:2px 0 14px 18px;">' + rows + more + '</div>'
+        + '</details>';
     }).join('');
-    return '<section id="atlas-backbone" style="background:#fff;border:1px solid #e5e4dd;border-radius:14px;padding:22px;margin-bottom:22px;font-family:var(--ip-font,system-ui);">'
-      + '<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;">'
-      + '<h2 style="font-size:18px;font-weight:600;color:#1d1d1b;margin:0;">Atlas backbone — all your items</h2>'
-      + '<span style="font-size:13px;color:#888780;">' + (data.count || 0) + ' across ' + Object.keys(data.by_source || {}).length + ' surfaces · live</span>'
-      + '</div>' + body + '</section>';
+    return '<section id="atlas-backbone" style="background:#fff;border:1px solid #e5e4dd;border-radius:14px;padding:14px 18px;margin-bottom:16px;font-family:var(--ip-font,system-ui);">'
+      + '<details class="ab-panel" data-ab-key="__panel"' + (open.__panel ? ' open' : '') + '>'
+      + '<summary style="display:flex;align-items:baseline;gap:10px;cursor:pointer;list-style:none;padding:2px 0;">'
+      + '<h2 style="font-size:15px;font-weight:600;color:#1d1d1b;margin:0;">Atlas backbone</h2>'
+      + '<span style="font-size:12px;color:#888780;">' + (data.count || 0) + ' items across '
+      + Object.keys(data.by_source || {}).length + ' surfaces · live</span>'
+      + '<span class="ab-caret" style="margin-left:auto;font-size:11px;color:#888780;">'
+      + (open.__panel ? 'hide' : 'show') + '</span>'
+      + '</summary>'
+      + '<div style="padding-top:10px;">' + body + '</div>'
+      + '</details></section>';
   }
 
   // Daily's Minimal Mode is a one-viewport execution lens. The backbone is a
@@ -83,8 +110,23 @@
     else host.insertAdjacentHTML('afterbegin', html());
   }
 
+  // Remember open/closed across the re-mount the screen router forces on us.
+  // 'toggle' doesn't bubble, so capture it.
+  function watchToggles() {
+    document.addEventListener('toggle', function (e) {
+      var d = e.target;
+      if (!d || !d.matches || !d.matches('#atlas-backbone details[data-ab-key]')) return;
+      setOpen(d.getAttribute('data-ab-key'), d.open);
+      if (d.matches('.ab-panel')) {
+        var caret = d.querySelector('.ab-caret');
+        if (caret) caret.textContent = d.open ? 'hide' : 'show';
+      }
+    }, true);
+  }
+
   function start() {
     load();
+    watchToggles();
     // Re-mount when the navigate() router swaps the screen (replaces #main-content
     // content), instead of polling forever. Observe once the host exists.
     var main = document.getElementById('main-content');

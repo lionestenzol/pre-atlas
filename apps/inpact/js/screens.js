@@ -523,9 +523,9 @@ const ScreenRenderers = {
   // (what to do now); Full is the planning view. state.UI.dailyView picks.
   Daily() {
     const plan = Helpers.getDayPlan();
-    return state.UI?.dailyView === 'full'
-      ? this.renderDailyFull(plan)
-      : this.renderDailyMinimal(plan);
+    return state.UI?.dailyView === 'minimal'
+      ? this.renderDailyMinimal(plan)
+      : this.renderDailyFull(plan);
   },
 
   renderDailyFull(todayPlan) {

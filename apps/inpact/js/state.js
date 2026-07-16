@@ -157,7 +157,7 @@ class CycleBoardState {
       onboardingDone: false,
       calendarView: 'month',
       calendarDate: new Date().toISOString().slice(0, 10),
-      UI: { dailyView: 'minimal' }
+      UI: { dailyView: 'full' }
     };
   }
 

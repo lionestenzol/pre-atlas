@@ -21,6 +21,13 @@ export interface ScpConfig {
   allowLocal: boolean; // permit local paths / file:// (off by default)
   maxFiles: number; // abort a repo that walks past this many source files
   maxTotalBytes: number; // abort a repo whose scanned source exceeds this
+  // The flue: where rendered Markdown drops are written for the Chainer/droplist.
+  flueDir: string;
+  // Worker auto-populates the AST graph (migration 006) after each job. Fail-soft.
+  graphAutoPopulate: boolean;
+  // Symbol extractor: 'regex' (cheap/sync, default) or 'treesitter' (real AST —
+  // covers legacy languages regex misses + call edges). SCP_EXTRACTOR.
+  extractor: 'regex' | 'treesitter';
 }
 
 function num(name: string, fallback: number): number {
@@ -69,6 +76,11 @@ export function loadConfig(): ScpConfig {
     allowLocal: bool('SCP_ALLOW_LOCAL', false),
     maxFiles: intInRange('SCP_MAX_FILES', 20000, 1),
     maxTotalBytes: intInRange('SCP_MAX_TOTAL_BYTES', 50 * 1024 * 1024, 1),
+    // Default to a local outbox in the service dir — loose, explicit coupling to
+    // droplist (point SCP_FLUE_DIR at droplist's watched inbox to wire them up).
+    flueDir: process.env.SCP_FLUE_DIR ?? path.join(process.cwd(), 'flue-out'),
+    graphAutoPopulate: bool('SCP_GRAPH_AUTOPOPULATE', true),
+    extractor: /^tree.?sitter$/i.test((process.env.SCP_EXTRACTOR ?? '').trim()) ? 'treesitter' : 'regex',
   };
 }
 

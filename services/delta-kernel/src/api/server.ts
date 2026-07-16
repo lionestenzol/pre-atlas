@@ -63,12 +63,22 @@ const repoRoot = process.env.DELTA_REPO_ROOT
 const cognitiveSensorDir = process.env.COGNITIVE_SENSOR_DIR
   || path.join(repoRoot, 'services', 'cognitive-sensor');
 
-// Initialize and start governance daemon
-const daemon = getDaemon(storage, repoRoot);
-daemon.start();
-
-// Initialize work controller
+// Initialize work controller FIRST and share this exact instance with the
+// governance daemon (see getDaemon's 3rd param) -- Seq 7 (LangGraph Skill
+// Lattice's Supervisor) live-testing found that two independently-constructed
+// WorkController instances each load the on-disk ledger once at startup and
+// never see each other's writes again: a job registered via this file's
+// /api/work/request routes was invisible to the daemon's checkTimeouts(),
+// which was checking its OWN stale in-memory copy loaded before the job ever
+// existed -- so timed-out jobs silently never retried. One instance, shared,
+// fixes this at the root instead of papering over it with a reload-before-read
+// hack (which would still race two independent writers on every mutation, not
+// just checkTimeouts()).
 const workController = new WorkController(repoRoot);
+
+// Initialize and start governance daemon
+const daemon = getDaemon(storage, repoRoot, workController);
+daemon.start();
 
 // Initialize timeline logger
 const timeline = getTimelineLogger(repoRoot);

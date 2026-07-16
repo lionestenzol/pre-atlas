@@ -15,6 +15,8 @@
     "test": "tsx src/core/run-tests.ts",
     "test:api": "tsx src/tests/api-tests.ts",
     "test:work": "tsx src/tests/work-controller-tests.ts",
+    "test:lattice-resume": "tsx src/tests/lattice-resume-tests.ts",
+    "test:daemon-shared-controller": "tsx src/tests/governance-daemon-shared-workcontroller-tests.ts",
     "test:lattice-droplist": "tsx src/tests/lattice-projection-droplist-tests.ts",
     "test:artifact-schema": "tsx src/tests/atlas-artifact-schema-tests.ts",
     "test:routing": "tsx src/tests/routing-tests.ts",

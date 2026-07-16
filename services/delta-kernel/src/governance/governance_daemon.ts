@@ -13,7 +13,8 @@ import { Storage } from '../cli/sqlite-storage';
 import { createDelta, createEntity, now } from '../core/delta';
 import { route } from '../core/routing';
 import { Mode, SystemStateData, ActionType, InboxData, TaskData, ThreadData, DraftData, PendingActionData, EntityType } from '../core/types';
-import { WorkController } from '../core/work-controller';
+import { WorkController, ActiveJob } from '../core/work-controller';
+import { isLatticeResumeJob, resolveLatticePython, buildResumeArgs } from './lattice_resume.js';
 import { getTimelineLogger, TimelineLogger } from '../core/timeline-logger.js';
 import { getEffectiveRiskTier, buildCockpit, createPendingAction, CockpitBuildContext } from '../core/cockpit.js';
 import { emitEvent } from '../core/event-emitter.js';
@@ -80,11 +81,17 @@ export class GovernanceDaemon {
   private readonly AGENT_PIPELINE_TIMEOUT_MS = 600000; // 10 minutes
   private readonly SENSOR_DAILY_TIMEOUT_MS = 900000;   // 15 minutes — multi-phase pipeline (ingest, es_scan, triage, backlog); measured >5min in practice
 
-  constructor(storage: Storage, repoRoot: string) {
+  /**
+   * workController is optional only so callers without an API server (tests,
+   * standalone scripts) still work standalone -- see server.ts's comment on
+   * why passing a shared instance matters whenever an API server is also
+   * mutating the same on-disk ledger.
+   */
+  constructor(storage: Storage, repoRoot: string, workController?: WorkController) {
     this.storage = storage;
     this.repoRoot = repoRoot;
     this.cognitiveSensorDir = process.env.COGNITIVE_SENSOR_DIR || path.join(repoRoot, 'services', 'cognitive-sensor');
-    this.workController = new WorkController(repoRoot);
+    this.workController = workController ?? new WorkController(repoRoot);
     this.timeline = getTimelineLogger(repoRoot);
     this.state = {
       running: false,
@@ -742,6 +749,24 @@ export class GovernanceDaemon {
 
     if (result.retried.length > 0) {
       console.log(`[Daemon] Work queue: ${result.retried.length} job(s) retried after timeout: ${result.retried.join(', ')}`);
+
+      // LangGraph Skill Lattice Seq 7 (Supervisor): checkTimeouts() above already
+      // reset the job's clock and cleared its execution claim, but that alone
+      // doesn't re-run anything -- LangGraph has no auto-resume of its own
+      // (docs/LANGGRAPH_SKILL_LATTICE_PLAN.md, Honest Cost #2). This daemon's
+      // work queue is the external caller the plan names: for any retried job
+      // tagged metadata.kind === "lattice_resume", re-launch run_chain.py
+      // --resume for that thread_id so LangGraph resumes from its last
+      // checkpoint. Not a new ActionType/capability (TRUST_BOUNDARY.md) --
+      // 'system' job type and the /api/work/* routes already exist; this only
+      // wires an existing retry signal to an existing resumable CLI.
+      const active = this.workController.getLedger().active;
+      for (const jobId of result.retried) {
+        const job = active.find(j => j.job_id === jobId);
+        if (job && isLatticeResumeJob(job)) {
+          this.resumeLatticeJob(job);
+        }
+      }
     }
 
     if (result.timed_out.length > 0) {
@@ -767,6 +792,51 @@ export class GovernanceDaemon {
 
     // Create pending_action + phone notify for notify/confirm-tier prepared actions
     await this.notifyPreparedActions();
+  }
+
+  /**
+   * LangGraph Skill Lattice Seq 7 (Supervisor) -- fire-and-forget re-launch of
+   * a retried lattice_resume job. --resume + the original thread_id/db make
+   * LangGraph replay only the steps that hadn't checkpointed yet (Seq 3's
+   * AsyncSqliteSaver mechanism -- already proven not to re-run completed
+   * @tasks). Does not block the minute-tick work-queue job -- a real skill
+   * chain can run for minutes. Argv construction and python resolution live
+   * in lattice_resume.ts (pure, hermetically tested); this method is just the
+   * spawn + logging glue.
+   */
+  private resumeLatticeJob(job: ActiveJob): void {
+    let args: string[];
+    try {
+      args = buildResumeArgs(job.job_id, job.metadata);
+    } catch (err) {
+      console.error(`[Daemon] ${(err as Error).message}`);
+      return;
+    }
+
+    const latticeDir = path.join(this.repoRoot, 'tools', 'lattice');
+    const runner = resolveLatticePython(this.repoRoot);
+    const threadId = (job.metadata as { thread_id?: string }).thread_id;
+
+    console.log(`[Daemon] lattice_resume: re-launching thread_id=${threadId} for retried job ${job.job_id}`);
+    this.timeline.emit('WORK_RETRIED', 'governance_daemon', {
+      job_id: job.job_id,
+      thread_id: threadId,
+      lattice_resume: true,
+    });
+
+    const proc = spawn(runner, args, { cwd: latticeDir, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stderr = '';
+    proc.stderr?.on('data', (d) => { stderr += d.toString(); });
+    proc.on('error', (err) => {
+      console.error(`[Daemon] lattice_resume: failed to spawn resume for job ${job.job_id}: ${err.message}`);
+    });
+    proc.on('close', (code) => {
+      if (code !== 0) {
+        console.error(`[Daemon] lattice_resume: job ${job.job_id} resume exited ${code}: ${stderr.slice(-500)}`);
+      } else {
+        console.log(`[Daemon] lattice_resume: job ${job.job_id} resume completed`);
+      }
+    });
   }
 
   /**
@@ -1580,11 +1650,15 @@ export class GovernanceDaemon {
 let daemonInstance: GovernanceDaemon | null = null;
 
 /**
- * Get or create the daemon instance.
+ * Get or create the daemon instance. Pass workController when the caller
+ * (server.ts) already has its own instance mutating the same on-disk ledger
+ * via /api/work/* routes -- otherwise the daemon's checkTimeouts() operates
+ * on a permanently stale copy of jobs registered through the API (see the
+ * constructor's comment).
  */
-export function getDaemon(storage: Storage, repoRoot: string): GovernanceDaemon {
+export function getDaemon(storage: Storage, repoRoot: string, workController?: WorkController): GovernanceDaemon {
   if (!daemonInstance) {
-    daemonInstance = new GovernanceDaemon(storage, repoRoot);
+    daemonInstance = new GovernanceDaemon(storage, repoRoot, workController);
   }
   return daemonInstance;
 }

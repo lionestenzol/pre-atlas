@@ -1,4 +1,4 @@
-# lattice — LangGraph Skill Lattice (Seq 2 + Seq 3 + Seq 4 + Seq 5 + Seq 6)
+# lattice — LangGraph Skill Lattice (Seq 2 + Seq 3 + Seq 4 + Seq 5 + Seq 6 + Seq 7 — DONE)
 
 Wraps a genuinely agentic Claude Code Skill invocation (`claude-agent-sdk`, `skills=[...]`,
 forced `output_format`) into the same `seam.v1` Receipt shape every deterministic tool in
@@ -245,3 +245,69 @@ prompt through the fixed UI and confirmed the `code-recon` node ended up `"ok"` 
 demo-step receipt shapes) -- the FastAPI/SSE routes themselves are proven by the live browser
 run instead of a mocked TestClient, since background-task streaming is exactly the kind of thing
 that looks right under a mock and breaks for real.
+
+## supervisor.py + demo_steps.py — delta-kernel resumes a killed run (Seq 7, closes the plan)
+
+LangGraph has no auto-resume of its own (Honest Cost #2 in the plan): something external must
+call `graph.ainvoke(None, config)` after a real process crash. delta-kernel's work queue is that
+external supervisor -- it already does claim/heartbeat/timeout/retry.
+
+```bash
+python run_chain.py --thread-id t1 --demo --supervised --job-timeout-ms 120000
+python run_chain.py --thread-id t1 code-recon "..." --supervised   # real chain, same flag
+```
+
+`--supervised` registers the run as a `type: "system"` delta-kernel job (`supervisor.py`,
+`metadata.kind: "lattice_resume"`) before it starts -- not a new ActionType/capability
+(`TRUST_BOUNDARY.md`), just an ordinary job against the existing `/api/work/*` routes. If the
+process dies before completing, the job's `timeout_at` lapses; `WorkController.checkTimeouts()`
+(delta-kernel, every minute) retries it in place, and `governance_daemon.ts`'s `runWorkQueue()`
+dispatches any retried `lattice_resume` job to `resumeLatticeJob()`, which re-launches this exact
+command with `--resume --job-id <same id>` so the resumed process reports completion against the
+SAME delta-kernel job rather than registering a second one. The decision logic (is this a lattice
+job? what argv resumes it?) lives in `services/delta-kernel/src/governance/lattice_resume.ts` --
+pure functions, split out specifically so they're hermetically testable without constructing a
+full `GovernanceDaemon`.
+
+`--demo` (zero-cost synthetic 3-step chain, `demo_steps.py`, shared with Seq 6's viewer so there's
+one implementation, not two) exists so the kill/resume/supervise loop can be proven repeatedly
+without spending real Claude Agent SDK budget on every cycle.
+
+**Live-testing found and fixed two real bugs, both fixed inline (code-as-furniture — never
+"documented and left"), not just noted:**
+
+1. `supervisor.py` wasn't sending `Authorization: Bearer` at all. Registering against a real
+   running delta-kernel with a `.aegis-tenant-key` on disk 403'd immediately. Fixed by fetching
+   `/api/auth/token` (the one open route) before every POST.
+2. A genuine pre-existing bug, not introduced by this sequence: `server.ts` and `GovernanceDaemon`
+   each constructed their **own** `WorkController`. Both load the on-disk ledger once at
+   construction and never see each other's writes again -- a job registered via
+   `/api/work/request` (server.ts's instance) was **permanently invisible** to the daemon's
+   `checkTimeouts()` (its own, separately-loaded, stale-forever instance). Fixed at the root:
+   `GovernanceDaemon`'s constructor now accepts a shared `WorkController`; `server.ts` constructs
+   one and passes it to both `getDaemon()` and its own routes. A reload-before-read patch would
+   have left the deeper problem (two independent writers to one file) in place; sharing the
+   instance removes it entirely.
+
+**Live-verified literally, not just hermetically**: registered a supervised `--demo` run, found
+its real OS PID and `Stop-Process -Force`-killed it mid-chain (confirmed via an empty stdout log
+-- no completion line reached), then did nothing else and waited for the real governance-daemon
+cron (`*/1 * * * *`) to fire on its own. Log trace, unedited:
+
+```
+[Daemon] Work queue: 1 job(s) retried after timeout: j_9g9thkqdmrmyony2
+[Daemon] lattice_resume: re-launching thread_id=seq7-live-demo4 for retried job j_9g9thkqdmrmyony2
+[Daemon] lattice_resume: job j_9g9thkqdmrmyony2 resume completed
+```
+
+Confirmed past the log line too: `graph.aget_state()` against the checkpoint sqlite showed all 3
+demo steps `ok` in the final state, and `/api/work/status` showed the job cleared from `active`.
+Zero manual `--resume` invocation for this run -- the daemon did it.
+
+19 new hermetic tests: `test_lattice_supervisor.py` (10 -- request/complete shapes, fail-soft on
+unreachable/malformed responses, the auth-header regression), `lattice-resume-tests.ts` (7 -- pure
+`isLatticeResumeJob`/`buildResumeArgs`/`resolveLatticePython`), and
+`governance-daemon-shared-workcontroller-tests.ts` (2 -- the shared-instance regression test
+itself, reproducing the bug class via a monkey-patched `checkTimeouts` spy plus a real
+registered-then-retried job run through `daemon.runJob('work_queue')`). Full suite: 258/258
+Python, 8/8 TS test files green.

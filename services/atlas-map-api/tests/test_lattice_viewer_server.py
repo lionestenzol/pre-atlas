@@ -49,7 +49,10 @@ def test_is_node_update_true_only_for_the_state_patch_shape():
 
 def test_demo_step_ok_returns_a_valid_receipt_shape():
     import asyncio
-    fn = vs._demo_step("x", delay=0)
+    # demo_step now lives in demo_steps.py (Seq 7 shares it with run_chain.py's
+    # --demo flag) -- viewer_server imports it under the same name, re-verify
+    # the import wiring here rather than just testing demo_steps.py in isolation.
+    fn = vs.demo_step("x", delay=0)
     receipt = asyncio.run(fn())
     assert receipt["tool"] == "x"
     assert receipt["status"] == "ok"
@@ -58,7 +61,7 @@ def test_demo_step_ok_returns_a_valid_receipt_shape():
 
 def test_demo_step_fail_returns_an_error_receipt():
     import asyncio
-    fn = vs._demo_step("x", delay=0, fail=True)
+    fn = vs.demo_step("x", delay=0, fail=True)
     receipt = asyncio.run(fn())
     assert receipt["status"] == "error"
     assert receipt["sha256"] is None

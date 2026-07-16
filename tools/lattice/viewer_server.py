@@ -45,6 +45,7 @@ from graph import StepFn, build_chain_graph  # noqa: E402
 from schemas import SKILL_SCHEMAS  # noqa: E402
 from skill_nodes import DEFAULT_MAX_BUDGET_USD, DEFAULT_MAX_TURNS, invoke_skill  # noqa: E402
 from ledger_feed import append_ledger  # noqa: E402
+from demo_steps import demo_step  # noqa: E402
 
 DB_PATH = str(_HERE / "viewer_runs.sqlite")
 VENDOR_DIR = _HERE.parent.parent / "apps" / "lattice"
@@ -74,18 +75,6 @@ def _node_names(skills: list[str]) -> list[str]:
         seen[s] = seen.get(s, 0) + 1
         names.append(s if seen[s] == 1 else f"{s}_{seen[s]}")
     return names
-
-
-def _demo_step(name: str, *, delay: float = 0.8, fail: bool = False):
-    async def _fn() -> dict[str, Any]:
-        await asyncio.sleep(delay)
-        if fail:
-            return {"seam_version": "v1", "tool": name, "sha256": None, "produced_at": "",
-                     "status": "error", "data": None, "error": "demo failure"}
-        return {"seam_version": "v1", "tool": name, "sha256": "0" * 64, "produced_at": "",
-                 "status": "ok", "data": {"demo": True}, "error": None}
-
-    return _fn
 
 
 def _real_step(skill: str, prompt: str, *, max_turns: int, max_budget_usd: float):
@@ -139,9 +128,9 @@ async def start_run(req: RunRequest) -> dict[str, Any]:
     if req.demo:
         names = ["demo-a", "demo-b", "demo-c"]
         steps = {
-            "demo-a": StepFn(name="demo-a", fn=_demo_step("demo-a")),
-            "demo-b": StepFn(name="demo-b", fn=_demo_step("demo-b")),
-            "demo-c": StepFn(name="demo-c", fn=_demo_step("demo-c", fail=True)),
+            "demo-a": StepFn(name="demo-a", fn=demo_step("demo-a")),
+            "demo-b": StepFn(name="demo-b", fn=demo_step("demo-b")),
+            "demo-c": StepFn(name="demo-c", fn=demo_step("demo-c", fail=True)),
         }
     else:
         if not req.pairs:

@@ -171,21 +171,22 @@ def test_describe_index_covers_all_35_surfaces():
     body = client.get("/describe").json()
     assert {"anon", "agent", "operator", "root"} <= {x["role"] for x in body["roles"]}
     expected = {
-        # services (19)
+        # services (16) — mirofish/mosaic-dashboard/mosaic-orchestrator moved to
+        # services/_retired/ and no longer declare overlays under services/.
         "aegis-fabric", "atlas-map-api", "canvas-engine", "cognitive-sensor", "cortex",
-        "crucix", "delta-kernel", "droplist", "memory-hub", "mirofish", "mosaic-dashboard",
-        "mosaic-orchestrator", "openclaw", "optogon", "perception", "search-stack",
-        "triangulation", "uasc-executor", "ws-gateway",
+        "crucix", "delta-kernel", "droplist", "memory-hub", "openclaw", "optogon",
+        "perception", "search-stack", "triangulation", "uasc-executor", "ws-gateway",
         # apps (7)
         "inpact", "lattice", "webos-333", "code-converter", "blueprint-generator",
         "ai-exec-pipeline", "canvas-demo",
-        # tools (9)
+        # tools (11) — +code-recon, +repo-inventory since this set was last updated
         "atlas-cli", "atlas-audit", "anatomy-extension", "anatomy-research",
         "anatomy-rewrite", "codex-partner", "fest-reconcile", "mini-ship", "reminders",
+        "code-recon", "repo-inventory",
     }
     missing = expected - set(body["surfaces"])
     assert not missing, f"surfaces missing self-description overlays: {sorted(missing)}"
-    assert len(expected) == 35
+    assert len(expected) == 34
 
 
 def test_describe_endpoint_text_narration():
@@ -207,6 +208,31 @@ def test_describe_live_populates_state():
     assert body["state"] is not None and body["state"]["probed"] is True
     assert body["state"]["via"] == "health"  # probed the public health read
     assert "reachable" in body["state"]
+
+
+# ---- triggers: the /route field ------------------------------------------------
+def test_capability_from_dict_parses_triggers():
+    cap = d.Capability.from_dict({
+        "id": "digest", "label": "Digest", "direction": "read", "exposure": "public",
+        "criticality": 0, "triggers": ["where am i", "catch me up"],
+    })
+    assert cap.triggers == ("where am i", "catch me up")
+
+
+def test_capability_from_dict_defaults_triggers_to_empty():
+    cap = d.Capability.from_dict({"id": "x", "label": "X", "direction": "read", "exposure": "public", "criticality": 0})
+    assert cap.triggers == ()
+
+
+def test_full_field_includes_triggers_only_when_present():
+    overlay = d.SurfaceOverlay("x", "headline", (
+        d.Capability("a", "A", "read", "public", 0, triggers=("hello",)),
+        d.Capability("b", "B", "read", "public", 0),
+    ))
+    fields = d.describe_surface(overlay, d.ROLES["anon"])["fields"]
+    by_id = {f["id"]: f for f in fields}
+    assert by_id["a"]["triggers"] == ["hello"]
+    assert "triggers" not in by_id["b"]
 
 
 def test_render_text_no_actions_case():

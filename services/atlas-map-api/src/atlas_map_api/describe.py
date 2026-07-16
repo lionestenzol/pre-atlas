@@ -143,6 +143,10 @@ class Capability:
     criticality: int  # 0 routine .. 3 dangerous
     invoke: str = ""  # how to call it (e.g. "POST /api/drop") — leaked only when full
     needs: tuple[str, ...] = field(default_factory=tuple)
+    # Free-text phrases a router matches against (e.g. "where am I", "catch me up").
+    # Optional — a capability with no triggers is still fully describable/callable,
+    # it just never surfaces from a free-text /route query.
+    triggers: tuple[str, ...] = field(default_factory=tuple)
 
     @staticmethod
     def from_dict(raw: dict[str, Any]) -> "Capability":
@@ -154,6 +158,7 @@ class Capability:
             criticality=max(0, min(3, int(raw.get("criticality", 0) or 0))),
             invoke=str(raw.get("invoke", "") or ""),
             needs=tuple(str(n) for n in (raw.get("needs", []) or [])),
+            triggers=tuple(str(t) for t in (raw.get("triggers", []) or [])),
         )
 
 
@@ -250,6 +255,8 @@ def _full_field(cap: Capability) -> dict[str, Any]:
         out["invoke"] = cap.invoke
     if cap.needs:
         out["needs"] = list(cap.needs)
+    if cap.triggers:
+        out["triggers"] = list(cap.triggers)
     return out
 
 

@@ -15,6 +15,7 @@ Tools (one per /map/* endpoint, plus reload):
   atlas_show      — detail for one subsystem (+ depends_on / depended_on_by)
   atlas_status    — live signals: ports + autostart + retired
   atlas_reload    — re-read snapshot files from disk
+  atlas_route     — dispatch: which declared capability answers a free-text intent?
 """
 
 from __future__ import annotations
@@ -29,6 +30,7 @@ from rapidfuzz import fuzz
 from . import auth
 from . import describe as describe_mod
 from . import gateway as gateway_mod
+from . import route as route_mod
 from .graph import ServiceGraph
 from .loader import MapSnapshot, load_snapshot
 
@@ -313,6 +315,33 @@ async def atlas_describe_list() -> dict:
         "default_role": describe_mod.DEFAULT_ROLE,
         "surfaces": describe_mod.described_surfaces(snap.repo_root),
     }
+
+
+@mcp.tool()
+async def atlas_route(query: str, limit: int = 5) -> dict:
+    """Pick which declared capability best answers a free-text intent — the
+    dispatch layer in front of atlas_describe/atlas_call (the "librarian").
+
+    Ranks over exactly what atlas_describe(role="agent") would show — same
+    redaction ladder — so it can never surface a capability outside agent
+    clearance. Read-only selection only: it never invokes anything, it only
+    names a (surface, capability) pair to pass to atlas_call. Use this INSTEAD
+    OF guessing which surface/skill applies, when the intent is free text
+    rather than an already-known surface name.
+
+    Args:
+        query: Free-text intent (e.g. "where am I", "run autopilot", "catch me up").
+        limit: 1-20 candidates to consider.
+
+    Returns:
+        {query, count, confident, matches: [{surface, capability, label, score,
+        direction, criticality, invoke?, needs?}, ...]}. When `confident` is
+        false, treat `matches` as a shortlist to choose from, not a single answer.
+    """
+    snap, _ = _ensure()
+    limit = max(1, min(20, limit))
+    role = describe_mod.resolve_role("agent")
+    return route_mod.route(snap.repo_root, role, query, limit, secret=auth.current_token())
 
 
 @mcp.tool()

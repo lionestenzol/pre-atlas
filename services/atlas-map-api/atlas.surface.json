@@ -5,6 +5,7 @@
     { "id": "status",       "label": "Check the registry status",      "direction": "read",  "exposure": "public",   "criticality": 0, "invoke": "GET /healthz" },
     { "id": "list_systems", "label": "List all subsystems",            "direction": "read",  "exposure": "public",   "criticality": 0, "invoke": "GET /map/systems" },
     { "id": "describe",     "label": "Describe a surface for a caller", "direction": "read",  "exposure": "agent",    "criticality": 0, "invoke": "GET /describe/{surface}?role=R" },
+    { "id": "route",        "label": "Which capability answers this free-text intent?", "direction": "read", "exposure": "agent", "criticality": 0, "invoke": "GET /route", "needs": ["q"], "triggers": ["which tool should i use", "what capability handles this", "route this", "dispatch this", "who can do this"] },
     { "id": "call_traffic", "label": "Live call counts per capability", "direction": "read",  "exposure": "agent",    "criticality": 0, "invoke": "GET /map/calls" },
     { "id": "set_status",   "label": "Set a backbone item's status",   "direction": "write", "exposure": "agent",    "criticality": 1, "invoke": "POST /items/{id}/status", "needs": ["status"] },
     { "id": "start_service","label": "Start a stopped service",        "direction": "write", "exposure": "internal", "criticality": 2, "invoke": "POST /map/start/{name}" },

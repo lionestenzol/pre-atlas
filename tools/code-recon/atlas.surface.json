@@ -13,7 +13,8 @@
       "invoke": "python tools/code-recon/orient_seam.py {root}",
       "needs": ["root"],
       "evidence": "C:/Users/bruke/Pre Atlas/tools/code-recon/orient_seam.py wraps ~/.claude/skills/code-recon/scripts/orient.mjs (read-only, never --regen)",
-      "notes": "Read-only: runs orient WITHOUT --regen (no map regeneration, no writes), then content-addresses the cached map (sha256 minus generated_at -> stable join key). found:false when the repo has no cached map yet (verdict MISSING). {root} is a forward-slash path."
+      "notes": "Read-only: runs orient WITHOUT --regen (no map regeneration, no writes), then content-addresses the cached map (sha256 minus generated_at -> stable join key). found:false when the repo has no cached map yet (verdict MISSING). {root} is a forward-slash path.",
+      "triggers": ["orient me", "is the recon map fresh", "where is this code", "locate this symbol", "recon this repo", "eyes before hands"]
     }
   ]
 }

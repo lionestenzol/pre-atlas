@@ -13,7 +13,8 @@
       "invoke": "python tools/repo-inventory/inv.py {root}",
       "needs": ["root"],
       "evidence": "C:/Users/bruke/Pre Atlas/tools/repo-inventory/inv.py wraps ~/.claude/skills/repo-inventory/scripts/inventory.py analyze()",
-      "notes": "Read-only, deterministic (same tree -> same join key; absolute root excluded from the hash). {root} is a forward-slash path relative to repo_root (the gateway cwd) or absolute. A large tree does a full os.walk + cross-system grep -> may approach the 20s gateway timeout."
+      "notes": "Read-only, deterministic (same tree -> same join key; absolute root excluded from the hash). {root} is a forward-slash path relative to repo_root (the gateway cwd) or absolute. A large tree does a full os.walk + cross-system grep -> may approach the 20s gateway timeout.",
+      "triggers": ["how many files", "how many systems", "inventory this repo", "count LOC", "organize this repo", "map out this repo"]
     }
   ]
 }

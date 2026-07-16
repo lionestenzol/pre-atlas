@@ -10,6 +10,7 @@ Endpoints:
   GET  /map/path?from=X&to=Y          directed shortest path
   GET  /map/search?q=<q>&limit=N      fuzzy search across name + purpose
   GET  /map/signals                   live: ports + autostart + retired
+  GET  /route?q=<q>&limit=N           dispatch: which capability answers this intent?
 
 The data comes from <repo>/audit/system-index.json + <repo>/atlas-map.json,
 loaded on startup. Use POST /admin/reload to re-read from disk after the builder
@@ -38,6 +39,7 @@ from . import gateway as gateway_mod
 from . import items as items_backbone
 from . import launcher
 from . import receipt_store
+from . import route as route_mod
 from . import seam as seam_mod
 from . import surfaces as surfaces_mod
 from .graph import ServiceGraph
@@ -600,6 +602,29 @@ async def describe_surface_endpoint(
     if format == "text":
         return PlainTextResponse(describe_mod.render_text(form))
     return form
+
+
+@app.get("/route")
+async def route_endpoint(
+    q: str = Query(..., min_length=1, description="Free-text intent, e.g. 'where am I' or 'run autopilot'"),
+    limit: int = Query(5, ge=1, le=20),
+    role: str | None = Query(None, description="Request a NARROWER preview role (cannot escalate past your token)"),
+    x_atlas_token: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Layer-4: pick which declared capability best answers a free-text intent —
+    the dispatch layer in front of /describe and /call (the "librarian").
+
+    Ranks over exactly what /describe would show THIS caller — same token-derived
+    role, same redaction ladder — so it can never surface a capability outside the
+    caller's clearance. Read-only selection only: it never invokes anything, it
+    only names a (surface, capability) pair for the caller to pass to /call. Below
+    a confidence threshold `confident` is false and `matches` is a shortlist to
+    choose from rather than a single dispatch.
+    """
+    snap, _ = _ensure_loaded()
+    token_role = describe_mod.resolve_role(auth.resolve_caller_role(x_atlas_token, snap.repo_root))
+    effective = describe_mod.narrow_role(token_role, role)
+    return route_mod.route(snap.repo_root, effective, q, limit, secret=auth.current_token())
 
 
 @app.post("/call")

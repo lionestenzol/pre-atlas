@@ -1,4 +1,4 @@
-# lattice — LangGraph Skill Lattice (Seq 2 + Seq 3)
+# lattice — LangGraph Skill Lattice (Seq 2 + Seq 3 + Seq 4)
 
 Wraps a genuinely agentic Claude Code Skill invocation (`claude-agent-sdk`, `skills=[...]`,
 forced `output_format`) into the same `seam.v1` Receipt shape every deterministic tool in
@@ -113,3 +113,43 @@ proves the actual DoD, not just that the code runs:
 - resume survives a genuinely fresh `AsyncSqliteSaver` connection against the same on-disk
   file — i.e. it isn't relying on any in-process Python state, which is what a real killed
   and restarted process would look like.
+
+## bandit.py — the Thompson bandit as a NODE, not an edge (Seq 4)
+
+`make_bandit_node(seed=None, load_combos=None)` draws once from `combo.py`'s Thompson-sampled
+ranking over tool-combination arms (`~/.claude/scripts/ledger/combo.py` -- same ledger, same
+`pick_combo`/`build_combos`, imported not forked), records the draw as a `seam.v1` Receipt, and
+writes the chosen combo to `state["next_combo"]`. `route(state)` is a **pure** function used as
+the graph's conditional edge: it only reads `next_combo` back out of state, no randomness.
+
+**Why this split matters (Design Constraint 1):** LangGraph edges are plain functions
+re-evaluated against state, not checkpointed the way nodes are. A Thompson draw placed
+*inside an edge function* would re-draw on every replay/resume, silently changing the route a
+crashed-and-resumed run takes. Placing the draw inside a node means it executes exactly once;
+its result becomes durable checkpointed state; the edge downstream can never re-randomize it.
+
+```python
+from bandit import make_bandit_node, route, BanditState
+from langgraph.graph import StateGraph, START, END
+
+g = StateGraph(BanditState)
+g.add_node("bandit", make_bandit_node(seed=0))
+g.add_node("code-recon+groundwork", ...)   # a real node, e.g. wired to skill_nodes.invoke_skill
+g.add_edge(START, "bandit")
+g.add_conditional_edges("bandit", route, {"code-recon+groundwork": "code-recon+groundwork", "done": END})
+```
+
+Cold-start safe: an empty ledger/combos list makes `next_combo` `None`, and `route` maps that to
+`"done"` -- no crash, no fake arm.
+
+`services/atlas-map-api/tests/test_lattice_bandit.py` (6 tests, hermetic -- `load_combos` is
+always injected with a fixed fixture, never the real ledger file) proves the plan's own DoD
+wording directly: `aget_state_history()` shows the drawn arm recorded as a receipt, and
+replaying the same `thread_id` after a downstream crash produces the *same* arm (the draw's
+underlying call count stays at 1 across the crash/resume boundary -- proven by a counting
+`load_combos` stub, not just by the output looking right).
+
+Sanity-checked live against the real ledger too (pure local Thompson sampling, no API cost):
+209 real ledger rows -> 176 derived combos -> a real node run through a real `StateGraph`
+returned a genuine `seam.v1` Receipt (`status: "ok"`, real `sha256`) with the top-ranked arm
+(`code-recon>groundwork-cli`, score 0.9999, n=12) correctly written to `next_combo`.

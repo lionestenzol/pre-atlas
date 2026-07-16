@@ -26,6 +26,8 @@
       align-items: center;
       gap: 24px;
       flex-shrink: 0;
+      flex-wrap: wrap;
+      row-gap: 8px;
     }
 
     .system-title {
@@ -38,8 +40,10 @@
 
     .directive-metrics {
       display: flex;
-      gap: 32px;
-      flex: 1;
+      gap: 16px 32px;
+      flex: 1 1 auto;
+      flex-wrap: wrap;
+      min-width: 0;
     }
 
     .metric {
@@ -71,7 +75,8 @@
     .metric-value.risk-low { color: #34d399; }
 
     .primary-order {
-      flex: 2;
+      flex: 2 1 280px;
+      min-width: 0;
       background: rgba(248, 113, 113, 0.1);
       border: 1px solid rgba(248, 113, 113, 0.25);
       border-radius: 8px;
@@ -141,7 +146,8 @@
 
     /* === RIGHT PANEL (DASHBOARD) === */
     .right-panel {
-      width: 400px;
+      width: clamp(280px, 28vw, 400px);
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
       background: #0a0a0f;
@@ -150,6 +156,13 @@
 
     .right-panel.collapsed {
       width: 40px;
+    }
+
+    @media (max-width: 720px) {
+      .right-panel { width: 100%; border-left: none; border-top: 1px solid #2a2a3a; }
+      .right-panel.collapsed { width: 100%; height: 40px; }
+      .main-content { flex-direction: column; }
+      .center-viewport { border-right: none; border-bottom: 1px solid #2a2a3a; min-height: 60vh; }
     }
 
     .panel-header {
@@ -457,6 +470,108 @@
     ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
     ::-webkit-scrollbar-corner { background: transparent; }
     * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
+
+    /* === RESIZE-SAFE OVERRIDES ===
+       Goals: no clipped tabs, no clipped buttons, no wasted vertical space
+       from the directive bar, no text-wrap inside pill controls. */
+
+    /* Allow flex children to actually shrink (the default min-width: auto
+       blowout is what causes overflow on the main row). */
+    .main-content { min-width: 0; min-height: 0; }
+    .center-viewport { min-width: 0; min-height: 0; }
+    .right-panel { min-height: 0; }
+
+    /* Directive bar: tighter gaps + fluid font sizing so it stops wrapping
+       to 2-3 rows at mid widths. Primary order tries to fit on row 1 first;
+       only wraps when the metrics can't share space. */
+    .directive-bar { padding: 10px 16px; gap: 8px 18px; row-gap: 6px; }
+    .metric { min-width: 0; }
+    .metric-value { font-size: clamp(14px, 1.4vw, 18px); }
+    .metric-label { font-size: clamp(9px, 0.8vw, 10px); }
+    .primary-order { flex: 1 1 260px; min-width: 0; }
+
+    /* Chrome compression at SHORT window heights — the iframe must keep
+       getting a fair share, even when the directive bar would otherwise wrap. */
+    @media (max-height: 640px) {
+      .directive-bar { padding: 6px 14px; gap: 4px 14px; row-gap: 4px; }
+      .system-title { font-size: 12px; }
+      .metric { gap: 0; }
+      .metric-value { font-size: 13px; }
+      .metric-label { font-size: 9px; }
+      .primary-order { padding: 4px 10px; }
+      .primary-order-label { font-size: 9px; }
+      .primary-order-text { font-size: 12px; }
+      .viewport-tab { padding: 7px 16px; font-size: 11px; }
+      .command-strip { padding: 7px 14px; }
+      .command-btn { padding: 7px 14px; font-size: 10px; }
+    }
+    @media (max-height: 480px) {
+      /* Ultra-short: drop labels, single-row metrics, mini buttons.
+         The iframe always gets at least ~60% of the window. */
+      .directive-bar { padding: 4px 12px; gap: 2px 12px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+      .directive-bar::-webkit-scrollbar { height: 0; }
+      .directive-metrics { flex-wrap: nowrap; }
+      .metric-label { display: none; }
+      .metric { white-space: nowrap; flex-shrink: 0; }
+      .primary-order { flex: 0 1 240px; padding: 3px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .primary-order-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .command-strip { padding: 5px 12px; gap: 6px; }
+      .command-btn { padding: 5px 10px; font-size: 9px; }
+      .viewport-tab { padding: 6px 12px; font-size: 10px; }
+    }
+
+    /* Iframe gets a floor — never falls below ~200px no matter how the
+       chrome tries to grow. Forces a body scroll instead of squishing iframe. */
+    .viewport-frame, .panel-frame { min-height: 200px; }
+
+    /* Tabs: never wrap text inside a tab, scroll the row horizontally
+       when total width exceeds the viewport. */
+    .viewport-tabs {
+      flex-shrink: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .viewport-tabs::-webkit-scrollbar { height: 0; background: transparent; }
+    .viewport-tab { white-space: nowrap; flex-shrink: 0; }
+
+    /* Command strip: same treatment — buttons stay full-size, row scrolls. */
+    .command-strip {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      min-width: 0;
+      scrollbar-width: none;
+    }
+    .command-strip::-webkit-scrollbar { height: 0; background: transparent; }
+    .command-btn,
+    .system-status,
+    .daemon-status,
+    .enforcement-badge { white-space: nowrap; flex-shrink: 0; }
+
+    /* Right panel: leaner min at the awkward 720-1100 range so the
+       center viewport keeps enough breathing room. */
+    @media (max-width: 1100px) and (min-width: 721px) {
+      .right-panel { width: clamp(220px, 24vw, 320px); }
+    }
+
+    /* Phone-ish widths: compact the directive bar + command strip so
+       neither one steals more than ~110px from the iframe area. */
+    @media (max-width: 720px) {
+      .directive-bar { padding: 8px 12px; gap: 6px 14px; }
+      .system-title { font-size: 12px; letter-spacing: 1.5px; }
+      .metric-value { font-size: 13px; }
+      .primary-order { padding: 6px 10px; }
+      .primary-order-text { font-size: 12px; }
+      .command-strip { padding: 8px 12px; gap: 8px; }
+      .command-btn { padding: 8px 14px; font-size: 10px; }
+      .viewport-tab { padding: 9px 14px; }
+    }
+
+    /* Modal/notification stay clear of a tall wrapped directive bar. */
+    .notification { top: clamp(60px, 8vh, 90px); max-width: calc(100vw - 32px); }
+    .control-modal-content { max-height: 92vh; }
   </style>
 </head>
 <body>

@@ -1,0 +1,2587 @@
+{
+  "generated_at": "2026-05-27T19:13:49.208497",
+  "corpus": "claude_code_session_jsonl_under_~/.claude/projects/**",
+  "stats": {
+    "total_sessions": 1017,
+    "total_items": 140,
+    "project_dirs": 65,
+    "bucket_counts": {
+      "discussed_and_shipped": 79,
+      "discussed_but_not_shipped": 33,
+      "shipped_but_not_discussed": 7,
+      "neither": 16,
+      "skipped_generic_name": 5
+    }
+  },
+  "buckets": {
+    "discussed_and_shipped": [
+      {
+        "name": "anime-js",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "anime-js"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "where is anotmy at",
+          "I need you to find anime.js and instal an create some docs for ai",
+          "excecute the handoff below: Good call. Fresh session is right \u2014 context here is heavy and Path 1 is multi-hour with ~40 "
+        ],
+        "path": "C:\\Users\\bruke\\anime-js"
+      },
+      {
+        "name": "binre",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 7,
+        "matched_terms_used": [
+          "binre"
+        ],
+        "sample_first_msgs": [
+          "what happens in we combine binre tool with es tool what can we do",
+          "explaain binre to me and what it is",
+          "i need you to give me a tour of binre",
+          "I'm giving Bruke a guided tour of his binre RE/debug pipeline at `C:\\Users\\bruke\\binre\\`. It orchestrates 5 reverse-engi",
+          "I'm giving Bruke a guided tour of his binre RE/debug pipeline at `C:\\Users\\bruke\\binre\\`. This is a personal project tha",
+          "TASK: Use the `codex-delegate` skill to have Codex write a runtime memory-dump unpacker for an ASPack-packed Windows DLL",
+          "TASK: Unpack the ASPack 2.x packed DLL at `C:\\Users\\bruke\\fl356-sandbox\\MAINDIR\\FruityLoopsEngine.dll` using a dedicated"
+        ],
+        "path": "C:\\Users\\bruke\\binre"
+      },
+      {
+        "name": "competitor-monitor",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 16,
+        "matched_terms_used": [
+          "competitor-monitor"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "<scheduled-task name=\"pester-2-linkedin-positioning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-2-linkedin-posi",
+          "<scheduled-task name=\"pester-1-cold-email\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-1-cold-email\\SKILL.md\"> T",
+          "where is anotmy at",
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "<scheduled-task name=\"pester-3-accountability-check\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-3-accountabilit",
+          "i fave something called niship do you know what im talk about if so i need you to es tool it"
+        ],
+        "path": "C:\\Users\\bruke\\competitor-monitor"
+      },
+      {
+        "name": "Downloads",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 75,
+        "matched_terms_used": [
+          "downloads"
+        ],
+        "sample_first_msgs": [
+          "Pick up Thread 2 from C:\\Users\\bruke\\OneDrive\\Desktop\\claude-mining\\v2\\_THREAD_2_READY.md.  Read that file first \u2014 it's ",
+          "what happens in we combine binre tool with es tool what can we do",
+          "Concrete steps, in order. Do them on the machine you build on. 1. Install Rust. Go to rustup.rs, run the installer. Open",
+          "Good. \"Use it like it's native\" is the ambitious framing \u2014 that means the skill needs to give Claude operational fluency",
+          "@C:\\Users\\bruke\\OneDrive\\Desktop\\1 files.zip here",
+          ".",
+          "Paste this into a fresh session:  ---  **carbo-shrink LIVE wire \u2014 finish end-to-end test**  Context: carbo-shrink v0.2 h",
+          "i need you to use site ma;p anotmy on this website or plaright? i want one of every type of paper in the best format you"
+        ],
+        "path": "C:\\Users\\bruke\\Downloads"
+      },
+      {
+        "name": "everything-claude-code",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "everything-claude-code"
+        ],
+        "sample_first_msgs": [
+          "i need you to es ttool find remotioni d and see  oif it is in stalled if so lets seee it",
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y",
+          "**TASK: Read these specific files end-to-end. Don't ask questions. Quote with file:line citations.**  **Pass 1 \u2014 All CLA",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is the `C:\\Users\\bruke\\.claude\\` tree (everything EXCEP"
+        ],
+        "path": "C:\\Users\\bruke\\everything-claude-code"
+      },
+      {
+        "name": "m3p-to-fract",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "m3p-to-fract"
+        ],
+        "sample_first_msgs": [
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "what happens in we combine binre tool with es tool what can we do",
+          "i need you to use es tool to serarch and context and memory i need to find my debugging tool",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "i need you to give me a tour of binre"
+        ],
+        "path": "C:\\Users\\bruke\\m3p-to-fract"
+      },
+      {
+        "name": "mandelbulber2_install",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "mandelbulber2_install"
+        ],
+        "sample_first_msgs": [
+          "i need you to use es tool to serarch and context and memory i need to find my debugging tool",
+          ".",
+          "c dto pre atlas",
+          "Assess how much Mandelbulb3D (MB3D) capability Mandelbulber 2 (Mb2) actually covers. The user is considering Mb2 as a su"
+        ],
+        "path": "C:\\Users\\bruke\\mandelbulber2_install"
+      },
+      {
+        "name": "mb3d-blender",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "mb3d blender",
+          "mb3d-blender"
+        ],
+        "sample_first_msgs": [
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "what happens in we combine binre tool with es tool what can we do",
+          "i need you to use es tool to serarch and context and memory i need to find my debugging tool",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "i need you to give me a tour of binre"
+        ],
+        "path": "C:\\Users\\bruke\\mb3d-blender"
+      },
+      {
+        "name": "my-project",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "my-project"
+        ],
+        "sample_first_msgs": [
+          "I need you to search through cognitive sensor and lets find some projects to work on"
+        ],
+        "path": "C:\\Users\\bruke\\my-project"
+      },
+      {
+        "name": "nih-plug",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "nih-plug"
+        ],
+        "sample_first_msgs": [
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "Concrete steps, in order. Do them on the machine you build on. 1. Install Rust. Go to rustup.rs, run the installer. Open"
+        ],
+        "path": "C:\\Users\\bruke\\nih-plug"
+      },
+      {
+        "name": "operator-system",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 11,
+        "matched_terms_used": [
+          "operator system",
+          "operator-system"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "I'm planning a new Claude Code build: a git repo called `operator-system` plus a skill called `handoff-out` that writes ",
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is **SCRIPTS at user-root and standard locations** \u2014 si",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\operator-system"
+      },
+      {
+        "name": "POLARIS",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 38,
+        "matched_terms_used": [
+          "polaris"
+        ],
+        "sample_first_msgs": [
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "are you able to see my conversation history with the es tool",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "Explore the codebase at C:\\Users\\bruke\\POLARIS thoroughly. I need to understand:  1. What is this project? What does it "
+        ],
+        "path": "C:\\Users\\bruke\\POLARIS"
+      },
+      {
+        "name": "Pre Atlas",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 384,
+        "matched_terms_used": [
+          "pre atlas"
+        ],
+        "sample_first_msgs": [
+          "cd services/canvas-engine && npm run smoke:envelope",
+          "claude -p --permission-mode acceptEdits < \"C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\zealous-mclean-a9b079\\.dispatch\\ph",
+          "<scheduled-task name=\"atlas-evening\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-evening\\SKILL.md\"> This is an au",
+          "<scheduled-task name=\"atlas-morning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-morning\\SKILL.md\"> This is an au",
+          "<scheduled-task name=\"atlas-evening\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-evening\\SKILL.md\"> This is an au",
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "<scheduled-task name=\"atlas-substrate-daily-soak\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-substrate-daily-soa",
+          "<scheduled-task name=\"atlas-substrate-daily-soak\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-substrate-daily-soa"
+        ],
+        "path": "C:\\Users\\bruke\\Pre Atlas"
+      },
+      {
+        "name": "remotion-test",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "remotion-test"
+        ],
+        "sample_first_msgs": [
+          "i need you to es ttool find remotioni d and see  oif it is in stalled if so lets seee it"
+        ],
+        "path": "C:\\Users\\bruke\\remotion-test"
+      },
+      {
+        "name": "Scrapling",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 14,
+        "matched_terms_used": [
+          "scrapling"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prom",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "I'm planning a new Claude Code build: a git repo called `operator-system` plus a skill called `handoff-out` that writes ",
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is **SCRIPTS at user-root and standard locations** \u2014 si",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\Scrapling"
+      },
+      {
+        "name": "scrapling-smoke",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 6,
+        "matched_terms_used": [
+          "scrapling-smoke"
+        ],
+        "sample_first_msgs": [
+          "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prom",
+          "I'm planning a new Claude Code build: a git repo called `operator-system` plus a skill called `handoff-out` that writes ",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is **SCRIPTS at user-root and standard locations** \u2014 si",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "WEAPON MODE \u2014 single mission, no scope expansion.  TARGET: Close the \"Scrapling browser modes are not yet usable\" loop b",
+          "WEAPON MODE \u2014 single mission, no scope expansion.  TARGET: Close the \"Pattern 3 (adaptive selector heal) is claimed but "
+        ],
+        "path": "C:\\Users\\bruke\\scrapling-smoke"
+      },
+      {
+        "name": "screenshot-to-code",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "screenshot-to-code"
+        ],
+        "sample_first_msgs": [
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "where is anotmy at",
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "I need a COMPLETE, accurate map of the \"vision\" (screenshot \u2192 code) subsystem inside a TypeScript/Express service called"
+        ],
+        "path": "C:\\Users\\bruke\\screenshot-to-code"
+      },
+      {
+        "name": "STEMai",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 48,
+        "matched_terms_used": [
+          "stemai"
+        ],
+        "sample_first_msgs": [
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "are you able to see my conversation history with the es tool",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "Search the project at C:\\Users\\bruke\\STEMai for any existing piano roll implementation. Look for: 1. Any HTML/JS files w",
+          "I need to understand what \"notes\" data exists in the STEMai project at C:\\Users\\bruke\\STEMai. The user has a stem player"
+        ],
+        "path": "C:\\Users\\bruke\\STEMai"
+      },
+      {
+        "name": "STRUDEL",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 366,
+        "matched_terms_used": [
+          "strudel"
+        ],
+        "sample_first_msgs": [
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "# Resume \u2014 Claude/ChatGPT Mining Project (Post-Fest)  You're picking up an in-flight project. Prior session **closed the",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "Pick up Thread 2 from C:\\Users\\bruke\\OneDrive\\Desktop\\claude-mining\\v2\\_THREAD_2_READY.md.  Read that file first \u2014 it's ",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "Save this as a file or paste it into the new session:  ``` # Resume \u2014 Claude/ChatGPT Export Mining Project  You're picki"
+        ],
+        "path": "C:\\Users\\bruke\\STRUDEL"
+      },
+      {
+        "name": "task-manager",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 10,
+        "matched_terms_used": [
+          "task manager",
+          "task-manager"
+        ],
+        "sample_first_msgs": [
+          "Concrete steps, in order. Do them on the machine you build on. 1. Install Rust. Go to rustup.rs, run the installer. Open",
+          "I need you to search through cognitive sensor and lets find some projects to work on",
+          "i need you to research this : Here's the look-up list, ordered by how directly each one maps to what you've built:  Clos",
+          "Thoroughness: very thorough  Explore the ENTIRE Pre Atlas repository rooted at C:\\Users\\bruke\\Pre Atlas. This is a feder",
+          "Explore the remaining directories in the Pre Atlas project at C:\\Users\\bruke\\Pre Atlas:  1. Check the apps/ directory - ",
+          "I need to understand the VISUAL LAYOUT of the Pre Atlas UI system to create an ASCII/markdown visual representation. Rea",
+          "Read the file C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor\\idea_registry.json and analyze the execute_now and next",
+          "Thoroughly explore the codebase in C:\\Users\\bruke\\Pre Atlas. I need to understand:  1. The overall project structure (di"
+        ],
+        "path": "C:\\Users\\bruke\\task-manager"
+      },
+      {
+        "name": "three-js",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 33,
+        "matched_terms_used": [
+          "three-js"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "i need you to connect to blender",
+          "i need you to use es tool to serarch and context and memory i need to find my debugging tool",
+          "execute this: b Writing the Path 2 handoff for a fresh session. Path 2 handoff written Location: `C:/Users/bruke/three-j",
+          "I need you to find anime.js and instal an create some docs for ai",
+          "excecute the handoff below: Good call. Fresh session is right \u2014 context here is heavy and Path 1 is multi-hour with ~40 ",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "c dto pre atlas"
+        ],
+        "path": "C:\\Users\\bruke\\three-js"
+      },
+      {
+        "name": "three-stack",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 9,
+        "matched_terms_used": [
+          "three-stack"
+        ],
+        "sample_first_msgs": [
+          "execute this: b Writing the Path 2 handoff for a fresh session. Path 2 handoff written Location: `C:/Users/bruke/three-j",
+          "excecute the handoff below: Good call. Fresh session is right \u2014 context here is heavy and Path 1 is multi-hour with ~40 ",
+          "You are executing Path 2 of the three.js ecosystem comparison rig \u2014 **CSG (constructive solid geometry / mesh booleans) ",
+          "You are executing Path 2 of the three.js ecosystem comparison rig \u2014 **shader-libs category** (helper libraries for writi",
+          "You are executing Path 2 of the three.js ecosystem comparison rig \u2014 **WebGL vs WebGPU postprocessing category**. Render ",
+          "You are executing Path 2 of the three.js ecosystem comparison rig \u2014 **text-3d category only** (3D text rendering in thre",
+          "You are executing Path 2 of the three.js ecosystem comparison rig \u2014 **physics category only**. Build the same physics de",
+          "You are executing Path 2 of the three.js ecosystem comparison rig \u2014 **postprocessing category only**. Build the same blo"
+        ],
+        "path": "C:\\Users\\bruke\\three-stack"
+      },
+      {
+        "name": "URBANNOMAD",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "urbannomad"
+        ],
+        "sample_first_msgs": [
+          "where is anotmy at",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c"
+        ],
+        "path": "C:\\Users\\bruke\\URBANNOMAD"
+      },
+      {
+        "name": "wasp",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 8,
+        "matched_terms_used": [
+          "wasp"
+        ],
+        "sample_first_msgs": [
+          "Explore the current Pre Atlas worktree at `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\stoic-noether-96bea8` and report b",
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is **SCRIPTS at user-root and standard locations** \u2014 si",
+          "**TASK: Read these specific files end-to-end. Don't ask questions. Quote with file:line citations.**  **Pass 1 \u2014 All CLA",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK: Read every file in 4 specific directories end-to-end. Do not skip. Do not skim. Quote with file:line citations.*",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is the `C:\\Users\\bruke\\.claude\\` tree (everything EXCEP",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa"
+        ],
+        "path": "C:\\Users\\bruke\\wasp"
+      },
+      {
+        "name": "web-audit",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 39,
+        "matched_terms_used": [
+          "web-audit"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "ship anatomy patch 3 for SPEC 03 (canvas pre-capture) \u2014 reconsider firewall for that one.",
+          "where is anotmy at",
+          "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prom",
+          "I need uyou to tell me what do you think about the structure of this repo",
+          "eeverything ive been hesitating i seen other oeiole do",
+          "i need you to look at the memory",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop"
+        ],
+        "path": "C:\\Users\\bruke\\web-audit"
+      },
+      {
+        "name": "welcome-to-docker",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "welcome-to-docker"
+        ],
+        "sample_first_msgs": [
+          "where is anotmy at",
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y"
+        ],
+        "path": "C:\\Users\\bruke\\welcome-to-docker"
+      },
+      {
+        "name": "pre-atlas",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 112,
+        "matched_terms_used": [
+          "pre-atlas"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"pester-2-linkedin-positioning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-2-linkedin-posi",
+          "i need you to install gemini cli npm install -g @google/gemini cli",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "i want to make a folder caled meta atalas and put pre atlas in it will my files break if we do that>?",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "Pick up Thread 2 from C:\\Users\\bruke\\OneDrive\\Desktop\\claude-mining\\v2\\_THREAD_2_READY.md.  Read that file first \u2014 it's "
+        ],
+        "path": null
+      },
+      {
+        "name": "competitor-monitor",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 16,
+        "matched_terms_used": [
+          "competitor-monitor"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "<scheduled-task name=\"pester-2-linkedin-positioning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-2-linkedin-posi",
+          "<scheduled-task name=\"pester-1-cold-email\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-1-cold-email\\SKILL.md\"> T",
+          "where is anotmy at",
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "<scheduled-task name=\"pester-3-accountability-check\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-3-accountabilit",
+          "i fave something called niship do you know what im talk about if so i need you to es tool it"
+        ],
+        "path": null
+      },
+      {
+        "name": "Scrapling",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 14,
+        "matched_terms_used": [
+          "scrapling"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prom",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "I'm planning a new Claude Code build: a git repo called `operator-system` plus a skill called `handoff-out` that writes ",
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is **SCRIPTS at user-root and standard locations** \u2014 si",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": null
+      },
+      {
+        "name": "strudel",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 242,
+        "matched_terms_used": [
+          "strudel"
+        ],
+        "sample_first_msgs": [
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "Pick up Thread 2 from C:\\Users\\bruke\\OneDrive\\Desktop\\claude-mining\\v2\\_THREAD_2_READY.md.  Read that file first \u2014 it's ",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> Thi",
+          "<scheduled-task name=\"strudel-source-tracker\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-source-tracker\\SKILL.",
+          "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> Thi"
+        ],
+        "path": null
+      },
+      {
+        "name": "ai-fashion-prompt-console",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 16,
+        "matched_terms_used": [
+          "ai-fashion-prompt-console"
+        ],
+        "sample_first_msgs": [
+          "Goal: Census the user's Claude Code session transcripts so I can plan an audit. I need ground truth on volume, time rang",
+          "Explore the AI Fashion Prompt Console upload screen implementation in C:\\Users\\bruke\\Downloads\\ai-fashion-prompt-console",
+          "Explore the directory structure of C:\\Users\\bruke\\Downloads\\ai-fashion-prompt-console\\ \u2014 list ALL files and directories,",
+          "Explore the project at C:\\Users\\bruke\\Downloads\\ai-fashion-prompt-console\\ and also C:\\Users\\bruke\\Downloads\\ComfyUI\\ to",
+          "Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requ",
+          "Good. I\u2019m going to be surgical. You don\u2019t need more features. You need to fix three layers: 1. Positioning clarity 2. Au",
+          "Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requ",
+          "Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requ"
+        ],
+        "path": null
+      },
+      {
+        "name": "inpact-site",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "inpact site",
+          "inpact-site"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "Audit the ACTUAL state of inPACT as a launchable paid product.  CONTEXT: User's MEMORY.md says \"Waitlist + Clarity Snaps"
+        ],
+        "path": null
+      },
+      {
+        "name": "SteerPOP",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "steerpop"
+        ],
+        "sample_first_msgs": [
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "**TASK: Read these specific files end-to-end. Don't ask questions. Quote with file:line citations.**  **Pass 1 \u2014 All CLA",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is the `C:\\Users\\bruke\\.claude\\` tree (everything EXCEP"
+        ],
+        "path": null
+      },
+      {
+        "name": "strudel-skills",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 9,
+        "matched_terms_used": [
+          "strudel skills",
+          "strudel-skills"
+        ],
+        "sample_first_msgs": [
+          "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> Thi",
+          "<scheduled-task name=\"strudel-source-tracker\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-source-tracker\\SKILL.",
+          "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> Thi",
+          "<scheduled-task name=\"strudel-source-tracker\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-source-tracker\\SKILL.",
+          "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> Thi",
+          "<scheduled-task name=\"strudel-source-tracker\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-source-tracker\\SKILL.",
+          "<scheduled-task name=\"strudel-source-tracker\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-source-tracker\\SKILL.",
+          "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> Thi"
+        ],
+        "path": null
+      },
+      {
+        "name": "STEMai",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 48,
+        "matched_terms_used": [
+          "stemai"
+        ],
+        "sample_first_msgs": [
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "are you able to see my conversation history with the es tool",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "Search the project at C:\\Users\\bruke\\STEMai for any existing piano roll implementation. Look for: 1. Any HTML/JS files w",
+          "I need to understand what \"notes\" data exists in the STEMai project at C:\\Users\\bruke\\STEMai. The user has a stem player"
+        ],
+        "path": null
+      },
+      {
+        "name": "POLARIS",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 38,
+        "matched_terms_used": [
+          "polaris"
+        ],
+        "sample_first_msgs": [
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "<scheduled-task name=\"weekly-session-audit\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\weekly-session-audit\\SKILL.md\">",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "are you able to see my conversation history with the es tool",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "Explore the codebase at C:\\Users\\bruke\\POLARIS thoroughly. I need to understand:  1. What is this project? What does it "
+        ],
+        "path": null
+      },
+      {
+        "name": "URBANNOMAD",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "urbannomad"
+        ],
+        "sample_first_msgs": [
+          "where is anotmy at",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c"
+        ],
+        "path": null
+      },
+      {
+        "name": "comfyui-controller",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "comfyui controller",
+          "comfyui-controller"
+        ],
+        "sample_first_msgs": [
+          "Read all the key source files in the comfyui-controller package at C:\\Users\\bruke\\Downloads\\ComfyUI\\comfyui_controller\\ ",
+          "Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requ"
+        ],
+        "path": null
+      },
+      {
+        "name": "virtualstudio",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "virtualstudio"
+        ],
+        "sample_first_msgs": [
+          "You need to rewrite 3 React component files in the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio C",
+          "Perform a thorough code audit of the VirtualStudio Cinematic Hero project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_",
+          "Clone both repositories into temporary directories and then compare their structures and contents.  1. Clone https://git"
+        ],
+        "path": null
+      },
+      {
+        "name": "VirtualStudio-Cinematic-Hero",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "virtualstudio cinematic hero",
+          "virtualstudio-cinematic-hero"
+        ],
+        "sample_first_msgs": [
+          "Goal: Census the user's Claude Code session transcripts so I can plan an audit. I need ground truth on volume, time rang",
+          "Perform a thorough code audit of the VirtualStudio Cinematic Hero project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_",
+          "Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requ",
+          "Explore the source code at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero. Focus on:  1. The ma"
+        ],
+        "path": null
+      },
+      {
+        "name": "THING",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 135,
+        "matched_terms_used": [
+          "thing"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "i need you to open atlas core",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "In C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine, the helper that converts a region name to a PascalCase component nam",
+          "i need you to install gemini cli npm install -g @google/gemini cli",
+          "# Resume \u2014 Claude/ChatGPT Mining Project (Post-Fest)  You're picking up an in-flight project. Prior session **closed the",
+          "i want to make a folder caled meta atalas and put pre atlas in it will my files break if we do that>?",
+          "Pick up Thread 2 from C:\\Users\\bruke\\OneDrive\\Desktop\\claude-mining\\v2\\_THREAD_2_READY.md.  Read that file first \u2014 it's "
+        ],
+        "path": null
+      },
+      {
+        "name": "WallPaper",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 17,
+        "matched_terms_used": [
+          "wallpaper"
+        ],
+        "sample_first_msgs": [
+          "I need a comprehensive audit of all HTML files in the Pre Atlas codebase at C:\\Users\\bruke\\Pre Atlas. For EACH of the fo",
+          "I need to build a comprehensive UI architecture map of the \"Pre Atlas\" project's HTML frontend. Explore VERY THOROUGHLY ",
+          "I need to design a local MCP server for Android development in Claude Code. Here's the context:  **Environment:** - Node",
+          "I need to understand how to configure a local MCP server for Claude Code. Check:  1. Read C:\\Users\\bruke\\.claude\\setting",
+          "Thoroughly explore the codebase at C:\\Users\\bruke\\android. I need to understand: 1. What kind of project this is (Androi",
+          "Search for Android SDK installation, ADB, and Firebase CLI on this Windows machine. Check: 1. Common Android SDK locatio",
+          "Review all recent code changes in the WallPaper Android project at C:/Users/bruke/android/WallPaper. This is a code revi",
+          "Fix 4 audit issues in the WallPaper Android app. The project is at C:/Users/bruke/android/WallPaper. Package: com.focusb"
+        ],
+        "path": null
+      },
+      {
+        "name": "anatomy-map",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 10,
+        "matched_terms_used": [
+          "anatomy-map"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "where is anotmy at",
+          "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prom",
+          "i need you to use es tools locate recent code invvoviling anotmy and extensoio n and use memore and context vso we can f",
+          "Inventory every \"anatomy\" implementation in the Pre Atlas repo. Report under 400 words.  Search the cwd (`C:\\Users\\bruke",
+          "You are auditing PR #14 in the lionestenzol/pre-atlas GitHub repo. Branch: `claude/main-triage-26f4a5`. Title: \"triage: ",
+          "I'm planning a new Claude Code build: a git repo called `operator-system` plus a skill called `handoff-out` that writes ",
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\anatomy-map"
+      },
+      {
+        "name": "anime-js",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "anime-js"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "where is anotmy at",
+          "I need you to find anime.js and instal an create some docs for ai",
+          "excecute the handoff below: Good call. Fresh session is right \u2014 context here is heavy and Path 1 is multi-hour with ~40 "
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js"
+      },
+      {
+        "name": "continuous-learning-v2",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "continuous-learning-v2"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "**TASK:** Read every slash command file under `C:\\Users\\bruke\\.claude\\commands\\` end-to-end. Goal: **streamlining** \u2014 Br",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\continuous-learning-v2"
+      },
+      {
+        "name": "mandelbulb3d",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 13,
+        "matched_terms_used": [
+          "mandelbulb3d"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "Good. \"Use it like it's native\" is the ambitious framing \u2014 that means the skill needs to give Claude operational fluency",
+          "i need you to use es tool to serarch and context and memory i need to find my debugging tool",
+          "@C:\\Users\\bruke\\OneDrive\\Desktop\\1 files.zip here",
+          "i need you to give me a tour of binre",
+          "ive been usin claude computer use with mandelbulb 3d its way too slowand using way too many tojens is there away we can ",
+          "c dto pre atlas",
+          "Audit the existing Mandelbulb3D (MB3D) skill scaffolding. Goal: tell the user what programmatic-control assets already e"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulb3d"
+      },
+      {
+        "name": "mandelbulber2",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 6,
+        "matched_terms_used": [
+          "mandelbulber2"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "what happens in we combine binre tool with es tool what can we do",
+          "i need you to use es tool to serarch and context and memory i need to find my debugging tool",
+          ".",
+          "c dto pre atlas",
+          "Assess how much Mandelbulb3D (MB3D) capability Mandelbulber 2 (Mb2) actually covers. The user is considering Mb2 as a su"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulber2"
+      },
+      {
+        "name": "react-three-fiber",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 9,
+        "matched_terms_used": [
+          "react three fiber",
+          "react-three-fiber"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "i need you to connect to blender",
+          "execute this: b Writing the Path 2 handoff for a fresh session. Path 2 handoff written Location: `C:/Users/bruke/three-j",
+          "I need you to find anime.js and instal an create some docs for ai",
+          "c dto pre atlas",
+          "PASS 2 of the three.js ecosystem deep audit. Pass 1 was selective. Bruke wants the full source walk: \"I only want to mak",
+          "You are verifying a hand-curated list of three.js-based game engines, frameworks, boilerplates, and example collections.",
+          "You are verifying the pmndrs (Poimandres) React-three.js ecosystem packages. The list was compiled from a user's library"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\react-three-fiber"
+      },
+      {
+        "name": "remotion",
+        "surface": "custom_skill",
+        "signal_band": "partial",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "remotion"
+        ],
+        "sample_first_msgs": [
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\remotion"
+      },
+      {
+        "name": "scrapling-official",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "scrapling-official"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prom",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\scrapling-official"
+      },
+      {
+        "name": "security-review",
+        "surface": "custom_skill",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 7,
+        "matched_terms_used": [
+          "security review",
+          "security-review"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "i need you to use es tools locate recent code invvoviling anotmy and extensoio n and use memore and context vso we can f",
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file",
+          "**TASK:** Read every slash command file under `C:\\Users\\bruke\\.claude\\commands\\` end-to-end. Goal: **streamlining** \u2014 Br",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa",
+          "TASK: Use the `codex-delegate` skill to have Codex write a runtime memory-dump unpacker for an ASPack-packed Windows DLL"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\security-review"
+      },
+      {
+        "name": "strategic-compact",
+        "surface": "custom_skill",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "strategic-compact"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\strategic-compact"
+      },
+      {
+        "name": "three-js",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 33,
+        "matched_terms_used": [
+          "three-js"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "i need you to connect to blender",
+          "i need you to use es tool to serarch and context and memory i need to find my debugging tool",
+          "execute this: b Writing the Path 2 handoff for a fresh session. Path 2 handoff written Location: `C:/Users/bruke/three-j",
+          "I need you to find anime.js and instal an create some docs for ai",
+          "excecute the handoff below: Good call. Fresh session is right \u2014 context here is heavy and Path 1 is multi-hour with ~40 ",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "c dto pre atlas"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\three-js"
+      },
+      {
+        "name": "web-audit",
+        "surface": "custom_skill",
+        "signal_band": "partial",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 39,
+        "matched_terms_used": [
+          "web-audit"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "ship anatomy patch 3 for SPEC 03 (canvas pre-capture) \u2014 reconsider firewall for that one.",
+          "where is anotmy at",
+          "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prom",
+          "I need uyou to tell me what do you think about the structure of this repo",
+          "eeverything ive been hesitating i seen other oeiole do",
+          "i need you to look at the memory",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\web-audit"
+      },
+      {
+        "name": "web-extract-workflow",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 8,
+        "matched_terms_used": [
+          "web-extract-workflow"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prom",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "I'm planning a new Claude Code build: a git repo called `operator-system` plus a skill called `handoff-out` that writes ",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa",
+          "WEAPON MODE \u2014 single mission, no scope expansion.  TARGET: Close the \"Scrapling browser modes are not yet usable\" loop b",
+          "WEAPON MODE \u2014 single mission, no scope expansion.  TARGET: Close the \"Pattern 3 (adaptive selector heal) is claimed but "
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\web-extract-workflow"
+      },
+      {
+        "name": "aegis-fabric",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 63,
+        "matched_terms_used": [
+          "aegis fabric",
+          "aegis-fabric"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "i need you to open atlas core",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "i need you to install gemini cli npm install -g @google/gemini cli",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "I need uyou to tell me what do you think about the structure of this repo",
+          "This repo feels likea big ball of mud",
+          "i need you to look at the memory"
+        ],
+        "path": "services\\aegis-fabric"
+      },
+      {
+        "name": "canvas-engine",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 51,
+        "matched_terms_used": [
+          "canvas-engine"
+        ],
+        "sample_first_msgs": [
+          "cd services/canvas-engine && npm run smoke:envelope",
+          "cd services/canvas-engine && npm run start'",
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "i need you to open atlas core",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "In C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine, the helper that converts a region name to a PascalCase component nam",
+          "# Resume \u2014 Claude/ChatGPT Mining Project (Post-Fest)  You're picking up an in-flight project. Prior session **closed the",
+          "i want to make a folder caled meta atalas and put pre atlas in it will my files break if we do that>?"
+        ],
+        "path": "services\\canvas-engine"
+      },
+      {
+        "name": "cognitive-sensor",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 279,
+        "matched_terms_used": [
+          "cognitive sensor",
+          "cognitive-sensor"
+        ],
+        "sample_first_msgs": [
+          "<scheduled-task name=\"atlas-evening\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-evening\\SKILL.md\"> This is an au",
+          "<scheduled-task name=\"atlas-morning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-morning\\SKILL.md\"> This is an au",
+          "<scheduled-task name=\"atlas-evening\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-evening\\SKILL.md\"> This is an au",
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "<scheduled-task name=\"atlas-substrate-daily-soak\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-substrate-daily-soa",
+          "<scheduled-task name=\"atlas-substrate-daily-soak\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-substrate-daily-soa",
+          "<scheduled-task name=\"atlas-midday\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-midday\\SKILL.md\"> This is an auto",
+          "<scheduled-task name=\"atlas-evening\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-evening\\SKILL.md\"> This is an au"
+        ],
+        "path": "services\\cognitive-sensor"
+      },
+      {
+        "name": "cortex",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 30,
+        "matched_terms_used": [
+          "cortex"
+        ],
+        "sample_first_msgs": [
+          "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cort",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  TICK 5m: Read the journal, plan, an",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  TICK 5m: Read the journal, plan, an",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  TICK 5m: Read the journal, plan, an",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  WRAP-UP: produce ONE sentence to se",
+          "You are executing Phase 3 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. P",
+          "You are executing Phase 1 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. P",
+          "You are executing Phase 1 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. P"
+        ],
+        "path": "services\\cortex"
+      },
+      {
+        "name": "crucix",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "crucix"
+        ],
+        "sample_first_msgs": [
+          "Read FIVE small services in `C:\\Users\\bruke\\Pre Atlas\\services\\` and report on each in under 100 words apiece (they're s",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  I need a HONEST inventory of the loose `.ts`, `.mj",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atla"
+        ],
+        "path": "services\\crucix"
+      },
+      {
+        "name": "delta-kernel",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 168,
+        "matched_terms_used": [
+          "delta kernel",
+          "delta-kernel"
+        ],
+        "sample_first_msgs": [
+          "claude -p --permission-mode acceptEdits < \"C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\zealous-mclean-a9b079\\.dispatch\\ph",
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "i need you to open atlas core",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "i need you to install gemini cli npm install -g @google/gemini cli",
+          "\"continue the atlas executor wiring\"",
+          "\"continue the atlas executor wiring\"",
+          "\"continue the atlas executor wiring\""
+        ],
+        "path": "services\\delta-kernel"
+      },
+      {
+        "name": "mirofish",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "mirofish"
+        ],
+        "sample_first_msgs": [
+          "Read three services in `C:\\Users\\bruke\\Pre Atlas\\services\\` and report on each in under 200 words apiece:  - `canvas-eng",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  I need a HONEST inventory of the loose `.ts`, `.mj",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atla"
+        ],
+        "path": "services\\mirofish"
+      },
+      {
+        "name": "mosaic-dashboard",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 14,
+        "matched_terms_used": [
+          "mosaic dashboard",
+          "mosaic-dashboard"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "i need you to open atlas core",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "I need uyou to tell me what do you think about the structure of this repo",
+          "This repo feels likea big ball of mud",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file",
+          "**TASK: Read these specific files end-to-end. Don't ask questions. Quote with file:line citations.**  **Pass 1 \u2014 All CLA"
+        ],
+        "path": "services\\mosaic-dashboard"
+      },
+      {
+        "name": "mosaic-orchestrator",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 13,
+        "matched_terms_used": [
+          "mosaic-orchestrator"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "i need you to install gemini cli npm install -g @google/gemini cli",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "I need uyou to tell me what do you think about the structure of this repo",
+          "This repo feels likea big ball of mud",
+          "I need you to open this link : https://chatgpt.com/share/69f38391-e470-83ea-8e82-3dead8c9a012",
+          "Explore the current Pre Atlas worktree at `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\stoic-noether-96bea8` and report b",
+          "**TASK: Read these 5 specific files end-to-end. Do not ask questions. Do not skim. Just read each fully and report findi"
+        ],
+        "path": "services\\mosaic-orchestrator"
+      },
+      {
+        "name": "openclaw",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "openclaw"
+        ],
+        "sample_first_msgs": [
+          "Read three services in `C:\\Users\\bruke\\Pre Atlas\\services\\` and report on each in under 200 words apiece:  - `canvas-eng",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atla"
+        ],
+        "path": "services\\openclaw"
+      },
+      {
+        "name": "optogon",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 49,
+        "matched_terms_used": [
+          "optogon"
+        ],
+        "sample_first_msgs": [
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "Save this as a file or paste it into the new session:  ``` # Resume \u2014 Claude/ChatGPT Export Mining Project  You're picki",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\8423c2598d1850b1b07b3dea7436ffc88813b8ea376e3ce3af159a55b612a31b-2026-05-21-20-01-06-5",
+          "Continue the MiniDocs glyph-CAS layered build from the plan file.  Worktree: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\",
+          "is optogon OP",
+          "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cort",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  TICK 5m: Read the journal, plan, an",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  TICK 5m: Read the journal, plan, an"
+        ],
+        "path": "services\\optogon"
+      },
+      {
+        "name": "perception",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "perception"
+        ],
+        "sample_first_msgs": [
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file",
+          "Read FIVE small services in `C:\\Users\\bruke\\Pre Atlas\\services\\` and report on each in under 100 words apiece (they're s",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atla",
+          "Good. I\u2019m going to be surgical. You don\u2019t need more features. You need to fix three layers: 1. Positioning clarity 2. Au"
+        ],
+        "path": "services\\perception"
+      },
+      {
+        "name": "triangulation",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "triangulation"
+        ],
+        "sample_first_msgs": [
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file",
+          "Read FIVE small services in `C:\\Users\\bruke\\Pre Atlas\\services\\` and report on each in under 100 words apiece (they're s",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atla"
+        ],
+        "path": "services\\triangulation"
+      },
+      {
+        "name": "uasc-executor",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 16,
+        "matched_terms_used": [
+          "uasc executor",
+          "uasc-executor"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "I need uyou to tell me what do you think about the structure of this repo",
+          "This repo feels likea big ball of mud",
+          "i need you to look at the memory",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "I'm continuing the Atlas collapse migration. Substrate lives at C:\\Users\\bruke\\atlas (private repo lionestenzol/atlas, b",
+          "I'm planning how to autonomously bring up + verify a closed MAPE-K loop in the Pre Atlas project. The user wants me to d"
+        ],
+        "path": "services\\uasc-executor"
+      },
+      {
+        "name": "ws-gateway",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 14,
+        "matched_terms_used": [
+          "ws-gateway"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "I need uyou to tell me what do you think about the structure of this repo",
+          "This repo feels likea big ball of mud",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "I need you to familiraize yourself with this repo / weapon",
+          "I need you to familirize yourself with this codebase"
+        ],
+        "path": "services\\ws-gateway"
+      },
+      {
+        "name": "ai-exec-pipeline",
+        "surface": "pre_atlas_apps",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "ai-exec-pipeline"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "This repo feels likea big ball of mud",
+          "Explore the current Pre Atlas worktree at `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\stoic-noether-96bea8` and report b",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  I need a HONEST inventory of the loose `.ts`, `.mj"
+        ],
+        "path": "apps\\ai-exec-pipeline"
+      },
+      {
+        "name": "blueprint-generator",
+        "surface": "pre_atlas_apps",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 23,
+        "matched_terms_used": [
+          "blueprint generator",
+          "blueprint-generator"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "This repo feels likea big ball of mud",
+          "I need you to familirize yourself with this codebase",
+          "Explore the broader Pre Atlas project UI patterns at C:\\Users\\bruke\\Pre Atlas. I need to understand: 1. What UI componen",
+          "Search the Pre Atlas repository at C:\\Users\\bruke\\Pre Atlas\\ for all dev server configurations. Look for:  1. package.js",
+          "show me the system",
+          "Thoroughness: very thorough  Explore the ENTIRE Pre Atlas repository rooted at C:\\Users\\bruke\\Pre Atlas. This is a feder"
+        ],
+        "path": "apps\\blueprint-generator"
+      },
+      {
+        "name": "canvas-demo",
+        "surface": "pre_atlas_apps",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 7,
+        "matched_terms_used": [
+          "canvas demo",
+          "canvas-demo"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "i need you to es ttool find remotioni d and see  oif it is in stalled if so lets seee it",
+          "Explore the current Pre Atlas worktree at `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\stoic-noether-96bea8` and report b",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  I need a HONEST inventory of the loose `.ts`, `.mj",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atla"
+        ],
+        "path": "apps\\canvas-demo"
+      },
+      {
+        "name": "code-converter",
+        "surface": "pre_atlas_apps",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 12,
+        "matched_terms_used": [
+          "code converter",
+          "code-converter"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "i need you to open atlas core",
+          "i need you to install gemini cli npm install -g @google/gemini cli",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "This repo feels likea big ball of mud",
+          "i need you to look at the memory",
+          "I need you to search through cognitive sensor and lets find some projects to work on",
+          "I need you to familirize yourself with this codebase"
+        ],
+        "path": "apps\\code-converter"
+      },
+      {
+        "name": "inpact",
+        "surface": "pre_atlas_apps",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 22,
+        "matched_terms_used": [
+          "inpact"
+        ],
+        "sample_first_msgs": [
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "<scheduled-task name=\"atlas-substrate-step5-gate\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-substrate-step5-gat",
+          "Save this as a file or paste it into the new session:  ``` # Resume \u2014 Claude/ChatGPT Export Mining Project  You're picki",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\8423c2598d1850b1b07b3dea7436ffc88813b8ea376e3ce3af159a55b612a31b-2026-05-21-20-01-06-5",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  TICK 5m: Read the journal, plan, an",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  TICK 5m: Read the journal, plan, an",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  TICK 5m: Read the journal, plan, an",
+          "\ufeffYou are an exoskeleton check-in. The operator is mid-session on a planned project.  WRAP-UP: produce ONE sentence to se"
+        ],
+        "path": "apps\\inpact"
+      },
+      {
+        "name": "anatomy-extension",
+        "surface": "pre_atlas_tools",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 41,
+        "matched_terms_used": [
+          "anatomy extension",
+          "anatomy-extension"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "<scheduled-task name=\"atlas-substrate-step5-gate\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-substrate-step5-gat",
+          "ship anatomy patch 3 for SPEC 03 (canvas pre-capture) \u2014 reconsider firewall for that one.",
+          "where is anotmy at",
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prom"
+        ],
+        "path": "tools\\anatomy-extension"
+      },
+      {
+        "name": "anatomy-research",
+        "surface": "pre_atlas_tools",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 10,
+        "matched_terms_used": [
+          "anatomy-research"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "where is anotmy at",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "i need you to use es tools locate recent code invvoviling anotmy and extensoio n and use memore and context vso we can f",
+          "i need you to es ttool find remotioni d and see  oif it is in stalled if so lets seee it",
+          "I'm planning architectural completion of Pre Atlas (personal MAPE-K autonomic system). The third identified hole is the ",
+          "Inventory every \"anatomy\" implementation in the Pre Atlas repo. Report under 400 words.  Search the cwd (`C:\\Users\\bruke"
+        ],
+        "path": "tools\\anatomy-research"
+      },
+      {
+        "name": "anatomy-rewrite",
+        "surface": "pre_atlas_tools",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 7,
+        "matched_terms_used": [
+          "anatomy-rewrite"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "where is anotmy at",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "I need uyou to tell me what do you think about the structure of this repo",
+          "i need you to use es tools locate recent code invvoviling anotmy and extensoio n and use memore and context vso we can f",
+          "Inventory every \"anatomy\" implementation in the Pre Atlas repo. Report under 400 words.  Search the cwd (`C:\\Users\\bruke",
+          "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  I have already inventoried `services/`, `apps/`, `"
+        ],
+        "path": "tools\\anatomy-rewrite"
+      },
+      {
+        "name": "codex-partner",
+        "surface": "pre_atlas_tools",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 17,
+        "matched_terms_used": [
+          "codex-partner"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "<scheduled-task name=\"atlas-substrate-step5-gate\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-substrate-step5-gat",
+          "mow iwant you to tell me what is the new atlas vs the old one is the new one a database?",
+          "I need uyou to tell me what do you think about the structure of this repo",
+          "i need you to look at the memory",
+          "i need you to use es tools locate recent code invvoviling anotmy and extensoio n and use memore and context vso we can f",
+          "I'm continuing the Atlas collapse migration. Substrate lives at C:\\Users\\bruke\\atlas (private repo lionestenzol/atlas, b",
+          "I'm planning how to autonomously bring up + verify a closed MAPE-K loop in the Pre Atlas project. The user wants me to d"
+        ],
+        "path": "tools\\codex-partner"
+      }
+    ],
+    "discussed_but_not_shipped": [
+      {
+        "name": "fractal-machine",
+        "surface": "standalone_repo",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "fractal machine",
+          "fractal-machine"
+        ],
+        "sample_first_msgs": [
+          "i like my curent settings on my web mandel machine i need you to use mcp to pull my prest and then i need you to add a s",
+          "."
+        ],
+        "path": "C:\\Users\\bruke\\fractal-machine"
+      },
+      {
+        "name": "my-app",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "my-app"
+        ],
+        "sample_first_msgs": [
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y",
+          "Explore the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero. Focus on:  1. Dependenci"
+        ],
+        "path": "C:\\Users\\bruke\\my-app"
+      },
+      {
+        "name": "my-habit-tracker",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "my-habit-tracker"
+        ],
+        "sample_first_msgs": [
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y"
+        ],
+        "path": "C:\\Users\\bruke\\my-habit-tracker"
+      },
+      {
+        "name": "my_project",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "my_project"
+        ],
+        "sample_first_msgs": [
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y"
+        ],
+        "path": "C:\\Users\\bruke\\my_project"
+      },
+      {
+        "name": "private-gpt",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "private-gpt"
+        ],
+        "sample_first_msgs": [
+          "Pick up Thread 2 from C:\\Users\\bruke\\OneDrive\\Desktop\\claude-mining\\v2\\_THREAD_2_READY.md.  Read that file first \u2014 it's ",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y"
+        ],
+        "path": "C:\\Users\\bruke\\private-gpt"
+      },
+      {
+        "name": "privateGPT",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "privategpt"
+        ],
+        "sample_first_msgs": [
+          "Pick up Thread 2 from C:\\Users\\bruke\\OneDrive\\Desktop\\claude-mining\\v2\\_THREAD_2_READY.md.  Read that file first \u2014 it's ",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "I'm doing a machine-discoverable inventory of Bruke's Claude-related assets on Windows for the Step 2a inventory scan. Y"
+        ],
+        "path": "C:\\Users\\bruke\\privateGPT"
+      },
+      {
+        "name": "servers",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 8,
+        "matched_terms_used": [
+          "servers"
+        ],
+        "sample_first_msgs": [
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "I need to understand the current shell layout system for the Loop Pad application to plan adding draggable column divide",
+          "Search the Pre Atlas repository at C:\\Users\\bruke\\Pre Atlas\\ for all dev server configurations. Look for:  1. package.js",
+          "Thoroughly explore the Pre Atlas project at C:\\Users\\bruke\\Pre Atlas to find ALL dev server configurations. I need to de",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is **SCRIPTS at user-root and standard locations** \u2014 si",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is the `C:\\Users\\bruke\\.claude\\` tree (everything EXCEP",
+          "Audit the ACTUAL code state of canvas-engine for shipping as paid developer SaaS (\"URL \u2192 React clone\").  CONTEXT: User's",
+          "Audit the ACTUAL code state of competitor-monitor for shipping as paid SaaS.  CONTEXT: User claims v1.0 is shipped. CHAN"
+        ],
+        "path": null
+      },
+      {
+        "name": "wasp",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 8,
+        "matched_terms_used": [
+          "wasp"
+        ],
+        "sample_first_msgs": [
+          "Explore the current Pre Atlas worktree at `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\stoic-noether-96bea8` and report b",
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is **SCRIPTS at user-root and standard locations** \u2014 si",
+          "**TASK: Read these specific files end-to-end. Don't ask questions. Quote with file:line citations.**  **Pass 1 \u2014 All CLA",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK: Read every file in 4 specific directories end-to-end. Do not skip. Do not skim. Quote with file:line citations.*",
+          "I'm doing a machine-discoverable inventory for Step 2a. Your job is the `C:\\Users\\bruke\\.claude\\` tree (everything EXCEP",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa"
+        ],
+        "path": null
+      },
+      {
+        "name": "lionestenzol",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 11,
+        "matched_terms_used": [
+          "lionestenzol"
+        ],
+        "sample_first_msgs": [
+          "<scheduled-task name=\"pester-2-linkedin-positioning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-2-linkedin-posi",
+          "<scheduled-task name=\"pester-1-cold-email\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-1-cold-email\\SKILL.md\"> T",
+          "<scheduled-task name=\"pester-3-accountability-check\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-3-accountabilit",
+          "I'm continuing the Atlas collapse migration. Substrate lives at C:\\Users\\bruke\\atlas (private repo lionestenzol/atlas, b",
+          "Goal: surgically merge PR #12 (sitepull -> Optogon ContextPackage adapter, branch `feat/optogon-sitepull-adapter-ship3`)",
+          "You are auditing PR #11 in the lionestenzol/pre-atlas GitHub repo. Branch: `claude/flamboyant-gates-54fb9c`. Title: \"fix",
+          "You are auditing PR #14 in the lionestenzol/pre-atlas GitHub repo. Branch: `claude/main-triage-26f4a5`. Title: \"triage: ",
+          "Re-audit PR #14 in lionestenzol/pre-atlas (branch `claude/main-triage-26f4a5`). My prior pass found 7 unique commits, ca"
+        ],
+        "path": null
+      },
+      {
+        "name": "anime-js-migrate",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "anime-js-migrate"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "I need you to find anime.js and instal an create some docs for ai"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js-migrate"
+      },
+      {
+        "name": "autopilot",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 14,
+        "matched_terms_used": [
+          "autopilot"
+        ],
+        "sample_first_msgs": [
+          "Design an integration plan for combining chord-pad and loop-engine into a new package called \"loop-pad\" in C:\\Users\\bruk",
+          "Context The autopilot works correctly with 8-chord progressions but has timing issues on shorter ones (2, 3, 4, 5, 6, 7 ",
+          "In C:\\Users\\bruke\\STRUDEL\\chord-pad, thoroughly explore the UI layer and main orchestration. I need complete details on:",
+          "I need to understand the \"autopilot\" feature on \"chord path\" in this codebase. The user has a UI issue where only one FX",
+          "Read all the UI files in packages/loop-engine/ui/ directory. I need to understand the full UI rendering, especially any ",
+          "I need your help .I need you to help me fix autopilot on chord path. Only one setting is visble at a time on the y axis ",
+          "I need to understand the chord-pad app's layout to fix sizing issues when it's embedded in an iframe inside loop-pad. Sp",
+          "I need to design a constellation visualizer for the chord-pad XY pad in C:\\Users\\bruke\\STRUDEL\\chord-pad\\.  ## Context T"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\autopilot"
+      },
+      {
+        "name": "backend-patterns",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "backend-patterns"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\backend-patterns"
+      },
+      {
+        "name": "codex-delegate",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 14,
+        "matched_terms_used": [
+          "codex delegate",
+          "codex-delegate"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "what happens in we combine binre tool with es tool what can we do",
+          "This repo feels likea big ball of mud",
+          "i need you to look at the memory",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "i need you to use es tools locate recent code invvoviling anotmy and extensoio n and use memore and context vso we can f",
+          "i need you to use the es tool to find everything you know about shardstate",
+          "I want to test something. I want you to search my conversation history and use that to profile me"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\codex-delegate"
+      },
+      {
+        "name": "coding-standards",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "coding standards",
+          "coding-standards"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\coding-standards"
+      },
+      {
+        "name": "competitor-monitor",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 16,
+        "matched_terms_used": [
+          "competitor-monitor"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "<scheduled-task name=\"pester-2-linkedin-positioning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-2-linkedin-posi",
+          "<scheduled-task name=\"pester-1-cold-email\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-1-cold-email\\SKILL.md\"> T",
+          "where is anotmy at",
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "<scheduled-task name=\"pester-3-accountability-check\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\pester-3-accountabilit",
+          "i fave something called niship do you know what im talk about if so i need you to es tool it"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\competitor-monitor"
+      },
+      {
+        "name": "cookbook",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "cookbook"
+        ],
+        "sample_first_msgs": [
+          "I need to verify that Strudel code examples from a cookbook document actually parse and evaluate correctly.   Look at th",
+          "Explore the Strudel codebase at C:\\Users\\bruke\\STRUDEL to understand what valid Strudel code looks like and how existing",
+          "Explore the `scripts/` directory and the AI reference docs at the repo root. I need to understand:  1. What's in `script",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\cookbook"
+      },
+      {
+        "name": "eval-harness",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "eval-harness"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "**TASK:** Read every slash command file under `C:\\Users\\bruke\\.claude\\commands\\` end-to-end. Goal: **streamlining** \u2014 Br",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\eval-harness"
+      },
+      {
+        "name": "fest",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 15,
+        "matched_terms_used": [
+          "fest"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "# Resume \u2014 Claude/ChatGPT Mining Project (Post-Fest)  You're picking up an in-flight project. Prior session **closed the",
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27",
+          "i need you to help me plan. I want o use es tool to plan a fest /project-finisher /mini-ship /weapon",
+          "You are executing Phase 2 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. P",
+          "You are executing Phase 3 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. P",
+          "You are executing Phase 1 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. P",
+          "You are executing Phase 1 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. P"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\fest"
+      },
+      {
+        "name": "frontend-patterns",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "frontend-patterns"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\frontend-patterns"
+      },
+      {
+        "name": "handoff-out",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 7,
+        "matched_terms_used": [
+          "handoff-out"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "\\Got it. Here's the complete handoff for Claude Code \u2014 the SOP, the repo setup, and the build plan in one document. Drop",
+          "I'm planning a new Claude Code build: a git repo called `operator-system` plus a skill called `handoff-out` that writes ",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa",
+          "Read actual code. Don't infer from names. Cite file:line for every claim.  **Two targets:**  ### Target A \u2014 Card system "
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\handoff-out"
+      },
+      {
+        "name": "learned",
+        "surface": "custom_skill",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "learned"
+        ],
+        "sample_first_msgs": [
+          "Research existing libraries and academic prior art for rotation/scale/font-invariant glyph shape descriptors that could "
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\learned"
+      },
+      {
+        "name": "mini-ship",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 33,
+        "matched_terms_used": [
+          "mini ship",
+          "mini-ship"
+        ],
+        "sample_first_msgs": [
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "In C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine, the helper that converts a region name to a PascalCase component nam",
+          "i need you to install gemini cli npm install -g @google/gemini cli",
+          "Pick up Thread 2 from C:\\Users\\bruke\\OneDrive\\Desktop\\claude-mining\\v2\\_THREAD_2_READY.md.  Read that file first \u2014 it's ",
+          "Save this as a file or paste it into the new session:  ``` # Resume \u2014 Claude/ChatGPT Export Mining Project  You're picki",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\8423c2598d1850b1b07b3dea7436ffc88813b8ea376e3ce3af159a55b612a31b-2026-05-21-20-01-06-5",
+          "Continue the MiniDocs glyph-CAS layered build from the plan file.  Worktree: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\mini-ship"
+      },
+      {
+        "name": "project-finisher",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 7,
+        "matched_terms_used": [
+          "project finisher",
+          "project-finisher"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "i need you to install gemini cli npm install -g @google/gemini cli",
+          "i need you to help me plan. I want o use es tool to plan a fest /project-finisher /mini-ship /weapon",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "**TASK:** Read every slash command file under `C:\\Users\\bruke\\.claude\\commands\\` end-to-end. Goal: **streamlining** \u2014 Br",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\project-finisher"
+      },
+      {
+        "name": "search-first",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "search first",
+          "search-first"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "i need you to use es tool to serarch and context and memory i need to find my debugging tool",
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\search-first"
+      },
+      {
+        "name": "st3gg",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 8,
+        "matched_terms_used": [
+          "st3gg"
+        ],
+        "sample_first_msgs": [
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "Install ST3GG from https://github.com/elder-plinius/ST3GG into ~/tools/ST3GG.  Steps: 1. cd ~/tools && git clone https:/",
+          "<command-message>goal</command-message> <command-name>/goal</command-name> <command-args>I need you to read memory and c",
+          "I want to test something. I want you to search my conversation history and use that to profile me",
+          "i need you to give me a tour of binre",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\st3gg"
+      },
+      {
+        "name": "tdd-workflow",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 6,
+        "matched_terms_used": [
+          "tdd-workflow"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file",
+          "**TASK:** Read every slash command file under `C:\\Users\\bruke\\.claude\\commands\\` end-to-end. Goal: **streamlining** \u2014 Br",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\tdd-workflow"
+      },
+      {
+        "name": "three-js-migrate",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "three-js-migrate"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "I need you to find anime.js and instal an create some docs for ai"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\three-js-migrate"
+      },
+      {
+        "name": "verification-loop",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "verification-loop"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "**TASK:** Read every slash command file under `C:\\Users\\bruke\\.claude\\commands\\` end-to-end. Goal: **streamlining** \u2014 Br",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\verification-loop"
+      },
+      {
+        "name": "wasp-patterns",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 6,
+        "matched_terms_used": [
+          "wasp patterns",
+          "wasp-patterns"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every file under `C:\\Users\\bruke\\.claude\\agents\\` (10 files) and `C:\\Users\\bruke\\.claude\\rules\\` (17 file",
+          "**TASK:** Read every slash command file under `C:\\Users\\bruke\\.claude\\commands\\` end-to-end. Goal: **streamlining** \u2014 Br",
+          "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce fa",
+          "**TASK:** Read every SKILL.md under `C:\\Users\\bruke\\.claude\\skills\\` end-to-end. The goal is **streamlining** \u2014 Bruke wa"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\wasp-patterns"
+      },
+      {
+        "name": "weapon",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 18,
+        "matched_terms_used": [
+          "weapon"
+        ],
+        "sample_first_msgs": [
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "<scheduled-task name=\"lsh-png-wire-drift-check-2026-05-15\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\lsh-png-wire-dri",
+          "i need you to help me plan. I want o use es tool to plan a fest /project-finisher /mini-ship /weapon",
+          "I need you to familiraize yourself with this repo / weapon",
+          "You are an exoskeleton check-in. The operator is mid-session on a planned project.  TICK 15m: Read the journal, plan, an",
+          "I'm planning how to autonomously bring up + verify a closed MAPE-K loop in the Pre Atlas project. The user wants me to d",
+          "Audit the existing Mandelbulb3D (MB3D) skill scaffolding. Goal: tell the user what programmatic-control assets already e",
+          "I need to understand Optogon's task-execution surface \u2014 specifically whether it can ingest a list of \"missions\" and run "
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\weapon"
+      },
+      {
+        "name": "webos-333",
+        "surface": "pre_atlas_apps",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 32,
+        "matched_terms_used": [
+          "webos-333"
+        ],
+        "sample_first_msgs": [
+          "I wangt you to pretend i m someone looking at this repo fir the first time with no context what do we have",
+          "I need to understand how atlas_boot.html works as a shell that embeds other pages via iframes, and identify all the plac",
+          "Thoroughness: very thorough  Explore the ENTIRE Pre Atlas repository rooted at C:\\Users\\bruke\\Pre Atlas. This is a feder",
+          "Very thorough exploration of the top-level files and supporting directories in the Pre Atlas repository at C:\\Users\\bruk",
+          "Very thorough exploration. I need machine-precise facts from two areas:  ## Area 1: services/aegis-fabric/ (C:\\Users\\bru",
+          "Very thorough exploration of atlas_boot.html and all state/data files. I need machine-precise facts:  1. Read `C:\\Users\\",
+          "Very thorough exploration of the Pre Atlas repository. I need a complete picture of:  1. The FULL repository tree struct",
+          "Explore the aegis-fabric codebase at C:\\Users\\bruke\\Pre Atlas\\services\\aegis-fabric\\ to understand:  1. Look at ALL exis"
+        ],
+        "path": "apps\\webos-333"
+      },
+      {
+        "name": "fest-reconcile",
+        "surface": "pre_atlas_tools",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "fest-reconcile"
+        ],
+        "sample_first_msgs": [
+          "# Part B \u2014 corpus-wide intent-vs-artifact reconciliation  **Status:** queued for next session. Part A shipped 2026-05-27"
+        ],
+        "path": "tools\\fest-reconcile"
+      },
+      {
+        "name": "mini-ship",
+        "surface": "pre_atlas_tools",
+        "signal_band": "none",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 33,
+        "matched_terms_used": [
+          "mini ship",
+          "mini-ship"
+        ],
+        "sample_first_msgs": [
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\data-8ed83bb3-4a28-4595-840a-a9d0b3dd0d19-1779538231-29ad55e9-batch-0000.zip\" @\"C:\\Use",
+          "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /j",
+          "In C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine, the helper that converts a region name to a PascalCase component nam",
+          "i need you to install gemini cli npm install -g @google/gemini cli",
+          "Pick up Thread 2 from C:\\Users\\bruke\\OneDrive\\Desktop\\claude-mining\\v2\\_THREAD_2_READY.md.  Read that file first \u2014 it's ",
+          "Save this as a file or paste it into the new session:  ``` # Resume \u2014 Claude/ChatGPT Export Mining Project  You're picki",
+          "@\"C:\\Users\\bruke\\OneDrive\\Desktop\\8423c2598d1850b1b07b3dea7436ffc88813b8ea376e3ce3af159a55b612a31b-2026-05-21-20-01-06-5",
+          "Continue the MiniDocs glyph-CAS layered build from the plan file.  Worktree: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\"
+        ],
+        "path": "tools\\mini-ship"
+      }
+    ],
+    "shipped_but_not_discussed": [
+      {
+        "name": "airwindows",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\airwindows"
+      },
+      {
+        "name": "fleet-launch",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\fleet-launch"
+      },
+      {
+        "name": "mb3d_anim_demo",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\mb3d_anim_demo"
+      },
+      {
+        "name": "my-vite-app",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\my-vite-app"
+      },
+      {
+        "name": "surge-xt",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\surge-xt"
+      },
+      {
+        "name": "outpost",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "MB-Lab",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      }
+    ],
+    "neither": [
+      {
+        "name": "cpython",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\cpython"
+      },
+      {
+        "name": "musescore-mcp",
+        "surface": "standalone_repo",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\musescore-mcp"
+      },
+      {
+        "name": "weather",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\weather"
+      },
+      {
+        "name": "saas-boilerplate",
+        "surface": "github_repo",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "CreatorOS",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "web-os-555",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "FragOS",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "nextjs-ai-chatbot",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "python-sdk",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "DAPO",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "m-357249",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "joyful-analytics-symphony",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "cpython",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "meshmap.net",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "js-dos",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "SuperTool",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      }
+    ],
+    "skipped_generic_name": [
+      {
+        "name": "atlas",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\atlas"
+      },
+      {
+        "name": "mcp",
+        "surface": "standalone_repo",
+        "signal_band": "none",
+        "memory_index_mention": true,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\mcp"
+      },
+      {
+        "name": "r3f",
+        "surface": "standalone_repo",
+        "signal_band": "none",
+        "memory_index_mention": true,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": "C:\\Users\\bruke\\r3f"
+      },
+      {
+        "name": "atlas",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      },
+      {
+        "name": "mpc",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_first_msgs": [],
+        "path": null
+      }
+    ]
+  }
+}

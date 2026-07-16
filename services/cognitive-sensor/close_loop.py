@@ -22,6 +22,13 @@ DB_PATH = BASE / "results.db"
 MEMORY_PATH = BASE / "memory_db.json"
 CLASSIFICATIONS_PATH = BASE / "conversation_classifications.json"
 
+# Bearer auth for delta-kernel — without it the POST silent-401s and the
+# closure never makes it to Atlas state. See ~/.claude/rules/common/code-as-furniture.md.
+_DELTA_API_KEY = ""
+_key_path = BASE.parent.parent / ".aegis-tenant-key"
+if _key_path.exists():
+    _DELTA_API_KEY = _key_path.read_text(encoding="utf-8").strip()
+
 # Lazy-loaded conversation data
 _memory_db = None
 _classifications = None
@@ -229,6 +236,9 @@ def record_decision(convo_id, decision):
     print(f"\n  >> {verb}: {title} (#{convo_id})")
 
     # Notify delta-kernel
+    headers = {"Content-Type": "application/json"}
+    if _DELTA_API_KEY:
+        headers["Authorization"] = f"Bearer {_DELTA_API_KEY}"
     try:
         req = urllib.request.Request(
             "http://localhost:3001/api/law/close_loop",
@@ -240,7 +250,7 @@ def record_decision(convo_id, decision):
                 "artifact_path": None,
                 "coverage_score": None,
             }).encode(),
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             method="POST"
         )
         urllib.request.urlopen(req, timeout=5)

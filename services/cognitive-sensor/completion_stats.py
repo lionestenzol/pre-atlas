@@ -4,6 +4,16 @@ from datetime import datetime, timedelta
 con = sqlite3.connect("results.db")
 cur = con.cursor()
 
+# Ensure loop_decisions table exists. atlas_triage_cli.py creates it lazily
+# when it records a decision, but on a freshly rebuilt results.db (via ingest.py)
+# the table may not yet exist. completion_stats.py must not crash in that case.
+# See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
+cur.execute(
+    "CREATE TABLE IF NOT EXISTS loop_decisions "
+    "(convo_id TEXT, decision TEXT, date TEXT)"
+)
+con.commit()
+
 today = datetime.now().strftime("%Y-%m-%d")
 week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 

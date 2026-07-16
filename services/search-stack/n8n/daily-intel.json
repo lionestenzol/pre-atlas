@@ -1,0 +1,107 @@
+{
+  "name": "Pre Atlas — Daily Intel Sweep",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Daily 7am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Edit this array to set what you want monitored daily.\n// Each item produces one search-stack call.\nreturn [\n  { q: 'claude code', kind: 'web' },\n  { q: 'anthropic', kind: 'news' },\n  { q: 'agent SDK', kind: 'social' },\n].map(item => ({ json: item }));"
+      },
+      "name": "Topics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3070/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ q: $json.q, kind: $json.kind, max_results: 5 }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "name": "search-stack /search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Persist each result to DropList as an intel_drop packet.\n// Requires services/droplist running its own server, OR fall through to log.\nconst items = [];\nfor (const r of ($input.first().json.results || [])) {\n  items.push({\n    json: {\n      type: 'intel_drop',\n      source: 'n8n.daily-intel',\n      query: $('Topics').item.json.q,\n      kind: $('Topics').item.json.kind,\n      result: r,\n    },\n  });\n}\nreturn items;"
+      },
+      "name": "Shape as intel_drop",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DROPLIST_INTAKE_URL || 'http://127.0.0.1:3070/memory/save' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ result: $json.result, drop_to: $env.DROPLIST_INTAKE_URL }) }}",
+        "options": {}
+      },
+      "name": "Save to DropList",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Daily 7am": {
+      "main": [[{ "node": "Topics", "type": "main", "index": 0 }]]
+    },
+    "Topics": {
+      "main": [[{ "node": "search-stack /search", "type": "main", "index": 0 }]]
+    },
+    "search-stack /search": {
+      "main": [[{ "node": "Shape as intel_drop", "type": "main", "index": 0 }]]
+    },
+    "Shape as intel_drop": {
+      "main": [[{ "node": "Save to DropList", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1",
+  "id": "daily-intel-sweep",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Daily 7am: run search-stack against a tracked topic list, persist hits to DropList as intel_drop packets. Edit the 'Topics' node to change targets. Set DROPLIST_INTAKE_URL env var if DropList intake lives somewhere other than search-stack /memory/save. To activate: import into n8n, set credentials/env, toggle 'active' on."
+  }
+}

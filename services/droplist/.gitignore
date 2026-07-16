@@ -1,0 +1,11 @@
+# Runtime data (regenerated per session by the CLI / tests).
+data/
+*.egg-info/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Per-developer editor / OS
+.vscode/
+.idea/
+.DS_Store

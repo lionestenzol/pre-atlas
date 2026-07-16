@@ -1,3 +1,11 @@
+> **Status:** SUPERSEDED — `load_bearing_now: false`
+> **Superseded by:** `canvas-engine`
+> **Source:** [`audit/lava-layers.json`](../../audit/lava-layers.json)
+>
+> This service is still installed but not load-bearing. New work should target the superseder.
+
+---
+
 # Blueprint Generator
 
 Deterministic constraint-based execution blueprint generator.

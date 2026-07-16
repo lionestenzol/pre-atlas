@@ -1,0 +1,29 @@
+[project]
+name = "memory-hub"
+version = "0.1.0"
+description = "REST surface over Pre Atlas memory stores: droplist packets + cognitive-sensor atlas_query + idea_registry + mirofish neo4j. Each store stays where it is; this just routes."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+memory-hub = "memory_hub.server:run"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

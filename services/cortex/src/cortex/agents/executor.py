@@ -16,14 +16,16 @@ from cortex.contracts import (
 from cortex.config import config
 from cortex.clients.delta_client import DeltaClient
 from cortex.clients.uasc_client import UascClient
+from cortex.clients.optogon_client import OptogonClient
 
 log = logging.getLogger("cortex.executor")
 
 
 class Executor:
-    def __init__(self, uasc: UascClient, delta: DeltaClient) -> None:
+    def __init__(self, uasc: UascClient, delta: DeltaClient, optogon: OptogonClient) -> None:
         self._uasc = uasc
         self._delta = delta
+        self._optogon = optogon
         self._http = httpx.AsyncClient(timeout=30.0)
 
     async def execute(self, spec: ExecutionSpec) -> ExecutionResult:
@@ -257,6 +259,15 @@ class Executor:
     async def _handle_noop(self, params: dict) -> tuple:
         return {"noop": True}, 0.0
 
+    async def _handle_optogon_session(self, params: dict) -> tuple:
+        result = await self._optogon.run_session(
+            path_id=params["path_id"],
+            initial_context=params.get("initial_context"),
+            context_package=params.get("context_package"),
+            sitepull_audit_dir=params.get("sitepull_audit_dir"),
+        )
+        return result, 0.0
+
     _DISPATCH = {
         ActionType.API_CALL: _handle_api_call,
         ActionType.UASC_COMMAND: _handle_uasc_command,
@@ -266,4 +277,5 @@ class Executor:
         ActionType.STATE_UPDATE: _handle_state_update,
         ActionType.SHELL_EXEC: _handle_shell_exec,
         ActionType.NOOP: _handle_noop,
+        ActionType.OPTOGON_SESSION: _handle_optogon_session,
     }

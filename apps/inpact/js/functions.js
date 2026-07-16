@@ -2839,6 +2839,25 @@ function saveTodayField(field, value) {
   stateManager.update({ Today: state.Today });
 }
 
+// Which lens the Daily screen shows: 'minimal' (execute) or 'full' (plan).
+function setDailyView(view) {
+  if (view !== 'minimal' && view !== 'full') return;
+  if (!state.UI) state.UI = { dailyView: 'minimal' };
+  state.UI.dailyView = view;
+  stateManager.update({ UI: state.UI });
+  render();
+}
+
+// The reset move is the play you run when the day cracks. Logging it makes the
+// crack visible in the timeline instead of it just being a line you never used.
+function activateResetMove() {
+  var plan = getTodayFields();
+  if (!plan.resetMove) return;
+  Helpers.logActivity('reset_move_used', `Used reset move: ${plan.resetMove}`, { resetMove: plan.resetMove });
+  UI.showToast('Reset move logged', plan.resetMove, 'success');
+  render();
+}
+
 // Complete a priority that the daemon seeded from a real backend task entity
 // (governance_daemon.ts's seedTodayPlan stores p{n}TaskId). Marking it done here
 // calls the same completeBackendTask path as the "Ask Atlas" > Handle next panel,
@@ -3004,6 +3023,7 @@ if (typeof module !== 'undefined' && module.exports) {
     toggleGoalCompletionForDate, addTimeBlockForDate, showCreatePlanModal, showNewEventModal,
     submitEnergySignals, submitFinanceSignals, submitSkillsSignals, submitNetworkSignals,
     getTodayFields, saveTodayField, buildLinkSelect, getRhythmAction, quickReflect, saveQuickReflect,
+    setDailyView, activateResetMove,
     _closeStep, _renderCloseStep, _closeStepNext
   };
 }

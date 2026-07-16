@@ -156,7 +156,8 @@ class CycleBoardState {
       },
       onboardingDone: false,
       calendarView: 'month',
-      calendarDate: new Date().toISOString().slice(0, 10)
+      calendarDate: new Date().toISOString().slice(0, 10),
+      UI: { dailyView: 'minimal' }
     };
   }
 
@@ -251,6 +252,9 @@ class CycleBoardState {
             !this.state.DayTypeTemplates.B?.timeBlocks?.length ||
             !this.state.DayTypeTemplates.C?.timeBlocks?.length) {
           this.state.DayTypeTemplates = this.getDefaultState().DayTypeTemplates;
+        }
+        if (!this.state.UI) {
+          this.state.UI = { dailyView: 'minimal' };
         }
       }
     } catch (e) {

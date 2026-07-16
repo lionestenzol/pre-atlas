@@ -858,3 +858,174 @@ textarea.td-input { resize: vertical; min-height: 5rem; line-height: 1.55; }
 .sb-mobile-tab.active { color: var(--ip-black); }
 .sb-mobile-tab i { font-size: 1rem; }
 .sb-mobile-tab span { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.02em; }
+
+/* =========================================================================
+   MINIMAL MODE — Daily execution lens
+   Mobile-first: the whole thing should read in one viewport. Controls are
+   44px min so they're thumb-reachable; NOW sticks to the top while you scroll.
+   ========================================================================= */
+.ip-minimal {
+  max-width: 32rem;
+  padding-bottom: 2rem;
+}
+
+/* Lens toggle [ Minimal ] [ Full Plan ] */
+.ip-view-toggle {
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: 1.25rem;
+}
+.ip-view-toggle .td-btn-pill {
+  min-height: 2.75rem;
+  padding: 0.5rem 1.125rem;
+}
+
+/* NOW — the only thing that matters this minute */
+.ip-now {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--ip-black);
+  color: var(--ip-white);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.ip-now-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+  margin-bottom: 0.375rem;
+}
+.ip-now-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.ip-now-meta {
+  font-size: 0.8125rem;
+  opacity: 0.6;
+  margin-top: 0.25rem;
+}
+.ip-now-check {
+  margin-top: 1rem;
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: var(--ip-white);
+  font-family: var(--ip-font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ip-now-check:hover { background: rgba(255, 255, 255, 0.1); }
+.ip-now-check.is-done {
+  background: var(--ip-white);
+  color: var(--ip-black);
+  border-color: var(--ip-white);
+}
+
+/* Read-only cards: what the morning already decided */
+.ip-min-card {
+  border: 1px solid var(--ip-gray-200);
+  border-radius: 0.625rem;
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.625rem;
+}
+.ip-min-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ip-gray-600);
+  margin-bottom: 0.375rem;
+}
+.ip-min-hero {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.ip-min-body {
+  font-size: 0.875rem;
+  color: var(--ip-gray-700);
+  line-height: 1.4;
+}
+.ip-min-priority {
+  display: flex;
+  gap: 0.625rem;
+  align-items: baseline;
+  font-size: 0.875rem;
+  color: var(--ip-gray-700);
+  padding: 0.1875rem 0;
+}
+.ip-min-priority-num {
+  font-weight: 700;
+  color: var(--ip-gray-300);
+  flex-shrink: 0;
+}
+.ip-min-next { border-style: dashed; }
+.ip-min-reset {
+  margin-top: 0.625rem;
+  min-height: 2.75rem;
+  width: 100%;
+}
+
+/* Active routine steps: tappable while you're in the block */
+.ip-min-step {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--ip-gray-700);
+}
+.ip-min-step input {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--ip-black);
+  flex-shrink: 0;
+}
+.ip-min-step .is-done {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.ip-min-progress {
+  font-size: 0.8125rem;
+  color: var(--ip-gray-600);
+  padding: 0.875rem 0;
+  margin-top: 0.375rem;
+  border-top: 1px solid var(--ip-gray-200);
+}
+
+.ip-minimal-open {
+  width: 100%;
+  min-height: 2.75rem;
+  margin-top: 0.5rem;
+}
+
+/* Empty plan: route to Full rather than showing an empty execution lens */
+.ip-minimal-empty {
+  border: 1px dashed var(--ip-gray-200);
+  border-radius: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+.ip-minimal-empty-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.375rem;
+}
+.ip-minimal-empty-sub {
+  font-size: 0.875rem;
+  color: var(--ip-gray-600);
+  margin-bottom: 1.25rem;
+}

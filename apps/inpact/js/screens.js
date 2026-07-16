@@ -300,11 +300,39 @@ function navigate(screen) {
   }
 }
 
+// Escape a value used as a quoted JS argument inside an inline handler attribute.
+// UI.sanitize is not enough here: it escapes & < > only (textContent -> innerHTML),
+// so a quote in the value breaks out of both the JS string and the attribute.
+// Routine names are free user text (functions.js:941) and also arrive from synced
+// state, so they get escaped rather than trusted.
+function _jsAttrArg(value) {
+  return String(value)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // Helper: find routine match for a time block title
 function _findRoutineMatch(blockTitle) {
   return Object.keys(state.Routine).find(name =>
     blockTitle.toLowerCase().includes(name.toLowerCase())
   );
+}
+
+// Helper: the [ Minimal ] [ Full Plan ] lens toggle inside the Daily header
+function _dailyViewToggle(active) {
+  const btn = (view, label) => `
+    <button onclick="setDailyView('${view}')" class="td-btn-pill ${active === view ? 'active' : ''}"
+            aria-pressed="${active === view}">${label}</button>
+  `;
+  return `
+    <div class="ip-view-toggle" role="group" aria-label="Daily view">
+      ${btn('minimal', 'Minimal')}${btn('full', 'Full Plan')}
+    </div>
+  `;
 }
 
 // Helper: bridge links at bottom of screen
@@ -491,8 +519,16 @@ const ScreenRenderers = {
   // =========================================================================
   // DAILY (plan your day + execution scaffolding)
   // =========================================================================
+  // Daily has two lenses over the same DayPlan. Minimal is the execution view
+  // (what to do now); Full is the planning view. state.UI.dailyView picks.
   Daily() {
-    const todayPlan = Helpers.getDayPlan();
+    const plan = Helpers.getDayPlan();
+    return state.UI?.dailyView === 'full'
+      ? this.renderDailyFull(plan)
+      : this.renderDailyMinimal(plan);
+  },
+
+  renderDailyFull(todayPlan) {
     const todayDate = stateManager.getTodayDate();
     const dailyProgress = Helpers.calculateDailyProgress();
     const td = getTodayFields();
@@ -503,6 +539,7 @@ const ScreenRenderers = {
 
     return `
       <div style="max-width:48rem;">
+        ${_dailyViewToggle('full')}
         <h1 style="font-size:2.25rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.25rem;">Daily Plan</h1>
         <div style="color:var(--ip-gray-600);font-size:0.9375rem;margin-bottom:1.75rem;">${Helpers.formatDate(todayPlan.date)}</div>
 
@@ -633,7 +670,7 @@ const ScreenRenderers = {
                     </div>
                     ${routineSteps.map((step, idx) => `
                       <label style="display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;cursor:pointer;">
-                        <input type="checkbox" ${completion.steps?.[idx] ? 'checked' : ''} onchange="toggleRoutineStep('${routineMatch}', ${idx}, this.checked)" style="width:0.875rem;height:0.875rem;accent-color:var(--ip-black);" />
+                        <input type="checkbox" ${completion.steps?.[idx] ? 'checked' : ''} onchange="toggleRoutineStep('${_jsAttrArg(routineMatch)}', ${idx}, this.checked)" style="width:0.875rem;height:0.875rem;accent-color:var(--ip-black);" />
                         <span style="font-size:0.8125rem;color:var(--ip-gray-700);${completion.steps?.[idx] ? 'text-decoration:line-through;opacity:0.5;' : ''}">${UI.sanitize(step)}</span>
                       </label>
                     `).join('')}
@@ -721,6 +758,116 @@ const ScreenRenderers = {
           { screen: 'History', text: 'Write a journal entry or review' },
           { screen: 'Home', text: 'Back to overview' }
         ])}
+      </div>
+    `;
+  },
+
+  // Minimal Mode: the act-now lens over the same DayPlan. Everything the morning
+  // ritual decided is read-only here. The only writes are the ones you make while
+  // executing: block completion, routine steps, reset move.
+  renderDailyMinimal(plan) {
+    if (!Helpers.isPlanReady(plan)) {
+      return `
+        <div class="ip-minimal">
+          ${_dailyViewToggle('minimal')}
+          <div class="ip-minimal-empty">
+            <div class="ip-minimal-empty-title">No plan for today yet.</div>
+            <div class="ip-minimal-empty-sub">Minimal Mode shows the block you're in. Build the day first.</div>
+            <button class="td-btn ip-minimal-open" onclick="setDailyView('full')">Plan your day</button>
+          </div>
+        </div>
+      `;
+    }
+
+    const td = getTodayFields();
+    const progress = Helpers.calculateDailyProgress();
+    const current = Helpers.getCurrentTimeBlock(plan);
+    const next = Helpers.getNextTimeBlock(plan);
+    const routine = Helpers.getActiveRoutine(plan);
+    // Keep the original slot number: a filled p2 with an empty p1 is still "2".
+    const priorities = [1, 2, 3].map(i => ({ num: i, text: td['p' + i] })).filter(p => p.text);
+
+    const nowCard = current ? `
+      <div class="ip-now-label">Now</div>
+      <div class="ip-now-title">${UI.sanitize(current.title)}</div>
+      <div class="ip-now-meta">Started ${UI.sanitize(current.time)}</div>
+      <button class="ip-now-check ${current.completed ? 'is-done' : ''}"
+              onclick="toggleTimeBlockCompletion('${current.id}')">
+        ${current.completed ? '<i class="fas fa-check"></i> Done' : 'Mark done'}
+      </button>
+    ` : `
+      <div class="ip-now-label">Now</div>
+      <div class="ip-now-title">The day hasn't started.</div>
+      <div class="ip-now-meta">${next ? `First block: ${UI.sanitize(next.title)} at ${UI.sanitize(next.time)}` : 'Nothing scheduled.'}</div>
+    `;
+
+    return `
+      <div class="ip-minimal">
+        ${_dailyViewToggle('minimal')}
+
+        <div class="ip-now">${nowCard}</div>
+
+        ${routine ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">${UI.sanitize(routine.name)} routine . ${routine.done}/${routine.total} steps</div>
+            ${routine.steps.map((step, idx) => `
+              <label class="ip-min-step">
+                <input type="checkbox" ${routine.completion.steps?.[idx] ? 'checked' : ''}
+                       onchange="toggleRoutineStep('${_jsAttrArg(routine.name)}', ${idx}, this.checked)" />
+                <span class="${routine.completion.steps?.[idx] ? 'is-done' : ''}">${UI.sanitize(step)}</span>
+              </label>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${td.winTarget ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">Today counts if</div>
+            <div class="ip-min-hero">${UI.sanitize(td.winTarget)}</div>
+          </div>
+        ` : ''}
+
+        ${priorities.length ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">Top 3</div>
+            ${priorities.map(p => `
+              <div class="ip-min-priority">
+                <span class="ip-min-priority-num">${p.num}</span>
+                <span>${UI.sanitize(p.text)}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${td.lever ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">The lever</div>
+            <div class="ip-min-body">${UI.sanitize(td.lever)}</div>
+          </div>
+        ` : ''}
+
+        ${td.resetMove ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">Reset move</div>
+            <div class="ip-min-body">${UI.sanitize(td.resetMove)}</div>
+            <button class="td-btn-ghost ip-min-reset" onclick="activateResetMove()">I used it</button>
+          </div>
+        ` : ''}
+
+        ${next ? `
+          <div class="ip-min-card ip-min-next">
+            <div class="ip-min-label">Next</div>
+            <div class="ip-min-body">${UI.sanitize(next.time)} . ${UI.sanitize(next.title)}</div>
+          </div>
+        ` : ''}
+
+        <div class="ip-min-progress">
+          Blocks <strong>${progress.timeBlocks.completed}/${progress.timeBlocks.total}</strong>
+          . Goals <strong>${progress.goals.completed}/${progress.goals.total}</strong>
+          . Overall <strong>${progress.overall}%</strong>
+        </div>
+
+        <button class="td-btn ip-minimal-open" onclick="setDailyView('full')">Open Full Plan</button>
       </div>
     `;
   },

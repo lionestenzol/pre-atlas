@@ -60,8 +60,21 @@
       + '</div>' + body + '</section>';
   }
 
+  // Daily's Minimal Mode is a one-viewport execution lens. The backbone is a
+  // planning surface: mounting it afterbegin pushes the NOW block off screen,
+  // which defeats the whole point of the lens. Stay out of the way there.
+  function suppressed() {
+    return typeof state !== 'undefined' && !!state && state.screen === 'Daily'
+      && !!state.UI && state.UI.dailyView === 'minimal';
+  }
+
   function mount(force) {
     if (!data) return;
+    if (suppressed()) {
+      var stale = document.getElementById('atlas-backbone');
+      if (stale) stale.remove();
+      return;
+    }
     var host = document.querySelector('#main-content .max-w-6xl') || document.getElementById('main-content');
     if (!host) return;
     var existing = document.getElementById('atlas-backbone');

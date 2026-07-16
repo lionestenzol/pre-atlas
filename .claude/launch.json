@@ -2,6 +2,15 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "lattice-viewer",
+      "runtimeExecutable": "../../services/atlas-map-api/.venv/Scripts/python.exe",
+      "runtimeArgs": [
+        "viewer_server.py"
+      ],
+      "port": 8902,
+      "cwd": "tools/lattice"
+    },
+    {
       "name": "delta-api",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
@@ -489,33 +498,63 @@
     {
       "name": "c110-trace",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "apps/c110-trace", "-p", "8897", "-c-1", "--cors"],
-      "port": 8897
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "apps/c110-trace",
+        "-p",
+        "8901",
+        "-c-1",
+        "--cors"
+      ],
+      "port": 8901
     },
     {
       "name": "ws-gateway",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["tsx", "index.ts"],
-      "port": 3011,
+      "runtimeArgs": [
+        "tsx",
+        "index.ts"
+      ],
+      "env": {
+        "WS_PORT": "3013"
+      },
+      "port": 3013,
       "cwd": "services/ws-gateway"
     },
     {
       "name": "strudel",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["astro", "dev", "--host", "0.0.0.0", "--port", "4321"],
+      "runtimeArgs": [
+        "astro",
+        "dev",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "4321"
+      ],
       "port": 4321,
       "cwd": "C:/Users/bruke/STRUDEL/website"
     },
     {
       "name": "chatpull",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-c", "import chatpull.web; chatpull.web.serve()"],
+      "runtimeArgs": [
+        "-c",
+        "import chatpull.web; chatpull.web.serve()"
+      ],
       "port": 8877
     },
     {
       "name": "mandelbulb-preview",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server", "C:/Users/bruke/AppData/Local/Temp/claude/C--Users-bruke-Pre-Atlas/17588421-0010-4c1b-b3ab-d5ad4c9b8b5a/scratchpad/mandelbulb-preview", "-p", "8913", "-c-1", "--cors"],
+      "runtimeArgs": [
+        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
+        "C:/Users/bruke/AppData/Local/Temp/claude/C--Users-bruke-Pre-Atlas/17588421-0010-4c1b-b3ab-d5ad4c9b8b5a/scratchpad/mandelbulb-preview",
+        "-p",
+        "8913",
+        "-c-1",
+        "--cors"
+      ],
       "port": 8913
     }
   ]

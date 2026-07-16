@@ -30,7 +30,7 @@ Human-in-loop approval gate is the stated stance.
 - **DONE:** full health scan all-green-or-idle; real daily brief pulls through openclaw
 
 ## Phase 2 — Finish the Partials · ~2-3 days
-- [ ] ws-gateway:3011 — add tests; prove NATS→Socket.IO end-to-end (publish → browser sees it)
+- [ ] ws-gateway:3013 — add tests; prove NATS→Socket.IO end-to-end (publish → browser sees it)
 - [ ] uasc-executor:3008 — flesh daemon: poll delta-kernel for approved work, execute profile via command tokens, ack back; real tests
 - [ ] triangulation:3074 — build Phase B (visual) + Phase C (API); consensus on a sample; B/C tested
 - **DONE:** all three COMPLETE + tested

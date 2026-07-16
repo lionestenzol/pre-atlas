@@ -53,7 +53,7 @@ Every row has a wire surface (HTTP API) and/or a CLI. These ARE the headless sys
 | canvas-engine | 3050 | `src/server.ts` | `/clone`, `/edit`, `/sessions` | active |
 | code-converter | 3007 | `server.py` | `/convert`, `/patterns` | active (⚠ RCE flag) |
 | triangulation | 3075 | `triangulation.api` | `/verify`, `/library/*` | stub |
-| ws-gateway | 3011 | `index.ts` | socket.io events (no REST) | dormant |
+| ws-gateway | 3013 | `index.ts` | socket.io events (no REST) | dormant |
 | **legacy/retired** | — | — | mosaic-orchestrator :3005, mosaic-dashboard :3000, openclaw :3004, mirofish, ai-exec-pipeline :5000, blueprint-generator :3030 | retired |
 
 Cross-repo node: **delta-scp** :3012 (sibling repo `C:/Users/bruke/pre-atlas`) — `src/cli.ts` + demo-server.
@@ -98,9 +98,11 @@ These are back-end conditions, independent of the UI. Going headless does not ca
 3. **Auth on writes.** delta-kernel needs Bearer key (`GET /api/auth/token`, exempt). atlas-map-api
    needs `X-Atlas-Token` (gitignored `.atlas-write-token`). uasc needs HMAC. → A headless driver
    must fetch/hold these.
-4. **Port collisions that the UI was hiding.** ws-gateway :3011 == lattice :3011; c110-trace :8897
-   == audit-map :8897. Going headless **drops the static servers and self-resolves both collisions** —
-   a free win, not a risk.
+4. **Port collisions that the UI was hiding — RESOLVED 2026-07-15.** ws-gateway :3011 == lattice
+   :3011; c110-trace :8897 == audit-map :8897. Fixed directly (ws-gateway → 3013 + `WS_PORT` env
+   override, c110-trace → 8901) via `register-preview-server.py`'s port-collision guard, ahead of
+   any headless migration. Going headless would still drop the static servers as a category, but
+   that's no longer needed to resolve this specific item.
 5. **Data-inflation.** `cognitive-sensor` loc (~116k) is ~half multi-MB JSON dumps, not code. Treat
    it as a data store with a pipeline, not a 116k-line service to reason about.
 6. **Submodule trap.** `services/crucix` is a git submodule, habitually `-dirty`. Never bulk

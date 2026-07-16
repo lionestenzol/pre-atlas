@@ -36,11 +36,11 @@ spine_loop:
   flow: cognitive-sensor (analyze) → optogon/cortex (propose/execute, GATED) → droplist (packetize) → delta-kernel (commit state) → lattice/inpact (project)
   note: Seams are reads or signal-writes. cortex/optogon act only behind default-off env flags.
 runtime_ports:
-  backends: {mosaic-dashboard: 3000, delta-api: 3001, aegis-api: 3002, openclaw: 3004, mosaic-orch: 3005, code-converter: 3007, uasc: 3008, cortex: 3009, optogon: 3010, ws-gateway: 3011, delta-scp-demo: 3012,
+  backends: {mosaic-dashboard: 3000, delta-api: 3001, aegis-api: 3002, openclaw: 3004, mosaic-orch: 3005, code-converter: 3007, uasc: 3008, cortex: 3009, optogon: 3010, ws-gateway: 3013, delta-scp-demo: 3012,
     blueprint-generator: 3030, canvas-engine: 3050, search-stack: 3070, memory-hub: 3071, atlas-map-api: 3072, droplist: 3073, triangulation: 3075, strudel: 4321, ai-exec-pipeline: 5000, delta-web: 5173,
     delta-scp-web: 5174, triage-server: 8765, hydra-engine: 8899}
   static_shell_servers: {inpact: 3006, lattice: 3011, atlas-shell: 8888, cycleboard: 8889, aegis-landing: 8890, cortex-dashboard: 8891, inpact-site-legacy: 8892, thread-cards: 8893, anatomy: 8894, tour-test: 8895,
-    anatomy-calibration: 8896, audit-map: 8897, c110-trace: 8897, hydra: 8898, anatomy-saas-example: 8911}
+    anatomy-calibration: 8896, audit-map: 8897, c110-trace: 8901, hydra: 8898, anatomy-saas-example: 8911}
   note: Runtime ports from .claude/launch.json (boot truth). Overrides code-default drift in audit/system-index.json — see verification.port_drift_resolved.
 systems:
   aegis-fabric:
@@ -264,7 +264,7 @@ systems:
     requires: [HMAC signature]
   ws-gateway:
     class: {role: spoke (bridge), lifecycle: dormant (not autostarted)}
-    props: {lang: ts, port: 3011, loc: 122, files: 5}
+    props: {lang: ts, port: 3013, loc: 122, files: 5}
     purpose: websocket gateway
     provides: socket.io events (no REST surface).
     consumes: [delta-kernel]
@@ -445,7 +445,8 @@ verification:
     openclaw, optogon, search-stack, triangulation, uasc-executor]
   no_rest_surface: [ws-gateway]
   port_drift_resolved: ['aegis-fabric: system-index port 3010 -> runtime 3002 (launch.json)', 'canvas-engine: system-index port 3060 -> runtime 3050 (launch.json)', 'triangulation: system-index port 3010
-      -> runtime 3075 (launch.json)', 'ws-gateway: system-index port 3006 -> runtime 3011 (launch.json)']
+      -> runtime 3075 (launch.json)', 'ws-gateway: system-index port 3006 -> runtime 3011 (collided with lattice, unnoticed) -> runtime 3013 (fixed 2026-07-15, via register-preview-server port-collision guard)',
+    'c110-trace: copy-pasted audit-map port 8897 on add (2026-04-30, a0c87a8) -> runtime 8901 (fixed 2026-07-15)']
   contract_strays_unassigned: none
   contract_missing_files: none
   rebuild: python audit/build_atlas_manifest.py

@@ -16,7 +16,7 @@ _Deterministic counts via repo-inventory; qualitative layer via parallel read-on
 | 3008 | uasc-executor | Execution daemon polling delta-kernel for approved work | Python + FastAPI | 🟡 partial (skeleton, 1 smoke test) | delta-kernel:3001 |
 | 3009 | **cortex** | Autonomous execution layer (planner→executor→reviewer, Ghost Executor) | Python + FastAPI | ✅ complete | delta-kernel, aegis, uasc (req); mosaic, optogon, nats (opt) |
 | 3010 | optogon | Brain-stem path runtime — directive closure via node graphs | Python + FastAPI | ✅ complete | delta-kernel (opt) |
-| 3011 | ws-gateway | NATS event-bus → browser bridge | TS (122 LOC) | 🟡 partial (no tests) | NATS:4222 |
+| 3013 | ws-gateway | NATS event-bus → browser bridge | TS (122 LOC) | 🟡 partial (no tests) | NATS:4222 |
 | 3012 | delta-scp | Repo URL → symbolic compression map, job queue | TS + vitest | ✅ complete | Supabase, Postgres |
 | 3050 | **canvas-engine** | URL/image → live editable React clone via Claude vision | TS + Express + Anthropic | ✅ complete (84 tests) | web-audit, Anthropic, Vite pool 3060-3069 |
 | 3070 | search-stack | Unified search router (Exa/Tavily/Brave/Firecrawl/code-recon/gh) | Python + FastAPI | ✅ complete | external APIs; droplist + cognitive-sensor (memory) |
@@ -55,7 +55,7 @@ EXECUTION         cortex:3009 ──► delta-kernel, aegis, uasc-executor:3008 
 INTELLIGENCE      cognitive-sensor:8765 ──► droplist
 INTAKE / MEMORY   droplist:3073 · memory-hub:3071 ──► droplist + cognitive-sensor · atlas-map-api:3072 (read-only)
 SEARCH            search-stack:3070 ──► droplist + cognitive-sensor + external
-MESSAGING / IO    openclaw:3004 (channels) · ws-gateway:3011 (NATS→browser)
+MESSAGING / IO    openclaw:3004 (channels) · ws-gateway:3013 (NATS→browser)
 PRODUCT / TOOLS   canvas-engine:3050 (THE canvas product) · delta-scp:3012 · crucix:3117 · triangulation:3074 · perception(stub)
 RETIRED           mirofish:3003 · mosaic-orchestrator:3005
 ```

@@ -147,6 +147,16 @@ def test_route_endpoint_dogfoods_its_own_route_capability():
     assert ("atlas-map-api", "route") in ids
 
 
+def test_route_endpoint_resolves_bearings_confidently():
+    # bearings.digest carries "catch me up" as an exact trigger; against the full
+    # real registry this should be the sole match above threshold -- confident.
+    r_ = client.get("/route?q=catch me up&role=agent&limit=10", headers=_agent_headers())
+    body = r_.json()
+    assert body["matches"][0]["surface"] == "bearings"
+    assert body["matches"][0]["capability"] == "digest"
+    assert body["confident"] is True
+
+
 def test_run_autopilot_beats_unrelated_capability_at_full_corpus_scale():
     # Regression guard: the original merged-haystack scoring scored optogon's
     # UNRELATED "Start a path session and run the first turn" at 85 against

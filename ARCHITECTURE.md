@@ -3,7 +3,7 @@
 > Portable architecture reference. No prior context required.
 > For onboarding walkthroughs, see [ONBOARDING.md](ONBOARDING.md).
 > For the raw inventory (LOC counts, port map, reconciliation), see [REPO_RUNDOWN.md](REPO_RUNDOWN.md).
-> For architectural decisions and their rationale, see [DECISIONS.md](DECISIONS.md).
+> For architectural decisions and their rationale, see [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md).
 
 ---
 
@@ -140,7 +140,7 @@ All state mutations are **append-only, hash-chained JSON Patches (RFC 6902)**. Y
 - Type definitions: `services/delta-kernel/src/core/types.ts` (1,162 lines, 24 entity types)
 - Delta creation and application: `services/delta-kernel/src/core/delta.ts`
 
-Design choices inherited from the ATM (Asynchronous Temporal Mesh) target architecture: hash-chained deltas correspond to the ATM's "Sundial" timestamping; `DEFAULT_MAX_PACKET_BYTES = 220` in `delta-sync.ts` reflects LoRa-safe packet sizing; no blobs and deterministic conflict resolution are ATM transport constraints. See [DECISIONS.md](DECISIONS.md) ADR-010.
+Design choices inherited from the ATM (Asynchronous Temporal Mesh) target architecture: hash-chained deltas correspond to the ATM's "Sundial" timestamping; `DEFAULT_MAX_PACKET_BYTES = 220` in `delta-sync.ts` reflects LoRa-safe packet sizing; no blobs and deterministic conflict resolution are ATM transport constraints. See [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md) ADR-010.
 
 ---
 
@@ -352,7 +352,7 @@ Numbers: ~3,400 files, ~302,000 LOC owned (excluding 574K vendored and ~28K buil
 
 | Document | What it covers |
 |---|---|
-| [DECISIONS.md](DECISIONS.md) | Architectural decision log (ADR format) |
+| [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md) | Architectural decision log (ADR format) |
 | [TRUST_BOUNDARY.md](TRUST_BOUNDARY.md) | Capability/trust closure rule and verification |
 | [REPO_RUNDOWN.md](REPO_RUNDOWN.md) | Raw inventory with LOC counts, port reconciliation |
 | [ONBOARDING.md](ONBOARDING.md) | Step-by-step setup and walkthrough |

@@ -1029,3 +1029,36 @@ textarea.td-input { resize: vertical; min-height: 5rem; line-height: 1.55; }
   color: var(--ip-gray-600);
   margin-bottom: 1.25rem;
 }
+
+/* =========================================================================
+   COLLAPSIBLE CHAPTERS
+   Daily opens as a wall of fields. Each chapter collapses so the page starts
+   small and you expand only what you're actually working in.
+   ========================================================================= */
+details.td-chap { margin: 0; }
+details.td-chap > summary.td-chap-summary {
+  cursor: pointer;
+  list-style: none;
+  min-height: 2.75rem;
+  align-items: center;
+}
+/* Hide the native disclosure triangle; the show/hide word is the affordance. */
+details.td-chap > summary::-webkit-details-marker { display: none; }
+details.td-chap > summary::marker { content: ''; }
+#atlas-backbone summary::-webkit-details-marker { display: none; }
+#atlas-backbone summary::marker { content: ''; }
+
+.td-chap-caret {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ip-gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.td-chap-caret::after { content: 'show'; }
+details.td-chap[open] > summary .td-chap-caret::after { content: 'hide'; }
+details.td-chap > summary:hover .td-chap-caret { color: var(--ip-black); }
+/* Collapsed chapters sit closer together than open ones. */
+details.td-chap:not([open]) > summary.td-chapter { margin-bottom: 0.75rem; }

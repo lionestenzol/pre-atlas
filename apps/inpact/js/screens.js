@@ -322,6 +322,45 @@ function _findRoutineMatch(blockTitle) {
   );
 }
 
+// Collapsible chapters. Daily stacks ~30 inputs in one column; opening all of it at
+// once is the density problem. Each chapter remembers its own open/closed state, so
+// the page you come back to is the page you left. Native <details> does the work.
+const _CHAP_KEY = 'inpact-chapters-open';
+
+function _chapterState() {
+  try { return JSON.parse(localStorage.getItem(_CHAP_KEY)) || {}; } catch (e) { return {}; }
+}
+
+function _setChapterOpen(key, isOpen) {
+  const m = _chapterState();
+  m[key] = isOpen;
+  try { localStorage.setItem(_CHAP_KEY, JSON.stringify(m)); } catch (e) { /* quota: forget it */ }
+}
+
+function _chapterOpen(key, title, sub, defaultOpen) {
+  const saved = _chapterState()[key];
+  const open = saved === undefined ? !!defaultOpen : saved;
+  return `
+    <details class="td-chap" data-chap="${key}"${open ? ' open' : ''}>
+      <summary class="td-chapter td-chap-summary">
+        <span class="td-chapter-title">${title}</span>
+        <span class="td-chapter-sub">${sub}</span>
+        <span class="td-chap-caret" aria-hidden="true"></span>
+      </summary>
+      <div class="td-section">`;
+}
+
+function _chapterClose() {
+  return `</div></details>`;
+}
+
+// 'toggle' doesn't bubble, so capture it. Registered once, survives every re-render.
+document.addEventListener('toggle', function (e) {
+  const d = e.target;
+  if (!d || !d.matches || !d.matches('details.td-chap[data-chap]')) return;
+  _setChapterOpen(d.getAttribute('data-chap'), d.open);
+}, true);
+
 // Helper: the [ Minimal ] [ Full Plan ] lens toggle inside the Daily header
 function _dailyViewToggle(active) {
   const btn = (view, label) => `
@@ -543,12 +582,8 @@ const ScreenRenderers = {
         <h1 style="font-size:2.25rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.25rem;">Daily Plan</h1>
         <div style="color:var(--ip-gray-600);font-size:0.9375rem;margin-bottom:1.75rem;">${Helpers.formatDate(todayPlan.date)}</div>
 
-        <!-- Plan Your Day — the morning ritual fields -->
-        <div class="td-chapter" style="margin-top:0;">
-          <span class="td-chapter-title">Plan Your Day</span>
-          <span class="td-chapter-sub">Set your target and priorities before you move.</span>
-        </div>
-        <div class="td-section">
+        <!-- Plan Your Day . the morning ritual fields -->
+        ${_chapterOpen('plan', 'Plan Your Day', 'Set your target and priorities before you move.', true)}
           <div class="td-label">Win Target <span class="td-label-step">Step 5</span></div>
           <div class="td-help">What's the one thing that makes today count? Not a list. The thing.</div>
           <input type="text" class="td-input" value="${UI.sanitize(td.winTarget || '')}" placeholder="The one outcome that makes today a win." onblur="saveTodayField('winTarget', this.value)" style="margin-bottom:1.25rem;" />
@@ -588,14 +623,10 @@ const ScreenRenderers = {
           <div class="td-label">Reset Move</div>
           <div class="td-help">When the day cracks, what's your move? Walk, music, 5 breaths.</div>
           <input type="text" class="td-input" value="${UI.sanitize(td.resetMove || '')}" placeholder="Your reset move when things crack" onblur="saveTodayField('resetMove', this.value)" />
-        </div>
+        ${_chapterClose()}
 
-        <!-- Daily Operating Protocol — where you are in the day -->
-        <div class="td-chapter" style="margin-top:0;">
-          <span class="td-chapter-title">Daily Operating Protocol</span>
-          <span class="td-chapter-sub">Where you are right now.</span>
-        </div>
-        <div class="td-section">
+        <!-- Daily Operating Protocol . where you are in the day -->
+        ${_chapterOpen('protocol', 'Daily Operating Protocol', 'Where you are right now.', false)}
           ${(() => {
             const hour = new Date().getHours();
             const blocks = [
@@ -618,14 +649,10 @@ const ScreenRenderers = {
               `;
             }).join('');
           })()}
-        </div>
+        ${_chapterClose()}
 
         <!-- Day Mode -->
-        <div class="td-chapter">
-          <span class="td-chapter-title">Day Mode</span>
-          <span class="td-chapter-sub">What kind of day is it?</span>
-        </div>
-        <div class="td-section">
+        ${_chapterOpen('daymode', 'Day Mode', 'What kind of day is it?', false)}
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             ${['A', 'B', 'C'].map(type => `
               <button onclick="setDayType('${type}')" class="td-btn-pill ${todayPlan.day_type === type ? 'active' : ''}" style="padding:0.625rem 1.25rem;font-size:0.875rem;">
@@ -633,14 +660,10 @@ const ScreenRenderers = {
               </button>
             `).join('')}
           </div>
-        </div>
+        ${_chapterClose()}
 
         <!-- Time Blocks with routine dropdowns -->
-        <div class="td-chapter">
-          <span class="td-chapter-title">Time Blocks</span>
-          <span class="td-chapter-sub">Build the scaffolding for the day.</span>
-        </div>
-        <div class="td-section">
+        ${_chapterOpen('blocks', 'Time Blocks', 'Build the scaffolding for the day.', true)}
           <div class="td-help">Each block is a bet on what you'll do when. Check it off when it's done.</div>
           ${todayPlan.time_blocks.map(block => {
             const routineMatch = _findRoutineMatch(block.title);
@@ -684,14 +707,10 @@ const ScreenRenderers = {
               <i class="fas fa-plus" style="margin-right:0.375rem;font-size:0.625rem;"></i>Add block
             </button>
           </div>
-        </div>
+        ${_chapterClose()}
 
         <!-- Goals -->
-        <div class="td-chapter">
-          <span class="td-chapter-title">Goals</span>
-          <span class="td-chapter-sub">X is the floor. Y is the stretch.</span>
-        </div>
-        <div class="td-section">
+        ${_chapterOpen('goals', 'Goals', 'X is the floor. Y is the stretch.', false)}
           <div class="td-label">Baseline (X) <span class="td-label-step">The minimum viable day</span></div>
           <div class="td-help">What's the one outcome that makes today count? Not ambitious. Real.</div>
           <div style="display:flex;align-items:center;gap:0.625rem;margin-bottom:1.25rem;">
@@ -711,7 +730,7 @@ const ScreenRenderers = {
           <div style="text-align:right;">
             <button onclick="saveGoals()" class="td-btn" style="padding:0.5rem 1rem;font-size:0.8125rem;">Save goals</button>
           </div>
-        </div>
+        ${_chapterClose()}
 
         <!-- Contingencies (collapsed) -->
         <details style="margin-bottom:1.5rem;">

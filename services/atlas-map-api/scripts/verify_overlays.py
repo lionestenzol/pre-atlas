@@ -6,11 +6,19 @@ most-specific literal path segment appears somewhere in that service's source �
 a hallucinated route would not. Exit non-zero if any overlay is malformed or any
 endpoint can't be located.
 
+Not every surface's source lives under its own services/apps/tools directory —
+some (e.g. delta-scp-demo) are overlays for a service that actually lives in a
+sibling repo on disk. For those, the co-location scan finds nothing by design,
+so we fall back to reading the exact file the capability's own `evidence` field
+cites and checking the token there — the overlay is trusted to cite real code,
+not to be reachable by directory-tree proximity.
+
 Run: ./.venv/Scripts/python.exe scripts/verify_overlays.py
 """
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -19,6 +27,7 @@ from atlas_map_api.loader import load_snapshot
 
 _PRUNE = {"node_modules", ".venv", ".git", "dist", "__pycache__", ".pytest_cache", "build"}
 _SRC_EXT = {".py", ".ts", ".js", ".tsx", ".jsx", ".mjs", ".cjs"}
+_EVIDENCE_PATH_RE = re.compile(r"^\s*((?:[A-Za-z]:)?[^:]+):\d")
 
 
 def _service_sources(service_dir: Path) -> list[str]:
@@ -42,6 +51,33 @@ def _path_token(invoke: str) -> str | None:
     path = next((p for p in parts if p.startswith("/")), parts[-1] if parts else "")
     segs = [s for s in path.split("/") if s and ":" not in s and "{" not in s]
     return max(segs, key=len) if segs else None
+
+
+def _evidence_file(evidence: str, repo_root: Path) -> Path | None:
+    """Resolve the file an `evidence` citation points at, if any.
+
+    Handles "path:line", "path:line-line", and "path:line (...)" shapes, plus
+    Windows absolute paths (the "C:" drive prefix isn't a field separator).
+    Relative citations resolve against repo_root; only the first cited file in
+    a multi-file citation ("a.js:1; b.js:2") is used — good enough to confirm
+    the surface points at real code, which is all this check needs.
+    """
+    m = _EVIDENCE_PATH_RE.match(evidence)
+    if not m:
+        return None
+    raw = m.group(1).strip()
+    p = Path(raw)
+    return p if p.is_absolute() else repo_root / raw
+
+
+def _token_verified_by_evidence(tok: str, evidence: str, repo_root: Path) -> bool:
+    p = _evidence_file(evidence, repo_root)
+    if p is None or not p.is_file():
+        return False
+    try:
+        return tok in p.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return False
 
 
 def main() -> int:
@@ -83,8 +119,11 @@ def main() -> int:
             tok = _path_token(cap.invoke)
             if tok is None:
                 continue  # no literal segment to check (e.g. "/")
-            if not any(tok in src for src in sources):
-                missing.append(f"{cap.id} ({cap.invoke} -> '{tok}')")
+            if any(tok in src for src in sources):
+                continue
+            if cap.evidence and _token_verified_by_evidence(tok, cap.evidence, repo_root):
+                continue
+            missing.append(f"{cap.id} ({cap.invoke} -> '{tok}')")
         if missing:
             failures.append(f"{name}: {len(missing)} endpoint(s) not found in source: {missing}")
             print(f"  [FAIL] {name}: {len(missing)} unverifiable: {missing}")

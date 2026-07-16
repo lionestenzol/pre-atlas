@@ -147,6 +147,11 @@ class Capability:
     # Optional — a capability with no triggers is still fully describable/callable,
     # it just never surfaces from a free-text /route query.
     triggers: tuple[str, ...] = field(default_factory=tuple)
+    # Self-declared "here's the code that proves this exists" citation, e.g.
+    # "path/to/file.ts:125-127 (...)". Never projected into API responses
+    # (see _full_field) — it exists so scripts/verify_overlays.py can check a
+    # capability against the file it cites instead of assuming co-location.
+    evidence: str = ""
 
     @staticmethod
     def from_dict(raw: dict[str, Any]) -> "Capability":
@@ -159,6 +164,7 @@ class Capability:
             invoke=str(raw.get("invoke", "") or ""),
             needs=tuple(str(n) for n in (raw.get("needs", []) or [])),
             triggers=tuple(str(t) for t in (raw.get("triggers", []) or [])),
+            evidence=str(raw.get("evidence", "") or ""),
         )
 
 

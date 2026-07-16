@@ -27,6 +27,7 @@ lattice = [
     "jsonschema>=4.25",
     "langgraph>=1.2.9",
     "langgraph-checkpoint-sqlite>=3.1.0",
+    "claude-agent-sdk>=0.2.120",
 ]
 
 [project.scripts]

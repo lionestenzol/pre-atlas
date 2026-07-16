@@ -175,6 +175,7 @@ services/cognitive-sensor/*.db.bak-*
 services/uasc-executor/storage/*.db
 services/uasc-executor/storage/*.db-shm
 services/uasc-executor/storage/*.db-wal
+tools/lattice/lattice_runs.sqlite*
 
 # === Weapon mission debris (variants of .weapon/) ===
 services/cognitive-sensor/.weapon-lsh-wire/

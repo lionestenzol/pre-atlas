@@ -1,4 +1,4 @@
-# lattice — LangGraph Skill Lattice (Seq 2 + Seq 3 + Seq 4)
+# lattice — LangGraph Skill Lattice (Seq 2 + Seq 3 + Seq 4 + Seq 5)
 
 Wraps a genuinely agentic Claude Code Skill invocation (`claude-agent-sdk`, `skills=[...]`,
 forced `output_format`) into the same `seam.v1` Receipt shape every deterministic tool in
@@ -153,3 +153,52 @@ Sanity-checked live against the real ledger too (pure local Thompson sampling, n
 209 real ledger rows -> 176 derived combos -> a real node run through a real `StateGraph`
 returned a genuine `seam.v1` Receipt (`status: "ok"`, real `sha256`) with the top-ranked arm
 (`code-recon>groundwork-cli`, score 0.9999, n=12) correctly written to `next_combo`.
+
+## ledger_feed.py — closing the learn loop (Seq 5)
+
+Feeds a completed graph run's receipts back into the SAME `tool-outcomes.jsonl` ledger
+`combo.py` scores -- mirrors `tools/seam/run.py`'s `_append_ledger`/`_ledger_rows` exactly
+(same row schema, same objective-reward convention, same `SEAM_LEDGER=1` /
+`SEAM_LEDGER_PATH` gating). `run_chain.py` calls it automatically after every `ainvoke`.
+
+```bash
+SEAM_LEDGER=1 python run_chain.py --thread-id t1 code-recon "..."   # also feeds the ledger
+python run_chain.py --thread-id t1 code-recon "..."                 # ledger feed is a no-op (default)
+```
+
+**The plan's own open question, decided:** should the JSONL ledger just *be*
+`graph.get_state_history()` across threads instead of a separate file? **No.** Checked before
+deciding, not assumed:
+1. **Coverage** -- the ledger aggregates every skill invocation across every session
+   (interactive + seam + lattice); `get_state_history()` is scoped to one thread. Swapping would
+   blind `combo.py` to the much larger volume of non-lattice usage.
+2. **Reward semantics** -- a checkpointed Receipt has no reward field, only status/error. The
+   ledger's reward is sentiment+shipped/retried fusion (interactive) or the objective ok+sha256
+   convention seam already established -- neither is derivable from a bare checkpoint.
+3. **Coupling** -- `combo.py` is deliberately stdlib-only and ledger-format-agnostic; coupling it
+   to LangGraph's internal checkpoint schema buys nothing and adds fragility.
+
+Unification means what Seq 5's own DoD implies: lattice runs *feed* the same ledger seam
+already feeds, not replace the substrate.
+
+Rows are `seq`-shaped (`a>b`), not `cofire`: each row gets a **distinct** `request` key (unlike
+seam's one-shared-request-per-manifest), so `combo.py`'s turn-chunking treats each node
+completion as its own turn and derives the chain as ordered transitions -- matching what a
+linear graph chain actually does. The bandit node's own receipt (`tool="bandit"`) is excluded --
+it always immediately precedes whatever it routed to by construction, so it isn't a learnable
+transition.
+
+`services/atlas-map-api/tests/test_lattice_ledger_feed.py` (8 tests) proves the DoD literally:
+builds a synthetic lattice-shaped ledger and confirms `combo.py --evaluate` (via
+`combo.evaluate()`) reads the new rows and beats random. One flakiness bug found and fixed along
+the way: `evaluate()`'s holdout split hashes session id, and Python's `hash()` is salted per
+process (`PYTHONHASHSEED`) -- a small fixture (12-vs-3 sessions) failed 2/5 explicit seeds
+because the 30% holdout draw sometimes contained zero losing-arm sessions, making
+`random_expected_reward` accidentally tie `combo_expected_reward` (a genuine tie, which
+`evaluate()`'s own docstring calls honest reporting, not a bug). Fixed by scaling the fixture up
+(200-vs-60 sessions) until a zero-draw becomes vanishingly improbable -- confirmed 0/30 failures
+across seeds 0-29 before trusting it.
+
+Live-verified end to end (real `code-recon` call, `SEAM_LEDGER=1` pointed at a scratch file, not
+the real ledger): the run produced a real Receipt and `run_chain.py` printed `lattice: fed 1
+row(s) to the tool-outcomes ledger`; the appended row matched `_ledger_rows`' schema exactly.

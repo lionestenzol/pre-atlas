@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""Run a live LangGraph chain of skill invocations (Seq 2 + Seq 3 integration).
+"""Run a live LangGraph chain of skill invocations (Seq 2 + Seq 3 + Seq 5 integration).
 
 Wires skill_nodes.invoke_skill (Seq 2 -- claude-agent-sdk -> seam.v1 Receipt) into
 graph.build_chain_graph (Seq 3 -- durable StateGraph, @task-wrapped nodes,
 AsyncSqliteSaver checkpointing) so a chain of real agentic skill calls is
 crash-resumable: kill this process mid-chain, re-run with the same --thread-id,
-and completed steps do not re-invoke the SDK.
+and completed steps do not re-invoke the SDK. After a successful run, feeds the
+same tool-outcomes.jsonl ledger combo.py scores (Seq 5, opt-in via SEAM_LEDGER=1
+-- see ledger_feed.py), so lattice-driven runs teach the bandit, not just
+interactive/seam usage.
 
     python run_chain.py --thread-id t1 code-recon "locate where run_id is threaded"
     python run_chain.py --thread-id t1 code-recon "prompt A" weapon "prompt B"   # 2-step chain
     python run_chain.py --thread-id t1 --resume                                  # resume after a crash
+    SEAM_LEDGER=1 python run_chain.py --thread-id t1 code-recon "..."            # also feed the ledger
 
 Checkpoints persist to lattice_runs.sqlite (next to this file) by default -- a
 real process restart reconnects to the same file, same as
@@ -33,6 +37,7 @@ if str(_HERE) not in sys.path:
 from graph import StepFn, build_chain_graph  # noqa: E402
 from skill_nodes import DEFAULT_MAX_BUDGET_USD, DEFAULT_MAX_TURNS, invoke_skill  # noqa: E402
 from schemas import SKILL_SCHEMAS  # noqa: E402
+from ledger_feed import append_ledger  # noqa: E402
 
 DEFAULT_DB_PATH = str(_HERE / "lattice_runs.sqlite")
 
@@ -101,6 +106,10 @@ async def run(argv: list[str] | None = None) -> int:
         result = await graph.ainvoke(initial_input, config, durability="sync")
 
     receipts = result["receipts"]
+    n_ledger_rows = append_ledger(receipts, args.thread_id)
+    if n_ledger_rows:
+        print(f"lattice: fed {n_ledger_rows} row(s) to the tool-outcomes ledger", file=sys.stderr)
+
     if args.json:
         print(json.dumps(receipts, indent=2, sort_keys=True))
     else:

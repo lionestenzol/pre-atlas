@@ -1,4 +1,4 @@
-# lattice — LangGraph Skill Lattice (Seq 2 + Seq 3 + Seq 4 + Seq 5)
+# lattice — LangGraph Skill Lattice (Seq 2 + Seq 3 + Seq 4 + Seq 5 + Seq 6)
 
 Wraps a genuinely agentic Claude Code Skill invocation (`claude-agent-sdk`, `skills=[...]`,
 forced `output_format`) into the same `seam.v1` Receipt shape every deterministic tool in
@@ -202,3 +202,46 @@ across seeds 0-29 before trusting it.
 Live-verified end to end (real `code-recon` call, `SEAM_LEDGER=1` pointed at a scratch file, not
 the real ledger): the run produced a real Receipt and `run_chain.py` printed `lattice: fed 1
 row(s) to the tool-outcomes ledger`; the appended row matched `_ledger_rows`' schema exactly.
+
+## viewer_server.py + viewer.html — watch a chain execute live (Seq 6)
+
+```bash
+python viewer_server.py     # http://127.0.0.1:8902  (or: use the "lattice-viewer" launch.json config)
+```
+
+A `build_chain_graph` run rendered as a Cytoscape DAG whose node colors change live as each
+`@task`-wrapped step actually completes -- gray (pending) -> blue (running) -> green (`ok`) /
+red (`error`) -- streamed off `graph.astream(..., stream_mode="updates")` via Server-Sent Events.
+Click **"Run demo chain"** for a free 3-node synthetic run (no API cost, for verifying the
+mechanism itself), or pick a real skill + type a prompt for **"Run real chain"** (costs real
+budget, same `skill_nodes.invoke_skill` path as `run_chain.py`). Every completed run also feeds
+the ledger via `ledger_feed.append_ledger` (Seq 5), same as `run_chain.py`.
+
+**Assemble-first note:** reuses the vendored `cytoscape.min.js` + `cytoscape-dagre.js` already
+proven in `apps/lattice/` (mounted read-only at `/vendor`) -- but does NOT touch
+`apps/lattice/index.html` itself. That app is a large, unrelated production surface (work-item
+viewmodel UI over delta-kernel, its own locked 3-week assemble-first plan, live Replicache
+write-paths) with nothing to do with watching a LangGraph run execute; forking or extending it
+for this would be scope creep into a system with its own moat. Reusing the *library*, not the
+*app*, is the actual assemble-first move here.
+
+**`stream_mode="updates"` fires twice per node** -- once for the inner `@task`'s raw return
+value, once for the node's `{"receipts": [...]}` state patch (both keyed by the same node name,
+confirmed by direct inspection, not assumed). `_is_node_update()` filters to only the
+state-patch shape so the browser sees exactly one event per real node completion, not two.
+
+**Live-verified in an actual browser** (not just `curl`/TestClient): started the server via
+`preview_start`, clicked "Run demo chain," and confirmed via direct Cytoscape state inspection
+(`cy.nodes().map(n => ({id: n.id(), classes: n.classes()}))`) that `demo-a`/`demo-b` ended up
+`"ok"` and `demo-c` (deliberately built to fail) ended up `"error"` -- matching each step's real
+outcome exactly, not just "the page loaded." **Found and fixed a real bug along the way**: the
+first UI draft took a single `"skill:prompt, skill:prompt"` text field; typing a prompt
+containing a comma ("In one sentence, what does...") silently mis-parsed into a bogus second
+pair and failed with `unknown skill(s)`. Root-caused via `document.getElementById(...).value`
+direct inspection (not guessed), fixed by replacing the fragile delimiter scheme with a proper
+skill `<select>` + a plain prompt `<textarea>`, then re-ran the EXACT same comma-containing
+prompt through the fixed UI and confirmed the `code-recon` node ended up `"ok"` for real.
+4 hermetic tests cover the pure logic (`_node_names` disambiguation, `_is_node_update` filter,
+demo-step receipt shapes) -- the FastAPI/SSE routes themselves are proven by the live browser
+run instead of a mocked TestClient, since background-task streaming is exactly the kind of thing
+that looks right under a mock and breaks for real.

@@ -369,7 +369,7 @@ function _dailyViewToggle(active) {
   `;
   return `
     <div class="ip-view-toggle" role="group" aria-label="Daily view">
-      ${btn('minimal', 'Minimal')}${btn('full', 'Full Plan')}
+      ${btn('minimal', 'Minimal')}${btn('medium', 'Medium')}${btn('full', 'Full Plan')}
     </div>
   `;
 }
@@ -562,15 +562,15 @@ const ScreenRenderers = {
   // (what to do now); Full is the planning view. state.UI.dailyView picks.
   Daily() {
     const plan = Helpers.getDayPlan();
-    return state.UI?.dailyView === 'minimal'
-      ? this.renderDailyMinimal(plan)
-      : this.renderDailyFull(plan);
+    if (state.UI?.dailyView === 'minimal') return this.renderDailyMinimal(plan);
+    return this.renderDailyFull(plan);
   },
 
   renderDailyFull(todayPlan) {
     const todayDate = stateManager.getTodayDate();
     const dailyProgress = Helpers.calculateDailyProgress();
     const td = getTodayFields();
+    const isMedium = state.UI?.dailyView === 'medium';
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -578,7 +578,7 @@ const ScreenRenderers = {
 
     return `
       <div style="max-width:48rem;">
-        ${_dailyViewToggle('full')}
+        ${_dailyViewToggle(isMedium ? 'medium' : 'full')}
         <h1 style="font-size:2.25rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.25rem;">Daily Plan</h1>
         <div style="color:var(--ip-gray-600);font-size:0.9375rem;margin-bottom:1.75rem;">${Helpers.formatDate(todayPlan.date)}</div>
 
@@ -597,16 +597,16 @@ const ScreenRenderers = {
                 <input type="text" class="td-input" value="${UI.sanitize(td['p'+i] || '')}" placeholder="Priority ${i}" onblur="saveTodayField('p${i}', this.value)" style="flex:1;" />
                 ${td['p'+i+'TaskId'] ? `<button class="td-btn" style="font-size:0.75rem;padding:0.3rem 0.625rem;flex-shrink:0;" title="Completes the real Atlas task, not just this text" onclick="completeSeededPriority(${i})">Done</button>` : ''}
               </div>
-              <div style="display:flex;align-items:center;gap:0.5rem;padding-left:1.75rem;">
+              ${isMedium ? '' : `<div style="display:flex;align-items:center;gap:0.5rem;padding-left:1.75rem;">
                 <input type="text" class="td-input" value="${UI.sanitize(td['p'+i+'why'] || '')}" placeholder="Why this matters" onblur="saveTodayField('p${i}why', this.value)" style="flex:1;font-size:0.8125rem;padding:0.5rem 0.625rem;" />
                 <span style="font-size:0.625rem;color:var(--ip-gray-300);text-transform:uppercase;letter-spacing:0.06em;">Link:</span>
                 ${buildLinkSelect('az', i)}
                 ${buildLinkSelect('area', i)}
-              </div>
+              </div>`}
             </div>
           `).join('')}
 
-          <div class="td-label" style="margin-top:1.25rem;">3 Ways to Win <span class="td-label-step">Min / Max</span></div>
+          ${isMedium ? '' : `<div class="td-label" style="margin-top:1.25rem;">3 Ways to Win <span class="td-label-step">Min / Max</span></div>
           <div class="td-help">Three win conditions. Min is the floor, max is the stretch.</div>
           ${[1,2,3].map(i => `
             <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;">
@@ -614,7 +614,7 @@ const ScreenRenderers = {
               <input type="text" class="td-input" value="${UI.sanitize(td['x'+i] || '')}" placeholder="Min" onblur="saveTodayField('x${i}', this.value)" style="flex:1;font-size:0.8125rem;padding:0.5rem 0.625rem;" />
               <input type="text" class="td-input" value="${UI.sanitize(td['y'+i] || '')}" placeholder="Max" onblur="saveTodayField('y${i}', this.value)" style="flex:1;font-size:0.8125rem;padding:0.5rem 0.625rem;" />
             </div>
-          `).join('')}
+          `).join('')}`}
 
           <div class="td-label" style="margin-top:1.25rem;">The Lever</div>
           <div class="td-help">What are you pulling today? The one action with outsized impact.</div>
@@ -626,7 +626,7 @@ const ScreenRenderers = {
         ${_chapterClose()}
 
         <!-- Daily Operating Protocol . where you are in the day -->
-        ${_chapterOpen('protocol', 'Daily Operating Protocol', 'Where you are right now.', false)}
+        ${isMedium ? '' : `${_chapterOpen('protocol', 'Daily Operating Protocol', 'Where you are right now.', false)}
           ${(() => {
             const hour = new Date().getHours();
             const blocks = [
@@ -649,10 +649,9 @@ const ScreenRenderers = {
               `;
             }).join('');
           })()}
-        ${_chapterClose()}
+        ${_chapterClose()}`}
 
-        <!-- Day Mode -->
-        ${_chapterOpen('daymode', 'Day Mode', 'What kind of day is it?', false)}
+        ${isMedium ? '' : `${_chapterOpen('daymode', 'Day Mode', 'What kind of day is it?', false)}
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             ${['A', 'B', 'C'].map(type => `
               <button onclick="setDayType('${type}')" class="td-btn-pill ${todayPlan.day_type === type ? 'active' : ''}" style="padding:0.625rem 1.25rem;font-size:0.875rem;">
@@ -660,7 +659,7 @@ const ScreenRenderers = {
               </button>
             `).join('')}
           </div>
-        ${_chapterClose()}
+        ${_chapterClose()}`}
 
         <!-- Time Blocks with routine dropdowns -->
         ${_chapterOpen('blocks', 'Time Blocks', 'Build the scaffolding for the day.', true)}
@@ -732,7 +731,7 @@ const ScreenRenderers = {
           </div>
         ${_chapterClose()}
 
-        <!-- Contingencies (collapsed) -->
+        ${isMedium ? '' : `<!-- Contingencies (collapsed) -->
         <details style="margin-bottom:1.5rem;">
           <summary style="cursor:pointer;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-gray-600);padding:0.5rem 0;">
             Contingencies . When the plan breaks. Pick the play.
@@ -755,7 +754,7 @@ const ScreenRenderers = {
               <div style="font-size:0.75rem;color:var(--ip-gray-600);">Reassess, one task only</div>
             </button>
           </div>
-        </details>
+        </details>`}
 
         <!-- Progress summary -->
         <div class="td-stat" style="padding:1rem 0;border-top:1px solid var(--ip-gray-200);">

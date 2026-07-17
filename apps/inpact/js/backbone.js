@@ -92,7 +92,7 @@
   // which defeats the whole point of the lens. Stay out of the way there.
   function suppressed() {
     return typeof state !== 'undefined' && !!state && state.screen === 'Daily'
-      && !!state.UI && state.UI.dailyView === 'minimal';
+      && !!state.UI && state.UI.dailyView !== 'full';
   }
 
   function mount(force) {

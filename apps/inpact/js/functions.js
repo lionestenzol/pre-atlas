@@ -2839,9 +2839,9 @@ function saveTodayField(field, value) {
   stateManager.update({ Today: state.Today });
 }
 
-// Which lens the Daily screen shows: 'minimal' (execute) or 'full' (plan).
+// Which lens the Daily screen shows: 'minimal' | 'medium' | 'full'.
 function setDailyView(view) {
-  if (view !== 'minimal' && view !== 'full') return;
+  if (view !== 'minimal' && view !== 'medium' && view !== 'full') return;
   if (!state.UI) state.UI = { dailyView: 'minimal' };
   state.UI.dailyView = view;
   stateManager.update({ UI: state.UI });

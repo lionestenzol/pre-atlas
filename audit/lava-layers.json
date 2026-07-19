@@ -34,10 +34,10 @@
     {
       "name": "openclaw",
       "epoch_first_written": "2026-03",
-      "epoch_last_touched": "2026-04-14",
-      "load_bearing_now": false,
+      "epoch_last_touched": "2026-07-06",
+      "load_bearing_now": true,
       "superseded_by": null,
-      "doctrine_at_time": "A dedicated gateway service should handle multi-channel messaging and expose core functions as chat commands."
+      "doctrine_at_time": "A dedicated gateway service should handle multi-channel messaging and expose core functions as chat commands. Actively wired into approval loop (4e12bfe/c1d8981, 2026-07-06)."
     },
     {
       "name": "mosaic-orchestrator",

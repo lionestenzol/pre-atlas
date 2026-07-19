@@ -5,6 +5,9 @@ task 03/01). Nothing deleted - capsule doctrine. Live docs remain at root (<10).
 
 | File | What it was |
 |---|---|
+| [AGENT_SUBSTRATE.md](2026-07/AGENT_SUBSTRATE.md) | Machine-onboarding quickstart for external agents |
+| [ARCHITECTURE.md](2026-07/ARCHITECTURE.md) | Pre Atlas system architecture overview |
+| [ARCHITECTURE_DECISIONS.md](2026-07/ARCHITECTURE_DECISIONS.md) | Architectural decision log (ADR format) |
 | [ARCHITECTURE_BRIEFING.md](2026-07/ARCHITECTURE_BRIEFING.md) | Pre Atlas — Architecture Briefing (Missing System Knowledge) |
 | [ATLAS_ATM_UASC_ANALYSIS.md](2026-07/ATLAS_ATM_UASC_ANALYSIS.md) | Atlas × ATM × UASC — the three-way analysis |
 | [ATLAS_ATM_UASC_PREP.md](2026-07/ATLAS_ATM_UASC_PREP.md) | Staging — the Atlas × ATM × UASC analysis |
@@ -19,6 +22,7 @@ task 03/01). Nothing deleted - capsule doctrine. Live docs remain at root (<10).
 | [CODEX_EXECUTION_PLAN.md](2026-07/CODEX_EXECUTION_PLAN.md) | CODEX EXECUTION PLAN: Seal 3 Execution Leaks |
 | [CONTEXT_PACKET.md](2026-07/CONTEXT_PACKET.md) | Pre Atlas — Context Packet |
 | [CYCLEBOARD_COMPLETE_REFERENCE.md](2026-07/CYCLEBOARD_COMPLETE_REFERENCE.md) | CycleBoard Complete Reference Document |
+| [DECISIONS.md](2026-07/DECISIONS.md) | Architectural decisions log (27 ADRs) |
 | [DROPLIST_AUTOPILOT_KICKOFF.md](2026-07/DROPLIST_AUTOPILOT_KICKOFF.md) | DropList Ship — Autopilot Kickoff (paste into a FRESH session) |
 | [DROPLIST_MARKET_READY_SPEC.md](2026-07/DROPLIST_MARKET_READY_SPEC.md) | DropList → Market-Ready (local-first, installable, swappable-LLM) — Ship Spec |
 | [DROPLIST_SHIP_2026-06-26.md](2026-07/DROPLIST_SHIP_2026-06-26.md) | DropList → Market-Ready: Ship Summary (2026-06-26) |

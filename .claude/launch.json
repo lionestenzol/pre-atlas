@@ -41,29 +41,6 @@
       "cwd": "services/aegis-fabric"
     },
     {
-      "name": "blueprint-generator",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "next",
-        "dev",
-        "-p",
-        "3030"
-      ],
-      "port": 3030,
-      "cwd": "apps/blueprint-generator"
-    },
-    {
-      "name": "mosaic-dashboard",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
-      "port": 3000,
-      "autoPort": false,
-      "cwd": "services/mosaic-dashboard"
-    },
-    {
       "name": "atlas-shell",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
@@ -190,15 +167,6 @@
       ],
       "port": 3050,
       "cwd": "services/canvas-engine"
-    },
-    {
-      "name": "ai-exec-pipeline",
-      "runtimeExecutable": "python",
-      "runtimeArgs": [
-        "server.py"
-      ],
-      "port": 5000,
-      "cwd": "apps/ai-exec-pipeline"
     },
     {
       "name": "anatomy",
@@ -494,19 +462,6 @@
         "--cors"
       ],
       "port": 8911
-    },
-    {
-      "name": "c110-trace",
-      "runtimeExecutable": "node",
-      "runtimeArgs": [
-        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
-        "apps/c110-trace",
-        "-p",
-        "8901",
-        "-c-1",
-        "--cors"
-      ],
-      "port": 8901
     },
     {
       "name": "ws-gateway",

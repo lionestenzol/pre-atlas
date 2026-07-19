@@ -79,7 +79,7 @@ DEFAULTS: dict[str, Any] = {
         "ai-exec-pipeline": "ai execution pipeline (legacy)",
     },
     "new_since_audit": ["droplist", "memory-hub", "search-stack", "atlas-audit", "reminders"],
-    "retired": ["mirofish", "openclaw", "mosaic-dashboard", "mosaic-orchestrator",
+    "retired": ["mirofish", "mosaic-dashboard", "mosaic-orchestrator",
                 "blueprint-generator", "ai-exec-pipeline"],
     "service_edges": [
         ["lattice", "delta-kernel"], ["inpact", "delta-kernel"], ["droplist", "delta-kernel"],

@@ -24,7 +24,7 @@ import { executeOnUASC } from '../core/executor-bridge.js';
 
 // === TYPES ===
 
-export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily';
+export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily' | 'atlas_map_reload';
 
 export interface JobRun {
   job: JobName;
@@ -48,6 +48,7 @@ export interface DaemonState {
   last_preparation: number | null;
   last_stall_check: number | null;
   last_sensor_daily: number | null;
+  last_atlas_map_reload: number | null;
   job_history: JobRun[];
   current_job: JobRun | null;
 }
@@ -77,6 +78,7 @@ export class GovernanceDaemon {
   private readonly PREPARATION_CRON = '*/5 * * * *';  // Every 5 minutes — preparation engine
   private readonly STALL_CHECK_CRON = '0 21 * * *';   // 21:00 daily — stall detection
   private readonly SENSOR_DAILY_CRON = '45 5 * * *';  // 05:45 daily — cognitive-sensor pipeline, ahead of Day Start
+  private readonly ATLAS_MAP_RELOAD_CRON = '5 6 * * *'; // 06:05 daily — refresh atlas-map-api snapshot after sensor daily
   private readonly REFRESH_TIMEOUT_MS = 120000;       // 2 minutes
   private readonly AGENT_PIPELINE_TIMEOUT_MS = 600000; // 10 minutes
   private readonly SENSOR_DAILY_TIMEOUT_MS = 900000;   // 15 minutes — multi-phase pipeline (ingest, es_scan, triage, backlog); measured >5min in practice
@@ -106,6 +108,7 @@ export class GovernanceDaemon {
       last_preparation: null,
       last_stall_check: null,
       last_sensor_daily: null,
+      last_atlas_map_reload: null,
       job_history: [],
       current_job: null,
     };
@@ -201,6 +204,11 @@ export class GovernanceDaemon {
     }, { noOverlap: true, name: 'sensor_daily' });
     this.cronJobs.push(sensorDailyJob);
 
+    const atlasMapReloadJob = cron.schedule(this.ATLAS_MAP_RELOAD_CRON, () => {
+      this.runJob('atlas_map_reload');
+    }, { noOverlap: true, name: 'atlas_map_reload' });
+    this.cronJobs.push(atlasMapReloadJob);
+
     // Run initial heartbeat immediately
     this.runJob('heartbeat');
 
@@ -215,6 +223,7 @@ export class GovernanceDaemon {
     console.log(`  - Preparation: ${this.PREPARATION_CRON}`);
     console.log(`  - Stall Check: ${this.STALL_CHECK_CRON}`);
     console.log(`  - Sensor Daily: ${this.SENSOR_DAILY_CRON}`);
+    console.log(`  - Atlas Map Reload: ${this.ATLAS_MAP_RELOAD_CRON}`);
   }
 
   /**
@@ -306,6 +315,9 @@ export class GovernanceDaemon {
           break;
         case 'sensor_daily':
           await this.runSensorDaily();
+          break;
+        case 'atlas_map_reload':
+          await this.runAtlasMapReload();
           break;
       }
 
@@ -1390,6 +1402,26 @@ export class GovernanceDaemon {
     });
   }
 
+  private async runAtlasMapReload(): Promise<void> {
+    const tokenPath = path.join(this.repoRoot, '.atlas-write-token');
+    try {
+      const token = fs.readFileSync(tokenPath, 'utf-8').trim();
+      const res = await fetch('http://127.0.0.1:3072/admin/reload', {
+        method: 'POST',
+        headers: { 'X-Atlas-Token': token },
+        signal: AbortSignal.timeout(10000),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        console.warn(`[Daemon] atlas_map_reload returned ${res.status}: ${JSON.stringify(body)}`);
+        return;
+      }
+      console.log(`[Daemon] atlas_map_reload OK — loaded_at=${body.loaded_at}, subsystems=${body.subsystem_count}`);
+    } catch (err) {
+      console.warn(`[Daemon] atlas_map_reload failed (non-critical):`, (err as Error).message);
+    }
+  }
+
   /**
    * AUTONOMOUS MODE ENGINE
    *
@@ -1624,6 +1656,9 @@ export class GovernanceDaemon {
         break;
       case 'sensor_daily':
         this.state.last_sensor_daily = timestamp;
+        break;
+      case 'atlas_map_reload':
+        this.state.last_atlas_map_reload = timestamp;
         break;
     }
   }

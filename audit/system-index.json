@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-07-14",
+  "generated_at": "2026-07-19",
   "repo_root": "C:\\Users\\bruke\\Pre Atlas",
-  "subsystem_count": 73,
+  "subsystem_count": 77,
   "autostart_count": 12,
   "entries": [
     {
@@ -14,8 +14,8 @@
       "entry_points": [],
       "file_count": 134,
       "total_loc": 12648,
-      "port": 3000,
-      "in_autostart": true
+      "port": null,
+      "in_autostart": false
     },
     {
       "path": "services/aegis-fabric",
@@ -39,7 +39,7 @@
       ],
       "file_count": 117,
       "total_loc": 11993,
-      "port": 3010,
+      "port": 3002,
       "in_autostart": true
     },
     {
@@ -50,8 +50,8 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 27,
-      "total_loc": 5143,
+      "file_count": 37,
+      "total_loc": 6864,
       "port": 3072,
       "in_autostart": true
     },
@@ -108,7 +108,7 @@
         "uvicorn"
       ],
       "entry_points": [],
-      "file_count": 724,
+      "file_count": 725,
       "total_loc": 116713,
       "port": 3077,
       "in_autostart": false
@@ -168,8 +168,8 @@
       "entry_points": [
         "src/api/server.ts"
       ],
-      "file_count": 117,
-      "total_loc": 37210,
+      "file_count": 120,
+      "total_loc": 37609,
       "port": 3001,
       "in_autostart": true
     },
@@ -235,7 +235,7 @@
       "entry_points": [],
       "file_count": 26,
       "total_loc": 1128,
-      "port": null,
+      "port": 3004,
       "in_autostart": true
     },
     {
@@ -247,7 +247,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 40,
-      "total_loc": 4947,
+      "total_loc": 4953,
       "port": null,
       "in_autostart": true
     },
@@ -342,7 +342,7 @@
       "in_autostart": false
     },
     {
-      "path": "apps/ai-exec-pipeline",
+      "path": "apps/_retired/ai-exec-pipeline",
       "name": "ai-exec-pipeline",
       "group": "apps",
       "language": "py",
@@ -387,7 +387,7 @@
       "in_autostart": false
     },
     {
-      "path": "apps/blueprint-generator",
+      "path": "apps/_retired/blueprint-generator",
       "name": "blueprint-generator",
       "group": "apps",
       "language": "js",
@@ -408,7 +408,7 @@
       "in_autostart": false
     },
     {
-      "path": "apps/c110-trace",
+      "path": "apps/_retired/c110-trace",
       "name": "c110-trace",
       "group": "apps",
       "language": "html",
@@ -423,7 +423,7 @@
       "in_autostart": false
     },
     {
-      "path": "apps/canvas-demo",
+      "path": "apps/_retired/canvas-demo",
       "name": "canvas-demo",
       "group": "apps",
       "language": "ts",
@@ -536,8 +536,8 @@
       "entry_points": [
         "index.html"
       ],
-      "file_count": 32,
-      "total_loc": 11525,
+      "file_count": 34,
+      "total_loc": 12031,
       "port": null,
       "in_autostart": true
     },
@@ -728,6 +728,32 @@
       "in_autostart": false
     },
     {
+      "path": "tools/autopilot",
+      "name": "autopilot",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/bearings",
+      "name": "bearings",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "tools/binre",
       "name": "binre",
       "group": "tools",
@@ -819,6 +845,19 @@
       "in_autostart": false
     },
     {
+      "path": "tools/lattice",
+      "name": "lattice",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 11,
+      "total_loc": 1346,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "tools/mini-ship",
       "name": "mini-ship",
       "group": "tools",
@@ -828,6 +867,19 @@
       "entry_points": [],
       "file_count": 2,
       "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/registry-gen",
+      "name": "registry-gen",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 437,
       "port": null,
       "in_autostart": false
     },
@@ -982,7 +1034,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 67,
+      "file_count": 68,
       "total_loc": 0,
       "port": null,
       "in_autostart": false
@@ -1086,7 +1138,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 31,
+      "file_count": 34,
       "total_loc": 4893,
       "port": null,
       "in_autostart": false

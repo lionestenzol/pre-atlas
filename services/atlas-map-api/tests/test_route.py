@@ -157,6 +157,17 @@ def test_route_endpoint_resolves_bearings_confidently():
     assert body["confident"] is True
 
 
+def test_route_endpoint_resolves_delta_scp_demo_triggers():
+    for q, expected_cap in [
+        ("is delta-scp up", "healthz"),
+        ("check compression job status", "get-job"),
+    ]:
+        r_ = client.get(f"/route?q={q}&role=agent&limit=10", headers=_agent_headers())
+        body = r_.json()
+        assert body["matches"][0]["surface"] == "delta-scp-demo", q
+        assert body["matches"][0]["capability"] == expected_cap, q
+
+
 def test_run_autopilot_beats_unrelated_capability_at_full_corpus_scale():
     # Regression guard: the original merged-haystack scoring scored optogon's
     # UNRELATED "Start a path session and run the first turn" at 85 against

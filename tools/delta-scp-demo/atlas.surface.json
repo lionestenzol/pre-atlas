@@ -11,7 +11,8 @@
       "criticality": 0,
       "invoke": "GET /healthz",
       "evidence": "C:/Users/bruke/pre-atlas/services/delta-scp/src/demo-server.ts:125-127 (GET /healthz -> {ok:true, service, mode})",
-      "notes": "The always-available read with no precondition: the seam's liveness probe that the carry stage is reachable. Server is launched via npx tsx (launch.json name 'delta-scp-demo' port 3012); the gateway proxies live and does NOT auto-start it."
+      "notes": "The always-available read with no precondition: the seam's liveness probe that the carry stage is reachable. Server is launched via npx tsx (launch.json name 'delta-scp-demo' port 3012); the gateway proxies live and does NOT auto-start it.",
+      "triggers": ["is delta-scp up", "check delta-scp health", "delta-scp status", "is the compression server alive", "ping delta-scp"]
     },
     {
       "id": "get-job",
@@ -20,7 +21,8 @@
       "criticality": 0,
       "invoke": "GET /jobs/{id}",
       "evidence": "C:/Users/bruke/pre-atlas/services/delta-scp/src/demo-server.ts:192-199 (GET /jobs/:id -> {ok:true, job} | 404 {ok:false, error})",
-      "notes": "Reads one compression job by UUID id minted by a prior POST /jobs (a write, gated off unless DESCRIBE_GATEWAY_WRITES=1). Jobs live in an in-memory Map (demo-server.ts:98), so an id does not survive a server restart."
+      "notes": "Reads one compression job by UUID id minted by a prior POST /jobs (a write, gated off unless DESCRIBE_GATEWAY_WRITES=1). Jobs live in an in-memory Map (demo-server.ts:98), so an id does not survive a server restart.",
+      "triggers": ["check compression job status", "read my compression job result", "get delta-scp job by id", "check my compression job"]
     }
   ]
 }

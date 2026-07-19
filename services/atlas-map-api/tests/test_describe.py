@@ -176,13 +176,14 @@ def test_describe_index_covers_all_35_surfaces():
         "aegis-fabric", "atlas-map-api", "canvas-engine", "cognitive-sensor", "cortex",
         "crucix", "delta-kernel", "droplist", "memory-hub", "openclaw", "optogon",
         "perception", "search-stack", "triangulation", "uasc-executor", "ws-gateway",
-        # apps (7)
-        "inpact", "lattice", "webos-333", "code-converter", "blueprint-generator",
-        "ai-exec-pipeline", "canvas-demo",
-        # tools (11) — +code-recon, +repo-inventory since this set was last updated
+        # apps (4) — ai-exec-pipeline/blueprint-generator/canvas-demo moved to
+        # apps/_retired/ and no longer declare overlays under apps/.
+        "inpact", "lattice", "webos-333", "code-converter",
+        # tools (14) — +code-recon, +repo-inventory, +autopilot, +bearings,
+        # +delta-scp-demo since this set was last updated
         "atlas-cli", "atlas-audit", "anatomy-extension", "anatomy-research",
         "anatomy-rewrite", "codex-partner", "fest-reconcile", "mini-ship", "reminders",
-        "code-recon", "repo-inventory",
+        "code-recon", "repo-inventory", "autopilot", "bearings", "delta-scp-demo",
     }
     missing = expected - set(body["surfaces"])
     assert not missing, f"surfaces missing self-description overlays: {sorted(missing)}"

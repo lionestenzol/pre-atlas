@@ -1769,6 +1769,12 @@ app.post('/api/work/complete', (req, res) => {
     return;
   }
 
+  // Capture job metadata before complete() removes it from the ledger
+  const jobBeforeComplete = workController.getJob(job_id);
+  const jobMeta = jobBeforeComplete && 'metadata' in jobBeforeComplete
+    ? (jobBeforeComplete.metadata as Record<string, unknown>)
+    : null;
+
   const completeResult = workController.complete({ job_id, outcome, result: jobResult, error, metrics });
 
   if ('error' in completeResult) {
@@ -1776,7 +1782,50 @@ app.post('/api/work/complete', (req, res) => {
     return;
   }
 
-  res.json(completeResult);
+  // Flywheel receipt: update idea_registry when a flywheel job completes
+  let registryUpdated = false;
+  if (
+    jobMeta
+    && jobMeta.source === 'idea_flywheel'
+    && jobMeta.registry_id
+    && outcome === 'completed'
+  ) {
+    const registryPath = path.resolve(cognitiveSensorDir, 'idea_registry.json');
+    try {
+      const raw = fs.readFileSync(registryPath, 'utf-8');
+      const registry = JSON.parse(raw);
+      const tierNames = Object.keys(registry.tiers || {});
+      for (const tier of tierNames) {
+        const ideas = registry.tiers[tier];
+        if (!Array.isArray(ideas)) continue;
+        const idea = ideas.find(
+          (i: Record<string, unknown>) => i.canonical_id === jobMeta.registry_id
+        );
+        if (idea) {
+          const previousStatus = idea.status;
+          idea.status = 'executed';
+          idea.executed_at = new Date().toISOString();
+          idea.executed_job_id = job_id;
+          fs.writeFileSync(registryPath, JSON.stringify(registry, null, 2), 'utf-8');
+          timeline.emit('FLYWHEEL_REGISTRY_UPDATED', 'api', {
+            registry_id: jobMeta.registry_id,
+            job_id,
+            previous_status: previousStatus,
+            new_status: 'executed',
+          });
+          registryUpdated = true;
+          break;
+        }
+      }
+    } catch (err) {
+      console.error('[Flywheel] Failed to update idea registry:', err);
+    }
+  }
+
+  res.json({
+    ...completeResult,
+    ...(registryUpdated ? { registry_updated: true } : {}),
+  });
 });
 
 /**
@@ -2849,10 +2898,49 @@ app.post('/api/actions/confirm/:id', async (req, res) => {
     error: bridgeResult.error,
   });
 
+  // Flywheel: if the confirmed action targets an idea-promoted task,
+  // submit it to the work queue so an agent can claim and execute it.
+  let workResult: { status: string; job_id?: string; reason?: string } | null = null;
+  if (state.target_entity_id && state.action_type === 'complete_task') {
+    const allEntities = storage.loadAllEntities();
+    for (const [_, data] of allEntities) {
+      if (data.entity.entity_id === state.target_entity_id) {
+        const targetState = data.state as Record<string, unknown>;
+        if (targetState.source === 'idea_auto_promote') {
+          const systemState = getSystemStateForWork();
+          const title = (targetState.title_template as string)
+            || (targetState.title as string)
+            || 'Idea-promoted task';
+          workResult = workController.request(
+            {
+              type: 'ai',
+              title,
+              metadata: {
+                source: 'idea_flywheel',
+                pending_action_id: id,
+                registry_id: targetState.source_id || null,
+                task_entity_id: state.target_entity_id,
+              },
+            },
+            systemState
+          );
+          timeline.emit('FLYWHEEL_WORK_SUBMITTED', 'api', {
+            pending_action_id: id,
+            task_entity_id: state.target_entity_id,
+            work_status: workResult.status,
+            job_id: workResult.job_id || null,
+          });
+        }
+        break;
+      }
+    }
+  }
+
   res.json({
     id,
     status: 'CONFIRMED',
     execution: bridgeResult,
+    ...(workResult ? { work_queue: workResult } : {}),
   });
 });
 

@@ -1074,6 +1074,22 @@ async function compoundWeeklyBriefing(): Promise<any> {
       ? workHistory.map((j: any) => `- **${j.title}** (${j.outcome}, ${Math.round((j.duration_ms || 0) / 1000)}s)`)
       : ['- No work completed this week']),
     '',
+    '## Flywheel',
+    ...(() => {
+      const flywheelJobs = workHistory.filter((j: any) => j.metadata?.source === 'idea_flywheel');
+      const shipped = flywheelJobs.filter((j: any) => j.outcome === 'completed').length;
+      const taps = flywheelJobs.length;
+      const humanMin = taps * 0.5;
+      const ratio = shipped > 0 ? (humanMin / shipped).toFixed(1) : 'n/a';
+      return shipped > 0 || taps > 0
+        ? [
+            `- **${shipped}** ideas shipped via flywheel`,
+            `- **${humanMin}** est. human-minutes (${taps} tap${taps === 1 ? '' : 's'} x 0.5 min)`,
+            `- **${ratio}** human-min per shipped item`,
+          ]
+        : ['- No flywheel activity this week'];
+    })(),
+    '',
     '## Wins',
     ...(wins.length ? wins.map((w: any) => `- ${w.text} (${w.date})`) : ['- No wins logged']),
     '',

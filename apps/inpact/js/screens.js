@@ -663,7 +663,10 @@ const ScreenRenderers = {
 
         <!-- Time Blocks with routine dropdowns -->
         ${_chapterOpen('blocks', 'Time Blocks', 'Build the scaffolding for the day.', true)}
-          <div class="td-help">Each block is a bet on what you'll do when. Check it off when it's done.</div>
+          <div class="td-help" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+            <span>Each block is a bet on what you'll do when. Check it off when it's done.</span>
+            ${typeof CalendarSync !== 'undefined' ? CalendarSync.renderSyncButton() : ''}
+          </div>
           ${todayPlan.time_blocks.map(block => {
             const routineMatch = _findRoutineMatch(block.title);
             const isExpanded = _expandedRoutines.has(block.id);

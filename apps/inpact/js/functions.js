@@ -970,7 +970,7 @@ function deleteRoutineType(routineName) {
 function addRoutineStep(routineName) {
   if (!state.Routine[routineName]) return;
 
-  state.Routine[routineName].push('New step');
+  state.Routine[routineName].push({ text: 'New step', duration: 5 });
   stateManager.update({ Routine: state.Routine });
   render();
 
@@ -998,9 +998,18 @@ function updateRoutineStep(routineName, index, value) {
     return;
   }
 
-  state.Routine[routineName][index] = trimmedValue;
+  state.Routine[routineName][index].text = trimmedValue;
   stateManager.update({ Routine: state.Routine });
   Helpers.logActivity('routine_step_updated', `Updated step in ${routineName} routine`);
+}
+
+function updateRoutineStepDuration(routineName, index, minutes) {
+  if (!state.Routine[routineName]?.[index]) return;
+
+  const parsed = Math.min(240, Math.max(1, parseInt(minutes, 10) || 5));
+  state.Routine[routineName][index].duration = parsed;
+  stateManager.update({ Routine: state.Routine });
+  Helpers.logActivity('routine_step_updated', `Updated duration in ${routineName} routine`);
 }
 
 function deleteRoutineStep(routineName, index) {
@@ -3011,7 +3020,7 @@ if (typeof module !== 'undefined' && module.exports) {
     removeTimeBlock, saveGoals, toggleGoalCompletion, openCreateModal, openEditModal,
     sortTasks, filterTasks, searchTasks, exportState, showImportModal, handleFileImport,
     clearData, resetToDefaults, toggleDarkMode, toggleSetting, updateSetting,
-    addRoutineStep, updateRoutineStep, deleteRoutineStep, moveRoutineStep,
+    addRoutineStep, updateRoutineStep, updateRoutineStepDuration, deleteRoutineStep, moveRoutineStep,
     addNewRoutineType, deleteRoutineType, toggleRoutineStep, toggleRoutineComplete,
     openJournalModal, saveJournalEntry, editJournalEntry, deleteJournalEntry,
     addFocusTask, toggleFocusTask, removeFocusTask, toggleEightStep,

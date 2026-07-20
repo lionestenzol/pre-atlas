@@ -133,24 +133,49 @@ const CalendarSync = (() => {
     });
   }
 
+  // A block titled "Morning Routine" etc. matches a Routine template
+  // (_findRoutineMatch, defined in screens.js) and expands into one event
+  // per step instead of a single block event, so each step gets its own
+  // real time on the calendar rather than being collapsed into an hour.
   function buildTimeBlockEvents(dateStr, timeBlocks) {
-    return timeBlocks.map(block => {
-      const startDt = parseInpactTime(dateStr, block.time);
-      const endDt = new Date(startDt.getTime() + (block.duration || 30) * 60000);
-      return {
-        summary: block.title,
-        description: `inPACT time block${block.completed ? ' [DONE]' : ''}`,
-        start: {
-          dateTime: toLocalISO(startDt),
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        },
-        end: {
-          dateTime: toLocalISO(endDt),
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        },
-        colorId: block.completed ? '2' : '11',
-      };
-    });
+    const routines = (typeof stateManager !== 'undefined' && stateManager.state?.Routine) || {};
+    const findRoutine = typeof _findRoutineMatch === 'function' ? _findRoutineMatch : () => null;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const events = [];
+
+    for (const block of timeBlocks) {
+      const routineName = findRoutine(block.title);
+      const steps = routineName ? routines[routineName] : null;
+
+      if (steps && steps.length) {
+        let cursor = parseInpactTime(dateStr, block.time);
+        for (const step of steps) {
+          const duration = step.duration || 5;
+          const startDt = new Date(cursor);
+          const endDt = new Date(startDt.getTime() + duration * 60000);
+          events.push({
+            summary: `${block.title}: ${step.text}`,
+            description: `inPACT routine step${block.completed ? ' [DONE]' : ''}`,
+            start: { dateTime: toLocalISO(startDt), timeZone: tz },
+            end: { dateTime: toLocalISO(endDt), timeZone: tz },
+            colorId: block.completed ? '2' : '11',
+          });
+          cursor = endDt;
+        }
+      } else {
+        const startDt = parseInpactTime(dateStr, block.time);
+        const endDt = new Date(startDt.getTime() + (block.duration || 30) * 60000);
+        events.push({
+          summary: block.title,
+          description: `inPACT time block${block.completed ? ' [DONE]' : ''}`,
+          start: { dateTime: toLocalISO(startDt), timeZone: tz },
+          end: { dateTime: toLocalISO(endDt), timeZone: tz },
+          colorId: block.completed ? '2' : '11',
+        });
+      }
+    }
+
+    return events;
   }
 
   function parseInpactTime(dateStr, timeStr) {

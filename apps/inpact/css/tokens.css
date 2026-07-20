@@ -997,6 +997,13 @@ textarea.td-input { resize: vertical; min-height: 5rem; line-height: 1.55; }
   text-decoration: line-through;
   opacity: 0.5;
 }
+.ip-min-step-time {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--ip-gray-500);
+  flex-shrink: 0;
+  width: 4.5rem;
+}
 
 .ip-min-progress {
   font-size: 0.8125rem;

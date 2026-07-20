@@ -310,11 +310,26 @@ const Helpers = {
     const name = _findRoutineMatch(block.title);
     if (!name) return null;
 
-    const steps = state.Routine[name] || [];
+    const steps = this.computeRoutineStepTimes(block.time, state.Routine[name] || []);
     const completion = plan.routines_completed?.[name] || { completed: false, steps: {} };
     const done = steps.filter((_, idx) => completion.steps?.[idx]).length;
 
     return { name, steps, completion, done, total: steps.length };
+  },
+
+  // Stamps each routine step with a real clock time by walking forward from
+  // the parent block's start, accumulating each step's duration in turn.
+  // Re-scheduling the block automatically re-times every step under it.
+  computeRoutineStepTimes(blockTime, steps) {
+    let minutes = this._blockMinutes({ time: blockTime });
+    return steps.map(step => {
+      const duration = step.duration || 5;
+      const h = Math.floor(minutes / 60) % 24;
+      const m = minutes % 60;
+      const time = convertTo12Hour(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+      minutes += duration;
+      return { ...step, time, duration };
+    });
   },
 
   isPlanReady(plan) {

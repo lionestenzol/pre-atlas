@@ -671,7 +671,7 @@ const ScreenRenderers = {
             const routineMatch = _findRoutineMatch(block.title);
             const isExpanded = _expandedRoutines.has(block.id);
             const completion = routineMatch ? (todayPlan.routines_completed?.[routineMatch] || { completed: false, steps: {} }) : null;
-            const routineSteps = routineMatch ? state.Routine[routineMatch] : [];
+            const routineSteps = routineMatch ? Helpers.computeRoutineStepTimes(block.time, state.Routine[routineMatch]) : [];
 
             return `
               <div class="td-row" style="flex-wrap:wrap;">
@@ -696,7 +696,8 @@ const ScreenRenderers = {
                     ${routineSteps.map((step, idx) => `
                       <label style="display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;cursor:pointer;">
                         <input type="checkbox" ${completion.steps?.[idx] ? 'checked' : ''} onchange="toggleRoutineStep('${_jsAttrArg(routineMatch)}', ${idx}, this.checked)" style="width:0.875rem;height:0.875rem;accent-color:var(--ip-black);" />
-                        <span style="font-size:0.8125rem;color:var(--ip-gray-700);${completion.steps?.[idx] ? 'text-decoration:line-through;opacity:0.5;' : ''}">${UI.sanitize(step)}</span>
+                        <span style="font-size:0.6875rem;color:var(--ip-gray-500);font-family:monospace;width:4.5rem;flex-shrink:0;">${UI.sanitize(step.time)}</span>
+                        <span style="font-size:0.8125rem;color:var(--ip-gray-700);${completion.steps?.[idx] ? 'text-decoration:line-through;opacity:0.5;' : ''}">${UI.sanitize(step.text)}</span>
                       </label>
                     `).join('')}
                   </div>
@@ -835,7 +836,8 @@ const ScreenRenderers = {
               <label class="ip-min-step">
                 <input type="checkbox" ${routine.completion.steps?.[idx] ? 'checked' : ''}
                        onchange="toggleRoutineStep('${_jsAttrArg(routine.name)}', ${idx}, this.checked)" />
-                <span class="${routine.completion.steps?.[idx] ? 'is-done' : ''}">${UI.sanitize(step)}</span>
+                <span class="ip-min-step-time">${UI.sanitize(step.time)}</span>
+                <span class="${routine.completion.steps?.[idx] ? 'is-done' : ''}">${UI.sanitize(step.text)}</span>
               </label>
             `).join('')}
           </div>
@@ -1352,7 +1354,8 @@ const ScreenRenderers = {
                   ${routine.map((step, index) => `
                     <div class="td-row">
                       <span style="color:var(--ip-gray-300);font-weight:700;font-size:0.875rem;width:1.5rem;text-align:center;">${index + 1}</span>
-                      <input type="text" value="${UI.sanitize(step)}" onchange="updateRoutineStep('${routineName}', ${index}, this.value)" class="td-input" style="flex:1;" placeholder="Step..." />
+                      <input type="text" value="${UI.sanitize(step.text)}" onchange="updateRoutineStep('${routineName}', ${index}, this.value)" class="td-input" style="flex:1;" placeholder="Step..." />
+                      <input type="number" min="1" max="240" value="${step.duration}" onchange="updateRoutineStepDuration('${routineName}', ${index}, this.value)" class="td-input" style="width:4rem;" title="Minutes" />
                       <div style="display:flex;gap:0.125rem;">
                         ${index > 0 ? `<button onclick="moveRoutineStep('${routineName}', ${index}, 'up')" style="background:none;border:none;cursor:pointer;color:var(--ip-gray-600);padding:0.25rem;font-size:0.625rem;"><i class="fas fa-chevron-up"></i></button>` : ''}
                         ${index < routine.length - 1 ? `<button onclick="moveRoutineStep('${routineName}', ${index}, 'down')" style="background:none;border:none;cursor:pointer;color:var(--ip-gray-600);padding:0.25rem;font-size:0.625rem;"><i class="fas fa-chevron-down"></i></button>` : ''}

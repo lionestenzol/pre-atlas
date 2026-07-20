@@ -76,9 +76,15 @@ const cognitiveSensorDir = process.env.COGNITIVE_SENSOR_DIR
 // just checkTimeouts()).
 const workController = new WorkController(repoRoot);
 
-// Initialize and start governance daemon
+// Initialize governance daemon; start only when GOVERNANCE_DAEMON=1.
+// On/off switch (atlas-consolidation AC0002 Wave 1.1): the daemon's 11 cron
+// jobs must not run unbidden on every :3001 start.
 const daemon = getDaemon(storage, repoRoot, workController);
-daemon.start();
+if (process.env.GOVERNANCE_DAEMON === '1') {
+  daemon.start();
+} else {
+  console.log('[Daemon] governance daemon disabled - set GOVERNANCE_DAEMON=1 to enable');
+}
 
 // Initialize timeline logger
 const timeline = getTimelineLogger(repoRoot);

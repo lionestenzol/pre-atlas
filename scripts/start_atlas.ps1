@@ -18,7 +18,7 @@ $HttpServer = "C:\Users\bruke\AppData\Roaming\npm\node_modules\http-server\bin\h
 #   (ATLAS_MASTER_PLAN.md Campaign II task 3). memory-hub + atlas-map-api added -
 #   both were built and dark; these are on-switches, not new services.
 $services = @(
-    @{ Name = "delta-kernel";     Port = 3001; Cwd = "$RepoRoot\services\delta-kernel";        Cmd = "`$env:DELTA_REPO_ROOT='$RepoRoot'; `$env:DELTA_DATA_DIR='$RepoRoot\.delta-fabric'; npx tsx src/api/server.ts" },
+    @{ Name = "delta-kernel";     Port = 3001; Cwd = "$RepoRoot\services\delta-kernel";        Cmd = "`$env:DELTA_REPO_ROOT='$RepoRoot'; `$env:DELTA_DATA_DIR='$RepoRoot\.delta-fabric'; `$env:GOVERNANCE_DAEMON='1'; npx tsx src/api/server.ts" },
     @{ Name = "aegis-fabric";     Port = 3002; Cwd = "$RepoRoot\services\aegis-fabric";        Cmd = "node --env-file=.env --import tsx/esm src/api/server.ts" },
     @{ Name = "openclaw";         Port = 3004; Cwd = "$RepoRoot\services\openclaw";            Cmd = "`$env:PYTHONPATH='src'; python -m uvicorn openclaw.api:app --host 127.0.0.1 --port 3004" },
     @{ Name = "inpact";           Port = 3006; Cwd = "$RepoRoot\apps\inpact";                  Cmd = "node `"$HttpServer`" . -p 3006 -c-1 --cors" },

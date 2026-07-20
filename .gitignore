@@ -297,3 +297,6 @@ festivals/.festival/.state/
 data/dag_events.jsonl
 data/run_log.jsonl
 .claude/skills/
+
+# === Generated system map data (rebuilt by audit/imports/_build_map.py) ===
+**/system-map-data.js

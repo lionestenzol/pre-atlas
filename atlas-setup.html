@@ -65,6 +65,7 @@
     <h1>Atlas Setup <span class="sub">— boot Atlas your way</span></h1>
     <span class="pill"><span id="connDot" class="dot unknown"></span><span id="connText">connecting…</span></span>
     <span class="pill"><span id="tokDot" class="dot unknown"></span><span id="tokText">token…</span></span>
+    <a id="statusLink" class="pill" href="http://localhost:3072/status" target="_blank" rel="noopener" style="text-decoration:none">status</a>
   </header>
   <p class="muted">No terminal. Click a preset, talk to it, or flip services one by one. The hub at
     <span class="chip" id="hubLabel">:3072</span> does the rest.</p>
@@ -173,6 +174,8 @@
   };
 
   let HUB = localStorage.getItem(LS.hub) || "http://localhost:3072";
+  const statusLink = document.getElementById("statusLink");
+  if (statusLink) statusLink.href = HUB + "/status";
   let writeToken = null;            // resolved at runtime, kept in memory only
   let catalog = [];                 // [{name, port, running, self, shared_with}]
   let lastPlan = null;              // {launch:[], stop:[], reason}
@@ -545,6 +548,7 @@
             throw new Error("must be a loopback http(s) URL");
         } catch (e) { log("invalid hub URL: " + e.message, "err"); return; }
         HUB = newHub; localStorage.setItem(LS.hub, HUB); hubLabel.textContent = HUB.replace(/^https?:\/\//, "");
+        if (statusLink) statusLink.href = HUB + "/status";
       }
       if (tok) localStorage.setItem(LS.tokenOverride, tok); else localStorage.removeItem(LS.tokenOverride);
       log("reconnecting to " + HUB + "…");

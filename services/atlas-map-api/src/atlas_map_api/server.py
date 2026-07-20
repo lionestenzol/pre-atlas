@@ -41,6 +41,7 @@ from . import launcher
 from . import receipt_store
 from . import route as route_mod
 from . import seam as seam_mod
+from . import status as status_mod
 from . import surfaces as surfaces_mod
 from .graph import ServiceGraph
 from .loader import MapSnapshot, load_snapshot
@@ -110,6 +111,7 @@ async def root() -> dict[str, Any]:
             "/map/path?from=X&to=Y",
             "/map/search?q=<q>&limit=N",
             "/map/signals",
+            "/status",
             "/describe",
             "/describe/{surface}?role=R&format=json|text",
             "/map/viewer?probe=true",
@@ -741,6 +743,15 @@ async def signals() -> dict[str, Any]:
         "generated_at": snap.generated_at,
         "loaded_at": _loaded_at,
     }
+
+
+@app.get("/status")
+async def unified_status() -> dict[str, Any]:
+    """Wave 1.3 unified status surface: services up/down + Atlas Scheduled
+    Tasks + governance-daemon heartbeat + orphan listeners, in one response.
+    See festival atlas-consolidation-AC0002 / 02_wave1_visibility / task 3."""
+    snap, _ = _ensure_loaded()
+    return await status_mod.unified_status(snap)
 
 
 def run() -> None:

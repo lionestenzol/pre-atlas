@@ -20,6 +20,7 @@ EXCLUDE_DIRS = {
     "node_modules", ".venv", "venv", "dist", "build",
     ".git", ".next", "target", "__pycache__", ".pytest_cache",
     ".mypy_cache", ".ruff_cache", "coverage", ".turbo",
+    "_retired", "anatomy-research",  # Wave 2.1: vendored/retired blobs excluded from canonical count
 }
 SOURCE_EXT = {
     ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",

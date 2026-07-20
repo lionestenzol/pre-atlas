@@ -1,22 +1,9 @@
 {
-  "generated_at": "2026-07-19",
+  "generated_at": "2026-07-20",
   "repo_root": "C:\\Users\\bruke\\Pre Atlas",
-  "subsystem_count": 77,
-  "autostart_count": 12,
+  "subsystem_count": 60,
+  "autostart_count": 11,
   "entries": [
-    {
-      "path": "services/_retired",
-      "name": "_retired",
-      "group": "services",
-      "language": "mixed",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 134,
-      "total_loc": 12648,
-      "port": null,
-      "in_autostart": false
-    },
     {
       "path": "services/aegis-fabric",
       "name": "aegis-fabric",
@@ -50,8 +37,8 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 37,
-      "total_loc": 6864,
+      "file_count": 39,
+      "total_loc": 7049,
       "port": 3072,
       "in_autostart": true
     },
@@ -86,7 +73,7 @@
       ],
       "file_count": 72,
       "total_loc": 7001,
-      "port": 3060,
+      "port": 3050,
       "in_autostart": true
     },
     {
@@ -123,7 +110,7 @@
       "entry_points": [],
       "file_count": 46,
       "total_loc": 4657,
-      "port": null,
+      "port": 3009,
       "in_autostart": true
     },
     {
@@ -169,7 +156,7 @@
         "src/api/server.ts"
       ],
       "file_count": 120,
-      "total_loc": 37609,
+      "total_loc": 37756,
       "port": 3001,
       "in_autostart": true
     },
@@ -248,7 +235,7 @@
       "entry_points": [],
       "file_count": 40,
       "total_loc": 4953,
-      "port": null,
+      "port": 3010,
       "in_autostart": true
     },
     {
@@ -329,126 +316,6 @@
       "in_autostart": false
     },
     {
-      "path": "apps/ahk-activity-logger",
-      "name": "ahk-activity-logger",
-      "group": "apps",
-      "language": "unknown",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 1,
-      "total_loc": 0,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/_retired/ai-exec-pipeline",
-      "name": "ai-exec-pipeline",
-      "group": "apps",
-      "language": "py",
-      "framework": "flask",
-      "deps": [
-        "flask",
-        "flask-cors",
-        "requests"
-      ],
-      "entry_points": [
-        "server.py"
-      ],
-      "file_count": 8,
-      "total_loc": 455,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/ai-png-execution-precursor",
-      "name": "ai-png-execution-precursor",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 78,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/binary-fingerprint",
-      "name": "binary-fingerprint",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 130,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/_retired/blueprint-generator",
-      "name": "blueprint-generator",
-      "group": "apps",
-      "language": "js",
-      "framework": "next",
-      "deps": [
-        "@types/node",
-        "@types/react",
-        "@types/react-dom",
-        "next",
-        "react",
-        "react-dom",
-        "typescript"
-      ],
-      "entry_points": [],
-      "file_count": 35,
-      "total_loc": 998,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/_retired/c110-trace",
-      "name": "c110-trace",
-      "group": "apps",
-      "language": "html",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [
-        "index.html"
-      ],
-      "file_count": 1,
-      "total_loc": 446,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/_retired/canvas-demo",
-      "name": "canvas-demo",
-      "group": "apps",
-      "language": "ts",
-      "framework": "react",
-      "deps": [
-        "@remotion/bundler",
-        "@remotion/cli",
-        "@remotion/renderer",
-        "@types/node",
-        "@types/react",
-        "@types/react-dom",
-        "react",
-        "react-dom",
-        "remotion",
-        "typescript"
-      ],
-      "entry_points": [
-        "src/index.ts"
-      ],
-      "file_count": 10,
-      "total_loc": 254,
-      "port": null,
-      "in_autostart": false
-    },
-    {
       "path": "apps/code-converter",
       "name": "code-converter",
       "group": "apps",
@@ -468,19 +335,6 @@
       "in_autostart": true
     },
     {
-      "path": "apps/code-module-memory",
-      "name": "code-module-memory",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 91,
-      "port": null,
-      "in_autostart": false
-    },
-    {
       "path": "apps/delta-scp-web",
       "name": "delta-scp-web",
       "group": "apps",
@@ -497,19 +351,6 @@
       ],
       "file_count": 15,
       "total_loc": 1073,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/habit-xp-tracker",
-      "name": "habit-xp-tracker",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 108,
       "port": null,
       "in_autostart": false
     },
@@ -537,8 +378,8 @@
         "index.html"
       ],
       "file_count": 34,
-      "total_loc": 12031,
-      "port": null,
+      "total_loc": 12120,
+      "port": 3006,
       "in_autostart": true
     },
     {
@@ -559,84 +400,6 @@
       "in_autostart": false
     },
     {
-      "path": "apps/learned-execution-router",
-      "name": "learned-execution-router",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 126,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/novenary-encoding",
-      "name": "novenary-encoding",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 145,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/png-code-carrier",
-      "name": "png-code-carrier",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 99,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/png-lookup-calculator",
-      "name": "png-lookup-calculator",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 85,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/python-docs-dictionary",
-      "name": "python-docs-dictionary",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 104,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/quiz-grader",
-      "name": "quiz-grader",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 121,
-      "port": null,
-      "in_autostart": false
-    },
-    {
       "path": "apps/webos-333",
       "name": "webos-333",
       "group": "apps",
@@ -646,19 +409,6 @@
       "entry_points": [],
       "file_count": 3,
       "total_loc": 3442,
-      "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "apps/workflow-execution-log",
-      "name": "workflow-execution-log",
-      "group": "apps",
-      "language": "py",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 3,
-      "total_loc": 137,
       "port": null,
       "in_autostart": false
     },
@@ -673,19 +423,6 @@
       "file_count": 20,
       "total_loc": 5381,
       "port": null,
-      "in_autostart": false
-    },
-    {
-      "path": "tools/anatomy-research",
-      "name": "anatomy-research",
-      "group": "tools",
-      "language": "mixed",
-      "framework": "unknown",
-      "deps": [],
-      "entry_points": [],
-      "file_count": 2968,
-      "total_loc": 571924,
-      "port": 8080,
       "in_autostart": false
     },
     {
@@ -871,6 +608,19 @@
       "in_autostart": false
     },
     {
+      "path": "tools/optogon-audit",
+      "name": "optogon-audit",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 54,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "tools/registry-gen",
       "name": "registry-gen",
       "group": "tools",
@@ -996,7 +746,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 50,
-      "total_loc": 15612,
+      "total_loc": 15643,
       "port": null,
       "in_autostart": false
     },
@@ -1034,7 +784,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 68,
+      "file_count": 72,
       "total_loc": 0,
       "port": null,
       "in_autostart": false
@@ -1138,8 +888,8 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 34,
-      "total_loc": 4893,
+      "file_count": 33,
+      "total_loc": 5082,
       "port": null,
       "in_autostart": false
     }

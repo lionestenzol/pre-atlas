@@ -27,7 +27,8 @@ CODE_EXT = {".py", ".ts", ".tsx", ".js", ".jsx", ".html", ".css", ".rs", ".go", 
 DOC_EXT = {".md", ".json", ".yaml", ".yml", ".toml"}
 NODE_EXT = CODE_EXT | DOC_EXT
 EXCLUDE = {"node_modules", ".git", ".venv", "venv", "__pycache__",
-           "dist", "build", ".pytest_cache", ".mypy_cache", "target", ".next"}
+           "dist", "build", ".pytest_cache", ".mypy_cache", "target", ".next",
+           "_retired"}
 
 TS_IMPORT = re.compile(r"""(?:import|export)[^'"]*?from\s*['"]([^'"]+)['"]""")
 TS_REQUIRE = re.compile(r"""require\(\s*['"]([^'"]+)['"]\s*\)""")

@@ -41,8 +41,15 @@ LANG_EXT = {".py":"py", ".ts":"ts", ".tsx":"ts", ".js":"js", ".jsx":"js",
             ".html":"html", ".css":"css", ".rs":"rs", ".go":"go", ".java":"java"}
 CODE_EXT = set(LANG_EXT)
 DOC_EXT = {".md", ".json", ".yaml", ".yml", ".toml"}
+# "_retired" quarantined per atlas-consolidation task 2.4 (see ~/.claude/rules/common/code-as-furniture.md - excluded, not deleted; decision #4 pending)
 EXCLUDE = {"node_modules", ".git", ".venv", "venv", "__pycache__",
-           "dist", "build", ".pytest_cache", ".mypy_cache", "target", ".next"}
+           "dist", "build", ".pytest_cache", ".mypy_cache", "target", ".next",
+           "_retired"}
+
+# Wave 2.1 (atlas-consolidation AC0002): vendored/retired blobs must not inflate
+# the canonical count. anatomy-research alone was 571,924 LOC = 62% of the old total.
+# See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
+EXCLUDE_SUBSYSTEMS = {"tools/anatomy-research", "services/_retired", "apps/_retired"}
 
 # Extra top-level dirs surfaced as single nodes so the WHOLE repo is on the map
 # (not just services/apps/tools). Each dir becomes one node under a synthetic
@@ -162,6 +169,23 @@ def find_port(root):
     return None
 
 
+def get_start_script_ports():
+    """Authoritative name/cwd -> port map from scripts/start_atlas.ps1.
+    Fixes the port bug where find_port()'s first-match source scrape assigned
+    aegis-fabric port 3010 (optogon's port); start_atlas.ps1 declares 3002."""
+    auto = ROOT / "scripts" / "start_atlas.ps1"
+    out = {}
+    if not auto.exists():
+        return out
+    txt = auto.read_text(encoding="utf-8", errors="ignore")
+    pat = re.compile(r'@\{\s*Name\s*=\s*"([^"]+)";\s*Port\s*=\s*(\d+);\s*Cwd\s*=\s*"([^"]+)"', re.IGNORECASE)
+    for name, port, cwd in pat.findall(txt):
+        out[name.lower()] = int(port)
+        cwd_tail = cwd.replace("$RepoRoot\\", "").replace("$RepoRoot/", "").replace("\\", "/").lower()
+        out[cwd_tail] = int(port)
+    return out
+
+
 def get_autostart_set():
     auto = ROOT / "scripts" / "start_atlas.ps1"
     if not auto.exists():
@@ -188,7 +212,9 @@ def analyze_dir(parent_name, sub):
         "entry_points": find_entry_points(path),
         "file_count": code + docs,
         "total_loc": loc,
-        "port": find_port(path),
+        "port": START_PORTS.get(sub.lower(),
+                START_PORTS.get(f"{parent_name}/{sub}".lower(),
+                find_port(path))),
         "in_autostart": sub in autostart_names,
     }
 
@@ -253,6 +279,7 @@ def analyze_root_files():
 
 
 autostart_names = get_autostart_set()
+START_PORTS = get_start_script_ports()
 
 entries = []
 for parent in ("services", "apps", "tools"):
@@ -263,6 +290,8 @@ for parent in ("services", "apps", "tools"):
         if sub.startswith(".") or sub in EXCLUDE:
             continue
         if not (pdir / sub).is_dir():
+            continue
+        if f"{parent}/{sub}" in EXCLUDE_SUBSYSTEMS:
             continue
         e = analyze_dir(parent, sub)
         if e:

@@ -6,6 +6,12 @@ const CalendarSync = (() => {
   const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
   const TOKEN_KEY = 'inpact-gcal-token';
   const TOKEN_EXPIRY_BUFFER_MS = 60000;
+  const CALENDAR_ID = '7770736e5f8aa82b297209089ff8e02111d5256854d4a40ceb21a09a199d7800@group.calendar.google.com';
+  // Local map of our event keys -> Google event IDs, namespaced by date:
+  // { "2026-07-20": { "block:<id>": "<googleEventId>", ... } }. This is what
+  // makes sync push-based and idempotent: a re-sync PATCHes the existing
+  // event instead of INSERTing a duplicate, and removes events we dropped.
+  const EVENT_MAP_KEY = 'inpact-gcal-event-map';
 
   let tokenClient = null;
   let gapiInited = false;
@@ -50,6 +56,19 @@ const CalendarSync = (() => {
 
   function clearStoredToken() {
     localStorage.removeItem(TOKEN_KEY);
+  }
+
+  function getEventMap() {
+    try {
+      const raw = localStorage.getItem(EVENT_MAP_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function saveEventMap(map) {
+    localStorage.setItem(EVENT_MAP_KEY, JSON.stringify(map));
   }
 
   // Token validity is tracked in our own storage (with expiry) rather than
@@ -107,11 +126,13 @@ const CalendarSync = (() => {
     });
   }
 
-  // Tries a silent refresh first (no popup) since Google will grant one
-  // without prompting if the user still has an active session and has
-  // already consented. Only falls back to the full consent popup when
-  // the silent attempt is rejected.
-  function authorize(forceConsent = false) {
+  // The silent-refresh win comes from hasToken(): while a stored token is
+  // still valid, syncToday never calls authorize() at all, so no popup.
+  // Once it's expired we DO need Google, and the request must fire
+  // synchronously inside the triggering click gesture — opening the consent
+  // popup from an async callback gets blocked by the browser. So we request
+  // consent directly here rather than doing a silent-then-fallback dance.
+  function authorize() {
     return new Promise((resolve, reject) => {
       if (!tokenClient) {
         reject(new Error('Calendar not initialized. Set your Google Client ID first.'));
@@ -119,17 +140,13 @@ const CalendarSync = (() => {
       }
       tokenClient.callback = (resp) => {
         if (resp.error) {
-          if (!forceConsent) {
-            authorize(true).then(resolve).catch(reject);
-            return;
-          }
           reject(new Error(resp.error));
           return;
         }
         saveToken(resp);
         resolve(resp);
       };
-      tokenClient.requestAccessToken({ prompt: forceConsent ? 'consent' : '' });
+      tokenClient.requestAccessToken({ prompt: hasToken() ? '' : 'consent' });
     });
   }
 
@@ -143,17 +160,23 @@ const CalendarSync = (() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const events = [];
 
+    // Template blocks (the fallback when no day plan exists) have no id, so
+    // fall back to a title+time key. Both are stable enough to map an event
+    // to the same Google entry across re-syncs.
+    const blockKey = block => `block:${block.id || `${block.title}@${block.time}`}`;
+
     for (const block of timeBlocks) {
       const routineName = findRoutine(block.title);
       const steps = routineName ? routines[routineName] : null;
 
       if (steps && steps.length) {
         let cursor = parseInpactTime(dateStr, block.time);
-        for (const step of steps) {
+        steps.forEach((step, idx) => {
           const duration = step.duration || 5;
           const startDt = new Date(cursor);
           const endDt = new Date(startDt.getTime() + duration * 60000);
           events.push({
+            _key: `step:${block.id || block.title}:${idx}`,
             summary: `${block.title}: ${step.text}`,
             description: `inPACT routine step${block.completed ? ' [DONE]' : ''}`,
             start: { dateTime: toLocalISO(startDt), timeZone: tz },
@@ -161,11 +184,12 @@ const CalendarSync = (() => {
             colorId: block.completed ? '2' : '11',
           });
           cursor = endDt;
-        }
+        });
       } else {
         const startDt = parseInpactTime(dateStr, block.time);
         const endDt = new Date(startDt.getTime() + (block.duration || 30) * 60000);
         events.push({
+          _key: blockKey(block),
           summary: block.title,
           description: `inPACT time block${block.completed ? ' [DONE]' : ''}`,
           start: { dateTime: toLocalISO(startDt), timeZone: tz },
@@ -223,25 +247,79 @@ const CalendarSync = (() => {
     }
 
     const events = buildTimeBlockEvents(dateStr, timeBlocks);
-    let created = 0;
+
+    // Push-based, idempotent sync keyed off the local event map. For each
+    // event we PATCH the existing Google entry if we've synced it before,
+    // otherwise INSERT and remember its id. Anything in the map for today
+    // that this sync no longer produces gets DELETEd. No GET/polling.
+    const map = getEventMap();
+    const dayMap = map[dateStr] || {};
+    const seenKeys = new Set();
+    let created = 0, updated = 0, deleted = 0;
     const errors = [];
 
     for (const event of events) {
+      const key = event._key;
+      seenKeys.add(key);
+      const resource = { ...event };
+      delete resource._key;
+
+      const existingId = dayMap[key];
       try {
-        await gapi.client.calendar.events.insert({
-          calendarId: '7770736e5f8aa82b297209089ff8e02111d5256854d4a40ceb21a09a199d7800@group.calendar.google.com',
-          resource: event,
-        });
-        created++;
+        if (existingId) {
+          try {
+            await gapi.client.calendar.events.patch({
+              calendarId: CALENDAR_ID, eventId: existingId, resource,
+            });
+            updated++;
+          } catch (err) {
+            // Event was deleted on Google's side (404/410) — re-create it.
+            if (err.status === 404 || err.status === 410) {
+              const resp = await gapi.client.calendar.events.insert({ calendarId: CALENDAR_ID, resource });
+              dayMap[key] = resp.result.id;
+              created++;
+            } else {
+              throw err;
+            }
+          }
+        } else {
+          const resp = await gapi.client.calendar.events.insert({ calendarId: CALENDAR_ID, resource });
+          dayMap[key] = resp.result.id;
+          created++;
+        }
       } catch (err) {
         errors.push(`${event.summary}: ${err.result?.error?.message || err.message}`);
       }
     }
 
+    // Remove events we previously synced for today but no longer have.
+    for (const key of Object.keys(dayMap)) {
+      if (seenKeys.has(key)) continue;
+      try {
+        await gapi.client.calendar.events.delete({ calendarId: CALENDAR_ID, eventId: dayMap[key] });
+        deleted++;
+      } catch (err) {
+        // Already gone on Google's side is fine; anything else we log.
+        if (err.status !== 404 && err.status !== 410) {
+          errors.push(`delete ${key}: ${err.result?.error?.message || err.message}`);
+        }
+      }
+      delete dayMap[key];
+    }
+
+    map[dateStr] = dayMap;
+    saveEventMap(map);
+
+    const summary = [
+      created ? `${created} added` : '',
+      updated ? `${updated} updated` : '',
+      deleted ? `${deleted} removed` : '',
+    ].filter(Boolean).join(', ') || 'No changes';
+
     if (errors.length) {
-      UI.showToast('Partial Sync', `${created} blocks synced, ${errors.length} failed.`, 'warning');
+      UI.showToast('Partial Sync', `${summary}; ${errors.length} failed.`, 'warning');
     } else {
-      UI.showToast('Calendar Synced', `${created} time blocks pushed to Google Calendar.`, 'success');
+      UI.showToast('Calendar Synced', `${summary}.`, 'success');
     }
   }
 

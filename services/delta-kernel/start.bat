@@ -1,22 +1,9 @@
 @echo off
-echo Starting Delta-State Fabric...
-
-:: Start API server in new terminal with repo-local data dir
-start "Delta API" cmd /k "cd /d %~dp0 && set DELTA_DATA_DIR=%~dp0..\.delta-fabric && npm run api"
-
-:: Wait a moment for API to start
-timeout /t 5 /nobreak >nul
-
-:: Start web app in new terminal
-start "Delta Web" cmd /k "cd /d %~dp0\web && npm run dev"
-
-:: Start Crucix OSINT feed (7 sources, port 3117)
-start "Crucix OSINT" cmd /k "cd /d %~dp0\..\crucix && node server.mjs"
-
-echo.
-echo Delta-State Fabric is starting...
-echo   API Server:  http://localhost:3001
-echo   Web App:     http://localhost:5173
-echo   Crucix OSINT: http://localhost:3117
-echo.
-echo Close the terminal windows to stop the servers.
+REM Rationalized (atlas-consolidation AC0002, wave1 task 04): no visible cmd /k terminals.
+REM Defers to the canonical fleet starter - hidden windows, logs in .atlas-logs\.
+REM See ~/.claude/rules/common/code-as-furniture.md - the old per-service cmd /k spawns were the terminal-spam source.
+REM Not covered by start_atlas.ps1 (start manually if needed):
+REM   delta-web dev UI (:5173)  - use .claude/launch.json "delta-web", or: cd web ^&^& npm run dev
+REM   crucix OSINT   (:3117)  - cd ..\crucix ^&^& node server.mjs
+echo Starting Delta-State Fabric via scripts\start_atlas.ps1 (hidden windows, logs in .atlas-logs\)...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\scripts\start_atlas.ps1"

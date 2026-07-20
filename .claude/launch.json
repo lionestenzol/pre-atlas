@@ -248,24 +248,6 @@
       "cwd": "services/openclaw"
     },
     {
-      "name": "mosaic-orch",
-      "runtimeExecutable": "python",
-      "runtimeArgs": [
-        "-m",
-        "uvicorn",
-        "mosaic.main:app",
-        "--host",
-        "127.0.0.1",
-        "--port",
-        "3005"
-      ],
-      "env": {
-        "PYTHONPATH": "src"
-      },
-      "port": 3005,
-      "cwd": "services/mosaic-orchestrator"
-    },
-    {
       "name": "uasc",
       "runtimeExecutable": "python",
       "runtimeArgs": [
@@ -498,19 +480,6 @@
         "import chatpull.web; chatpull.web.serve()"
       ],
       "port": 8877
-    },
-    {
-      "name": "mandelbulb-preview",
-      "runtimeExecutable": "node",
-      "runtimeArgs": [
-        "C:/Users/bruke/AppData/Roaming/npm/node_modules/http-server/bin/http-server",
-        "C:/Users/bruke/AppData/Local/Temp/claude/C--Users-bruke-Pre-Atlas/17588421-0010-4c1b-b3ab-d5ad4c9b8b5a/scratchpad/mandelbulb-preview",
-        "-p",
-        "8913",
-        "-c-1",
-        "--cors"
-      ],
-      "port": 8913
     }
   ]
 }

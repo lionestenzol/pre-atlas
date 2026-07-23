@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# pre-atlas-search — CLI shim that POSTs to the running search-stack service.
+#
+# Usage:
+#   pre-atlas-search "query"
+#   pre-atlas-search "query" --kind web --max 5
+#   pre-atlas-search --extract https://example.com
+#   pre-atlas-search --budget
+#
+# Requires: curl, jq, services/search-stack running on :3070
+
+set -euo pipefail
+
+URL="${SEARCH_STACK_URL:-http://127.0.0.1:3070}"
+
+usage() {
+    cat <<'EOF'
+pre-atlas-search — unified search across 28 providers
+
+  pre-atlas-search "query"                  # web kind (default)
+  pre-atlas-search "query" --kind research  # specific kind
+  pre-atlas-search "query" --max 5          # cap results
+  pre-atlas-search --extract <URL>          # firecrawl one page
+  pre-atlas-search --budget                 # show quota state
+  pre-atlas-search --health                 # provider enabled/disabled
+
+Kinds: web code file github research social news legal data local
+       multimedia product memory extract
+EOF
+}
+
+if [ $# -eq 0 ]; then usage; exit 0; fi
+
+case "${1:-}" in
+    -h|--help)
+        usage; exit 0 ;;
+    --budget)
+        curl -fsS "$URL/budget" | jq '.'
+        exit ;;
+    --health)
+        curl -fsS "$URL/healthz" | jq '.search_providers | map({name, enabled})'
+        exit ;;
+    --extract)
+        if [ -z "${2:-}" ]; then echo "missing URL" >&2; exit 1; fi
+        curl -fsS -X POST "$URL/extract" \
+            -H 'content-type: application/json' \
+            -d "$(jq -nc --arg url "$2" '{url: $url, mode: "markdown"}')" | jq '.'
+        exit ;;
+esac
+
+QUERY="$1"; shift
+KIND=""
+MAX=10
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --kind) KIND="$2"; shift 2 ;;
+        --max)  MAX="$2";  shift 2 ;;
+        *) echo "unknown arg: $1" >&2; exit 1 ;;
+    esac
+done
+
+PAYLOAD=$(jq -nc \
+    --arg q "$QUERY" \
+    --arg kind "$KIND" \
+    --argjson max "$MAX" \
+    'if $kind == "" then {q: $q, max_results: $max} else {q: $q, kind: $kind, max_results: $max} end')
+
+curl -fsS -X POST "$URL/search" \
+    -H 'content-type: application/json' \
+    -d "$PAYLOAD" | jq '.'

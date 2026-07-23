@@ -1,0 +1,76 @@
+{
+  "surface": "canvas-engine",
+  "headline": "URL/image -> live React clone via in-process Vite pool; SSE clone + region/free-form edit loops over anatomy envelopes.",
+  "capabilities": [
+    {
+      "id": "health",
+      "label": "Check engine health and active sessions",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /health"
+    },
+    {
+      "id": "list_sessions",
+      "label": "List active clone sessions",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /sessions"
+    },
+    {
+      "id": "clone_stub",
+      "label": "Stream a stub clone (SSE, no real codegen)",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /clone/stub",
+      "needs": ["url"]
+    },
+    {
+      "id": "clone",
+      "label": "Clone a URL or image into a live React app (SSE)",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /clone",
+      "needs": ["url"]
+    },
+    {
+      "id": "edit",
+      "label": "Edit a clone session via region or free-form intent (SSE)",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /edit",
+      "needs": ["sessionId", "intent"]
+    },
+    {
+      "id": "get_edits",
+      "label": "Get the edit history for a session",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /sessions/:sessionId/edits",
+      "needs": ["sessionId"]
+    },
+    {
+      "id": "get_envelope",
+      "label": "Get the anatomy envelope (the map) behind a clone",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /sessions/:sessionId/envelope",
+      "needs": ["sessionId"]
+    },
+    {
+      "id": "delete_session",
+      "label": "Release the Vite sandbox and delete a session (destructive)",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 3,
+      "invoke": "DELETE /sessions/:sessionId",
+      "needs": ["sessionId"]
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "surface": "aegis-fabric",
+  "headline": "Multi-tenant enterprise governance gateway — policy-gated agent actions, approval queue, hash-chained delta audit on port 3002.",
+  "capabilities": [
+    {
+      "id": "health",
+      "label": "Check the fabric health",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /health"
+    },
+    {
+      "id": "prometheus_metrics",
+      "label": "Scrape Prometheus metrics",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /metrics"
+    },
+    {
+      "id": "submit_agent_action",
+      "label": "Submit an agent action for policy evaluation",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /api/v1/agent/action",
+      "needs": ["agent_id", "action", "params"]
+    },
+    {
+      "id": "register_agent",
+      "label": "Register a new agent",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /api/v1/agents",
+      "needs": ["name", "provider"]
+    },
+    {
+      "id": "list_agents",
+      "label": "List registered agents",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /api/v1/agents"
+    },
+    {
+      "id": "query_state",
+      "label": "Query entity state (current or point-in-time)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /api/v1/state/query"
+    },
+    {
+      "id": "list_deltas",
+      "label": "List hash-chained deltas",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /api/v1/deltas"
+    },
+    {
+      "id": "verify_hash_chain",
+      "label": "Verify delta hash-chain integrity",
+      "direction": "read",
+      "exposure": "internal",
+      "criticality": 0,
+      "invoke": "GET /api/v1/deltas/verify"
+    },
+    {
+      "id": "list_approvals",
+      "label": "List pending approvals",
+      "direction": "read",
+      "exposure": "internal",
+      "criticality": 0,
+      "invoke": "GET /api/v1/approvals"
+    },
+    {
+      "id": "decide_approval",
+      "label": "Approve or reject a held action",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "POST /api/v1/approvals/:id",
+      "needs": ["id", "decision"]
+    },
+    {
+      "id": "list_policies",
+      "label": "List policy rules",
+      "direction": "read",
+      "exposure": "internal",
+      "criticality": 0,
+      "invoke": "GET /api/v1/policies"
+    },
+    {
+      "id": "set_policies",
+      "label": "Create or add policy rules",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "POST /api/v1/policies",
+      "needs": ["rules"]
+    },
+    {
+      "id": "simulate_policy",
+      "label": "Dry-run policy evaluation",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 1,
+      "invoke": "POST /api/v1/policies/simulate",
+      "needs": ["agent_id", "action"]
+    },
+    {
+      "id": "create_tenant",
+      "label": "Create a tenant (admin key)",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "POST /api/v1/tenants",
+      "needs": ["name"]
+    },
+    {
+      "id": "list_tenants",
+      "label": "List all tenants (admin key)",
+      "direction": "read",
+      "exposure": "internal",
+      "criticality": 0,
+      "invoke": "GET /api/v1/tenants"
+    },
+    {
+      "id": "manage_webhooks",
+      "label": "Create or list webhooks",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "POST /api/v1/webhooks/manage",
+      "needs": ["action"]
+    },
+    {
+      "id": "usage_metrics",
+      "label": "Read cost/usage per tenant",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /api/v1/metrics/usage"
+    },
+    {
+      "id": "audit_log",
+      "label": "Query the action audit log",
+      "direction": "read",
+      "exposure": "internal",
+      "criticality": 0,
+      "invoke": "GET /api/v1/audit"
+    }
+  ]
+}

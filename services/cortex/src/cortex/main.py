@@ -7,7 +7,10 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import Optional
 
 from cortex.config import config
 from cortex.clients.delta_client import DeltaClient
@@ -85,6 +88,26 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Cortex", version="0.1.0", lifespan=lifespan)
+
+# Bearer-auth gate, mirroring delta-kernel's `.aegis-tenant-key` model
+# (services/delta-kernel/src/api/server.ts): every route except /health requires
+# `Authorization: Bearer <key>` once DELTA_API_KEY is configured. Dev mode (no key
+# file, no env var) skips auth, same fail-open-locally / fail-closed-once-configured
+# convention already used elsewhere in this repo.
+# Path 2 hardened: /tasks/submit was reachable with zero auth on host="0.0.0.0",
+# and could reach LLM-decomposed shell_exec/api_call steps — see loop.py/planner.py/
+# executor.py fixes in the same change. See ~/.claude/rules/common/code-as-furniture.md.
+_PUBLIC_PATHS = {"/health"}
+
+
+@app.middleware("http")
+async def _require_auth(request: Request, call_next):
+    if not config.DELTA_API_KEY or request.url.path in _PUBLIC_PATHS:
+        return await call_next(request)
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header.startswith("Bearer ") or auth_header[len("Bearer "):] != config.DELTA_API_KEY:
+        return JSONResponse({"error": "Missing or invalid API key"}, status_code=401)
+    return await call_next(request)
 
 
 @app.get("/health")
@@ -164,6 +187,32 @@ async def submit_task(task: dict):
     from cortex.loop import enqueue_local_task
     task_id = await enqueue_local_task(task)
     return {"status": "queued", "task_id": task_id}
+
+
+class CodexExecRequest(BaseModel):
+    user_intent: str
+    cwd: Optional[str] = None
+    output_schema_path: Optional[str] = None
+
+
+@app.post("/codex/exec")
+async def codex_exec(req: CodexExecRequest):
+    """Classify a user intent and dispatch to Codex CLI.
+
+    Per doctrine/02_ROSETTA_STONE.md, Cortex is the layer that owns Codex
+    delegation. This endpoint is the HTTP surface for that — callers POST
+    a user_intent instead of invoking Codex directly.
+    """
+    from cortex.codex_dispatcher import DispatchError, dispatch_codex
+    try:
+        result = dispatch_codex(
+            user_intent=req.user_intent,
+            cwd=req.cwd,
+            output_schema_path=req.output_schema_path,
+        )
+    except DispatchError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 
 
 def start():

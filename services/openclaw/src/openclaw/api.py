@@ -15,6 +15,7 @@ from openclaw.skills.brief import handle_brief
 from openclaw.skills.fest import handle_fest
 from openclaw.skills.simulate import handle_simulate
 from openclaw.skills.approve import handle_approve
+from openclaw.skills.pending import handle_pending
 from openclaw.scheduler import DailyScheduler
 
 log = structlog.get_logger()
@@ -46,6 +47,7 @@ SKILLS = {
     "fest": Command(name="fest", description="Festival progress", handler=handle_fest),
     "simulate": Command(name="simulate", description="Start simulation", handler=handle_simulate),
     "approve": Command(name="approve", description="Approve item", handler=handle_approve),
+    "pending": Command(name="pending", description="List pending actions", handler=handle_pending),
 }
 
 # Scheduler

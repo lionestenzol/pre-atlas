@@ -1,0 +1,515 @@
+{
+  "generated_at": "2026-05-29",
+  "repo_root": "C:\\Users\\bruke\\Pre Atlas",
+  "subsystem_count": 29,
+  "autostart_count": 12,
+  "entries": [
+    {
+      "path": "services/.delta-fabric",
+      "name": ".delta-fabric",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 0,
+      "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "services/aegis-fabric",
+      "name": "aegis-fabric",
+      "language": "ts",
+      "framework": "express",
+      "deps": [
+        "@types/cors",
+        "@types/express",
+        "@types/node",
+        "cors",
+        "express",
+        "tsx",
+        "typescript"
+      ],
+      "entry_points": [
+        "src/api/server.ts"
+      ],
+      "file_count": 104,
+      "total_loc": 15179,
+      "port": 3002,
+      "in_autostart": true
+    },
+    {
+      "path": "services/canvas-engine",
+      "name": "canvas-engine",
+      "language": "ts",
+      "framework": "express",
+      "deps": [
+        "@anthropic-ai/sdk",
+        "@types/express",
+        "@types/node",
+        "@types/react",
+        "@types/react-dom",
+        "@vitejs/plugin-react",
+        "ajv",
+        "autoprefixer",
+        "express",
+        "postcss",
+        "react",
+        "react-dom",
+        "tailwindcss",
+        "tsx",
+        "typescript",
+        "vite",
+        "vitest",
+        "zod"
+      ],
+      "entry_points": [
+        "src/server.ts"
+      ],
+      "file_count": 78,
+      "total_loc": 12738,
+      "port": 3050,
+      "in_autostart": true
+    },
+    {
+      "path": "services/cognitive-sensor",
+      "name": "cognitive-sensor",
+      "language": "mixed",
+      "framework": "unknown",
+      "deps": [
+        "hdbscan",
+        "numpy",
+        "plyer",
+        "pytest",
+        "scikit-learn",
+        "sentence-transformers",
+        "umap-learn"
+      ],
+      "entry_points": [
+        "atlas_template.html"
+      ],
+      "file_count": 386,
+      "total_loc": 4319045,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "services/cortex",
+      "name": "cortex",
+      "language": "py",
+      "framework": "fastapi",
+      "deps": [
+        "fastapi",
+        "httpx",
+        "nats-py",
+        "pydantic",
+        "uvicorn"
+      ],
+      "entry_points": [],
+      "file_count": 37,
+      "total_loc": 3952,
+      "port": 3009,
+      "in_autostart": true
+    },
+    {
+      "path": "services/crucix",
+      "name": "crucix",
+      "language": "js",
+      "framework": "express",
+      "deps": [
+        "express"
+      ],
+      "entry_points": [
+        "server.mjs"
+      ],
+      "file_count": 74,
+      "total_loc": 15984,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "services/delta-kernel",
+      "name": "delta-kernel",
+      "language": "ts",
+      "framework": "express",
+      "deps": [
+        "@types/better-sqlite3",
+        "@types/cors",
+        "@types/express",
+        "@types/node",
+        "@types/node-cron",
+        "ajv",
+        "ajv-formats",
+        "better-sqlite3",
+        "cors",
+        "express",
+        "nats",
+        "node-cron",
+        "tsx",
+        "typescript"
+      ],
+      "entry_points": [
+        "src/api/server.ts"
+      ],
+      "file_count": 83,
+      "total_loc": 39809,
+      "port": 3001,
+      "in_autostart": true
+    },
+    {
+      "path": "services/mirofish",
+      "name": "mirofish",
+      "language": "py",
+      "framework": "fastapi",
+      "deps": [
+        "fastapi",
+        "uvicorn"
+      ],
+      "entry_points": [],
+      "file_count": 30,
+      "total_loc": 2933,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "services/mosaic-dashboard",
+      "name": "mosaic-dashboard",
+      "language": "ts",
+      "framework": "next",
+      "deps": [
+        "@tailwindcss/postcss",
+        "@testing-library/dom",
+        "@testing-library/react",
+        "@types/d3",
+        "@types/node",
+        "@types/react",
+        "@types/react-dom",
+        "@vitejs/plugin-react",
+        "d3",
+        "eslint",
+        "eslint-config-next",
+        "jsdom",
+        "next",
+        "plotly.js-dist-min",
+        "react",
+        "react-dom",
+        "react-plotly.js",
+        "socket.io-client",
+        "tailwindcss",
+        "typescript",
+        "vite-tsconfig-paths",
+        "vitest"
+      ],
+      "entry_points": [],
+      "file_count": 36,
+      "total_loc": 13897,
+      "port": 3000,
+      "in_autostart": true
+    },
+    {
+      "path": "services/mosaic-orchestrator",
+      "name": "mosaic-orchestrator",
+      "language": "py",
+      "framework": "fastapi",
+      "deps": [
+        "fastapi",
+        "uvicorn"
+      ],
+      "entry_points": [],
+      "file_count": 55,
+      "total_loc": 7567,
+      "port": 3005,
+      "in_autostart": true
+    },
+    {
+      "path": "services/openclaw",
+      "name": "openclaw",
+      "language": "py",
+      "framework": "fastapi",
+      "deps": [
+        "fastapi",
+        "uvicorn"
+      ],
+      "entry_points": [],
+      "file_count": 22,
+      "total_loc": 918,
+      "port": 3004,
+      "in_autostart": true
+    },
+    {
+      "path": "services/optogon",
+      "name": "optogon",
+      "language": "py",
+      "framework": "fastapi",
+      "deps": [
+        "anthropic",
+        "fastapi",
+        "httpx",
+        "jsonschema",
+        "pydantic",
+        "uvicorn"
+      ],
+      "entry_points": [],
+      "file_count": 33,
+      "total_loc": 4335,
+      "port": 3010,
+      "in_autostart": true
+    },
+    {
+      "path": "services/perception",
+      "name": "perception",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 18,
+      "total_loc": 834,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "services/triangulation",
+      "name": "triangulation",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [
+        "numpy"
+      ],
+      "entry_points": [],
+      "file_count": 13,
+      "total_loc": 1294,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "services/uasc-executor",
+      "name": "uasc-executor",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [
+        "server.py"
+      ],
+      "file_count": 35,
+      "total_loc": 3533,
+      "port": 3008,
+      "in_autostart": true
+    },
+    {
+      "path": "services/ws-gateway",
+      "name": "ws-gateway",
+      "language": "ts",
+      "framework": "unknown",
+      "deps": [
+        "@types/node",
+        "nats",
+        "socket.io",
+        "tsx",
+        "typescript"
+      ],
+      "entry_points": [
+        "index.ts"
+      ],
+      "file_count": 4,
+      "total_loc": 1011,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/ai-exec-pipeline",
+      "name": "ai-exec-pipeline",
+      "language": "py",
+      "framework": "flask",
+      "deps": [
+        "flask",
+        "flask-cors",
+        "requests"
+      ],
+      "entry_points": [
+        "server.py"
+      ],
+      "file_count": 6,
+      "total_loc": 507,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/blueprint-generator",
+      "name": "blueprint-generator",
+      "language": "ts",
+      "framework": "next",
+      "deps": [
+        "@types/node",
+        "@types/react",
+        "@types/react-dom",
+        "next",
+        "react",
+        "react-dom",
+        "typescript"
+      ],
+      "entry_points": [],
+      "file_count": 33,
+      "total_loc": 2023,
+      "port": 3030,
+      "in_autostart": true
+    },
+    {
+      "path": "apps/canvas-demo",
+      "name": "canvas-demo",
+      "language": "ts",
+      "framework": "react",
+      "deps": [
+        "@remotion/bundler",
+        "@remotion/cli",
+        "@remotion/renderer",
+        "@types/node",
+        "@types/react",
+        "@types/react-dom",
+        "react",
+        "react-dom",
+        "remotion",
+        "typescript"
+      ],
+      "entry_points": [
+        "src/index.ts"
+      ],
+      "file_count": 7,
+      "total_loc": 3193,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/code-converter",
+      "name": "code-converter",
+      "language": "py",
+      "framework": "fastapi",
+      "deps": [
+        "fastapi",
+        "uvicorn"
+      ],
+      "entry_points": [
+        "server.py",
+        "index.html"
+      ],
+      "file_count": 6,
+      "total_loc": 1500,
+      "port": 3007,
+      "in_autostart": true
+    },
+    {
+      "path": "apps/inpact",
+      "name": "inpact",
+      "language": "ts",
+      "framework": "vanilla",
+      "deps": [],
+      "entry_points": [
+        "index.html",
+        "onboarding.html"
+      ],
+      "file_count": 28,
+      "total_loc": 10979,
+      "port": 3006,
+      "in_autostart": true
+    },
+    {
+      "path": "apps/lattice",
+      "name": "lattice",
+      "language": "js",
+      "framework": "vanilla",
+      "deps": [],
+      "entry_points": [
+        "index.html"
+      ],
+      "file_count": 2,
+      "total_loc": 2403,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/webos-333",
+      "name": "webos-333",
+      "language": "html",
+      "framework": "vanilla",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 1,
+      "total_loc": 3442,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/anatomy-extension",
+      "name": "anatomy-extension",
+      "language": "py",
+      "framework": "vanilla",
+      "deps": [],
+      "entry_points": [
+        "manifest.json"
+      ],
+      "file_count": 23,
+      "total_loc": 6684,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/anatomy-research",
+      "name": "anatomy-research",
+      "language": "mixed",
+      "framework": "vanilla",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 2694,
+      "total_loc": 674603,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/anatomy-rewrite",
+      "name": "anatomy-rewrite",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 0,
+      "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/codex-partner",
+      "name": "codex-partner",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 16,
+      "total_loc": 458,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/fest-reconcile",
+      "name": "fest-reconcile",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 41,
+      "total_loc": 95538,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/mini-ship",
+      "name": "mini-ship",
+      "language": "unknown",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 0,
+      "total_loc": 0,
+      "port": null,
+      "in_autostart": false
+    }
+  ]
+}

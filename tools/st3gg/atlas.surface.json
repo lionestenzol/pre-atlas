@@ -1,0 +1,19 @@
+{
+  "surface": "st3gg",
+  "headline": "Steganographic carrier analysis (ST3GG). Read-only statistical inspection of a PNG carrier -- LSB ratios, chi-square anomalies, channel stats. `analyze --json` emits a receipt keyed on sha256 of the carrier bytes (the seam join key). The decode/payload path is intentionally NOT exposed.",
+  "kind": "cli",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "analyze",
+      "label": "Analyze a carrier image for steganographic anomalies (read-only, no payload decode)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "C:/Users/bruke/tools/ST3GG/.venv/Scripts/python.exe C:/Users/bruke/tools/ST3GG/cli.py analyze {input} --json",
+      "needs": ["input"],
+      "evidence": "C:/Users/bruke/tools/ST3GG/cli.py:419 analyze command (--json branch); steg_core.py:815-913 analyze_image reads no payload",
+      "notes": "Read-only: runs analyze_image (carrier statistics) only and prints {tool,op,file,sha256,analysis}. sha256 is of the carrier file bytes -- ST3GG's own CRC32 lives on the decode path, which is a code-injection channel and is deliberately UNexposed here. Not on PATH (console script 'stegg'), so argv[0] is the absolute venv python + absolute cli.py."
+    }
+  ]
+}

@@ -534,7 +534,7 @@ def main():
     }
 
     # Validate before write
-    require_valid(output, "ExcavatedIdeas.v1.json", "classifier")
+    require_valid(output, "IdeasClassified.v1.json", "classifier")
 
     # Write
     out_path = BASE / "ideas_classified.json"

@@ -492,8 +492,15 @@ def run_codex_exec(session_state: dict[str, Any], action: dict[str, Any]) -> Han
         "-C", cwd,
     ]
     if sandbox == "workspace-write":
-        # add --full-auto's other half (-a on-request); never combine with -s read-only
-        cmd += ["-a", "on-request"]
+        # `codex exec --help` (checked against the installed 0.142.0 CLI) has
+        # no -a/--ask-for-approval and no --full-auto — that flag only exists
+        # on the interactive `codex` command. `exec` is non-interactive by
+        # design: it never pauses for approval, sandboxing is governed
+        # entirely by -s. The old `-a on-request` here was already a no-op;
+        # --full-auto is too. Kept as a no-op rather than removed so a future
+        # Codex release that reintroduces an exec-level approval flag has an
+        # obvious place to wire it back in.
+        cmd += ["--full-auto"]
 
     # Optional structured-output mode
     output_file: Path | None = None

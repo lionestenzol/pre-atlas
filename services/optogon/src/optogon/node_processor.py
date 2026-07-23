@@ -317,6 +317,12 @@ def _handle_close(state, path, node, emitted):
     ns = _ensure_node_state(state, node["id"])
     ns["status"] = "closed"
     ns["closed_at"] = _now()
+    # Session-level close: the canonical field /session/run and store.update()
+    # read. Previously only ns["closed_at"] (node-scoped) + _close_signal were
+    # set, which forced a workaround in main.py._is_closed() and left store.close()
+    # uncalled. See ~/.claude/rules/common/code-as-furniture.md — no broken code
+    # left in place.
+    state["closed_at"] = _now()
     state["metrics"]["nodes_closed"] += 1
     # nodes_total is set at session_store.create() — don't overwrite here.
 

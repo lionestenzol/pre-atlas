@@ -1,0 +1,1578 @@
+{
+  "protocol": "DELTA_SCP",
+  "version": "1",
+  "status": "compressed",
+  "repo": "C:/Users/bruke/Pre Atlas/services/droplist",
+  "generated_at": "2026-06-16T01:59:14.865Z",
+  "languages": {
+    "markdown": 19,
+    "json": 6,
+    "python": 38,
+    "toml": 1
+  },
+  "symbolic_nodes": [
+    {
+      "path": ".pytest_cache/README.md",
+      "language": "markdown",
+      "bytes": 310,
+      "tokens_est": 78,
+      "symbols": []
+    },
+    {
+      "path": ".weapon/closed.md",
+      "language": "markdown",
+      "bytes": 1658,
+      "tokens_est": 411,
+      "symbols": []
+    },
+    {
+      "path": ".weapon/mission.json",
+      "language": "json",
+      "bytes": 296,
+      "tokens_est": 74,
+      "symbols": []
+    },
+    {
+      "path": ".weapon/plan.md",
+      "language": "markdown",
+      "bytes": 3265,
+      "tokens_est": 814,
+      "symbols": []
+    },
+    {
+      "path": ".weapon/spec.md",
+      "language": "markdown",
+      "bytes": 2980,
+      "tokens_est": 744,
+      "symbols": []
+    },
+    {
+      "path": "BIBLE.md",
+      "language": "markdown",
+      "bytes": 21249,
+      "tokens_est": 5301,
+      "symbols": []
+    },
+    {
+      "path": "data/dags/DAG-4bbd2113.json",
+      "language": "json",
+      "bytes": 8351,
+      "tokens_est": 2087,
+      "symbols": []
+    },
+    {
+      "path": "data/dags/DAG-b9aa8dbf.json",
+      "language": "json",
+      "bytes": 8204,
+      "tokens_est": 2050,
+      "symbols": []
+    },
+    {
+      "path": "data/entities/ANIMAL-DOE.json",
+      "language": "json",
+      "bytes": 476,
+      "tokens_est": 119,
+      "symbols": []
+    },
+    {
+      "path": "data/entities/ANIMAL-GOAT-3.json",
+      "language": "json",
+      "bytes": 506,
+      "tokens_est": 127,
+      "symbols": []
+    },
+    {
+      "path": "data/entities/ANIMAL-GOATS.json",
+      "language": "json",
+      "bytes": 504,
+      "tokens_est": 126,
+      "symbols": []
+    },
+    {
+      "path": "data/results/DAG-4bbd2113_N4.md",
+      "language": "markdown",
+      "bytes": 241,
+      "tokens_est": 61,
+      "symbols": []
+    },
+    {
+      "path": "data/results/DAG-b9aa8dbf_N4.md",
+      "language": "markdown",
+      "bytes": 236,
+      "tokens_est": 59,
+      "symbols": []
+    },
+    {
+      "path": "DOCTRINE.md",
+      "language": "markdown",
+      "bytes": 836,
+      "tokens_est": 209,
+      "symbols": []
+    },
+    {
+      "path": "droplist/__init__.py",
+      "language": "python",
+      "bytes": 69,
+      "tokens_est": 17,
+      "symbols": []
+    },
+    {
+      "path": "droplist/__main__.py",
+      "language": "python",
+      "bytes": 47,
+      "tokens_est": 12,
+      "symbols": []
+    },
+    {
+      "path": "droplist/agents.py",
+      "language": "python",
+      "bytes": 6989,
+      "tokens_est": 1747,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_parent_results",
+          "line": 54
+        },
+        {
+          "kind": "def",
+          "name": "_heuristic",
+          "line": 63
+        },
+        {
+          "kind": "def",
+          "name": "_r",
+          "line": 120
+        },
+        {
+          "kind": "def",
+          "name": "run_agent",
+          "line": 131
+        }
+      ]
+    },
+    {
+      "path": "droplist/atlas_signal.py",
+      "language": "python",
+      "bytes": 6276,
+      "tokens_est": 1569,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_derive_priority",
+          "line": 43
+        },
+        {
+          "kind": "def",
+          "name": "_node_summary",
+          "line": 57
+        },
+        {
+          "kind": "def",
+          "name": "_collect_action_options",
+          "line": 68
+        },
+        {
+          "kind": "def",
+          "name": "dag_to_signal",
+          "line": 87
+        },
+        {
+          "kind": "def",
+          "name": "emit_signal",
+          "line": 154
+        }
+      ]
+    },
+    {
+      "path": "droplist/classifier.py",
+      "language": "python",
+      "bytes": 8509,
+      "tokens_est": 2128,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_score",
+          "line": 121
+        },
+        {
+          "kind": "def",
+          "name": "_extract_entities",
+          "line": 131
+        },
+        {
+          "kind": "def",
+          "name": "_confidence",
+          "line": 145
+        },
+        {
+          "kind": "def",
+          "name": "heuristic_classify",
+          "line": 157
+        },
+        {
+          "kind": "def",
+          "name": "classify",
+          "line": 182
+        }
+      ]
+    },
+    {
+      "path": "droplist/cli.py",
+      "language": "python",
+      "bytes": 25546,
+      "tokens_est": 6382,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_color",
+          "line": 27
+        },
+        {
+          "kind": "def",
+          "name": "print_packet",
+          "line": 31
+        },
+        {
+          "kind": "def",
+          "name": "print_ship",
+          "line": 58
+        },
+        {
+          "kind": "def",
+          "name": "cmd_drop",
+          "line": 73
+        },
+        {
+          "kind": "def",
+          "name": "cmd_recent",
+          "line": 104
+        },
+        {
+          "kind": "def",
+          "name": "cmd_show",
+          "line": 117
+        },
+        {
+          "kind": "def",
+          "name": "cmd_memory_search",
+          "line": 126
+        },
+        {
+          "kind": "def",
+          "name": "_line",
+          "line": 144
+        },
+        {
+          "kind": "def",
+          "name": "cmd_morning",
+          "line": 150
+        },
+        {
+          "kind": "def",
+          "name": "cmd_review",
+          "line": 192
+        },
+        {
+          "kind": "def",
+          "name": "block",
+          "line": 218
+        },
+        {
+          "kind": "def",
+          "name": "cmd_inventory",
+          "line": 244
+        },
+        {
+          "kind": "def",
+          "name": "cmd_brief",
+          "line": 278
+        },
+        {
+          "kind": "def",
+          "name": "show",
+          "line": 287
+        },
+        {
+          "kind": "def",
+          "name": "cmd_watch",
+          "line": 330
+        },
+        {
+          "kind": "def",
+          "name": "cmd_entities",
+          "line": 349
+        },
+        {
+          "kind": "def",
+          "name": "cmd_recurring_add",
+          "line": 362
+        },
+        {
+          "kind": "def",
+          "name": "cmd_graph",
+          "line": 374
+        },
+        {
+          "kind": "def",
+          "name": "cmd_ship_from",
+          "line": 448
+        },
+        {
+          "kind": "def",
+          "name": "build_parser",
+          "line": 467
+        },
+        {
+          "kind": "def",
+          "name": "main",
+          "line": 497
+        },
+        {
+          "kind": "def",
+          "name": "brief_main",
+          "line": 533
+        },
+        {
+          "kind": "def",
+          "name": "watch_main",
+          "line": 537
+        },
+        {
+          "kind": "def",
+          "name": "graph_main",
+          "line": 541
+        },
+        {
+          "kind": "def",
+          "name": "review_main",
+          "line": 552
+        },
+        {
+          "kind": "def",
+          "name": "morning_main",
+          "line": 565
+        },
+        {
+          "kind": "def",
+          "name": "inventory_main",
+          "line": 570
+        },
+        {
+          "kind": "def",
+          "name": "shipfrom_main",
+          "line": 579
+        }
+      ]
+    },
+    {
+      "path": "droplist/clock.py",
+      "language": "python",
+      "bytes": 1061,
+      "tokens_est": 265,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "now",
+          "line": 13
+        },
+        {
+          "kind": "def",
+          "name": "now_iso",
+          "line": 23
+        },
+        {
+          "kind": "def",
+          "name": "today",
+          "line": 27
+        },
+        {
+          "kind": "def",
+          "name": "parse",
+          "line": 31
+        },
+        {
+          "kind": "def",
+          "name": "hours_since",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "path": "droplist/command_brief.py",
+      "language": "python",
+      "bytes": 2223,
+      "tokens_est": 556,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_all_dags",
+          "line": 16
+        },
+        {
+          "kind": "def",
+          "name": "_row",
+          "line": 28
+        },
+        {
+          "kind": "def",
+          "name": "build_brief",
+          "line": 38
+        }
+      ]
+    },
+    {
+      "path": "droplist/completion.py",
+      "language": "python",
+      "bytes": 8655,
+      "tokens_est": 2164,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_abnormal",
+          "line": 28
+        },
+        {
+          "kind": "def",
+          "name": "_build_action",
+          "line": 36
+        },
+        {
+          "kind": "def",
+          "name": "_file_ops_action",
+          "line": 85
+        },
+        {
+          "kind": "def",
+          "name": "_animal_action",
+          "line": 96
+        },
+        {
+          "kind": "def",
+          "name": "_money_action",
+          "line": 119
+        },
+        {
+          "kind": "def",
+          "name": "_daily_command_action",
+          "line": 149
+        },
+        {
+          "kind": "def",
+          "name": "_general_action",
+          "line": 160
+        },
+        {
+          "kind": "def",
+          "name": "complete",
+          "line": 182
+        }
+      ]
+    },
+    {
+      "path": "droplist/dag_builder.py",
+      "language": "python",
+      "bytes": 9502,
+      "tokens_est": 2376,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_resolve_python_literal",
+          "line": 24
+        },
+        {
+          "kind": "def",
+          "name": "_node",
+          "line": 48
+        },
+        {
+          "kind": "def",
+          "name": "_short",
+          "line": 70
+        },
+        {
+          "kind": "def",
+          "name": "_build_nodes",
+          "line": 74
+        },
+        {
+          "kind": "def",
+          "name": "build_dag",
+          "line": 177
+        },
+        {
+          "kind": "def",
+          "name": "validate_dag",
+          "line": 191
+        }
+      ]
+    },
+    {
+      "path": "droplist/dag_update.py",
+      "language": "python",
+      "bytes": 2405,
+      "tokens_est": 601,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_done_ids",
+          "line": 16
+        },
+        {
+          "kind": "def",
+          "name": "apply_review",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "path": "droplist/daily.py",
+      "language": "python",
+      "bytes": 2382,
+      "tokens_est": 596,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_is_open",
+          "line": 22
+        },
+        {
+          "kind": "def",
+          "name": "_priority",
+          "line": 26
+        },
+        {
+          "kind": "def",
+          "name": "build_brief",
+          "line": 49
+        }
+      ]
+    },
+    {
+      "path": "droplist/dispatcher.py",
+      "language": "python",
+      "bytes": 698,
+      "tokens_est": 174,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "get_ready_nodes",
+          "line": 8
+        },
+        {
+          "kind": "def",
+          "name": "get_node",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "path": "droplist/engine.py",
+      "language": "python",
+      "bytes": 3811,
+      "tokens_est": 953,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_now",
+          "line": 32
+        },
+        {
+          "kind": "def",
+          "name": "_drop_id",
+          "line": 36
+        },
+        {
+          "kind": "def",
+          "name": "process_drop",
+          "line": 40
+        },
+        {
+          "kind": "def",
+          "name": "ship_from",
+          "line": 79
+        },
+        {
+          "kind": "def",
+          "name": "to_mini_ship",
+          "line": 90
+        }
+      ]
+    },
+    {
+      "path": "droplist/entities.py",
+      "language": "python",
+      "bytes": 3552,
+      "tokens_est": 888,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_dir",
+          "line": 29
+        },
+        {
+          "kind": "def",
+          "name": "_path",
+          "line": 36
+        },
+        {
+          "kind": "def",
+          "name": "_slug",
+          "line": 40
+        },
+        {
+          "kind": "def",
+          "name": "_id",
+          "line": 44
+        },
+        {
+          "kind": "def",
+          "name": "get",
+          "line": 48
+        },
+        {
+          "kind": "def",
+          "name": "save",
+          "line": 56
+        },
+        {
+          "kind": "def",
+          "name": "list_all",
+          "line": 61
+        },
+        {
+          "kind": "def",
+          "name": "resolve_from_packet",
+          "line": 70
+        },
+        {
+          "kind": "def",
+          "name": "_ensure",
+          "line": 94
+        },
+        {
+          "kind": "def",
+          "name": "attach_dag",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "path": "droplist/graph_engine.py",
+      "language": "python",
+      "bytes": 8803,
+      "tokens_est": 2200,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_maybe_emit_atlas_signal",
+          "line": 21
+        },
+        {
+          "kind": "def",
+          "name": "_priority_score",
+          "line": 51
+        },
+        {
+          "kind": "def",
+          "name": "_enrich",
+          "line": 61
+        },
+        {
+          "kind": "def",
+          "name": "run_graph",
+          "line": 126
+        },
+        {
+          "kind": "def",
+          "name": "_finalize",
+          "line": 207
+        },
+        {
+          "kind": "def",
+          "name": "state_summary",
+          "line": 221
+        }
+      ]
+    },
+    {
+      "path": "droplist/hashing.py",
+      "language": "python",
+      "bytes": 2297,
+      "tokens_est": 575,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "normalize",
+          "line": 23
+        },
+        {
+          "kind": "def",
+          "name": "input_hash",
+          "line": 39
+        },
+        {
+          "kind": "class",
+          "name": "ClassificationCache",
+          "line": 44
+        },
+        {
+          "kind": "def",
+          "name": "__init__",
+          "line": 51
+        },
+        {
+          "kind": "def",
+          "name": "get",
+          "line": 64
+        },
+        {
+          "kind": "def",
+          "name": "put",
+          "line": 67
+        },
+        {
+          "kind": "def",
+          "name": "__contains__",
+          "line": 70
+        }
+      ]
+    },
+    {
+      "path": "droplist/inventory.py",
+      "language": "python",
+      "bytes": 6164,
+      "tokens_est": 1540,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_human",
+          "line": 24
+        },
+        {
+          "kind": "def",
+          "name": "_quick_hash",
+          "line": 32
+        },
+        {
+          "kind": "def",
+          "name": "scan",
+          "line": 48
+        },
+        {
+          "kind": "def",
+          "name": "run_inventory",
+          "line": 109
+        }
+      ]
+    },
+    {
+      "path": "droplist/llm.py",
+      "language": "python",
+      "bytes": 3166,
+      "tokens_est": 791,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_preview",
+          "line": 24
+        },
+        {
+          "kind": "def",
+          "name": "log_call",
+          "line": 29
+        },
+        {
+          "kind": "def",
+          "name": "anthropic_available",
+          "line": 58
+        },
+        {
+          "kind": "def",
+          "name": "call_json",
+          "line": 70
+        }
+      ]
+    },
+    {
+      "path": "droplist/node_reviewer.py",
+      "language": "python",
+      "bytes": 2989,
+      "tokens_est": 747,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "review",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "path": "droplist/node_router.py",
+      "language": "python",
+      "bytes": 1491,
+      "tokens_est": 373,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "classify",
+          "line": 16
+        },
+        {
+          "kind": "def",
+          "name": "execute",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "path": "droplist/retrieval.py",
+      "language": "python",
+      "bytes": 4830,
+      "tokens_est": 1206,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_tokens",
+          "line": 31
+        },
+        {
+          "kind": "def",
+          "name": "retrieve",
+          "line": 35
+        },
+        {
+          "kind": "def",
+          "name": "_external_search_enabled",
+          "line": 68
+        },
+        {
+          "kind": "def",
+          "name": "_search_stack_url",
+          "line": 72
+        },
+        {
+          "kind": "def",
+          "name": "retrieve_external",
+          "line": 76
+        },
+        {
+          "kind": "def",
+          "name": "retrieve_with_external",
+          "line": 113
+        }
+      ]
+    },
+    {
+      "path": "droplist/review.py",
+      "language": "python",
+      "bytes": 1915,
+      "tokens_est": 479,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_counts",
+          "line": 17
+        },
+        {
+          "kind": "def",
+          "name": "build_review",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "path": "droplist/router.py",
+      "language": "python",
+      "bytes": 2988,
+      "tokens_est": 747,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "select_workflow",
+          "line": 66
+        },
+        {
+          "kind": "def",
+          "name": "nodes_for",
+          "line": 70
+        },
+        {
+          "kind": "def",
+          "name": "first_and_next",
+          "line": 74
+        }
+      ]
+    },
+    {
+      "path": "droplist/schema.py",
+      "language": "python",
+      "bytes": 5021,
+      "tokens_est": 1255,
+      "symbols": [
+        {
+          "kind": "class",
+          "name": "WorkPacket",
+          "line": 46
+        },
+        {
+          "kind": "def",
+          "name": "to_dict",
+          "line": 71
+        },
+        {
+          "kind": "def",
+          "name": "validate",
+          "line": 74
+        },
+        {
+          "kind": "def",
+          "name": "is_valid",
+          "line": 99
+        },
+        {
+          "kind": "class",
+          "name": "MiniShipPacket",
+          "line": 107
+        },
+        {
+          "kind": "def",
+          "name": "to_dict",
+          "line": 126
+        },
+        {
+          "kind": "def",
+          "name": "validate",
+          "line": 129
+        },
+        {
+          "kind": "def",
+          "name": "is_valid",
+          "line": 143
+        }
+      ]
+    },
+    {
+      "path": "droplist/server.py",
+      "language": "python",
+      "bytes": 4521,
+      "tokens_est": 1129,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_packets_by_drop",
+          "line": 37
+        },
+        {
+          "kind": "def",
+          "name": "_dag_dir",
+          "line": 41
+        },
+        {
+          "kind": "def",
+          "name": "get_now",
+          "line": 46
+        },
+        {
+          "kind": "def",
+          "name": "get_dag",
+          "line": 75
+        },
+        {
+          "kind": "def",
+          "name": "list_dags",
+          "line": 83
+        },
+        {
+          "kind": "def",
+          "name": "list_packets",
+          "line": 112
+        },
+        {
+          "kind": "def",
+          "name": "get_state",
+          "line": 126
+        },
+        {
+          "kind": "def",
+          "name": "get_brief",
+          "line": 135
+        },
+        {
+          "kind": "def",
+          "name": "get_entities",
+          "line": 140
+        },
+        {
+          "kind": "def",
+          "name": "run",
+          "line": 147
+        }
+      ]
+    },
+    {
+      "path": "droplist/state.py",
+      "language": "python",
+      "bytes": 2535,
+      "tokens_est": 634,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_state_dir",
+          "line": 14
+        },
+        {
+          "kind": "def",
+          "name": "_load",
+          "line": 21
+        },
+        {
+          "kind": "def",
+          "name": "_save",
+          "line": 29
+        },
+        {
+          "kind": "def",
+          "name": "add_recurring",
+          "line": 39
+        },
+        {
+          "kind": "def",
+          "name": "list_recurring",
+          "line": 57
+        },
+        {
+          "kind": "def",
+          "name": "_mark_materialized",
+          "line": 61
+        },
+        {
+          "kind": "def",
+          "name": "due_recurring",
+          "line": 69
+        },
+        {
+          "kind": "def",
+          "name": "lock_ref",
+          "line": 80
+        },
+        {
+          "kind": "def",
+          "name": "locked_refs",
+          "line": 87
+        },
+        {
+          "kind": "def",
+          "name": "is_locked",
+          "line": 91
+        }
+      ]
+    },
+    {
+      "path": "droplist/storage.py",
+      "language": "python",
+      "bytes": 4548,
+      "tokens_est": 1137,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_path",
+          "line": 26
+        },
+        {
+          "kind": "def",
+          "name": "ensure_data_dir",
+          "line": 30
+        },
+        {
+          "kind": "def",
+          "name": "append",
+          "line": 35
+        },
+        {
+          "kind": "def",
+          "name": "read_all",
+          "line": 43
+        },
+        {
+          "kind": "def",
+          "name": "iter_records",
+          "line": 61
+        },
+        {
+          "kind": "def",
+          "name": "read_with_errors",
+          "line": 76
+        },
+        {
+          "kind": "def",
+          "name": "log_run",
+          "line": 96
+        },
+        {
+          "kind": "def",
+          "name": "save_dag",
+          "line": 134
+        },
+        {
+          "kind": "def",
+          "name": "load_dag",
+          "line": 145
+        },
+        {
+          "kind": "def",
+          "name": "results_dir",
+          "line": 153
+        }
+      ]
+    },
+    {
+      "path": "droplist/toolrouter.py",
+      "language": "python",
+      "bytes": 9454,
+      "tokens_est": 2362,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_receipt",
+          "line": 30
+        },
+        {
+          "kind": "def",
+          "name": "_calendar",
+          "line": 45
+        },
+        {
+          "kind": "def",
+          "name": "_file_writer",
+          "line": 53
+        },
+        {
+          "kind": "def",
+          "name": "_message_drafter",
+          "line": 72
+        },
+        {
+          "kind": "def",
+          "name": "_n8n_webhook",
+          "line": 82
+        },
+        {
+          "kind": "def",
+          "name": "_script_runner",
+          "line": 117
+        },
+        {
+          "kind": "def",
+          "name": "_external_search",
+          "line": 137
+        },
+        {
+          "kind": "def",
+          "name": "run_tool",
+          "line": 181
+        },
+        {
+          "kind": "def",
+          "name": "_check_calendar",
+          "line": 194
+        },
+        {
+          "kind": "def",
+          "name": "_check_file_writer",
+          "line": 199
+        },
+        {
+          "kind": "def",
+          "name": "_check_message_drafter",
+          "line": 210
+        },
+        {
+          "kind": "def",
+          "name": "_check_n8n",
+          "line": 215
+        },
+        {
+          "kind": "def",
+          "name": "_check_script_runner",
+          "line": 220
+        },
+        {
+          "kind": "def",
+          "name": "_check_external_search",
+          "line": 225
+        },
+        {
+          "kind": "def",
+          "name": "done_condition_met",
+          "line": 240
+        }
+      ]
+    },
+    {
+      "path": "droplist/watcher.py",
+      "language": "python",
+      "bytes": 3558,
+      "tokens_est": 890,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_materialize_recurring",
+          "line": 17
+        },
+        {
+          "kind": "def",
+          "name": "_all_dags",
+          "line": 49
+        },
+        {
+          "kind": "def",
+          "name": "tick",
+          "line": 62
+        }
+      ]
+    },
+    {
+      "path": "PACKETS/001_remove_router_orphan.md",
+      "language": "markdown",
+      "bytes": 8838,
+      "tokens_est": 2205,
+      "symbols": []
+    },
+    {
+      "path": "PACKETS/002_windows_portable_python.md",
+      "language": "markdown",
+      "bytes": 4875,
+      "tokens_est": 1217,
+      "symbols": []
+    },
+    {
+      "path": "PACKETS/003_python_command_actually_invokable.md",
+      "language": "markdown",
+      "bytes": 5284,
+      "tokens_est": 1318,
+      "symbols": []
+    },
+    {
+      "path": "PACKETS/004_audit_path_assumes_invocable.md",
+      "language": "markdown",
+      "bytes": 3613,
+      "tokens_est": 901,
+      "symbols": []
+    },
+    {
+      "path": "PACKETS/005_atlas_seam_contract.md",
+      "language": "markdown",
+      "bytes": 6740,
+      "tokens_est": 1680,
+      "symbols": []
+    },
+    {
+      "path": "PACKETS/006_live_atlas_signal_emission.md",
+      "language": "markdown",
+      "bytes": 2713,
+      "tokens_est": 676,
+      "symbols": []
+    },
+    {
+      "path": "PACKETS/007_lens_seam_cleanup.md",
+      "language": "markdown",
+      "bytes": 5792,
+      "tokens_est": 1445,
+      "symbols": []
+    },
+    {
+      "path": "PACKETS/008_lattice_consumer_wire.md",
+      "language": "markdown",
+      "bytes": 7967,
+      "tokens_est": 1988,
+      "symbols": []
+    },
+    {
+      "path": "PACKETS/009_lattice_ui_droplist_consumer.md",
+      "language": "markdown",
+      "bytes": 6873,
+      "tokens_est": 1714,
+      "symbols": []
+    },
+    {
+      "path": "PACKETS/010_atlas_artifact_contract.md",
+      "language": "markdown",
+      "bytes": 30875,
+      "tokens_est": 7659,
+      "symbols": []
+    },
+    {
+      "path": "pyproject.toml",
+      "language": "toml",
+      "bytes": 838,
+      "tokens_est": 210,
+      "symbols": []
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "bytes": 9224,
+      "tokens_est": 2291,
+      "symbols": []
+    },
+    {
+      "path": "test_atlas_emit.py",
+      "language": "python",
+      "bytes": 6653,
+      "tokens_est": 1664,
+      "symbols": [
+        {
+          "kind": "class",
+          "name": "_CaptureHandler",
+          "line": 47
+        },
+        {
+          "kind": "def",
+          "name": "do_POST",
+          "line": 50
+        },
+        {
+          "kind": "def",
+          "name": "log_message",
+          "line": 63
+        },
+        {
+          "kind": "def",
+          "name": "_start_server",
+          "line": 67
+        },
+        {
+          "kind": "def",
+          "name": "case_positive_emits_signal",
+          "line": 79
+        },
+        {
+          "kind": "def",
+          "name": "case_negative_no_env_no_emit",
+          "line": 132
+        },
+        {
+          "kind": "def",
+          "name": "run",
+          "line": 161
+        }
+      ]
+    },
+    {
+      "path": "test_atlas_signal.py",
+      "language": "python",
+      "bytes": 9402,
+      "tokens_est": 2350,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_node",
+          "line": 40
+        },
+        {
+          "kind": "def",
+          "name": "fixture_animal_needs_human",
+          "line": 51
+        },
+        {
+          "kind": "def",
+          "name": "fixture_build_problem_complete",
+          "line": 71
+        },
+        {
+          "kind": "def",
+          "name": "fixture_money_task_failed",
+          "line": 85
+        },
+        {
+          "kind": "def",
+          "name": "fixture_general_idea_stalled",
+          "line": 102
+        },
+        {
+          "kind": "def",
+          "name": "structural_check",
+          "line": 131
+        },
+        {
+          "kind": "def",
+          "name": "strict_check",
+          "line": 172
+        },
+        {
+          "kind": "def",
+          "name": "run",
+          "line": 200
+        }
+      ]
+    },
+    {
+      "path": "test_drops.py",
+      "language": "python",
+      "bytes": 5902,
+      "tokens_est": 1475,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "run",
+          "line": 68
+        }
+      ]
+    },
+    {
+      "path": "test_graph.py",
+      "language": "python",
+      "bytes": 2575,
+      "tokens_est": 644,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "run",
+          "line": 33
+        }
+      ]
+    },
+    {
+      "path": "test_persist.py",
+      "language": "python",
+      "bytes": 4573,
+      "tokens_est": 1143,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_set_day",
+          "line": 22
+        },
+        {
+          "kind": "def",
+          "name": "run",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "path": "test_retrieval_external.py",
+      "language": "python",
+      "bytes": 5499,
+      "tokens_est": 1374,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "fake_search_stack",
+          "line": 19
+        },
+        {
+          "kind": "class",
+          "name": "Handler",
+          "line": 23
+        },
+        {
+          "kind": "def",
+          "name": "do_POST",
+          "line": 24
+        },
+        {
+          "kind": "def",
+          "name": "log_message",
+          "line": 57
+        },
+        {
+          "kind": "def",
+          "name": "test_retrieve_external_returns_snippet_shape",
+          "line": 71
+        },
+        {
+          "kind": "def",
+          "name": "test_retrieve_external_returns_empty_on_error",
+          "line": 81
+        },
+        {
+          "kind": "def",
+          "name": "test_retrieve_external_empty_query",
+          "line": 87
+        },
+        {
+          "kind": "def",
+          "name": "test_retrieve_with_external_gated_by_env",
+          "line": 92
+        },
+        {
+          "kind": "def",
+          "name": "test_retrieve_with_external_merges_when_enabled",
+          "line": 105
+        },
+        {
+          "kind": "def",
+          "name": "test_retrieve_with_external_dedups_overlapping_source",
+          "line": 119
+        },
+        {
+          "kind": "def",
+          "name": "test_internal_retrieve_still_works_unchanged",
+          "line": 130
+        }
+      ]
+    },
+    {
+      "path": "test_server.py",
+      "language": "python",
+      "bytes": 7340,
+      "tokens_est": 1834,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "_free_port",
+          "line": 51
+        },
+        {
+          "kind": "def",
+          "name": "_wait_until_serving",
+          "line": 57
+        },
+        {
+          "kind": "def",
+          "name": "_get_json",
+          "line": 72
+        },
+        {
+          "kind": "def",
+          "name": "_seed_state",
+          "line": 93
+        },
+        {
+          "kind": "def",
+          "name": "_checks",
+          "line": 119
+        },
+        {
+          "kind": "def",
+          "name": "run",
+          "line": 138
+        }
+      ]
+    },
+    {
+      "path": "test_tools.py",
+      "language": "python",
+      "bytes": 2480,
+      "tokens_est": 620,
+      "symbols": [
+        {
+          "kind": "def",
+          "name": "run",
+          "line": 27
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "files_scanned": 64,
+    "files_included": 64,
+    "bytes": 333173,
+    "raw_tokens_est": 83161,
+    "compressed_tokens_est": 4158,
+    "token_yield": 79003,
+    "compression_ratio": 0.05
+  }
+}

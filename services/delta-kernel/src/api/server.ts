@@ -9,9 +9,13 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '../cli/sqlite-storage';
 import { createEntity, createDelta, now } from '../core/delta';
+import { buildCockpit, CockpitBuildContext, isActionAllowedInMode, PENDING_ACTION_TIMEOUT_MS } from '../core/cockpit';
+import type { InboxData, ThreadData, DraftData, EntityType } from '../core/types-core';
 import { getDaemon, JobName } from '../governance/governance_daemon';
 import { WorkController } from '../core/work-controller';
 import { getTimelineLogger } from '../core/timeline-logger.js';
+import { processClosureEvent as processClosureEventShared } from '../core/closure-engine.js';
+import Database from 'better-sqlite3';
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -23,11 +27,18 @@ import { DirectiveEmitter, DirectiveValidationError } from '../atlas/directive.j
 import {
   ingestSignal,
   listSignals,
+  getSignal,
   resolveSignal,
   SignalValidationError,
 } from '../atlas/signals-store.js';
 import { PreferencesStore } from '../atlas/preferences-store.js';
 import { ingestCloseSignal, CloseSignalValidationError } from '../atlas/close-signal.js';
+import {
+  buildViewmodel as buildLatticeViewmodel,
+  recordCorrection as recordLatticeCorrection,
+  CorrectionValidationError as LatticeCorrectionValidationError,
+  type StorageLike as LatticeStorageLike,
+} from '../atlas/lattice-projection.js';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -52,12 +63,28 @@ const repoRoot = process.env.DELTA_REPO_ROOT
 const cognitiveSensorDir = process.env.COGNITIVE_SENSOR_DIR
   || path.join(repoRoot, 'services', 'cognitive-sensor');
 
-// Initialize and start governance daemon
-const daemon = getDaemon(storage, repoRoot);
-daemon.start();
-
-// Initialize work controller
+// Initialize work controller FIRST and share this exact instance with the
+// governance daemon (see getDaemon's 3rd param) -- Seq 7 (LangGraph Skill
+// Lattice's Supervisor) live-testing found that two independently-constructed
+// WorkController instances each load the on-disk ledger once at startup and
+// never see each other's writes again: a job registered via this file's
+// /api/work/request routes was invisible to the daemon's checkTimeouts(),
+// which was checking its OWN stale in-memory copy loaded before the job ever
+// existed -- so timed-out jobs silently never retried. One instance, shared,
+// fixes this at the root instead of papering over it with a reload-before-read
+// hack (which would still race two independent writers on every mutation, not
+// just checkTimeouts()).
 const workController = new WorkController(repoRoot);
+
+// Initialize governance daemon; start only when GOVERNANCE_DAEMON=1.
+// On/off switch (atlas-consolidation AC0002 Wave 1.1): the daemon's 11 cron
+// jobs must not run unbidden on every :3001 start.
+const daemon = getDaemon(storage, repoRoot, workController);
+if (process.env.GOVERNANCE_DAEMON === '1') {
+  daemon.start();
+} else {
+  console.log('[Daemon] governance daemon disabled - set GOVERNANCE_DAEMON=1 to enable');
+}
 
 // Initialize timeline logger
 const timeline = getTimelineLogger(repoRoot);
@@ -76,6 +103,7 @@ app.use(cors({
     'http://localhost:8889', 'http://127.0.0.1:8889', // CycleBoard
     'http://localhost:3008', 'http://127.0.0.1:3008', // UASC Executor
     'http://localhost:3006', 'http://127.0.0.1:3006', // inPACT
+    'http://localhost:3011', 'http://127.0.0.1:3011', // Lattice
     'null', // file:// protocol
   ],
 }));
@@ -172,12 +200,34 @@ const buildUnifiedState = () => {
   const cognitiveStatePath = path.join(cognitiveSensorDir, 'cognitive_state.json');
   const loopsLatestPath = path.join(cognitiveSensorDir, 'loops_latest.json');
   const todayPath = path.join(repoRoot, 'data/projections/today.json');
+  const dailyPayloadPath = path.join(cognitiveSensorDir, 'cycleboard', 'brain', 'daily_payload.json');
   const closuresPath = path.join(cognitiveSensorDir, 'closures.json');
 
   const cognitiveState = readJsonFile(cognitiveStatePath, 'cognitive_state.json') as Record<string, unknown> | null;
   const loopsLatest = readJsonFile(loopsLatestPath, 'loops_latest.json') as unknown[] | null;
   const today = readJsonFile(todayPath, 'today.json') as Record<string, unknown> | null;
+  const dailyPayload = readJsonFile(dailyPayloadPath, 'daily_payload.json') as Record<string, unknown> | null;
   const closuresRegistry = readJsonFile(closuresPath, 'closures.json') as { closures: unknown[]; stats: Record<string, unknown> } | null;
+
+  // Staleness guard: a *daily* directive is only authoritative while recent.
+  // data/projections/today.json (dormant projection pipeline, last written
+  // 2026-01-12) sat at the top of the mode cascade for six months, overriding
+  // the live governor: the served mode stayed CLOSURE no matter what the
+  // Python side computed. A dated directive older than 48h is void; the
+  // cascade then falls through to daily_payload.json, which the cognitive
+  // pipeline regenerates via atlas_config.compute_mode (single source of
+  // truth). See ~/.claude/rules/common/code-as-furniture.md.
+  const DAILY_DIRECTIVE_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+  const isFreshDaily = (obj: Record<string, unknown> | null): boolean => {
+    const stamp = (obj?.generated_at ?? obj?.date) as string | undefined;
+    if (!stamp) return false;
+    const t = Date.parse(stamp);
+    return Number.isFinite(t) && Date.now() - t <= DAILY_DIRECTIVE_MAX_AGE_MS;
+  };
+  const freshToday = isFreshDaily(today) ? today : null;
+  if (today && !freshToday) errors.push('today.json stale (>48h) - directive ignored');
+  const freshPayload = isFreshDaily(dailyPayload) ? dailyPayload : null;
+  if (dailyPayload && !freshPayload) errors.push('daily_payload.json stale (>48h) - directive ignored');
 
   // D) Derive unified values
   //
@@ -193,16 +243,18 @@ const buildUnifiedState = () => {
   // and contains the most granular loop/closure data. today.json is the daily
   // directive (mode routing output). delta state is the persistent store.
   // If files are missing or stale, later sources provide a safe fallback.
-  const todayDirective = today?.directive as Record<string, unknown> | undefined;
-  const todayCognitive = today?.cognitive as Record<string, unknown> | undefined;
+  const todayDirective = freshToday?.directive as Record<string, unknown> | undefined;
+  const todayCognitive = freshToday?.cognitive as Record<string, unknown> | undefined;
 
-  // Mode: today.json > delta state > default
+  // Mode: fresh today.json > fresh daily_payload > delta state > default
   const mode = (todayDirective?.mode as string)
+    ?? (freshPayload?.mode as string)
     ?? (deltaState?.mode as string)
     ?? 'RECOVER';
 
-  // Risk: today.json > delta state > default
+  // Risk: fresh today.json > fresh daily_payload > delta state > default
   const risk = (todayDirective?.risk as string)
+    ?? (freshPayload?.risk as string)
     ?? (deltaState?.risk as string)
     ?? 'MEDIUM';
 
@@ -221,16 +273,19 @@ const buildUnifiedState = () => {
     ?? 0;
   const closureRatio = rawRatio > 1 ? rawRatio / 100 : rawRatio;
 
-  // Primary order: today.json > delta state > default
+  // Primary order: fresh today.json > fresh daily_payload > delta state > default
   const primaryOrder = (todayDirective?.primary_action as string)
+    ?? (freshPayload?.primary_action as string)
     ?? (deltaState?.primary_action as string)
     ?? 'Run refresh to get today\'s order';
 
-  // Build allowed: today.json > delta state > compute from mode
+  // Build allowed: fresh today.json > fresh daily_payload > delta state > compute from mode
   const buildAllowedFromDirective = todayDirective?.build_allowed as boolean | undefined;
+  const buildAllowedFromPayload = freshPayload?.build_allowed as boolean | undefined;
   const buildAllowedFromDelta = deltaState?.build_allowed as boolean | undefined;
   // Default: build allowed unless mode is CLOSURE
   const buildAllowed = buildAllowedFromDirective
+    ?? buildAllowedFromPayload
     ?? buildAllowedFromDelta
     ?? (mode !== 'CLOSURE');
 
@@ -508,7 +563,7 @@ app.put('/api/tasks/:id', async (req, res) => {
 
       // Feedback loop: task completion triggers closure pipeline
       if (updates.status === 'DONE') {
-        processClosureEvent({
+        processClosureEventShared({ storage, timeline, cognitiveSensorDir }, {
           title: (state.title as string) || 'Task completed',
           outcome: 'closed',
         }).catch(e => console.error('[task_complete] Closure feedback failed:', e));
@@ -1225,191 +1280,6 @@ app.post('/api/law/override', async (req, res) => {
 });
 
 /**
- * Internal closure processor — reusable by close_loop API and task completion.
- * Fire-and-forget: errors are logged but don't propagate.
- */
-async function processClosureEvent(closureInput: { loop_id?: string; title?: string; outcome: 'closed' | 'archived' }): Promise<{ success: boolean; mode?: string; mode_changed?: boolean; closureRatio?: number; closuresToday?: number; closedTotal?: number; openLoops?: number; buildAllowed?: boolean; streakDays?: number; streakUpdated?: boolean; bestStreak?: number }> {
-  const { loop_id, title, outcome } = closureInput;
-  const timestamp = now();
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayStartTs = todayStart.getTime();
-  const todayStr = todayStart.toISOString().split('T')[0];
-
-  // Load closures registry
-  const closuresPath = path.join(cognitiveSensorDir, 'closures.json');
-  let closuresRegistry: {
-    closures: Array<{ ts: number; loop_id: string | null; title: string | null; outcome: string; artifact_path?: string | null; coverage_score?: number | null; status?: string }>;
-    stats: {
-      total_closures: number;
-      closures_today: number;
-      last_closure_at: number | null;
-      streak_days: number;
-      last_streak_date: string | null;
-      best_streak: number;
-    };
-  };
-
-  try {
-    if (fs.existsSync(closuresPath)) {
-      closuresRegistry = JSON.parse(fs.readFileSync(closuresPath, 'utf-8'));
-    } else {
-      closuresRegistry = {
-        closures: [],
-        stats: { total_closures: 0, closures_today: 0, last_closure_at: null, streak_days: 0, last_streak_date: null, best_streak: 0 },
-      };
-    }
-  } catch {
-    closuresRegistry = {
-      closures: [],
-      stats: { total_closures: 0, closures_today: 0, last_closure_at: null, streak_days: 0, last_streak_date: null, best_streak: 0 },
-    };
-  }
-
-  // Idempotency check
-  if (loop_id) {
-    const alreadyClosed = closuresRegistry.closures.some(c => c.loop_id === loop_id);
-    if (alreadyClosed) return { success: false };
-  }
-
-  // Build closure entry
-  const closureEntry = { ts: timestamp, loop_id: loop_id || null, title: title || null, outcome };
-  closuresRegistry.closures.push(closureEntry);
-  closuresRegistry.stats.total_closures += 1;
-  closuresRegistry.stats.last_closure_at = timestamp;
-  const closuresToday = closuresRegistry.closures.filter(c => c.ts >= todayStartTs).length;
-  closuresRegistry.stats.closures_today = closuresToday;
-
-  // Read cognitive state for ratio
-  const cognitiveStatePath = path.join(cognitiveSensorDir, 'cognitive_state.json');
-  let openLoops = 0;
-  try {
-    if (fs.existsSync(cognitiveStatePath)) {
-      const cogState = JSON.parse(fs.readFileSync(cognitiveStatePath, 'utf-8'));
-      openLoops = cogState.closure?.open ?? 0;
-    }
-  } catch { /* default */ }
-
-  const closedLoops = closuresRegistry.stats.total_closures;
-  const totalLoops = openLoops + closedLoops;
-  const closureRatio = totalLoops > 0 ? closedLoops / totalLoops : 1;
-
-  // Mode transition rules
-  let newMode: string;
-  let buildAllowed: boolean;
-  if (closureRatio >= 0.8) { newMode = 'SCALE'; buildAllowed = true; }
-  else if (closureRatio >= 0.6) { newMode = 'BUILD'; buildAllowed = true; }
-  else if (closureRatio >= 0.4) { newMode = 'MAINTENANCE'; buildAllowed = false; }
-  else { newMode = 'CLOSURE'; buildAllowed = false; }
-
-  // Streak increment (BUILD-only)
-  let streakUpdated = false;
-  const isFirstClosureToday = closuresRegistry.stats.last_streak_date !== todayStr;
-  if (isFirstClosureToday && (newMode === 'BUILD' || newMode === 'SCALE')) {
-    closuresRegistry.stats.last_streak_date = todayStr;
-    closuresRegistry.stats.streak_days += 1;
-    streakUpdated = true;
-    if (closuresRegistry.stats.streak_days > closuresRegistry.stats.best_streak) {
-      closuresRegistry.stats.best_streak = closuresRegistry.stats.streak_days;
-    }
-  }
-
-  // Write closures registry
-  const closuresDir = path.dirname(closuresPath);
-  if (!fs.existsSync(closuresDir)) fs.mkdirSync(closuresDir, { recursive: true });
-  fs.writeFileSync(closuresPath, JSON.stringify(closuresRegistry, null, 2));
-
-  // Physical loop closure hooks
-  if (loop_id) {
-    const loopsLatestPath = path.join(cognitiveSensorDir, 'loops_latest.json');
-    const loopsClosedPath = path.join(cognitiveSensorDir, 'loops_closed.json');
-    try {
-      if (fs.existsSync(loopsLatestPath)) {
-        const loopsLatest = JSON.parse(fs.readFileSync(loopsLatestPath, 'utf-8')) as Array<{ id?: string; loop_id?: string }>;
-        const filtered = loopsLatest.filter(l => l.id !== loop_id && l.loop_id !== loop_id);
-        if (filtered.length !== loopsLatest.length) {
-          fs.writeFileSync(loopsLatestPath, JSON.stringify(filtered, null, 2));
-        }
-      }
-      let loopsClosed: Array<{ loop_id: string; title: string | null; closed_at: number; outcome: string }> = [];
-      if (fs.existsSync(loopsClosedPath)) loopsClosed = JSON.parse(fs.readFileSync(loopsClosedPath, 'utf-8'));
-      loopsClosed.push({ loop_id, title: title || null, closed_at: timestamp, outcome });
-      fs.writeFileSync(loopsClosedPath, JSON.stringify(loopsClosed, null, 2));
-    } catch (e) {
-      console.error('[processClosureEvent] Physical loop removal failed:', (e as Error).message);
-    }
-  }
-
-  // Update delta state
-  const entities = storage.loadEntitiesByType<Record<string, unknown>>('system_state');
-  const currentStreakDays = entities.length > 0 ? (entities[0].state.streak_days as number) || 0 : 0;
-
-  if (entities.length > 0) {
-    const existing = entities[0];
-    const currentMode = (existing.state.mode as string) || 'CLOSURE';
-    const currentMetrics = (existing.state.metrics as Record<string, unknown>) || {};
-    const currentEnforcement = (existing.state.enforcement as Record<string, unknown>) || {};
-    const currentClosureLog = (currentEnforcement.closure_log as unknown[]) || [];
-    const currentClosedTotal = (currentMetrics.closed_loops_total as number) || 0;
-
-    const patches: Array<{ op: 'replace'; path: string; value: unknown }> = [
-      { op: 'replace', path: '/enforcement/violations_count', value: 0 },
-      { op: 'replace', path: '/enforcement/closure_log', value: [...currentClosureLog, closureEntry] },
-      { op: 'replace', path: '/metrics/closed_loops_total', value: currentClosedTotal + 1 },
-      { op: 'replace', path: '/metrics/last_closure_at', value: timestamp },
-      { op: 'replace', path: '/metrics/closure_ratio', value: closureRatio },
-      { op: 'replace', path: '/metrics/open_loops', value: openLoops },
-      { op: 'replace', path: '/metrics/closures_today', value: closuresToday },
-      { op: 'replace', path: '/build_allowed', value: buildAllowed },
-    ];
-
-    const modeChanged = currentMode !== newMode;
-    if (modeChanged) {
-      patches.push({ op: 'replace', path: '/mode', value: newMode });
-      patches.push({ op: 'replace', path: '/last_mode_transition_at', value: timestamp });
-      patches.push({ op: 'replace', path: '/last_mode_transition_reason', value: `Closure event: ratio=${closureRatio.toFixed(2)}` });
-    }
-
-    if (streakUpdated) {
-      patches.push({ op: 'replace', path: '/streak_days', value: currentStreakDays + 1 });
-      patches.push({ op: 'replace', path: '/streak/last_increment_date', value: todayStr });
-      if (closuresRegistry.stats.streak_days > (existing.state.best_streak as number || 0)) {
-        patches.push({ op: 'replace', path: '/best_streak', value: closuresRegistry.stats.streak_days });
-      }
-    }
-
-    const result = await createDelta(existing.entity, existing.state, patches, 'closure_engine');
-    storage.saveEntity(result.entity, result.state);
-    storage.appendDelta(result.delta);
-
-    timeline.emit('CLOSURE_PROCESSED', 'closure_engine', {
-      loop_id: loop_id || null,
-      title: title || null,
-      outcome,
-      mode: newMode,
-      mode_changed: modeChanged,
-      closure_ratio: closureRatio,
-    });
-
-    return {
-      success: true,
-      mode: newMode,
-      mode_changed: modeChanged,
-      closureRatio,
-      closuresToday,
-      closedTotal: currentClosedTotal + 1,
-      openLoops,
-      buildAllowed,
-      streakDays: streakUpdated ? currentStreakDays + 1 : currentStreakDays,
-      streakUpdated,
-      bestStreak: closuresRegistry.stats.best_streak,
-    };
-  }
-
-  return { success: true, mode: newMode, mode_changed: false };
-}
-
-/**
  * POST /api/law/close_loop
  * PHASE 5B — CANONICAL CLOSURE EVENT
  *
@@ -1424,6 +1294,31 @@ async function processClosureEvent(closureInput: { loop_id?: string; title?: str
  *
  * Idempotency: duplicate closures (same loop_id) are rejected.
  */
+/**
+ * Records a loop decision into cognitive-sensor's results.db, matching the
+ * exact idempotency + schema of close_loop.py's record_decision(). Without
+ * this, /api/law/close_loop only ever touched the TS-side JSON ledgers
+ * (closures.json etc.) while the Python governor's closure_quality/ratio
+ * gate reads loop_decisions exclusively -- so obeying `atlas-ai close <id>`
+ * (the governor's own recommended command) silently never moved the metric
+ * it was meant to satisfy. See ~/.claude/rules/common/code-as-furniture.md.
+ */
+function recordLoopDecision(loopId: string, decision: 'CLOSE' | 'ARCHIVE'): void {
+  const dbPath = path.join(cognitiveSensorDir, 'results.db');
+  if (!fs.existsSync(dbPath)) return;
+  const db = new Database(dbPath);
+  try {
+    db.pragma('journal_mode = WAL');
+    db.pragma('busy_timeout = 5000');
+    const existing = db.prepare('SELECT decision FROM loop_decisions WHERE convo_id = ?').get(loopId);
+    if (existing) return;
+    const date = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    db.prepare('INSERT INTO loop_decisions (convo_id, decision, date) VALUES (?, ?, ?)').run(loopId, decision, date);
+  } finally {
+    db.close();
+  }
+}
+
 app.post('/api/law/close_loop', async (req, res) => {
   const { loop_id, title, outcome, artifact_path, coverage_score, status } = req.body as {
     loop_id?: string;
@@ -1445,6 +1340,14 @@ app.post('/api/law/close_loop', async (req, res) => {
   if (coverage_score != null && (typeof coverage_score !== 'number' || coverage_score < 0 || coverage_score > 1)) {
     res.status(400).json({ error: 'coverage_score must be a number between 0 and 1' });
     return;
+  }
+
+  if (loop_id) {
+    try {
+      recordLoopDecision(loop_id, outcome === 'closed' ? 'CLOSE' : 'ARCHIVE');
+    } catch (e) {
+      console.error('[close_loop] loop_decisions write failed:', (e as Error).message);
+    }
   }
 
   const timestamp = now();
@@ -1872,6 +1775,12 @@ app.post('/api/work/complete', (req, res) => {
     return;
   }
 
+  // Capture job metadata before complete() removes it from the ledger
+  const jobBeforeComplete = workController.getJob(job_id);
+  const jobMeta = jobBeforeComplete && 'metadata' in jobBeforeComplete
+    ? (jobBeforeComplete.metadata as Record<string, unknown>)
+    : null;
+
   const completeResult = workController.complete({ job_id, outcome, result: jobResult, error, metrics });
 
   if ('error' in completeResult) {
@@ -1879,7 +1788,50 @@ app.post('/api/work/complete', (req, res) => {
     return;
   }
 
-  res.json(completeResult);
+  // Flywheel receipt: update idea_registry when a flywheel job completes
+  let registryUpdated = false;
+  if (
+    jobMeta
+    && jobMeta.source === 'idea_flywheel'
+    && jobMeta.registry_id
+    && outcome === 'completed'
+  ) {
+    const registryPath = path.resolve(cognitiveSensorDir, 'idea_registry.json');
+    try {
+      const raw = fs.readFileSync(registryPath, 'utf-8');
+      const registry = JSON.parse(raw);
+      const tierNames = Object.keys(registry.tiers || {});
+      for (const tier of tierNames) {
+        const ideas = registry.tiers[tier];
+        if (!Array.isArray(ideas)) continue;
+        const idea = ideas.find(
+          (i: Record<string, unknown>) => i.canonical_id === jobMeta.registry_id
+        );
+        if (idea) {
+          const previousStatus = idea.status;
+          idea.status = 'executed';
+          idea.executed_at = new Date().toISOString();
+          idea.executed_job_id = job_id;
+          fs.writeFileSync(registryPath, JSON.stringify(registry, null, 2), 'utf-8');
+          timeline.emit('FLYWHEEL_REGISTRY_UPDATED', 'api', {
+            registry_id: jobMeta.registry_id,
+            job_id,
+            previous_status: previousStatus,
+            new_status: 'executed',
+          });
+          registryUpdated = true;
+          break;
+        }
+      }
+    } catch (err) {
+      console.error('[Flywheel] Failed to update idea registry:', err);
+    }
+  }
+
+  res.json({
+    ...completeResult,
+    ...(registryUpdated ? { registry_updated: true } : {}),
+  });
 });
 
 /**
@@ -1906,7 +1858,8 @@ app.post('/api/work/claim', (req, res) => {
     return;
   }
 
-  const claim = workController.claimNextExecutable(executor_id);
+  const systemState = getSystemStateForWork();
+  const claim = workController.claimNextExecutable(executor_id, systemState);
   res.json(claim);
 });
 
@@ -1964,12 +1917,16 @@ app.post('/api/work/cancel', (req, res) => {
 
 /**
  * GET /api/work/history
- * Get completed jobs history.
+ * Get completed jobs history, most recent first.
  */
 app.get('/api/work/history', (req, res) => {
   const ledger = workController.getLedger();
+  // `completed` is append-order (oldest first); slice(0, 20) here used to
+  // return the OLDEST 20 of the retained window, not the most recent — found
+  // live while proving AGENT_SUBSTRATE.md's DoD (a just-completed job didn't
+  // show up in its own history). Fixed inline per code-as-furniture doctrine.
   res.json({
-    completed: ledger.completed.slice(0, 20),
+    completed: ledger.completed.slice(-20).reverse(),
     stats: ledger.stats,
   });
 });
@@ -1981,6 +1938,41 @@ app.get('/api/work/history', (req, res) => {
 app.get('/api/work/metrics', (_req, res) => {
   res.json({
     claims: workController.getClaimMetrics(),
+  });
+});
+
+/**
+ * GET /api/work/subscribe
+ * Server-Sent Events stream of work-queue timeline events (WORK_REQUESTED,
+ * WORK_APPROVED, WORK_QUEUED, WORK_COMPLETED, WORK_FAILED, WORK_RETRIED,
+ * WORK_TIMEOUT, WORK_CANCELLED, AUTO_EXECUTED) as they happen.
+ *
+ * Campaign III (SUBSTRATE) task 03: lets an agent hold one open connection
+ * here instead of polling /api/work/status in a loop — "Either ends polling"
+ * (ATLAS_MASTER_PLAN.md). Backed by TimelineLogger's in-process pub-sub, not
+ * NATS — no broker/Docker dependency, scoped to this delta-kernel instance.
+ */
+app.get('/api/work/subscribe', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.write(': connected\n\n');
+
+  const unsubscribe = timeline.subscribe((event) => {
+    if (event.source !== 'work_controller') return;
+    res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
+  });
+
+  // Keep the connection alive through proxies/load balancers that time out
+  // idle connections before the next real event arrives.
+  const keepAlive = setInterval(() => res.write(': ping\n\n'), 15000);
+
+  req.on('close', () => {
+    clearInterval(keepAlive);
+    unsubscribe();
   });
 });
 
@@ -2012,6 +2004,27 @@ app.get('/api/signals', (req, res) => {
   res.json({ ok: true, signals: listSignals(since, repoRoot) });
 });
 
+const OPTOGON_URL = process.env.OPTOGON_URL || 'http://localhost:3010';
+
+/**
+ * Forward a resolved approval_required signal into Optogon's own session so the
+ * chosen option actually resumes the blocked path, not just marks the signal
+ * resolved here. Optogon's _handle_approval already recognizes 'approve'/'deny'
+ * as turn text (action_options ids match exactly) — no Optogon-side change needed.
+ * Fully fail-soft: a confirm action must never fail because Optogon is down.
+ */
+async function forwardApprovalToOptogon(sessionId: string, actionId: string): Promise<void> {
+  try {
+    await fetch(`${OPTOGON_URL}/session/${encodeURIComponent(sessionId)}/turn`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: actionId }),
+    });
+  } catch {
+    // Optogon down or unreachable — the signal is still marked resolved here.
+  }
+}
+
 app.post('/api/signals/:id/resolve', (req, res) => {
   const signalId = req.params.id;
   const actionId = typeof req.body?.action_id === 'string' ? req.body.action_id : '';
@@ -2019,11 +2032,23 @@ app.post('/api/signals/:id/resolve', (req, res) => {
     res.status(400).json({ ok: false, error: 'action_id required in body' });
     return;
   }
+
+  const signal = getSignal(signalId);
   const resolution = resolveSignal(signalId, actionId);
   if (!resolution) {
     res.status(404).json({ ok: false, error: `Signal ${signalId} not found or already resolved` });
     return;
   }
+
+  // Scoped to approval_required only — error signals' retry/abandon options
+  // aren't honored by Optogon's _handle_execute yet (separately scoped, Phase 4b).
+  if (signal?.source_layer === 'optogon' && signal.signal_type === 'approval_required') {
+    const sessionId = signal.payload?.data?.session_id;
+    if (typeof sessionId === 'string' && sessionId) {
+      forwardApprovalToOptogon(sessionId, actionId);
+    }
+  }
+
   res.json({ ok: true, resolution });
 });
 
@@ -2061,6 +2086,68 @@ app.get('/api/atlas/next-directive', (_req, res) => {
       res.status(500).json({ ok: false, error: error.message, details: error.details });
       return;
     }
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+/**
+ * GET /api/atlas/cockpit
+ * Returns the current Cockpit payload — mode, signals, prepared actions,
+ * top tasks, drafts, leverage moves, mode_since stamped from the latest
+ * mode transition (state.last_mode_transition_at, with entity.created_at fallback).
+ * Read-only; safe to poll. Wires buildCockpit into a live route so its mode_since
+ * fix is load-bearing (was previously only exercised by fabric-tests).
+ */
+app.get('/api/atlas/cockpit', (_req, res) => {
+  try {
+    const systemStateEntities = storage.loadEntitiesByType<SystemStateData>('system_state');
+    if (systemStateEntities.length === 0) {
+      res.status(503).json({ ok: false, error: 'No system_state entity present' });
+      return;
+    }
+
+    // Inbox is in CockpitBuildContext shape but never read inside buildCockpit body.
+    // If absent, supply a structurally-valid empty inbox so the route can serve
+    // freshly-bootstrapped fabrics without writing on a GET.
+    const inboxEntities = storage.loadEntitiesByType<InboxData>('inbox');
+    const inbox = inboxEntities.length > 0
+      ? inboxEntities[0]
+      : {
+          entity: {
+            entity_id: 'synthetic-inbox-cockpit',
+            entity_type: 'inbox' as EntityType,
+            created_at: now(),
+            current_version: 1,
+            current_hash: '',
+            is_archived: false,
+          },
+          state: {
+            unread_count: 0,
+            priority_queue: [],
+            task_queue: [],
+            idea_queue: [],
+            last_activity_at: now(),
+          } satisfies InboxData,
+        };
+
+    const tasks = storage.loadEntitiesByType<TaskData>('task');
+    const threads = storage.loadEntitiesByType<ThreadData>('thread');
+    const drafts = storage.loadEntitiesByType<DraftData>('draft');
+    const pendingActions = storage.loadEntitiesByType<PendingActionData>('pending_action');
+
+    const ctx: CockpitBuildContext = {
+      systemState: systemStateEntities[0],
+      inbox,
+      tasks,
+      threads,
+      drafts,
+      pendingAction: pendingActions.length > 0 ? pendingActions[0] : null,
+    };
+
+    const cockpit = buildCockpit(ctx);
+    res.json({ ok: true, cockpit });
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({ ok: false, error: message });
   }
@@ -2121,6 +2208,55 @@ app.post('/api/atlas/preferences', (req, res) => {
     res.status(500).json({ ok: false, error: message });
   }
 });
+// === LATTICE SEAM (slice 1: idea_registry.execute_now -> viewmodel + project correction) ===
+
+/**
+ * GET /api/lattice/viewmodel
+ * Projects cognitive-sensor's idea_registry into lattice's items/events/projects
+ * shape, then overlays user corrections stored as `task` entities tagged
+ * cortex_metadata.source = 'lattice'. User-corrected items win.
+ */
+app.get('/api/lattice/viewmodel', (_req, res) => {
+  try {
+    // PKT-008 wire: extend the storage shim with the in-memory signals ring
+    // so droplist DAG signals project into the viewmodel as items.
+    // Object.create(storage) preserves the generic loadEntitiesByType<T>
+    // signature via the prototype chain; .bind() would erase generics.
+    const storageWithSignals: LatticeStorageLike = Object.assign(
+      Object.create(storage),
+      { loadSignals: () => listSignals() },
+    );
+    const viewmodel = buildLatticeViewmodel(cognitiveSensorDir, storageWithSignals);
+    res.json({ ok: true, viewmodel });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+/**
+ * POST /api/lattice/correct
+ * User correction from lattice's right-click menu. Persists as a `task` entity
+ * with cortex_metadata.source='lattice' AND appends to
+ * services/cognitive-sensor/lattice_corrections.jsonl so the next clustering
+ * run can read it as labeled supervision.
+ *
+ * Body: { id: string, project: string, originalProject?, originalTitle? }
+ */
+app.post('/api/lattice/correct', async (req, res) => {
+  try {
+    const result = await recordLatticeCorrection(cognitiveSensorDir, storage, req.body);
+    res.status(202).json({ ok: true, ...result });
+  } catch (error: unknown) {
+    if (error instanceof LatticeCorrectionValidationError) {
+      res.status(400).json({ ok: false, error: error.message });
+      return;
+    }
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
 // === TIMELINE (Phase 6C) ===
 
 /**
@@ -2324,12 +2460,12 @@ app.get('/api/daemon/status', (req, res) => {
 /**
  * POST /api/daemon/run
  * Manually trigger a daemon job.
- * Body: { job: "heartbeat" | "refresh" | "day_start" | "day_end" }
+ * Body: { job: "heartbeat" | "refresh" | "day_start" | "day_end" | "sensor_daily" }
  */
 app.post('/api/daemon/run', async (req, res) => {
   const { job } = req.body;
 
-  const validJobs: JobName[] = ['heartbeat', 'refresh', 'day_start', 'day_end'];
+  const validJobs: JobName[] = ['heartbeat', 'refresh', 'day_start', 'day_end', 'sensor_daily', 'zoekt_reindex'];
   if (!job || !validJobs.includes(job)) {
     res.status(400).json({
       ok: false,
@@ -2577,7 +2713,17 @@ app.get('/api/cycleboard', (req, res) => {
     res.json({ ok: true, data: null });
     return;
   }
-  res.json({ ok: true, data: entities[0].state });
+  // Path 2 hardened: entity.state stores the client blob wrapped as { data: blob }
+  // (see the PUT handler below, which patches path "/data"). Every consumer —
+  // apps/inpact/js/api.js's getCycleBoardState() and atlas-ai.ts's
+  // getCycleboardState() — expects this endpoint's "data" field to BE the raw
+  // blob (top-level Today/DayPlans/_localUpdatedAt), matching what PUT accepts.
+  // Returning the still-wrapped entity.state left "data" double-nested, so
+  // remote._localUpdatedAt was always undefined and syncFromApi() could never
+  // detect a newer remote — pull-down silently never fired, only push-up did.
+  // See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
+  const blob = (entities[0].state as Record<string, unknown>).data ?? null;
+  res.json({ ok: true, data: blob });
 });
 
 app.put('/api/cycleboard', async (req, res) => {
@@ -2613,8 +2759,6 @@ app.put('/api/cycleboard', async (req, res) => {
 import { bridgeAction, checkExecutorHealth, getTokenForAction } from '../core/executor-bridge.js';
 import type { PendingActionData, ActionType, PendingActionStatus, SystemStateData, TaskData, Priority } from '../core/types-core';
 
-const PENDING_ACTION_TIMEOUT_MS = 30_000; // 30 seconds
-
 // List pending actions
 app.get('/api/actions/pending', (req, res) => {
   const entities = storage.loadEntitiesByType<PendingActionData>('pending_action');
@@ -2624,6 +2768,7 @@ app.get('/api/actions/pending', (req, res) => {
       id: e.entity.entity_id,
       action_type: (e.state as PendingActionData).action_type,
       target_entity_id: (e.state as PendingActionData).target_entity_id,
+      label: ((e.state as PendingActionData).payload?.label as string) || (e.state as PendingActionData).action_type,
       status: (e.state as PendingActionData).status,
       created_at: (e.state as PendingActionData).created_at,
       expires_at: (e.state as PendingActionData).expires_at,
@@ -2703,6 +2848,21 @@ app.post('/api/actions/confirm/:id', async (req, res) => {
     return;
   }
 
+  // Mode gate: block execution if the current mode doesn't allow this action type.
+  // Presentation (buildCockpit) already filters candidates by mode, but a pending
+  // action can outlive a mode shift, and this endpoint can be called directly —
+  // so the check must be re-applied here, not just trusted from creation time.
+  const systemStateEntities = storage.loadEntitiesByType<SystemStateData>('system_state');
+  const currentMode = systemStateEntities[0]?.state.mode;
+  if (currentMode && !isActionAllowedInMode(state.action_type, currentMode)) {
+    res.status(403).json({
+      error: `Action type '${state.action_type}' is not allowed in mode ${currentMode}`,
+      action_type: state.action_type,
+      mode: currentMode,
+    });
+    return;
+  }
+
   // Mark confirmed
   state.status = 'CONFIRMED';
   state.confirmed_at = now();
@@ -2744,10 +2904,49 @@ app.post('/api/actions/confirm/:id', async (req, res) => {
     error: bridgeResult.error,
   });
 
+  // Flywheel: if the confirmed action targets an idea-promoted task,
+  // submit it to the work queue so an agent can claim and execute it.
+  let workResult: { status: string; job_id?: string; reason?: string } | null = null;
+  if (state.target_entity_id && state.action_type === 'complete_task') {
+    const allEntities = storage.loadAllEntities();
+    for (const [_, data] of allEntities) {
+      if (data.entity.entity_id === state.target_entity_id) {
+        const targetState = data.state as Record<string, unknown>;
+        if (targetState.source === 'idea_auto_promote') {
+          const systemState = getSystemStateForWork();
+          const title = (targetState.title_template as string)
+            || (targetState.title as string)
+            || 'Idea-promoted task';
+          workResult = workController.request(
+            {
+              type: 'ai',
+              title,
+              metadata: {
+                source: 'idea_flywheel',
+                pending_action_id: id,
+                registry_id: targetState.source_id || null,
+                task_entity_id: state.target_entity_id,
+              },
+            },
+            systemState
+          );
+          timeline.emit('FLYWHEEL_WORK_SUBMITTED', 'api', {
+            pending_action_id: id,
+            task_entity_id: state.target_entity_id,
+            work_status: workResult.status,
+            job_id: workResult.job_id || null,
+          });
+        }
+        break;
+      }
+    }
+  }
+
   res.json({
     id,
     status: 'CONFIRMED',
     execution: bridgeResult,
+    ...(workResult ? { work_queue: workResult } : {}),
   });
 });
 

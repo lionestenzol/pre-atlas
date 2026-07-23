@@ -11,6 +11,7 @@
  */
 
 import { spawn, ChildProcess } from 'child_process';
+import * as fs from 'fs';
 import * as net from 'net';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,6 +22,25 @@ const __dirname = path.dirname(__filename);
 const API_URL = 'http://localhost:3001';
 const API_PORT = 3001;
 const KERNEL_CWD = path.resolve(__dirname, '../..');
+
+// Resolve npm's real entry script and bypass cmd.exe entirely (process.execPath +
+// argv, shell:false) instead of spawning the npm.cmd shim with shell:true. Args
+// here are fully static ('run', 'api') so this was never externally reachable,
+// but shell:true is the same fragile-transport class this session proved
+// vulnerable elsewhere (atlas-ai.ts's codex invocation) — hardened to be safe by
+// construction, not by luck of current inputs. See
+// ~/.claude/rules/common/code-as-furniture.md and
+// ~/.claude/projects/.../memory/reference_windows_safe_exec_pattern.md.
+function resolveNpmEntry(): { cmd: string; prefixArgs: string[] } {
+  if (process.platform !== 'win32') return { cmd: 'npm', prefixArgs: [] };
+  const shim = (process.env.PATH ?? '').split(path.delimiter)
+    .map((dir) => path.join(dir, 'npm.cmd'))
+    .find((p) => fs.existsSync(p));
+  if (!shim) throw new Error('npm.cmd not found on PATH');
+  const entry = path.join(path.dirname(shim), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  if (!fs.existsSync(entry)) throw new Error(`npm entry script not found at expected path: ${entry}`);
+  return { cmd: process.execPath, prefixArgs: [entry] };
+}
 
 // === PORT CHECK ===
 
@@ -50,14 +70,13 @@ let kernelProcess: ChildProcess | null = null;
 async function startKernel(): Promise<void> {
   console.log('[Gate] Starting Delta Kernel...');
 
-  // Use npm.cmd on Windows
-  const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  const { cmd, prefixArgs } = resolveNpmEntry();
 
-  kernelProcess = spawn(npmCmd, ['run', 'api'], {
+  kernelProcess = spawn(cmd, [...prefixArgs, 'run', 'api'], {
     cwd: KERNEL_CWD,
     detached: true,
     stdio: 'ignore',
-    shell: true,
+    shell: false,
   });
 
   kernelProcess.unref();

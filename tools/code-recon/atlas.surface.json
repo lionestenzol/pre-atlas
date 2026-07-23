@@ -1,0 +1,20 @@
+{
+  "surface": "code-recon",
+  "kind": "cli",
+  "lifecycle": "live",
+  "headline": "The orient gate: is a repo's cached delta-scp symbolic map FRESH / STALE / MISSING, and what's its content-address. The perceive stage's eyes-before-hands freshness check + token-yield that the compile stage routes through.",
+  "capabilities": [
+    {
+      "id": "orient",
+      "label": "Orient on a repo's cached recon map (verdict + content-address, read-only, no regen)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python tools/code-recon/orient_seam.py {root}",
+      "needs": ["root"],
+      "evidence": "C:/Users/bruke/Pre Atlas/tools/code-recon/orient_seam.py wraps ~/.claude/skills/code-recon/scripts/orient.mjs (read-only, never --regen)",
+      "notes": "Read-only: runs orient WITHOUT --regen (no map regeneration, no writes), then content-addresses the cached map (sha256 minus generated_at -> stable join key). found:false when the repo has no cached map yet (verdict MISSING). {root} is a forward-slash path.",
+      "triggers": ["orient me", "is the recon map fresh", "where is this code", "locate this symbol", "recon this repo", "eyes before hands"]
+    }
+  ]
+}

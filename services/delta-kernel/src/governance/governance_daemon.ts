@@ -12,15 +12,19 @@ import * as fs from 'fs';
 import { Storage } from '../cli/sqlite-storage';
 import { createDelta, createEntity, now } from '../core/delta';
 import { route } from '../core/routing';
-import { Mode, SystemStateData, ActionType } from '../core/types';
-import { WorkController } from '../core/work-controller';
+import { Mode, SystemStateData, ActionType, InboxData, TaskData, ThreadData, DraftData, PendingActionData, EntityType } from '../core/types';
+import { WorkController, ActiveJob } from '../core/work-controller';
+import { isLatticeResumeJob, resolveLatticePython, buildResumeArgs } from './lattice_resume.js';
 import { getTimelineLogger, TimelineLogger } from '../core/timeline-logger.js';
-import { getEffectiveRiskTier } from '../core/cockpit.js';
+import { getEffectiveRiskTier, buildCockpit, createPendingAction, CockpitBuildContext } from '../core/cockpit.js';
 import { emitEvent } from '../core/event-emitter.js';
+import { notifyPhone } from '../core/notify.js';
+import { processClosureEvent } from '../core/closure-engine.js';
+import { executeOnUASC } from '../core/executor-bridge.js';
 
 // === TYPES ===
 
-export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check';
+export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily' | 'atlas_map_reload' | 'zoekt_reindex';
 
 export interface JobRun {
   job: JobName;
@@ -43,6 +47,9 @@ export interface DaemonState {
   last_agent_pipeline: number | null;
   last_preparation: number | null;
   last_stall_check: number | null;
+  last_sensor_daily: number | null;
+  last_atlas_map_reload: number | null;
+  last_zoekt_reindex: number | null;
   job_history: JobRun[];
   current_job: JobRun | null;
 }
@@ -57,6 +64,8 @@ export class GovernanceDaemon {
   private cronJobs: cron.ScheduledTask[] = [];
   private refreshProcess: ChildProcess | null = null;
   private agentProcess: ChildProcess | null = null;
+  private sensorProcess: ChildProcess | null = null;
+  private zoektReindexProcess: ChildProcess | null = null;
   private workController: WorkController;
   private timeline: TimelineLogger;
 
@@ -70,14 +79,25 @@ export class GovernanceDaemon {
   private readonly AGENT_PIPELINE_CRON = '0 6 * * 0'; // Sunday 06:00 — weekly idea pipeline
   private readonly PREPARATION_CRON = '*/5 * * * *';  // Every 5 minutes — preparation engine
   private readonly STALL_CHECK_CRON = '0 21 * * *';   // 21:00 daily — stall detection
+  private readonly SENSOR_DAILY_CRON = '45 5 * * *';  // 05:45 daily — cognitive-sensor pipeline, ahead of Day Start
+  private readonly ATLAS_MAP_RELOAD_CRON = '5 6 * * *'; // 06:05 daily — refresh atlas-map-api snapshot after sensor daily
+  private readonly ZOEKT_REINDEX_CRON = '35 5 * * *';  // 05:35 daily — Layer 2 of zoekt reindex failsafe; --if-stale no-ops if index already fresh
   private readonly REFRESH_TIMEOUT_MS = 120000;       // 2 minutes
   private readonly AGENT_PIPELINE_TIMEOUT_MS = 600000; // 10 minutes
+  private readonly SENSOR_DAILY_TIMEOUT_MS = 900000;   // 15 minutes — multi-phase pipeline (ingest, es_scan, triage, backlog); measured >5min in practice
+  private readonly ZOEKT_REINDEX_TIMEOUT_MS = 1200000; // 20 minutes — full reindex of 3 repos with per-file scip spawn
 
-  constructor(storage: Storage, repoRoot: string) {
+  /**
+   * workController is optional only so callers without an API server (tests,
+   * standalone scripts) still work standalone -- see server.ts's comment on
+   * why passing a shared instance matters whenever an API server is also
+   * mutating the same on-disk ledger.
+   */
+  constructor(storage: Storage, repoRoot: string, workController?: WorkController) {
     this.storage = storage;
     this.repoRoot = repoRoot;
     this.cognitiveSensorDir = process.env.COGNITIVE_SENSOR_DIR || path.join(repoRoot, 'services', 'cognitive-sensor');
-    this.workController = new WorkController(repoRoot);
+    this.workController = workController ?? new WorkController(repoRoot);
     this.timeline = getTimelineLogger(repoRoot);
     this.state = {
       running: false,
@@ -91,6 +111,9 @@ export class GovernanceDaemon {
       last_agent_pipeline: null,
       last_preparation: null,
       last_stall_check: null,
+      last_sensor_daily: null,
+      last_atlas_map_reload: null,
+      last_zoekt_reindex: null,
       job_history: [],
       current_job: null,
     };
@@ -114,59 +137,90 @@ export class GovernanceDaemon {
       timestamp: this.state.started_at,
     });
 
+    // noOverlap:true on every job below — verified 2026-07-06 (adversarial review of
+    // f6a0c61) that node-cron 4.2.1 defaults noOverlap to false, so a slow tick (e.g.
+    // work_queue's notifyPreparedActions looping over up to 7 prepared actions with
+    // an awaited hash per entity) could otherwise overlap the next tick and race the
+    // in-memory pending_action dedup check against not-yet-persisted writes, creating
+    // duplicate pending actions + duplicate phone notifications for the same target.
+    // Every job here re-derives its state from current data each run, so skipping an
+    // overlapped tick (node-cron's behavior with noOverlap:true) is always correct —
+    // nothing here needs to "catch up" a missed tick.
+
     // Schedule heartbeat (every 5 minutes)
     const heartbeatJob = cron.schedule(this.HEARTBEAT_CRON, () => {
       this.runJob('heartbeat');
-    });
+    }, { noOverlap: true, name: 'heartbeat' });
     this.cronJobs.push(heartbeatJob);
 
     // Schedule refresh (every hour)
     const refreshJob = cron.schedule(this.REFRESH_CRON, () => {
       this.runJob('refresh');
-    });
+    }, { noOverlap: true, name: 'refresh' });
     this.cronJobs.push(refreshJob);
 
     // Schedule day start (06:00)
     const dayStartJob = cron.schedule(this.DAY_START_CRON, () => {
       this.runJob('day_start');
-    });
+    }, { noOverlap: true, name: 'day_start' });
     this.cronJobs.push(dayStartJob);
 
     // Schedule day end (22:00)
     const dayEndJob = cron.schedule(this.DAY_END_CRON, () => {
       this.runJob('day_end');
-    });
+    }, { noOverlap: true, name: 'day_end' });
     this.cronJobs.push(dayEndJob);
 
     // Schedule autonomous mode recalculation (every 15 minutes)
     const modeRecalcJob = cron.schedule(this.MODE_RECALC_CRON, () => {
       this.runJob('mode_recalc');
-    });
+    }, { noOverlap: true, name: 'mode_recalc' });
     this.cronJobs.push(modeRecalcJob);
 
     // Schedule work queue management (every minute)
     const workQueueJob = cron.schedule(this.WORK_QUEUE_CRON, () => {
       this.runJob('work_queue');
-    });
+    }, { noOverlap: true, name: 'work_queue' });
     this.cronJobs.push(workQueueJob);
 
     // Schedule agent pipeline (weekly Sunday 06:00)
     const agentPipelineJob = cron.schedule(this.AGENT_PIPELINE_CRON, () => {
       this.runJob('agent_pipeline');
-    });
+    }, { noOverlap: true, name: 'agent_pipeline' });
     this.cronJobs.push(agentPipelineJob);
 
     // Schedule preparation engine (every 5 minutes)
     const preparationJob = cron.schedule(this.PREPARATION_CRON, () => {
       this.runJob('preparation');
-    });
+    }, { noOverlap: true, name: 'preparation' });
     this.cronJobs.push(preparationJob);
 
     // Schedule stall detection (21:00 daily)
     const stallCheckJob = cron.schedule(this.STALL_CHECK_CRON, () => {
       this.runJob('stall_check');
-    });
+    }, { noOverlap: true, name: 'stall_check' });
     this.cronJobs.push(stallCheckJob);
+
+    // Schedule cognitive-sensor's daily pipeline (05:45, ahead of Day Start at
+    // 06:00) — this was the unscheduled front of the spine per the 2026-07-06
+    // completeness assessment: Optogon/cortex had nothing feeding them.
+    const sensorDailyJob = cron.schedule(this.SENSOR_DAILY_CRON, () => {
+      this.runJob('sensor_daily');
+    }, { noOverlap: true, name: 'sensor_daily' });
+    this.cronJobs.push(sensorDailyJob);
+
+    const atlasMapReloadJob = cron.schedule(this.ATLAS_MAP_RELOAD_CRON, () => {
+      this.runJob('atlas_map_reload');
+    }, { noOverlap: true, name: 'atlas_map_reload' });
+    this.cronJobs.push(atlasMapReloadJob);
+
+    // Zoekt Reindex (Layer 2 of the 3-layer index failsafe). Complements the
+    // PreAtlas-ZoektReindex scheduled task (L1) and -Boot logon task (L3);
+    // --if-stale keeps the layers complementary rather than redundant.
+    const zoektReindexJob = cron.schedule(this.ZOEKT_REINDEX_CRON, () => {
+      this.runJob('zoekt_reindex');
+    }, { noOverlap: true, name: 'zoekt_reindex' });
+    this.cronJobs.push(zoektReindexJob);
 
     // Run initial heartbeat immediately
     this.runJob('heartbeat');
@@ -181,6 +235,9 @@ export class GovernanceDaemon {
     console.log(`  - Agent Pipeline: ${this.AGENT_PIPELINE_CRON}`);
     console.log(`  - Preparation: ${this.PREPARATION_CRON}`);
     console.log(`  - Stall Check: ${this.STALL_CHECK_CRON}`);
+    console.log(`  - Sensor Daily: ${this.SENSOR_DAILY_CRON}`);
+    console.log(`  - Atlas Map Reload: ${this.ATLAS_MAP_RELOAD_CRON}`);
+    console.log(`  - Zoekt Reindex: ${this.ZOEKT_REINDEX_CRON}`);
   }
 
   /**
@@ -208,6 +265,14 @@ export class GovernanceDaemon {
     if (this.agentProcess) {
       this.agentProcess.kill();
       this.agentProcess = null;
+    }
+    if (this.sensorProcess) {
+      this.sensorProcess.kill();
+      this.sensorProcess = null;
+    }
+    if (this.zoektReindexProcess) {
+      this.zoektReindexProcess.kill();
+      this.zoektReindexProcess = null;
     }
 
     this.state.running = false;
@@ -265,6 +330,15 @@ export class GovernanceDaemon {
           break;
         case 'stall_check':
           await this.runStallCheck();
+          break;
+        case 'sensor_daily':
+          await this.runSensorDaily();
+          break;
+        case 'atlas_map_reload':
+          await this.runAtlasMapReload();
+          break;
+        case 'zoekt_reindex':
+          await this.runZoektReindex();
           break;
       }
 
@@ -412,7 +486,185 @@ export class GovernanceDaemon {
       'metrics.closures_today': 0,
     });
 
+    // Seed inPACT's Today screen from what Atlas already knows, instead of
+    // leaving Bruke to author a blank plan every morning (see TRUST_BOUNDARY.md-
+    // adjacent completeness assessment, 2026-07-06).
+    await this.seedTodayPlan(today, modeResult.mode);
+
     console.log(`[Daemon] Day start: ${today}, mode: ${modeResult.mode}`);
+  }
+
+  /**
+   * Pre-fill inPACT's Today.daily[date] with real open tasks (top priority)
+   * so the screen arrives with content instead of starting blank. Never invents
+   * winTarget/why/lever — those need Bruke's own judgment, not a guess. Skips
+   * entirely if a plan for `date` already exists (never clobbers in-progress work)
+   * or if there's no cycle_board entity yet, or no open tasks to seed with.
+   *
+   * Campaign I (RITUAL): a normal day also carries "goldmine" material — one
+   * Execute-Now idea + one one-tap-closable loop, so the push is a cue+craving,
+   * not just a task list (ATLAS_MASTER_PLAN.md Campaign I). A RECOVER day seeds
+   * a lighter load (one task, not three) and one past win instead of the
+   * goldmine, per the master plan's RECOVER-aware seeding rule.
+   */
+  private async seedTodayPlan(date: string, mode: string): Promise<void> {
+    const entities = this.storage.loadEntitiesByType<Record<string, unknown>>('cycle_board');
+    if (entities.length === 0) return;
+
+    const existing = entities[0];
+    const cbData = (existing.state as Record<string, unknown>).data as Record<string, unknown> | undefined;
+    if (!cbData) return;
+
+    const todayBlock = (cbData.Today as Record<string, unknown>) || { mission: '', motto: '', daily: {} };
+    const daily = (todayBlock.daily as Record<string, unknown>) || {};
+    if (daily[date]) return;
+
+    const isRecover = mode === 'RECOVER';
+    const taskLimit = isRecover ? 1 : 3;
+
+    const priorityRank: Record<string, number> = { CRITICAL: 0, HIGH: 1, NORMAL: 2, LOW: 3 };
+    const tasks = this.storage.loadEntitiesByType<Record<string, unknown>>('task');
+    const openTasks = tasks
+      .filter((t) => {
+        const status = (t.state as Record<string, unknown>).status as string;
+        return status !== 'DONE' && status !== 'ARCHIVED';
+      })
+      .sort((a, b) => {
+        const pa = priorityRank[(a.state as Record<string, unknown>).priority as string] ?? 4;
+        const pb = priorityRank[(b.state as Record<string, unknown>).priority as string] ?? 4;
+        return pa - pb;
+      })
+      .slice(0, taskLimit);
+
+    if (openTasks.length === 0) return;
+
+    const titleOf = (t: { state: Record<string, unknown> }): string =>
+      (t.state.title as string) || (t.state.title_template as string) || 'Untitled task';
+
+    const idOf = (t: { entity: { entity_id: string } }): string => t.entity.entity_id;
+
+    const seededPlan: Record<string, unknown> = {
+      date,
+      winTarget: '',
+      p1: titleOf(openTasks[0]), p1why: '', p1TaskId: idOf(openTasks[0]),
+      p2: openTasks[1] ? titleOf(openTasks[1]) : '', p2why: '', p2TaskId: openTasks[1] ? idOf(openTasks[1]) : '',
+      p3: openTasks[2] ? titleOf(openTasks[2]) : '', p3why: '', p3TaskId: openTasks[2] ? idOf(openTasks[2]) : '',
+      x1: '', y1: '', x2: '', y2: '', x3: '', y3: '',
+      lever: '', resetMove: '', reflection: '',
+      updated_at: null,
+      seeded_from_atlas: true,
+    };
+
+    let pushBody = openTasks.map(titleOf).join(' · ');
+
+    if (isRecover) {
+      const pastWin = this.pickPastWin(cbData, date);
+      if (pastWin) {
+        seededPlan.pastWin = pastWin;
+        pushBody += ` · Past win: ${pastWin.description}`;
+      }
+    } else {
+      const goldmine = this.buildGoldmine(date);
+      if (goldmine) {
+        seededPlan.goldmine = goldmine;
+        if (goldmine.idea) pushBody += ` · Idea: ${goldmine.idea.title}`;
+        if (goldmine.loop) pushBody += ` · Loop: ${goldmine.loop.title}`;
+      }
+    }
+
+    const newCbData = {
+      ...cbData,
+      Today: {
+        ...todayBlock,
+        daily: { ...daily, [date]: seededPlan },
+      },
+      _localUpdatedAt: new Date().toISOString(),
+    };
+
+    const result = await createDelta(
+      existing.entity,
+      existing.state,
+      [{ op: 'replace' as const, path: '/data', value: newCbData }],
+      'governance_daemon'
+    );
+    this.storage.saveEntity(result.entity, result.state);
+    this.storage.appendDelta(result.delta);
+
+    notifyPhone('Today seeded', pushBody).catch(() => {});
+  }
+
+  /**
+   * Pick the day's one Execute-Now idea + one one-tap-closable loop. Rotates
+   * deterministically by day-of-epoch so the same item isn't repeated every
+   * morning (stale cue = the push becomes noise, per the master plan's "no
+   * push inflation" guardrail) without needing randomness or extra state.
+   */
+  private buildGoldmine(date: string): {
+    idea: { canonical_id: string; title: string; priority_score: number } | null;
+    loop: { convo_id: string; title: string; reason: string } | null;
+  } | null {
+    const idea = this.pickExecuteNowIdea(date);
+    const loop = this.pickOneTapLoop(date);
+    if (!idea && !loop) return null;
+    return { idea, loop };
+  }
+
+  private dayIndex(date: string): number {
+    return Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 86400000);
+  }
+
+  private pickExecuteNowIdea(date: string): { canonical_id: string; title: string; priority_score: number } | null {
+    const registryPath = path.join(this.cognitiveSensorDir, 'cycleboard', 'brain', 'idea_registry.json');
+    try {
+      if (!fs.existsSync(registryPath)) return null;
+      const registry = JSON.parse(fs.readFileSync(registryPath, 'utf-8'));
+      const executeNow: any[] = registry.execute_now ?? [];
+      if (executeNow.length === 0) return null;
+      const idea = executeNow[this.dayIndex(date) % executeNow.length];
+      return {
+        canonical_id: idea.canonical_id,
+        title: idea.canonical_title,
+        priority_score: idea.priority_score,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Source: loops_latest.json — the exact list loop_clearer.py / cognitive_api.py
+   * treat as "currently open" (10 entries as of the 001_UNLOCK drain, deliberately
+   * left open as Campaign I fodder rather than bulk-archived). NOT
+   * loop_recommendations.json: that file's `recommendation` vocabulary (NEEDS_WORK/
+   * REVIEW/KEEP) predates the CLOSE/ARCHIVE scheme atlas-ai.ts's
+   * compoundClosureReports() expects, so filtering it for 'CLOSE' silently yields
+   * zero candidates against real data — caught by live verification, not by
+   * inspection (see ATLAS_MASTER_PLAN.md Campaign I / TODO.md 001_UNLOCK note).
+   */
+  private pickOneTapLoop(date: string): { convo_id: string; title: string; reason: string } | null {
+    const loopsPath = path.join(this.cognitiveSensorDir, 'loops_latest.json');
+    try {
+      if (!fs.existsSync(loopsPath)) return null;
+      const candidates: any[] = JSON.parse(fs.readFileSync(loopsPath, 'utf-8'));
+      if (!Array.isArray(candidates) || candidates.length === 0) return null;
+      const loop = candidates[this.dayIndex(date) % candidates.length];
+      return {
+        convo_id: String(loop.convo_id),
+        title: loop.title,
+        reason: `open loop, score ${loop.score ?? '?'}`,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private pickPastWin(cbData: Record<string, unknown>, date: string): { description: string; date: string } | null {
+    const wins = (cbData.MomentumWins as Array<{ description: string; date: string }>) ?? [];
+    const past = wins
+      .filter((w) => w.date && w.date < date)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    if (past.length === 0) return null;
+    return { description: past[0].description, date: past[0].date };
   }
 
   /**
@@ -484,6 +736,32 @@ export class GovernanceDaemon {
     if (streakReset) {
       console.log(`[Daemon] Streak reset to 0 (no productive BUILD closure today)`);
     }
+
+    // Campaign I (RITUAL) reward: MomentumWins had zero consumers before this —
+    // logged wins sat in state and were never echoed back. Evening wrap closes
+    // the habit loop's "Reward" stage. Capped to today's wins only, and skipped
+    // entirely when there's nothing to report, per the master plan's "no push
+    // inflation" guardrail.
+    await this.pushEveningWrap(todayStr, closuresToday);
+  }
+
+  private async pushEveningWrap(dateStr: string, closuresToday: number): Promise<void> {
+    const entities = this.storage.loadEntitiesByType<Record<string, unknown>>('cycle_board');
+    if (entities.length === 0) return;
+
+    const cbData = (entities[0].state as Record<string, unknown>).data as Record<string, unknown> | undefined;
+    const wins = ((cbData?.MomentumWins as Array<{ description: string; date: string }>) ?? [])
+      .filter((w) => w.date === dateStr);
+
+    if (wins.length === 0 && closuresToday === 0) return;
+
+    const loopsPhrase = closuresToday > 0 ? `${closuresToday} loop${closuresToday === 1 ? '' : 's'} closed` : '';
+    const winsPhrase = wins.length > 0
+      ? `${wins.length} win${wins.length === 1 ? '' : 's'}: ${wins.slice(0, 3).map((w) => w.description).join(' · ')}`
+      : '';
+    const body = [winsPhrase, loopsPhrase].filter(Boolean).join(' · ');
+
+    notifyPhone('Evening wrap', body).catch(() => {});
   }
 
   /**
@@ -501,6 +779,28 @@ export class GovernanceDaemon {
    */
   private async runWorkQueue(): Promise<void> {
     const result = this.workController.checkTimeouts();
+
+    if (result.retried.length > 0) {
+      console.log(`[Daemon] Work queue: ${result.retried.length} job(s) retried after timeout: ${result.retried.join(', ')}`);
+
+      // LangGraph Skill Lattice Seq 7 (Supervisor): checkTimeouts() above already
+      // reset the job's clock and cleared its execution claim, but that alone
+      // doesn't re-run anything -- LangGraph has no auto-resume of its own
+      // (docs/LANGGRAPH_SKILL_LATTICE_PLAN.md, Honest Cost #2). This daemon's
+      // work queue is the external caller the plan names: for any retried job
+      // tagged metadata.kind === "lattice_resume", re-launch run_chain.py
+      // --resume for that thread_id so LangGraph resumes from its last
+      // checkpoint. Not a new ActionType/capability (TRUST_BOUNDARY.md) --
+      // 'system' job type and the /api/work/* routes already exist; this only
+      // wires an existing retry signal to an existing resumable CLI.
+      const active = this.workController.getLedger().active;
+      for (const jobId of result.retried) {
+        const job = active.find(j => j.job_id === jobId);
+        if (job && isLatticeResumeJob(job)) {
+          this.resumeLatticeJob(job);
+        }
+      }
+    }
 
     if (result.timed_out.length > 0) {
       console.log(`[Daemon] Work queue: ${result.timed_out.length} job(s) timed out: ${result.timed_out.join(', ')}`);
@@ -522,6 +822,54 @@ export class GovernanceDaemon {
 
     // Auto-execute prepared actions with 'auto' risk tier
     await this.autoExecutePreparedActions();
+
+    // Create pending_action + phone notify for notify/confirm-tier prepared actions
+    await this.notifyPreparedActions();
+  }
+
+  /**
+   * LangGraph Skill Lattice Seq 7 (Supervisor) -- fire-and-forget re-launch of
+   * a retried lattice_resume job. --resume + the original thread_id/db make
+   * LangGraph replay only the steps that hadn't checkpointed yet (Seq 3's
+   * AsyncSqliteSaver mechanism -- already proven not to re-run completed
+   * @tasks). Does not block the minute-tick work-queue job -- a real skill
+   * chain can run for minutes. Argv construction and python resolution live
+   * in lattice_resume.ts (pure, hermetically tested); this method is just the
+   * spawn + logging glue.
+   */
+  private resumeLatticeJob(job: ActiveJob): void {
+    let args: string[];
+    try {
+      args = buildResumeArgs(job.job_id, job.metadata);
+    } catch (err) {
+      console.error(`[Daemon] ${(err as Error).message}`);
+      return;
+    }
+
+    const latticeDir = path.join(this.repoRoot, 'tools', 'lattice');
+    const runner = resolveLatticePython(this.repoRoot);
+    const threadId = (job.metadata as { thread_id?: string }).thread_id;
+
+    console.log(`[Daemon] lattice_resume: re-launching thread_id=${threadId} for retried job ${job.job_id}`);
+    this.timeline.emit('WORK_RETRIED', 'governance_daemon', {
+      job_id: job.job_id,
+      thread_id: threadId,
+      lattice_resume: true,
+    });
+
+    const proc = spawn(runner, args, { cwd: latticeDir, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stderr = '';
+    proc.stderr?.on('data', (d) => { stderr += d.toString(); });
+    proc.on('error', (err) => {
+      console.error(`[Daemon] lattice_resume: failed to spawn resume for job ${job.job_id}: ${err.message}`);
+    });
+    proc.on('close', (code) => {
+      if (code !== 0) {
+        console.error(`[Daemon] lattice_resume: job ${job.job_id} resume exited ${code}: ${stderr.slice(-500)}`);
+      } else {
+        console.log(`[Daemon] lattice_resume: job ${job.job_id} resume completed`);
+      }
+    });
   }
 
   /**
@@ -599,6 +947,25 @@ export class GovernanceDaemon {
         executedThisCycle++;
         const title = triaged.task_title || triaged.label || 'Task';
 
+        // Drive the same closures registry / streak / closure-ratio / mode-transition
+        // pipeline that PUT /api/tasks/:id triggers on manual completion. Before this,
+        // auto-tier completions were invisible to the machinery mode governance reads.
+        try {
+          await processClosureEvent(
+            { storage: this.storage, timeline: this.timeline, cognitiveSensorDir: this.cognitiveSensorDir },
+            { title, outcome: 'closed' }
+          );
+        } catch (e) {
+          console.error(`[Daemon] Closure feedback failed for auto-executed task "${title}":`, e);
+        }
+
+        // Best-effort UASC audit trail entry. @CLOSE_LOOP's mark_task_done step is the
+        // identical PUT this loop already performed directly above — this call exists
+        // purely so auto-tier completions show up in UASC's run ledger. Fire-and-forget:
+        // 'auto' tier must stay reliable even if the UASC executor service is down.
+        executeOnUASC({ cmd: '@CLOSE_LOOP', inputs: { task_id: taskId, task_title: title } })
+          .catch(() => {});
+
         this.timeline.emit('AUTO_EXECUTED', 'governance_daemon', {
           action_type: 'complete_task',
           entity_id: taskId,
@@ -616,6 +983,101 @@ export class GovernanceDaemon {
         'auto_executions_today': autoExecToday + executedThisCycle,
         'daemon.last_auto_execution': now(),
       });
+    }
+  }
+
+  /**
+   * Phase 3C: create pending_action entities (+ phone notify) for prepared
+   * actions whose effective risk tier is 'notify' or 'confirm' — this is the
+   * first caller createPendingAction has ever had in the repo. 'auto'-tier
+   * actions stay on autoExecutePreparedActions()'s existing path above.
+   * Dedup: skip any entity that already has a PENDING pending_action, so the
+   * same task doesn't spawn a fresh one on every minute's tick.
+   */
+  private async notifyPreparedActions(): Promise<void> {
+    const systemStateEntities = this.storage.loadEntitiesByType<SystemStateData>('system_state');
+    if (systemStateEntities.length === 0) return;
+    const systemState = systemStateEntities[0];
+    const mode = systemState.state.mode as Mode;
+
+    const inboxEntities = this.storage.loadEntitiesByType<InboxData>('inbox');
+    const inbox = inboxEntities.length > 0
+      ? inboxEntities[0]
+      : {
+          entity: {
+            entity_id: 'synthetic-inbox-governance',
+            entity_type: 'inbox' as EntityType,
+            created_at: now(),
+            current_version: 1,
+            current_hash: '',
+            is_archived: false,
+          },
+          state: {
+            unread_count: 0,
+            priority_queue: [],
+            task_queue: [],
+            idea_queue: [],
+            last_activity_at: now(),
+          } satisfies InboxData,
+        };
+
+    const tasks = this.storage.loadEntitiesByType<TaskData>('task');
+    const threads = this.storage.loadEntitiesByType<ThreadData>('thread');
+    const drafts = this.storage.loadEntitiesByType<DraftData>('draft');
+    const existingPending = this.storage.loadEntitiesByType<PendingActionData>('pending_action');
+
+    const ctx: CockpitBuildContext = {
+      systemState,
+      inbox,
+      tasks,
+      threads,
+      drafts,
+      pendingAction: existingPending.length > 0 ? existingPending[0] : null,
+    };
+
+    const cockpit = buildCockpit(ctx);
+
+    const targetsAwaitingConfirmation = new Set(
+      existingPending
+        .filter((e) => e.state.status === 'PENDING')
+        .map((e) => e.state.target_entity_id)
+    );
+
+    for (const action of cockpit.prepared_actions) {
+      const tier = getEffectiveRiskTier(action.action_type as ActionType, mode);
+      if (tier === 'auto') continue;
+      if (targetsAwaitingConfirmation.has(action.entity_id)) continue;
+
+      // Per-action isolation (added 2026-07-06 after adversarial review of f6a0c61):
+      // a thrown error here previously propagated out of the whole loop, silently
+      // dropping every remaining prepared action for this tick with no per-action
+      // visibility. Each action now fails independently — the tick's dedup Set
+      // already reflects everything that succeeded, so a skipped action is just
+      // retried on the next minute's tick.
+      try {
+        const result = await createPendingAction(action, 'governance_daemon');
+        this.storage.saveEntity(result.entity, result.state);
+        this.storage.appendDelta(result.delta);
+        targetsAwaitingConfirmation.add(action.entity_id);
+
+        this.timeline.emit('PENDING_ACTION_CREATED', 'governance_daemon', {
+          pending_id: result.entity.entity_id,
+          action_type: action.action_type,
+          entity_id: action.entity_id,
+          label: action.label,
+          risk_tier: tier,
+          mode,
+        });
+
+        notifyPhone(
+          tier === 'confirm' ? 'Action needs confirmation' : 'Action ready',
+          action.label
+        ).catch(() => {});
+
+        console.log(`[Daemon] Pending action created (${tier}): "${action.label}"`);
+      } catch (error) {
+        console.error(`[Daemon] Failed to create pending action for "${action.label}":`, (error as Error).message);
+      }
     }
   }
 
@@ -897,6 +1359,157 @@ export class GovernanceDaemon {
   }
 
   /**
+   * Sensor Daily: run cognitive-sensor's run_daily.py once a day, ahead of
+   * Day Start. This is the front of the spine that ATLAS_HEADLESS_MAP.md
+   * flagged as unscheduled — without it, Optogon/cortex reason over stale or
+   * empty input. Non-critical by design: a failure here logs and moves on,
+   * it never blocks Day Start or seeding.
+   */
+  private async runSensorDaily(): Promise<void> {
+    const scriptPath = path.join(this.cognitiveSensorDir, 'run_daily.py');
+
+    if (!fs.existsSync(scriptPath)) {
+      throw new Error(`run_daily.py not found at: ${scriptPath}`);
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        if (this.sensorProcess) {
+          this.sensorProcess.kill();
+          this.sensorProcess = null;
+        }
+        reject(new Error(`Sensor daily pipeline timed out after ${this.SENSOR_DAILY_TIMEOUT_MS}ms`));
+      }, this.SENSOR_DAILY_TIMEOUT_MS);
+
+      this.sensorProcess = spawn('python', [scriptPath], {
+        cwd: this.cognitiveSensorDir,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      this.sensorProcess.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      this.sensorProcess.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      this.sensorProcess.on('close', async (code) => {
+        clearTimeout(timeout);
+        this.sensorProcess = null;
+
+        if (code === 0) {
+          await this.updateSystemState({
+            'daemon.last_sensor_daily': now(),
+            'daemon.sensor_daily_output': stdout.slice(-500),
+          });
+          this.timeline.emit('SENSOR_DAILY_COMPLETE', 'governance_daemon', {
+            output_length: stdout.length,
+          });
+          resolve();
+        } else {
+          reject(new Error(`run_daily.py exited with code ${code}: ${stderr.slice(-500)}`));
+        }
+      });
+
+      this.sensorProcess.on('error', (err) => {
+        clearTimeout(timeout);
+        this.sensorProcess = null;
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Zoekt Reindex (Layer 2 of the 3-layer index failsafe): refresh the zoekt
+   * code-search index once a day via reindex.py --if-stale. Complementary to the
+   * PreAtlas-ZoektReindex scheduled task (L1) and -Boot logon task (L3); the
+   * --if-stale gate means it only reindexes when the index is >24h stale, so the
+   * layers never double-run. Non-critical: runJob catches and logs failures.
+   */
+  private async runZoektReindex(): Promise<void> {
+    const reindexPy = process.env.ZOEKT_REINDEX_PY || 'C:\\Users\\bruke\\zoekt-win\\reindex.py';
+    const reindexCwd = path.dirname(reindexPy);
+
+    if (!fs.existsSync(reindexPy)) {
+      throw new Error(`reindex.py not found at: ${reindexPy}`);
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        if (this.zoektReindexProcess) {
+          this.zoektReindexProcess.kill();
+          this.zoektReindexProcess = null;
+        }
+        reject(new Error(`Zoekt reindex timed out after ${this.ZOEKT_REINDEX_TIMEOUT_MS}ms`));
+      }, this.ZOEKT_REINDEX_TIMEOUT_MS);
+
+      this.zoektReindexProcess = spawn('python', [reindexPy, '--if-stale'], {
+        cwd: reindexCwd,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      this.zoektReindexProcess.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      this.zoektReindexProcess.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      this.zoektReindexProcess.on('close', async (code) => {
+        clearTimeout(timeout);
+        this.zoektReindexProcess = null;
+
+        if (code === 0) {
+          await this.updateSystemState({
+            'daemon.last_zoekt_reindex': now(),
+            'daemon.zoekt_reindex_output': stdout.slice(-500),
+          });
+          this.timeline.emit('ZOEKT_REINDEX_COMPLETE', 'governance_daemon', {
+            output_length: stdout.length,
+          });
+          resolve();
+        } else {
+          reject(new Error(`reindex.py exited with code ${code}: ${stderr.slice(-500)}`));
+        }
+      });
+
+      this.zoektReindexProcess.on('error', (err) => {
+        clearTimeout(timeout);
+        this.zoektReindexProcess = null;
+        reject(err);
+      });
+    });
+  }
+
+  private async runAtlasMapReload(): Promise<void> {
+    const tokenPath = path.join(this.repoRoot, '.atlas-write-token');
+    try {
+      const token = fs.readFileSync(tokenPath, 'utf-8').trim();
+      const res = await fetch('http://127.0.0.1:3072/admin/reload', {
+        method: 'POST',
+        headers: { 'X-Atlas-Token': token },
+        signal: AbortSignal.timeout(10000),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        console.warn(`[Daemon] atlas_map_reload returned ${res.status}: ${JSON.stringify(body)}`);
+        return;
+      }
+      console.log(`[Daemon] atlas_map_reload OK — loaded_at=${body.loaded_at}, subsystems=${body.subsystem_count}`);
+    } catch (err) {
+      console.warn(`[Daemon] atlas_map_reload failed (non-critical):`, (err as Error).message);
+    }
+  }
+
+  /**
    * AUTONOMOUS MODE ENGINE
    *
    * Reads cognitive state, computes closure ratio, applies mode rules.
@@ -993,6 +1606,9 @@ export class GovernanceDaemon {
         buildAllowed,
         reason: `Autonomous recalc: ratio=${closureRatio.toFixed(2)}`,
       }).catch(() => {}); // Best-effort — don't block on NATS
+
+      // Push to phone — best-effort, never block the daemon loop
+      notifyPhone('Mode Changed', `${previousMode} → ${newMode} (ratio=${closureRatio.toFixed(2)})`).catch(() => {});
 
       // Re-run preparation engine immediately on mode change
       // so Command screen shows actions relevant to the new mode
@@ -1125,6 +1741,15 @@ export class GovernanceDaemon {
       case 'stall_check':
         this.state.last_stall_check = timestamp;
         break;
+      case 'sensor_daily':
+        this.state.last_sensor_daily = timestamp;
+        break;
+      case 'atlas_map_reload':
+        this.state.last_atlas_map_reload = timestamp;
+        break;
+      case 'zoekt_reindex':
+        this.state.last_zoekt_reindex = timestamp;
+        break;
     }
   }
 
@@ -1150,11 +1775,15 @@ export class GovernanceDaemon {
 let daemonInstance: GovernanceDaemon | null = null;
 
 /**
- * Get or create the daemon instance.
+ * Get or create the daemon instance. Pass workController when the caller
+ * (server.ts) already has its own instance mutating the same on-disk ledger
+ * via /api/work/* routes -- otherwise the daemon's checkTimeouts() operates
+ * on a permanently stale copy of jobs registered through the API (see the
+ * constructor's comment).
  */
-export function getDaemon(storage: Storage, repoRoot: string): GovernanceDaemon {
+export function getDaemon(storage: Storage, repoRoot: string, workController?: WorkController): GovernanceDaemon {
   if (!daemonInstance) {
-    daemonInstance = new GovernanceDaemon(storage, repoRoot);
+    daemonInstance = new GovernanceDaemon(storage, repoRoot, workController);
   }
   return daemonInstance;
 }

@@ -1,0 +1,13 @@
+{
+  "surface": "delta-kernel",
+  "headline": "Deterministic state engine · 6-mode FSM · the API hub",
+  "capabilities": [
+    { "id": "health",        "label": "Check the kernel health",          "direction": "read",  "exposure": "public",   "criticality": 0, "invoke": "GET /api/health" },
+    { "id": "view_state",    "label": "Read the current governance state","direction": "read",  "exposure": "agent",    "criticality": 0, "invoke": "GET /api/state" },
+    { "id": "next_directive","label": "Get the next Atlas directive",      "direction": "read",  "exposure": "agent",    "criticality": 0, "invoke": "GET /api/atlas/next-directive" },
+    { "id": "emit_signal",   "label": "Emit a signal into the kernel",     "direction": "write", "exposure": "agent",    "criticality": 1, "invoke": "POST /api/signals/ingest", "needs": ["signal"] },
+    { "id": "create_task",   "label": "Create a task",                     "direction": "write", "exposure": "agent",    "criticality": 1, "invoke": "POST /api/tasks", "needs": ["task"] },
+    { "id": "set_state",     "label": "Overwrite governance state (raw)",  "direction": "write", "exposure": "internal", "criticality": 2, "invoke": "PUT /api/state" },
+    { "id": "override_law",  "label": "Override a governance law (high-stakes)","direction": "write","exposure": "internal","criticality": 3, "invoke": "POST /api/law/override" }
+  ]
+}

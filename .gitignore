@@ -46,6 +46,12 @@ dist-ssr/
 .cache/
 .vite/
 
+# === atlas-map-api write-token (auto-generated shared secret, never commit) ===
+.atlas-write-token
+
+# === atlas-map-api role-token registry (maps tokens -> describe roles, never commit) ===
+.atlas-role-tokens.json
+
 # === Large data files (too big for git) ===
 # These are source data files, not version controlled
 services/cognitive-sensor/results.db
@@ -54,14 +60,37 @@ services/cognitive-sensor/conversations.json
 services/optogon/data/
 *.db-journal
 
+# === build_memory_db.py timestamped backups (large + auto-generated) ===
+services/cognitive-sensor/memory_db.*.bak.json
+services/cognitive-sensor/results.*.bak.db
+services/cognitive-sensor/conversations.*.bak.json
+
+# === Derivative outputs from extract_atlas_data.py / index_chatgpt_exports.py ===
+# These are regenerated from memory_db.json + cognitive_atlas.html and may contain
+# personal conversation titles. Re-generate locally; not version controlled.
+services/cognitive-sensor/atlas_graph.json
+services/cognitive-sensor/atlas_points.json
+services/cognitive-sensor/atlas_points_index.json
+services/cognitive-sensor/chatgpt_index.json
+
+# === Debug capture artifacts ===
+console-graph-errors.txt
+
+# === ingest.py per-run log (rebuilt each run) ===
+services/cognitive-sensor/ingest_log.json
+
 # === Generated state (recreated on run) ===
 .delta-fabric/
 .aegis-data/
 
 # === Generated HTML (rebuilt by Python pipeline) ===
 # Regenerate with: python build_cognitive_atlas.py / python build_cognitive_map.py
+# Regenerate galaxy with: python build_atlas_galaxy.py (needs atlas_points.json)
+# Regenerate explorer with: python build_atlas_explorer.py
 services/cognitive-sensor/cognitive_atlas.html
 services/cognitive-sensor/cognitive_map.html
+services/cognitive-sensor/atlas_galaxy.html
+services/cognitive-sensor/atlas_explorer.html
 
 # === Generated docs manifest (rebuilt by build_docs_manifest.py) ===
 docs_manifest.json
@@ -111,6 +140,14 @@ coverage/
 
 # === Testing artifacts ===
 *.png
+# ...but PWA/app icons are real product assets, not test screenshots. The blanket
+# *.png above silently dropped them (manifest.webmanifest 404'd its own icons).
+!services/droplist/ui/icons/*.png
+
+# === Coverage / pytest cache ===
+.coverage
+coverage.xml
+.pytest_cache/
 
 # === Archives at root ===
 /*.zip
@@ -136,6 +173,13 @@ backups/
 services/cognitive-sensor/atlas.db
 services/cognitive-sensor/*.db.bak-*
 services/uasc-executor/storage/*.db
+services/uasc-executor/storage/*.db-shm
+services/uasc-executor/storage/*.db-wal
+tools/lattice/lattice_runs.sqlite*
+tools/lattice/viewer_runs.sqlite*
+
+# === Weapon mission debris (variants of .weapon/) ===
+services/cognitive-sensor/.weapon-lsh-wire/
 
 # === Vendored binary distributions ===
 services/aegis-fabric/redis.zip
@@ -207,6 +251,16 @@ services/cognitive-sensor/harvest/
 services/cognitive-sensor/markdown_output/
 services/cognitive-sensor/fuzz-corpus/
 
+# === Local utilities (not for commit) ===
+sync_bridge.py
+.sync_bridge_config
+.sync_bridge.log
+
+# === gw map auto-refresh (post-commit hook) artifacts ===
+.groundwork/
+.gw-map-refresh.log
+.gw-map.lock
+
 # === cognitive-sensor cycleboard/brain runtime state ===
 services/cognitive-sensor/cycleboard/brain/cognitive_state.json
 services/cognitive-sensor/cycleboard/brain/closures.json
@@ -223,3 +277,26 @@ services/cognitive-sensor/cycleboard/brain/osint_feed.json
 services/cognitive-sensor/cycleboard/brain/prediction_results.json
 services/cognitive-sensor/cycleboard/brain/skills_metrics.json
 services/cognitive-sensor/cycleboard/brain/strategic_priorities.json
+
+# === Forensic / recon artifacts (regenerable, large) ===
+forensic-map.md
+docs/archive/2026-07/forensic-map.md
+.delta-scp/
+.weapon/
+
+# --- convergence pass 2026-06-25: junk & runtime state ---
+.tags-services
+*.tsbuildinfo
+.claire/
+festivals/.festival/.state/
+
+# === seam CARRY stage content-addressed bundle cache (tools/repomix/pack.py) ===
+.seam/
+
+# --- closure pass 2026-07-06: runtime logs & vendored skill packs ---
+data/dag_events.jsonl
+data/run_log.jsonl
+.claude/skills/
+
+# === Generated system map data (rebuilt by audit/imports/_build_map.py) ===
+**/system-map-data.js

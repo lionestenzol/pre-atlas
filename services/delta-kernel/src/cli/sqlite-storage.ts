@@ -11,6 +11,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Database from 'better-sqlite3';
+import { makeDatabase } from './db-driver';
 import { Entity, Delta, EntityType } from '../core/types';
 import { DictionaryState } from '../core/dictionary';
 
@@ -41,7 +42,9 @@ export class Storage {
     }
 
     const dbPath = path.join(this.dataDir, 'state.db');
-    this.db = new Database(dbPath);
+    // Driver-selectable (better-sqlite3 default; DELTA_DB_DRIVER=libsql for the
+    // Turso libSQL spine spike). Type stays better-sqlite3's Database.Database.
+    this.db = makeDatabase(dbPath);
 
     // WAL mode for concurrent reads during writes + busy timeout
     this.db.pragma('journal_mode = WAL');

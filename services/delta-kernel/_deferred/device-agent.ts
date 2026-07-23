@@ -17,9 +17,9 @@ import {
   ActuationReceiptData,
   ActuationOutcome,
   ControlMetrics,
-} from './types';
-import { now, generateUUID, computeHash, applyPatch } from './delta';
-import { ControlSurfaceStore } from './control-surface';
+} from '../src/core/types.js';
+import { now, generateUUID, computeHash, applyPatch } from '../src/core/delta.js';
+import { ControlSurfaceStore } from './control-surface.js';
 import {
   IntentStore,
   ControlMetricsTracker,
@@ -27,7 +27,7 @@ import {
   applyIntent,
   failIntent,
   createReceipt,
-} from './actuation';
+} from './actuation.js';
 
 // === VIRTUAL ACTUATOR (for testing) ===
 

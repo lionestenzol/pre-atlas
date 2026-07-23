@@ -55,10 +55,31 @@ class CycleBoardState {
         { id: 'fa5', name: 'Errands', definition: 'Logistics to reduce friction', color: '#EF4444', tasks: [] },
         { id: 'fa6', name: 'Network', definition: 'Expand and nurture connections', color: '#EC4899', tasks: [] }
       ],
+      // Each step carries a duration (minutes). Real clock times aren't stored
+      // here — they're derived by walking forward from the parent time
+      // block's start (see Helpers.computeRoutineStepTimes / calendar.js),
+      // so re-scheduling the block automatically re-times every step.
       Routine: {
-        Morning: ['Hydrate', 'Weather check', 'Oral care', 'Shower', 'Skincare', 'Dress', 'Pack essentials', 'Breakfast', 'Tidy space', 'Walk/Stretch', 'High-priority task'],
-        Commute: ['Grab essentials (keys, phone, wallet)', 'Weather check', 'Lock up and leave', 'Enter car/transport', 'Set navigation/playlist', 'Mental prep for day', 'Arrive 15 min early', 'Intentional downtime (10 min)', 'Gather belongings', 'Strategic downtime (5 min)', 'First task setup'],
-        Evening: ['Light tidy', 'Prep bag', 'Plan tomorrow', 'Gratitude entry']
+        Morning: [
+          { text: 'Hydrate', duration: 5 }, { text: 'Weather check', duration: 5 },
+          { text: 'Oral care', duration: 5 }, { text: 'Shower', duration: 10 },
+          { text: 'Skincare', duration: 5 }, { text: 'Dress', duration: 5 },
+          { text: 'Pack essentials', duration: 5 }, { text: 'Breakfast', duration: 10 },
+          { text: 'Tidy space', duration: 5 }, { text: 'Walk/Stretch', duration: 5 },
+          { text: 'High-priority task', duration: 15 }
+        ],
+        Commute: [
+          { text: 'Grab essentials (keys, phone, wallet)', duration: 2 }, { text: 'Weather check', duration: 1 },
+          { text: 'Lock up and leave', duration: 2 }, { text: 'Enter car/transport', duration: 3 },
+          { text: 'Set navigation/playlist', duration: 2 }, { text: 'Mental prep for day', duration: 5 },
+          { text: 'Arrive 15 min early', duration: 15 }, { text: 'Intentional downtime (10 min)', duration: 10 },
+          { text: 'Gather belongings', duration: 2 }, { text: 'Strategic downtime (5 min)', duration: 5 },
+          { text: 'First task setup', duration: 3 }
+        ],
+        Evening: [
+          { text: 'Light tidy', duration: 10 }, { text: 'Prep bag', duration: 5 },
+          { text: 'Plan tomorrow', duration: 10 }, { text: 'Gratitude entry', duration: 5 }
+        ]
       },
       DayTypeTemplates: {
         A: {
@@ -156,7 +177,8 @@ class CycleBoardState {
       },
       onboardingDone: false,
       calendarView: 'month',
-      calendarDate: new Date().toISOString().slice(0, 10)
+      calendarDate: new Date().toISOString().slice(0, 10),
+      UI: { dailyView: 'full' }
     };
   }
 
@@ -251,6 +273,19 @@ class CycleBoardState {
             !this.state.DayTypeTemplates.B?.timeBlocks?.length ||
             !this.state.DayTypeTemplates.C?.timeBlocks?.length) {
           this.state.DayTypeTemplates = this.getDefaultState().DayTypeTemplates;
+        }
+        if (!this.state.UI) {
+          this.state.UI = { dailyView: 'minimal' };
+        }
+        // Routine steps used to be plain strings with no timing. Upgrade
+        // any saved data still in that shape so calendar sync can derive
+        // real times for each step.
+        if (this.state.Routine) {
+          Object.keys(this.state.Routine).forEach(name => {
+            this.state.Routine[name] = (this.state.Routine[name] || []).map(step =>
+              typeof step === 'string' ? { text: step, duration: 5 } : step
+            );
+          });
         }
       }
     } catch (e) {

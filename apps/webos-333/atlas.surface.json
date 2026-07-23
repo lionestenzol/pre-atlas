@@ -1,0 +1,7 @@
+{
+  "surface": "webos-333",
+  "headline": "Stub (kind=ui) — experimental HTML, not production; do not build on this.",
+  "kind": "ui",
+  "lifecycle": "stub",
+  "capabilities": []
+}

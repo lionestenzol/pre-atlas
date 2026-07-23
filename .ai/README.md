@@ -34,7 +34,7 @@ This directory is **Plan B**: the same rules and decisions, in formats any tool 
     cursor.md            # .cursorrules format
     human.md             # Human developer onboarding
 
-DECISIONS.md             # (repo root) Load-bearing architectural decisions
+docs/archive/2026-07/DECISIONS.md  # Archived architectural decisions (27 ADRs)
 ENGINEERING_HANDBOOK.md  # (repo root) All rules in one file
 ```
 
@@ -45,12 +45,12 @@ Already loaded automatically via `~/.claude/rules/` and `CLAUDE.md`. The `.ai/` 
 
 ### ChatGPT (Custom GPT or API)
 1. Copy `providers/chatgpt.md` into Custom Instructions or system prompt
-2. For a Custom GPT, upload `ENGINEERING_HANDBOOK.md` + `DECISIONS.md` as knowledge files
+2. For a Custom GPT, upload `ENGINEERING_HANDBOOK.md` + `docs/archive/2026-07/DECISIONS.md` as knowledge files
 3. For API usage, include `ENGINEERING_HANDBOOK.md` content in the system message
 
 ### Google Gemini
 1. Copy `providers/gemini.md` into the system instruction field
-2. Attach `ENGINEERING_HANDBOOK.md` and `DECISIONS.md` as context
+2. Attach `ENGINEERING_HANDBOOK.md` and `docs/archive/2026-07/DECISIONS.md` as context
 
 ### Cursor
 1. Copy `providers/cursor.md` to `.cursorrules` at repo root
@@ -62,7 +62,7 @@ Already loaded automatically via `~/.claude/rules/` and `CLAUDE.md`. The `.ai/` 
 
 ### Human developer (no AI)
 1. Read `providers/human.md` as your onboarding guide
-2. `DECISIONS.md` explains why things are built this way
+2. `docs/archive/2026-07/DECISIONS.md` explains why things are built this way
 3. Individual rules in `rules/` are the building codes
 
 ## Relationship to CLAUDE.md
@@ -71,4 +71,4 @@ Already loaded automatically via `~/.claude/rules/` and `CLAUDE.md`. The `.ai/` 
 
 ## Maintenance
 
-When a rule changes in `~/.claude/rules/`, update the corresponding file in `.ai/rules/`. When a load-bearing decision is made, add it to `DECISIONS.md`. The `providers/` files are generated from the rules — regenerate them when rules change significantly.
+When a rule changes in `~/.claude/rules/`, update the corresponding file in `.ai/rules/`. When a load-bearing decision is made, add it to `docs/archive/2026-07/DECISIONS.md`. The `providers/` files are generated from the rules — regenerate them when rules change significantly.

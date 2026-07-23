@@ -163,9 +163,14 @@ def main():
 
     if len(ideas) == 0:
         print("No ideas to deduplicate.")
+        # Preserve upstream stats so ExcavatedIdeas.v1.json validation passes.
+        # See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
+        upstream_meta = data.get("metadata", {})
         output = {
             "metadata": {
                 "generated_at": __import__("datetime").datetime.now().isoformat(),
+                "total_conversations_scanned": upstream_meta.get("total_conversations_scanned", 0),
+                "total_ideas_extracted": upstream_meta.get("total_ideas_extracted", 0),
                 "ideas_before_dedup": 0,
                 "ideas_after_dedup": 0,
                 "merge_groups": 0,
@@ -276,10 +281,16 @@ def main():
     # Sort by mention count (most recurring first)
     deduped.sort(key=lambda x: x["mention_count"], reverse=True)
 
-    # Build output
+    # Build output. Preserve upstream stats (total_conversations_scanned,
+    # total_ideas_extracted) so the shared ExcavatedIdeas.v1.json schema
+    # validates — the deduplicator hands the same shape to the classifier
+    # plus its own dedup metrics. See ~/.claude/rules/common/code-as-furniture.md.
+    upstream_meta = data.get("metadata", {})
     output = {
         "metadata": {
             "generated_at": __import__("datetime").datetime.now().isoformat(),
+            "total_conversations_scanned": upstream_meta.get("total_conversations_scanned", 0),
+            "total_ideas_extracted": upstream_meta.get("total_ideas_extracted", len(ideas)),
             "ideas_before_dedup": len(ideas),
             "ideas_after_dedup": len(deduped),
             "merge_groups": merge_groups,
@@ -290,7 +301,7 @@ def main():
     }
 
     # Validate before write
-    require_valid(output, "ExcavatedIdeas.v1.json", "deduplicator")
+    require_valid(output, "IdeasDeduplicated.v1.json", "deduplicator")
 
     # Write
     out_path = BASE / "ideas_deduplicated.json"

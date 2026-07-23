@@ -1,0 +1,56 @@
+{
+  "surface": "cortex",
+  "headline": "Autonomous execution layer that runs gated tasks and inPACT automations against delta-kernel.",
+  "capabilities": [
+    {
+      "id": "health",
+      "label": "Check upstream health",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /health"
+    },
+    {
+      "id": "loop_status",
+      "label": "Read the execution loop status",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /status"
+    },
+    {
+      "id": "recent_tasks",
+      "label": "List recently executed tasks",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /tasks/recent"
+    },
+    {
+      "id": "inpact_status",
+      "label": "Read inPACT scheduler last-run summary",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /inpact/status"
+    },
+    {
+      "id": "inpact_run",
+      "label": "Manually fire an inPACT automation module",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "POST /inpact/run/{module}",
+      "needs": ["module"]
+    },
+    {
+      "id": "submit_task",
+      "label": "Submit a task to the executor (bypasses delta-kernel queue)",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 3,
+      "invoke": "POST /tasks/submit",
+      "needs": ["task"]
+    }
+  ]
+}

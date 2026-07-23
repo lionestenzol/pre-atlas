@@ -1,0 +1,45 @@
+[project]
+name = "atlas-map-api"
+version = "0.1.0"
+description = "Live HTTP API over the Pre Atlas system map — exposes systems, neighbors, paths, locate, search, signals. The 'GPS for code' substrate that CLI, MCP, and the viewer all compose on."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "rapidfuzz>=3.10",
+    "fastmcp>=0.4",
+    "psutil>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.27",
+]
+# LangGraph Skill Lattice (docs/LANGGRAPH_SKILL_LATTICE_PLAN.md) Seq 2+3.
+# Deliberately isolated from the core service's runtime deps -- langgraph
+# hard-pins langchain-core>=1.4.7,<2, which conflicts with the langchain 0.3.x
+# stack (langchain-community/-chroma/-ollama) already installed globally on
+# this machine for unrelated tools. Install into a venv (or this project's
+# own .venv), never into the global site-packages.
+lattice = [
+    "jsonschema>=4.25",
+    "langgraph>=1.2.9",
+    "langgraph-checkpoint-sqlite>=3.1.0",
+    "claude-agent-sdk>=0.2.120",
+]
+
+[project.scripts]
+atlas-map-api = "atlas_map_api.server:run"
+atlas-map-mcp = "atlas_map_api.mcp_server:run"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

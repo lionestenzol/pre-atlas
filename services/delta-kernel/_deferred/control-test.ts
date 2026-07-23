@@ -14,13 +14,13 @@ import {
   ActuatorStateData,
   ActuationIntentData,
   Mode,
-} from './types';
-import { generateUUID, now, computeHash, applyPatch } from './delta';
+} from '../src/core/types.js';
+import { generateUUID, now, computeHash, applyPatch } from '../src/core/delta.js';
 import {
   ControlSurfaceStore,
   buttonWidget,
   sliderWidget,
-} from './control-surface';
+} from './control-surface.js';
 import {
   IntentStore,
   ControlMetricsTracker,
@@ -28,8 +28,8 @@ import {
   processNewIntent,
   PolicyContext,
   resetRateLimits,
-} from './actuation';
-import { DeviceAgent, VirtualActuator } from './device-agent';
+} from './actuation.js';
+import { DeviceAgent, VirtualActuator } from './device-agent.js';
 
 // === TEST SETUP ===
 

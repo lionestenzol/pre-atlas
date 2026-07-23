@@ -9,7 +9,7 @@
  * Vendored utilities from atlas.ts (2026-04-10).
  */
 
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -23,6 +23,24 @@ const API = 'http://localhost:3001';
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const BRAIN_DIR = path.resolve(REPO_ROOT, 'services', 'cognitive-sensor', 'cycleboard', 'brain');
 const ATLAS_DIR = path.join(os.homedir(), '.atlas');
+
+/**
+ * Resolve how to invoke the `codex` CLI without ever going through a shell.
+ * On POSIX, npm's bin symlink is directly executable. On Windows, `codex`
+ * resolves to an npm .cmd shim, which cannot be exec'd without a shell — so
+ * this finds the real codex.js the shim wraps (same relative layout the shim
+ * itself uses) and returns invoking node.exe on it directly instead.
+ */
+function resolveCodexEntry(): { cmd: string; prefixArgs: string[] } {
+  if (process.platform !== 'win32') return { cmd: 'codex', prefixArgs: [] };
+  const shim = (process.env.PATH ?? '').split(path.delimiter)
+    .map((dir) => path.join(dir, 'codex.cmd'))
+    .find((p) => fs.existsSync(p));
+  if (!shim) throw new Error('codex.cmd not found on PATH');
+  const entry = path.join(path.dirname(shim), 'node_modules', '@openai', 'codex', 'bin', 'codex.js');
+  if (!fs.existsSync(entry)) throw new Error(`codex entry script not found at expected path: ${entry}`);
+  return { cmd: process.execPath, prefixArgs: [entry] };
+}
 
 // ── Output ──
 
@@ -63,6 +81,32 @@ async function apiFetch(urlPath: string, options: RequestInit = {}): Promise<any
   if (options.body) headers['Content-Type'] = 'application/json';
   const res = await fetch(`${API}${urlPath}`, { ...options, headers });
   return res.json();
+}
+
+// ── memory-hub (Campaign II: history search wired into daily surfaces) ──
+
+const MEMORY_HUB_URL = process.env.MEMORY_HUB_URL || 'http://127.0.0.1:3071/search';
+
+/**
+ * Best-effort lookup against memory-hub's merged search (droplist + cognitive-
+ * sensor conversation history + idea registry). Same doctrine as search-stack's
+ * memory provider: unreachable/empty backend returns [], never throws — the
+ * caller shouldn't degrade just because memory-hub isn't running.
+ */
+async function searchMemoryHub(query: string, maxResults = 3): Promise<any[]> {
+  if (!query) return [];
+  try {
+    const res = await fetch(MEMORY_HUB_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: query, max_results: maxResults }),
+    });
+    if (!res.ok) return [];
+    const body = await res.json() as { results?: any[] };
+    return body.results ?? [];
+  } catch {
+    return [];
+  }
 }
 
 // ── Brain files ──
@@ -633,9 +677,14 @@ async function compoundMorning(): Promise<any> {
   await completeWork(work.job_id);
 
   const decision = decide(state);
+  const memoryQuery = plan.baseline_goal.text || focusAreas[0]?.name || focusAreas[0]?.title || '';
+  const memoryContext = await searchMemoryHub(memoryQuery);
   return {
     executed: true, dayType, date, steps,
-    briefing: { mode: state.mode, energy, directive: state.directive, open_loops: state.open_loops, top_actions: [decision] },
+    briefing: {
+      mode: state.mode, energy, directive: state.directive, open_loops: state.open_loops, top_actions: [decision],
+      memory_context: memoryContext.map((h: any) => ({ source: h.source, snippet: h.snippet, relevance: h.relevance })),
+    },
   };
 }
 
@@ -1025,6 +1074,22 @@ async function compoundWeeklyBriefing(): Promise<any> {
       ? workHistory.map((j: any) => `- **${j.title}** (${j.outcome}, ${Math.round((j.duration_ms || 0) / 1000)}s)`)
       : ['- No work completed this week']),
     '',
+    '## Flywheel',
+    ...(() => {
+      const flywheelJobs = workHistory.filter((j: any) => j.metadata?.source === 'idea_flywheel');
+      const shipped = flywheelJobs.filter((j: any) => j.outcome === 'completed').length;
+      const taps = flywheelJobs.length;
+      const humanMin = taps * 0.5;
+      const ratio = shipped > 0 ? (humanMin / shipped).toFixed(1) : 'n/a';
+      return shipped > 0 || taps > 0
+        ? [
+            `- **${shipped}** ideas shipped via flywheel`,
+            `- **${humanMin}** est. human-minutes (${taps} tap${taps === 1 ? '' : 's'} x 0.5 min)`,
+            `- **${ratio}** human-min per shipped item`,
+          ]
+        : ['- No flywheel activity this week'];
+    })(),
+    '',
     '## Wins',
     ...(wins.length ? wins.map((w: any) => `- ${w.text} (${w.date})`) : ['- No wins logged']),
     '',
@@ -1275,7 +1340,6 @@ async function compoundWork(args: string[]): Promise<any> {
   }
 
   // 4. Execute via Codex
-  const escapedPrompt = prompt.replace(/"/g, '\\"').replace(/\n/g, '\\n');
   let output = '';
   let outcome = 'completed';
   const t0 = performance.now();
@@ -1284,9 +1348,22 @@ async function compoundWork(args: string[]): Promise<any> {
     // Heartbeat before long execution
     await apiFetch('/api/work/heartbeat', { method: 'POST', body: JSON.stringify({ job_id, executor_id: 'atlas-ai-worker' }) }).catch(() => {});
 
-    output = execSync(
-      `codex exec --dangerously-bypass-approvals-and-sandbox -C "${REPO_ROOT}" "${escapedPrompt}"`,
-      { timeout: 120000, encoding: 'utf-8', maxBuffer: 1024 * 1024 },
+    // Job title/instructions (and therefore `prompt`) originate from the work
+    // queue, not a fixed literal, so it must never be interpolated into a shell
+    // command string. `codex` resolves to an npm .cmd shim on Windows though —
+    // execFileSync(cmd, args, {shell:false}) refuses to run a .cmd at all
+    // (EINVAL), and {shell:true} reopens cmd.exe metacharacter parsing (`&`/`|`/
+    // backtick) even with args passed as an array — verified empirically, not
+    // assumed: a payload containing `& echo x > y.txt` executed the injected
+    // command under shell:true+array. The safe path bypasses cmd.exe entirely —
+    // resolveCodexEntry finds the real codex.js the shim wraps, and it's invoked
+    // via process.execPath (a genuine binary) with shell:false, so the OS never
+    // parses the argument string at all; prompt content cannot break out.
+    const { cmd, prefixArgs } = resolveCodexEntry();
+    output = execFileSync(
+      cmd,
+      [...prefixArgs, 'exec', '--dangerously-bypass-approvals-and-sandbox', '-C', REPO_ROOT, prompt],
+      { shell: false, timeout: 120000, encoding: 'utf-8', maxBuffer: 1024 * 1024 },
     ).trim();
 
     // Cap output

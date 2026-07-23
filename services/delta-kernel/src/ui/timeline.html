@@ -188,6 +188,21 @@
 <div class="timeline" id="timeline"></div>
 
 <script>
+let API_TOKEN = null;
+
+async function getAuthHeaders() {
+  if (API_TOKEN === null) {
+    const res = await fetch('/api/auth/token');
+    const { token } = await res.json();
+    API_TOKEN = token || '';
+  }
+  return API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {};
+}
+
+async function authFetch(url) {
+  return fetch(url, { headers: await getAuthHeaders() });
+}
+
 function formatTime(ts) {
   const d = new Date(ts);
   return d.toLocaleTimeString() + ' ' + d.toLocaleDateString();
@@ -218,7 +233,7 @@ function formatData(data) {
 
 async function loadStats() {
   try {
-    const res = await fetch('/api/timeline/stats');
+    const res = await authFetch('/api/timeline/stats');
     const stats = await res.json();
 
     document.getElementById('stats').innerHTML = `
@@ -252,8 +267,10 @@ async function refresh() {
   if (type) url += `&type=${type}`;
 
   try {
-    const res = await fetch(url);
+    const res = await authFetch(url);
     const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
     if (data.events.length === 0) {
       document.getElementById('timeline').innerHTML = '<div class="empty">No events yet</div>';

@@ -1,0 +1,130 @@
+{
+ "id": "b9f3021f-2881-4cfd-bfb8-37efa2f2be2d",
+ "repo_url": "https://github.com/sindresorhus/slugify",
+ "status": "complete",
+ "compressed_state": {
+  "protocol": "DELTA_SCP",
+  "version": "1",
+  "status": "compressed",
+  "repo": "https://github.com/sindresorhus/slugify",
+  "generated_at": "2026-06-25T13:17:44.808Z",
+  "languages": {
+   "markdown": 2,
+   "yaml": 1,
+   "typescript": 1,
+   "javascript": 3,
+   "json": 1
+  },
+  "symbolic_nodes": [
+   {
+    "path": ".github/security.md",
+    "language": "markdown",
+    "bytes": 179,
+    "tokens_est": 45,
+    "symbols": []
+   },
+   {
+    "path": ".github/workflows/main.yml",
+    "language": "yaml",
+    "bytes": 421,
+    "tokens_est": 106,
+    "symbols": []
+   },
+   {
+    "path": "index.d.ts",
+    "language": "typescript",
+    "bytes": 5463,
+    "tokens_est": 1355,
+    "symbols": [
+     {
+      "kind": "type",
+      "name": "Options",
+      "line": 1
+     },
+     {
+      "kind": "type",
+      "name": "CountableSlugify",
+      "line": 220
+     },
+     {
+      "kind": "function",
+      "name": "slugifyWithCounter",
+      "line": 286
+     }
+    ]
+   },
+   {
+    "path": "index.js",
+    "language": "javascript",
+    "bytes": 4137,
+    "tokens_est": 1035,
+    "symbols": [
+     {
+      "kind": "function",
+      "name": "slugifyWithCounter",
+      "line": 112
+     }
+    ]
+   },
+   {
+    "path": "overridable-replacements.js",
+    "language": "javascript",
+    "bytes": 139,
+    "tokens_est": 34,
+    "symbols": []
+   },
+   {
+    "path": "package.json",
+    "language": "json",
+    "bytes": 1066,
+    "tokens_est": 267,
+    "symbols": []
+   },
+   {
+    "path": "readme.md",
+    "language": "markdown",
+    "bytes": 5763,
+    "tokens_est": 1430,
+    "symbols": []
+   },
+   {
+    "path": "test.js",
+    "language": "javascript",
+    "bytes": 9391,
+    "tokens_est": 2316,
+    "symbols": []
+   }
+  ],
+  "stats": {
+   "files_scanned": 8,
+   "files_included": 8,
+   "bytes": 26559,
+   "raw_tokens_est": 6588,
+   "compressed_tokens_est": 298,
+   "token_yield": 6290,
+   "compression_ratio": 0.0452
+  }
+ },
+ "graph": {
+  "node_count": 12,
+  "edge_count": 2,
+  "imports": [
+   {
+    "from": "index.js",
+    "to": "overridable-replacements.js"
+   },
+   {
+    "from": "test.js",
+    "to": "index.js"
+   }
+  ],
+  "node_types": {
+   "file": 8,
+   "type_definition": 2,
+   "function": 2
+  }
+ },
+ "error_log": null,
+ "created_at": "2026-06-25T13:17:44.808Z",
+ "updated_at": "2026-06-25T13:17:45.671Z"
+}

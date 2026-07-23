@@ -1,0 +1,171 @@
+{
+  "audit_name": "Track 2A: Sequential reinvention scan",
+  "date": "2026-05-29",
+  "services_scanned": [
+    "services/cognitive-sensor",
+    "services/aegis-fabric",
+    "services/canvas-engine",
+    "services/cortex",
+    "services/optogon",
+    "apps/code-converter",
+    "services/uasc-executor",
+    "services/perception",
+    "services/triangulation"
+  ],
+  "services_skipped": [
+    "services/crucix (in A6)",
+    "services/ws-gateway (in A6)",
+    "services/delta-kernel Mode FSM (already in swap-backlog.md)",
+    "apps/inpact onboarding.html goStep (already in swap-backlog.md)",
+    "apps/inpact js/screens.js state (already in swap-backlog.md)"
+  ],
+  "candidates": [
+    {
+      "service": "cognitive-sensor",
+      "file": "triage_server.py",
+      "line_range": "23, 120-197",
+      "category": "http framework",
+      "current_implementation": "raw http.server with SimpleHTTPRequestHandler and manual do_POST/do_GET dispatch",
+      "library_canonical": "fastapi",
+      "library_alts": ["flask", "starlette"],
+      "confidence_swap_safe": "MEDIUM",
+      "moat_risk": "LOW",
+      "notes": "Thin triage UI server with 2 endpoints; moat_risk LOW but swap requires adjusting the background-thread sync model to async or workers.",
+      "verified": true,
+      "evidence": "imports `from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer` at line 23; class TriageHandler(SimpleHTTPRequestHandler) at line 120; manual do_POST at line 165; manual do_GET at line 140"
+    },
+    {
+      "service": "cognitive-sensor",
+      "file": "agent_excavator.py",
+      "line_range": "142-155",
+      "category": "text chunking",
+      "current_implementation": "hand-rolled word-boundary overlapping chunker: split().words, manual start/end index loop",
+      "library_canonical": "langchain-text-splitters",
+      "library_alts": ["semantic-text-splitter", "tiktoken with stride"],
+      "confidence_swap_safe": "HIGH",
+      "moat_risk": "NONE",
+      "notes": "Pure word-count chunker with overlap. Identical copy also exists in agent_book_miner.py (line 196-209) — two files, same function, zero differentiation.",
+      "verified": true,
+      "evidence": "def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP) at line 142; word split loop at lines 148-154; exact duplicate at agent_book_miner.py:196-208"
+    },
+    {
+      "service": "cognitive-sensor",
+      "file": "agent_book_miner.py",
+      "line_range": "196-209",
+      "category": "text chunking",
+      "current_implementation": "duplicate of agent_excavator.py chunk_text — identical overlapping word chunker",
+      "library_canonical": "langchain-text-splitters",
+      "library_alts": ["semantic-text-splitter"],
+      "confidence_swap_safe": "HIGH",
+      "moat_risk": "NONE",
+      "notes": "This is the second copy of the same hand-roll. Consolidating both to one library call eliminates the duplication.",
+      "verified": true,
+      "evidence": "def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP) at line 196; body is word-split loop identical to agent_excavator.py:142-155"
+    },
+    {
+      "service": "aegis-fabric",
+      "file": "src/gateway/rate-limiter.ts",
+      "line_range": "1-65",
+      "category": "caching / rate limiting",
+      "current_implementation": "hand-rolled token-bucket rate limiter: Map<string, Bucket> with manual refill-on-consume math",
+      "library_canonical": "rate-limiter-flexible",
+      "library_alts": ["bottleneck", "@express-rate-limit/memory-store"],
+      "confidence_swap_safe": "MEDIUM",
+      "moat_risk": "LOW",
+      "notes": "Token bucket per tenant+agent is standard. rate-limiter-flexible covers this exactly. Swap risk: multi-key composite (tenantId:agentId) would need mapping, but the library supports it.",
+      "verified": true,
+      "evidence": "class RateLimiter with Map<string, Bucket> at line 18; manual token refill: `bucket.tokens = Math.min(bucket.max, bucket.tokens + elapsed * bucket.refillRate)` at line 43; full 65-line implementation"
+    },
+    {
+      "service": "aegis-fabric",
+      "file": "src/observability/logger.ts",
+      "line_range": "1-48",
+      "category": "logging",
+      "current_implementation": "hand-rolled structured JSON logger: LEVEL_ORDER map, log() function, logger object with debug/info/warn/error",
+      "library_canonical": "pino",
+      "library_alts": ["winston"],
+      "confidence_swap_safe": "HIGH",
+      "moat_risk": "NONE",
+      "notes": "48-line custom logger reinventing what pino does. No aegis-specific fields that require custom logic. Direct swap.",
+      "verified": true,
+      "evidence": "LEVEL_ORDER constant at line 11; custom log() at line 21; logger object at line 43; outputs JSON via console.log/console.error"
+    },
+    {
+      "service": "aegis-fabric",
+      "file": "src/policies/decision-cache.ts",
+      "line_range": "1-63",
+      "category": "caching",
+      "current_implementation": "hand-rolled TTL in-memory cache: Map<string, CacheEntry> with expiresAt timestamp and manual expiry checks",
+      "library_canonical": "lru-cache",
+      "library_alts": ["node-cache", "keyv"],
+      "confidence_swap_safe": "HIGH",
+      "moat_risk": "NONE",
+      "notes": "Standard TTL cache pattern. lru-cache v10 has native TTL support and bounded size. The domain-key structure (tenant:agent:action:mode) maps cleanly to a string key.",
+      "verified": true,
+      "evidence": "class DecisionCache with `private cache: Map<string, CacheEntry>` at line 16; `expiresAt: Date.now() + ttlMs` at line 20; manual expiry check at line 32"
+    },
+    {
+      "service": "services/uasc-executor",
+      "file": "server.py",
+      "line_range": "13, 204-267",
+      "category": "http framework",
+      "current_implementation": "raw http.server with BaseHTTPRequestHandler; manual do_POST/do_GET dispatch; manual JSON serialization in _send_json",
+      "library_canonical": "fastapi",
+      "library_alts": ["flask", "starlette"],
+      "confidence_swap_safe": "HIGH",
+      "moat_risk": "LOW",
+      "notes": "UASC was explicitly noted as 'raw http.server — NO framework declared' in the task brief. 4 endpoints, HMAC auth middleware. FastAPI swap is straightforward.",
+      "verified": true,
+      "evidence": "import `from http.server import HTTPServer, BaseHTTPRequestHandler` at line 13; class RequestHandler(BaseHTTPRequestHandler) at line 204; manual do_POST at line 207; manual do_GET at line 213; manual JSON response at line 260-265"
+    },
+    {
+      "service": "services/cortex",
+      "file": "src/cortex/inpact/scheduler.py",
+      "line_range": "39-109",
+      "category": "scheduling / cron",
+      "current_implementation": "hand-rolled asyncio tick-loop scheduler: while-not-stop, tick counter, modulo for cadence, hour-of-day comparisons for time-of-day jobs",
+      "library_canonical": "apscheduler",
+      "library_alts": ["aiocron", "fastapi-scheduler"],
+      "confidence_swap_safe": "LOW",
+      "moat_risk": "MEDIUM",
+      "notes": "The scheduler cadence map (tick modulo + hour-of-day) is simple but the integration with asyncio cancellation and the stop event is load-bearing. APScheduler v4 (async) covers this but the migration would require restructuring the run() coroutine. Flag but defer.",
+      "verified": true,
+      "evidence": "class InpactScheduler with asyncio.Event _stop at line 43; while not self._stop.is_set() loop at line 101; tick modulo cadence at lines 73-78; hour-of-day checks at lines 81-88"
+    }
+  ],
+  "clean_subsystems": [
+    "services/canvas-engine (uses zod+ajv+express correctly; only console.log is in server.ts startup, not app code)",
+    "services/cortex (uses fastapi+pydantic+nats-py; no hand-rolls in core execution path)",
+    "services/optogon (uses fastapi+pydantic+jsonschema; session store manual cache is domain-appropriate wrapper over sqlite)",
+    "apps/code-converter (fastapi+pydantic, 2-file service, clean)",
+    "services/perception (pure library, zero runtime deps, stubs only — no hand-rolls yet)",
+    "services/triangulation (numpy-only visual similarity is integration-depth moat, not a solved-category swap)"
+  ],
+  "notes": {
+    "crucix_bridge_polling": "cognitive-sensor/crucix_bridge.py has a while-True/time.sleep polling loop (line 348) but this is a single-purpose bridge script, not a general scheduler — low ROI to swap.",
+    "cognitive_sensor_logging": "cognitive-sensor uses Python stdlib `logging` throughout (~109 files). This is appropriate stdlib use, not a hand-roll. loguru would be a quality-of-life upgrade but is not a reinvention finding."
+  },
+  "summary": {
+    "total_candidates": 8,
+    "high_confidence": 4,
+    "medium_confidence": 2,
+    "low_confidence": 1,
+    "by_category": {
+      "http_framework": 2,
+      "text_chunking": 2,
+      "logging": 1,
+      "caching": 2,
+      "scheduling": 1
+    },
+    "by_service": {
+      "cognitive-sensor": 3,
+      "aegis-fabric": 3,
+      "uasc-executor": 1,
+      "cortex": 1
+    },
+    "duplicate_hand_rolls": 1,
+    "moat_risk_high": 0,
+    "moat_risk_medium": 1,
+    "moat_risk_low_or_none": 7
+  }
+}

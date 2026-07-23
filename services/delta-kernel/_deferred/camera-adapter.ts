@@ -8,7 +8,7 @@
  * Everything else (extraction, deltas, sync, replay) already exists.
  */
 
-import { SimulatedFrame, TilePixels, DetectedBlob } from './camera-extractor';
+import { SimulatedFrame, TilePixels, DetectedBlob } from './camera-extractor.js';
 
 // === BROWSER CAMERA CAPTURE ===
 

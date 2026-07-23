@@ -24,6 +24,12 @@ The API runs on `http://localhost:3001`.
 
 ---
 
+## GOVERNANCE_DAEMON flag
+
+The governance daemon (11 cron jobs: heartbeat, refresh, day start/end, mode recalc, work queue, agent pipeline, preparation, stall check, sensor daily, atlas map reload) only starts when `GOVERNANCE_DAEMON=1` is set. Unset, the API server runs with the daemon off and logs `[Daemon] governance daemon disabled`. `scripts/start_atlas.ps1` sets the flag, so fleet starts keep today's behavior; ad-hoc `npx tsx src/api/server.ts` starts are daemon-off by default.
+
+---
+
 ## Architecture
 
 ```

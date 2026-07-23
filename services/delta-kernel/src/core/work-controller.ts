@@ -14,6 +14,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getTimelineLogger, TimelineLogger } from './timeline-logger.js';
 import { emitEvent } from './event-emitter.js';
+import { notifyPhone } from './notify.js';
 
 // === TYPES ===
 
@@ -72,6 +73,7 @@ export interface WorkLedgerConfig {
   max_queue_depth: number;
   default_timeout_ms: number;
   allow_ai_in_closure_mode: boolean;
+  max_retry_attempts: number;
 }
 
 export interface WorkLedger {
@@ -83,6 +85,7 @@ export interface WorkLedger {
     total_failed: number;
     total_abandoned: number;
     total_denied: number;
+    total_retried: number;
     avg_duration_ms: number;
     total_cost_usd: number;
     total_tokens_used: number;
@@ -256,7 +259,13 @@ export class WorkController {
   private loadLedger(): WorkLedger {
     try {
       if (fs.existsSync(this.ledgerPath)) {
-        return JSON.parse(fs.readFileSync(this.ledgerPath, 'utf-8'));
+        const loaded = JSON.parse(fs.readFileSync(this.ledgerPath, 'utf-8')) as WorkLedger;
+        // Backfill fields added after ledgers already existed on disk (loadLedger
+        // returns the raw parsed file with no schema merge, so a pre-retry-doctrine
+        // ledger would otherwise read max_retry_attempts as undefined forever).
+        loaded.config.max_retry_attempts ??= 3;
+        loaded.stats.total_retried ??= 0;
+        return loaded;
       }
     } catch (e) {
       console.error('[WorkController] Failed to load ledger:', (e as Error).message);
@@ -272,6 +281,7 @@ export class WorkController {
         total_failed: 0,
         total_abandoned: 0,
         total_denied: 0,
+        total_retried: 0,
         avg_duration_ms: 0,
         total_cost_usd: 0,
         total_tokens_used: 0,
@@ -282,10 +292,17 @@ export class WorkController {
         work_claim_ttl_ms_total: 0,
       },
       config: {
-        max_concurrent_jobs: 1,
+        // Campaign III (SUBSTRATE): raised from 1 to 2 (Bruke's explicit call,
+        // 2026-07-07) so two distinct agent identities can hold active jobs at
+        // the same time instead of racing for a single slot - a single-slot
+        // queue can't be "fleet-ready" no matter how well identity/events/retry
+        // are wired. Live-verified: bumping this let agent-alpha and agent-beta
+        // both claim their own job simultaneously with no race.
+        max_concurrent_jobs: 2,
         max_queue_depth: 5,
         default_timeout_ms: 600000,
         allow_ai_in_closure_mode: false,
+        max_retry_attempts: 3,
       },
     };
   }
@@ -715,6 +732,9 @@ export class WorkController {
       nextJobStarted: nextJobStarted,
     }).catch(() => {}); // Best-effort
 
+    // Push to phone — best-effort, never block the work controller
+    notifyPhone('Task Completed', `${req.job_id} — ${req.outcome}`).catch(() => {});
+
     return {
       success: true,
       job_id: req.job_id,
@@ -768,12 +788,35 @@ export class WorkController {
    * Atomically claim the next approved executable task for autonomous execution.
    * Active jobs are considered approved. Only tasks with metadata.cmd are executable.
    */
-  claimNextExecutable(executorId: string): ExecutableTaskClaim {
+  /**
+   * Re-applies the same mode/build_allowed admission rule used at request()
+   * time. A job can be approved under one mode and still be sitting active
+   * when mode later drops (e.g. BUILD -> RECOVER) — this re-check stops the
+   * daemon from claiming it anyway just because it already passed once.
+   */
+  private isJobAllowedInCurrentMode(
+    jobType: JobType,
+    systemState: { mode: string; build_allowed: boolean }
+  ): boolean {
+    if (systemState.mode === 'CLOSURE' && jobType === 'ai' && !this.ledger.config.allow_ai_in_closure_mode) {
+      return false;
+    }
+    if (!systemState.build_allowed && jobType !== 'system') {
+      return false;
+    }
+    return true;
+  }
+
+  claimNextExecutable(
+    executorId: string,
+    systemState: { mode: string; build_allowed: boolean }
+  ): ExecutableTaskClaim {
     const now = Date.now();
 
     for (const job of this.ledger.active) {
       if (!['ai', 'system'].includes(job.type)) continue;
       if (!this.hasExecutableCommand(job.metadata)) continue;
+      if (!this.isJobAllowedInCurrentMode(job.type, systemState)) continue;
 
       const claim = this.getExecutionClaim(job.metadata);
       const claimExpiresAt = typeof claim?.claim_expires_at === 'number'
@@ -974,10 +1017,21 @@ export class WorkController {
    * Check for timed-out jobs and advance queue.
    * Called by daemon on schedule.
    */
-  checkTimeouts(): { timed_out: string[]; advanced: string[] } {
+  /**
+   * Campaign III (SUBSTRATE) retry doctrine: a timed-out job used to die as
+   * 'failed' unconditionally, with no path back to execution (master plan
+   * cites this exact spot). Now it gets `max_retry_attempts` (config,
+   * defaults to 3) chances — retried in place with a fresh clock and a
+   * cleared claim, so a different executor can pick it up — before it's
+   * allowed to fail terminally. retry_count lives on job.metadata so it
+   * survives across timeout cycles, distinct from the per-claim `attempts`
+   * counter (which tracks claim-TTL re-claims within one active period).
+   */
+  checkTimeouts(): { timed_out: string[]; advanced: string[]; retried: string[] } {
     const timestamp = Date.now();
     const timedOut: string[] = [];
     const advanced: string[] = [];
+    const retriedJobs: string[] = [];
 
     // Find timed-out jobs
     const toTimeout = this.ledger.active.filter(
@@ -985,20 +1039,46 @@ export class WorkController {
     );
 
     for (const job of toTimeout) {
-      // Emit timeout event (before complete, which emits WORK_FAILED)
+      const retryCount = typeof job.metadata?.retry_count === 'number'
+        ? job.metadata.retry_count as number
+        : 0;
+      const maxRetries = this.ledger.config.max_retry_attempts ?? 0;
+
+      if (maxRetries > 0 && retryCount < maxRetries) {
+        const timeoutMs = this.getJobTimeoutMs(job) ?? this.ledger.config.default_timeout_ms;
+        const { execution, ...restMetadata } = job.metadata;
+        job.started_at = timestamp;
+        job.timeout_at = timestamp + timeoutMs;
+        job.metadata = { ...restMetadata, retry_count: retryCount + 1 };
+
+        this.ledger.stats.total_retried++;
+        this.timeline.emit('WORK_RETRIED', 'work_controller', {
+          job_id: job.job_id,
+          type: job.type,
+          title: job.title,
+          retry_count: retryCount + 1,
+          max_retries: maxRetries,
+          new_timeout_at: job.timeout_at,
+        });
+        retriedJobs.push(job.job_id);
+        continue;
+      }
+
+      // Retries exhausted (or none configured) — terminal failure, same as before.
       this.timeline.emit('WORK_TIMEOUT', 'work_controller', {
         job_id: job.job_id,
         type: job.type,
         title: job.title,
         started_at: job.started_at,
         timeout_at: job.timeout_at,
+        retry_count: retryCount,
       });
 
       // Complete as failed
       const result = this.complete({
         job_id: job.job_id,
         outcome: 'failed',
-        error: 'Job timed out',
+        error: retryCount > 0 ? `Job timed out after ${retryCount} retries` : 'Job timed out',
       });
 
       if ('success' in result && result.success) {
@@ -1009,7 +1089,9 @@ export class WorkController {
       }
     }
 
-    return { timed_out: timedOut, advanced };
+    if (retriedJobs.length > 0) this.saveLedger();
+
+    return { timed_out: timedOut, advanced, retried: retriedJobs };
   }
 
   /**

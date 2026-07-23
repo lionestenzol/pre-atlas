@@ -1,0 +1,44 @@
+{
+ "id": "9174b99e-94c9-4eeb-97f8-07a8f88af1dc",
+ "repo_url": "https://github.com/sindresorhus/quick-look-plugins",
+ "status": "complete",
+ "compressed_state": {
+  "protocol": "DELTA_SCP",
+  "version": "1",
+  "status": "compressed",
+  "repo": "https://github.com/sindresorhus/quick-look-plugins",
+  "generated_at": "2026-06-25T13:22:44.324Z",
+  "languages": {
+   "markdown": 1
+  },
+  "symbolic_nodes": [
+   {
+    "path": "readme.md",
+    "language": "markdown",
+    "bytes": 7090,
+    "tokens_est": 1770,
+    "symbols": []
+   }
+  ],
+  "stats": {
+   "files_scanned": 1,
+   "files_included": 1,
+   "bytes": 7090,
+   "raw_tokens_est": 1770,
+   "compressed_tokens_est": 74,
+   "token_yield": 1696,
+   "compression_ratio": 0.0418
+  }
+ },
+ "graph": {
+  "node_count": 1,
+  "edge_count": 0,
+  "imports": [],
+  "node_types": {
+   "file": 1
+  }
+ },
+ "error_log": null,
+ "created_at": "2026-06-25T13:22:44.324Z",
+ "updated_at": "2026-06-25T13:22:46.454Z"
+}

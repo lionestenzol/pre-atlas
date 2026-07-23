@@ -172,7 +172,10 @@
       "Bash(ls *.json)",
       "Bash(ls cycleboard/brain/)",
       "Bash(claude -p --model sonnet --output-format json --max-budget-usd 0.10 \"Say hello in 5 words or less.\")",
-      "Bash(schtasks //query //fo LIST //nh)"
+      "Bash(schtasks //query //fo LIST //nh)",
+      "Bash(cat)",
+      "Bash(python \"C:\\\\Users\\\\bruke\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-bruke-Pre-Atlas\\\\b872678a-569e-4f81-9717-4eeac6cdc734\\\\scratchpad\\\\td_windows.py\")",
+      "mcp__touchdesigner__get_td_info"
     ]
   }
 }

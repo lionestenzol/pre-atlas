@@ -14,18 +14,52 @@ const _expandedRoutines = new Set();
 // Atlas governance data cache (60s TTL)
 let _atlasCache = { data: null, fetchedAt: 0 };
 
-function _renderAtlasCard(data) {
-  if (!data) return '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">Loading Atlas data...</div>';
-  const u = data.unified;
-  const b = data.brief;
-  if (!u && !b) return '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">No governance data available.</div>';
+// Projects data cache (60s TTL) - read from inPACT's same-origin projects.json (written by atlas/gen_github.py)
+let _projectsCache = { data: null, fetchedAt: 0 };
 
-  const mode = u?.mode || u?.data?.mode || 'UNKNOWN';
-  const risk = u?.risk_level || u?.data?.risk_level || u?.data?.riskLevel || '--';
-  const openLoops = u?.open_loops ?? u?.data?.open_loops ?? u?.data?.openLoops ?? '--';
-  const closureRatio = u?.closure_ratio ?? u?.data?.closure_ratio ?? u?.data?.closureRatio ?? '--';
-  const streak = u?.streak ?? u?.data?.streak ?? '--';
-  const directive = b?.directive || b?.data?.directive || b?.data?.daily_directive || '';
+// Cortex preparation cache (60s TTL) - powers the "Handle next" card on Home.
+// Was previously only reachable inside the "Ask Atlas" modal (ai-actions.js);
+// promoted to the main screen per the 2026-07-06 completeness assessment so the
+// backend's queued work is visible without an extra click.
+let _prepCache = { data: null, fetchedAt: 0 };
+
+function _renderProjectsCard(projects) {
+  if (!projects) return '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">Loading projects...</div>';
+  const active = projects.filter(p => p.band === 0);
+  const list = (active.length ? active : projects).slice(0, 8);
+  if (!list.length) return '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">No recent projects found.</div>';
+  return list.map(p => `
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.45rem 0;border-bottom:1px solid var(--ip-gray-100);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${UI.sanitize(p.name)}</div>
+        <div style="font-size:0.75rem;color:var(--ip-gray-600);">${UI.sanitize(p.lang || '')} . ${UI.sanitize(p.updated || '')}</div>
+      </div>
+      <button class="td-btn" style="padding:0.25rem 0.625rem;font-size:0.75rem;flex-shrink:0;" data-name="${UI.sanitize(p.name)}" onclick="addProjectTask(this.dataset.name)">Add as task</button>
+    </div>
+  `).join('');
+}
+
+// Strategic HUD: command-center strip at the top of Home.
+// Governance tiles (mode/risk/open-loops/closure/streak) come from the live Atlas
+// backend via _atlasCache; execution tiles come from local state. Ported from
+// CycleBoard's Strategic HUD, kept honest: only real, data-backed signals are shown.
+function _renderStrategicHud() {
+  // --- Governance (from Atlas cache, if loaded) ---
+  const data = _atlasCache.data;
+  const u = data && data.unified;
+  const b = data && data.brief;
+  const online = typeof AtlasAPI !== 'undefined' && AtlasAPI.online;
+
+  // Governance lives in unified.derived: { mode, risk, open_loops, closure_ratio, streak_days, primary_order }.
+  const d = u ? (u.derived || u.data?.derived || null) : null;
+  const mode = d ? (d.mode || 'UNKNOWN') : null;
+  const risk = d ? (d.risk || d.risk_level || null) : null;
+  const openLoops = d ? (d.open_loops ?? null) : null;
+  const closureRaw = d ? (d.closure_ratio ?? null) : null;
+  // closure_ratio is a 0-1 ratio in derived; normalize to a percentage for display.
+  const closurePct = closureRaw == null ? null : Math.round(closureRaw <= 1 ? closureRaw * 100 : closureRaw);
+  const streak = d ? (d.streak_days ?? d.streak ?? null) : null;
+  const directive = (d && d.primary_order) || (b ? (b.directive || b.data?.directive || b.data?.daily_directive || '') : '');
 
   const modeColors = {
     RECOVER: '#ef4444', CLOSURE: '#f59e0b', MAINTENANCE: '#6b7280',
@@ -33,17 +67,167 @@ function _renderAtlasCard(data) {
   };
   const modeColor = modeColors[mode] || 'var(--ip-gray-600)';
 
+  const riskKey = (risk || '').toString().toUpperCase();
+  const riskColor = riskKey === 'HIGH' ? '#ef4444'
+    : (riskKey === 'MEDIUM' || riskKey === 'MED') ? '#f59e0b'
+    : riskKey === 'LOW' ? '#22c55e' : 'var(--ip-black)';
+  const redAlert = riskKey === 'HIGH';
+
+  // --- Execution (always available from local state) ---
+  const azDone = state.AZTask.filter(t => t.status === 'Completed').length;
+  const azTotal = state.AZTask.length;
+  const weekly = Helpers.getWeeklyStats();
+  const todayDate = stateManager.getTodayDate();
+  const todayData = state.Today?.daily?.[todayDate] || {};
+  const winSet = !!todayData.winTarget;
+
+  const tile = (label, value, color) => `
+    <div style="text-align:center;padding:0.625rem 0.5rem;border-radius:0.625rem;background:var(--ip-gray-50);border:1px solid var(--ip-gray-100);">
+      <div style="font-size:1.25rem;font-weight:800;line-height:1;color:${color || 'var(--ip-black)'};">${value}</div>
+      <div style="font-size:0.625rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin-top:0.375rem;">${label}</div>
+    </div>`;
+
+  const govTiles = d ? [
+    tile('Risk', riskKey || '--', riskColor),
+    tile('Open loops', openLoops != null ? openLoops : '--'),
+    tile('Closure', closurePct != null ? closurePct + '%' : '--'),
+    tile('Streak', streak != null ? streak + 'd' : '--'),
+  ].join('') : '';
+
+  const execTiles = [
+    tile('A-Z done', azTotal ? (azDone + '/' + azTotal) : '0'),
+    tile('Week base', weekly.completed + '/' + weekly.total),
+    tile('Today win', winSet ? 'set' : '—', winSet ? '#22c55e' : 'var(--ip-gray-300)'),
+  ].join('');
+
+  const statusNote = d ? '' : (online
+    ? '<div style="font-size:0.75rem;color:var(--ip-gray-600);margin-top:0.75rem;">Syncing governance from Atlas...</div>'
+    : '<div style="font-size:0.75rem;color:var(--ip-gray-600);margin-top:0.75rem;">Governance: local only (Atlas not connected). Execution metrics are live.</div>');
+
   return `
-    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
-      <span style="background:${modeColor};color:#fff;font-size:0.6875rem;font-weight:700;padding:0.125rem 0.5rem;border-radius:9999px;letter-spacing:0.05em;">${mode}</span>
-      <span style="font-size:0.8125rem;color:var(--ip-gray-600);">Risk: <strong>${risk}</strong></span>
-      ${streak !== '--' ? `<span style="font-size:0.8125rem;color:var(--ip-gray-600);">Streak: <strong>${streak}d</strong></span>` : ''}
+    <div style="border:1px solid ${redAlert ? 'rgba(239,68,68,0.5)' : 'var(--ip-gray-200)'};border-radius:0.875rem;padding:1.125rem;margin-bottom:2rem;${redAlert ? 'box-shadow:0 0 0 3px rgba(239,68,68,0.08);' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;">
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <i class="fas fa-satellite-dish" style="color:var(--ip-gray-600);font-size:0.8125rem;"></i>
+          <span style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-gray-600);">Strategic HUD</span>
+        </div>
+        ${mode ? `<span style="background:${modeColor};color:#fff;font-size:0.6875rem;font-weight:700;padding:0.1875rem 0.625rem;border-radius:9999px;letter-spacing:0.05em;">${mode}</span>` : '<span style="font-size:0.6875rem;color:var(--ip-gray-300);">no mode</span>'}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(4.5rem,1fr));gap:0.5rem;">
+        ${govTiles}${execTiles}
+      </div>
+      ${directive ? `<div style="font-size:0.8125rem;line-height:1.4;margin-top:0.875rem;padding-top:0.75rem;border-top:1px solid var(--ip-gray-100);"><strong>Directive:</strong> ${typeof UI !== 'undefined' ? UI.sanitize(directive) : directive}</div>` : ''}
+      ${redAlert ? '<div style="font-size:0.75rem;color:#b91c1c;margin-top:0.75rem;font-weight:600;"><i class="fas fa-triangle-exclamation" style="margin-right:0.375rem;"></i>Risk is HIGH. Close loops before opening new ones.</div>' : ''}
+      ${statusNote}
+    </div>`;
+}
+
+// Statistics section for the History screen. Pure views over local data
+// (A-Z tasks, day plans, weekly stats, 7-day progress). No backend needed.
+function _renderStatsSection() {
+  const az = state.AZTask || [];
+  const done = az.filter(t => t.status === 'Completed').length;
+  const prog = az.filter(t => t.status === 'In Progress').length;
+  const todo = az.filter(t => t.status === 'Not Started').length;
+  const total = az.length;
+  const weekly = Helpers.getWeeklyStats();
+  const streak = Helpers.getProgressStreak();
+  const planned = Object.keys(state.DayPlans || {}).length;
+  const dayTypes = { A: 0, B: 0, C: 0 };
+  Object.values(state.DayPlans || {}).forEach(p => { if (p && dayTypes[p.day_type] != null) dayTypes[p.day_type]++; });
+  const hist = Helpers.getProgressHistory(7);
+
+  const tile = (label, value) => `
+    <div style="text-align:center;padding:0.75rem 0.5rem;border-radius:0.625rem;background:var(--ip-gray-50);border:1px solid var(--ip-gray-100);">
+      <div style="font-size:1.375rem;font-weight:800;line-height:1;">${value}</div>
+      <div style="font-size:0.625rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin-top:0.375rem;">${label}</div>
+    </div>`;
+
+  const bar = (label, value, max, color) => {
+    const pct = max ? Math.round((value / max) * 100) : 0;
+    return `
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+        <span style="width:6.5rem;font-size:0.8125rem;color:var(--ip-gray-700);">${label}</span>
+        <div style="flex:1;height:0.5rem;background:var(--ip-gray-100);border-radius:9999px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${color};border-radius:9999px;"></div>
+        </div>
+        <span style="width:2.5rem;text-align:right;font-size:0.8125rem;font-weight:700;">${value}</span>
+      </div>`;
+  };
+
+  const maxP = Math.max(10, ...hist.map(h => h.progress));
+  const spark = hist.map(h => {
+    const hpx = Math.max(2, Math.round((h.progress / maxP) * 36));
+    return `<div title="${h.dateFormatted}: ${h.progress}%" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:0.25rem;">
+      <div style="width:100%;max-width:1.75rem;height:${hpx}px;background:${h.hasData ? 'var(--ip-black)' : 'var(--ip-gray-200)'};border-radius:0.25rem;"></div>
+      <span style="font-size:0.5625rem;color:var(--ip-gray-600);">${h.date.slice(8)}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="td-chapter" style="margin-top:0;">
+      <span class="td-chapter-title">Statistics</span>
+      <span class="td-chapter-sub">How you're trending.</span>
     </div>
-    ${directive ? `<div style="font-size:0.875rem;line-height:1.4;margin-bottom:0.5rem;"><strong>Directive:</strong> ${typeof UI !== 'undefined' ? UI.sanitize(directive) : directive}</div>` : ''}
-    <div style="font-size:0.8125rem;color:var(--ip-gray-600);">
-      Open loops: <strong>${openLoops}</strong> . Closure ratio: <strong>${closureRatio}</strong>
+    <div class="td-section">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(5rem,1fr));gap:0.5rem;margin-bottom:1.25rem;">
+        ${tile('A-Z done', total ? done + '/' + total : '0')}
+        ${tile('This week', weekly.completed + '/' + weekly.total)}
+        ${tile('Streak', streak + 'd')}
+        ${tile('Days planned', planned)}
+      </div>
+      <div style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin-bottom:0.5rem;">Task status</div>
+      ${bar('Completed', done, total, '#22c55e')}
+      ${bar('In progress', prog, total, 'var(--ip-gray-600)')}
+      ${bar('Not started', todo, total, 'var(--ip-gray-300)')}
+      <div style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin:1.25rem 0 0.5rem;">Day type usage</div>
+      ${bar('A days', dayTypes.A, planned, 'var(--ip-black)')}
+      ${bar('B days', dayTypes.B, planned, 'var(--ip-gray-600)')}
+      ${bar('C days', dayTypes.C, planned, 'var(--ip-gray-300)')}
+      <div style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ip-gray-600);margin:1.25rem 0 0.5rem;">Last 7 days</div>
+      <div style="display:flex;align-items:flex-end;gap:0.375rem;height:3rem;">${spark}</div>
+    </div>`;
+}
+
+// Activity timeline for the History screen. Reads state.History.timeline
+// (populated by Helpers.logActivity, including AI actions).
+function _renderTimelineSection() {
+  const tl = (state.History && state.History.timeline) || [];
+  const recent = tl.slice().reverse().slice(0, 20);
+  const iconFor = (type) => {
+    type = String(type || '');
+    if (/complete/i.test(type)) return 'fa-check';
+    if (/create|add/i.test(type)) return 'fa-plus';
+    if (/ai_/i.test(type)) return 'fa-robot';
+    if (/status/i.test(type)) return 'fa-arrows-rotate';
+    return 'fa-circle';
+  };
+  const relTime = (iso) => {
+    const d = new Date(iso); const now = new Date();
+    const mins = Math.round((now - d) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.round(hrs / 24);
+    if (days < 7) return days + 'd ago';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  const rows = recent.length ? recent.map(a => `
+    <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--ip-gray-100);">
+      <div style="flex-shrink:0;width:1.75rem;height:1.75rem;border-radius:50%;background:var(--ip-gray-100);display:flex;align-items:center;justify-content:center;color:var(--ip-gray-600);font-size:0.6875rem;"><i class="fas ${iconFor(a.type)}"></i></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.875rem;line-height:1.4;">${UI.sanitize(a.description || a.type || 'activity')}</div>
+        <div style="font-size:0.6875rem;color:var(--ip-gray-600);">${relTime(a.timestamp)}</div>
+      </div>
+    </div>`).join('') : '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">No activity yet. Actions you and Atlas take will appear here.</div>';
+
+  return `
+    <div class="td-chapter">
+      <span class="td-chapter-title">Activity Timeline</span>
+      <span class="td-chapter-sub">What you and Atlas have done${recent.length ? ' (recent ' + recent.length + ')' : ''}.</span>
     </div>
-  `;
+    <div class="td-section">${rows}</div>`;
 }
 
 function toggleRoutineDropdown(blockId) {
@@ -69,7 +253,12 @@ function renderNav() {
       <i class="fas ${s.icon}"></i>
       <span>${s.label}</span>
     </button>
-  `).join('');
+  `).join('') + `
+    <a href="http://127.0.0.1:8887/pages/github.html" class="sb-nav-item" aria-label="Go to Projects">
+      <i class="fas fa-folder-open"></i>
+      <span>Projects</span>
+    </a>
+  `;
 
   // Atlas connection status
   const statusEl = document.getElementById('atlas-status');
@@ -111,11 +300,78 @@ function navigate(screen) {
   }
 }
 
+// Escape a value used as a quoted JS argument inside an inline handler attribute.
+// UI.sanitize is not enough here: it escapes & < > only (textContent -> innerHTML),
+// so a quote in the value breaks out of both the JS string and the attribute.
+// Routine names are free user text (functions.js:941) and also arrive from synced
+// state, so they get escaped rather than trusted.
+function _jsAttrArg(value) {
+  return String(value)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // Helper: find routine match for a time block title
 function _findRoutineMatch(blockTitle) {
   return Object.keys(state.Routine).find(name =>
     blockTitle.toLowerCase().includes(name.toLowerCase())
   );
+}
+
+// Collapsible chapters. Daily stacks ~30 inputs in one column; opening all of it at
+// once is the density problem. Each chapter remembers its own open/closed state, so
+// the page you come back to is the page you left. Native <details> does the work.
+const _CHAP_KEY = 'inpact-chapters-open';
+
+function _chapterState() {
+  try { return JSON.parse(localStorage.getItem(_CHAP_KEY)) || {}; } catch (e) { return {}; }
+}
+
+function _setChapterOpen(key, isOpen) {
+  const m = _chapterState();
+  m[key] = isOpen;
+  try { localStorage.setItem(_CHAP_KEY, JSON.stringify(m)); } catch (e) { /* quota: forget it */ }
+}
+
+function _chapterOpen(key, title, sub, defaultOpen) {
+  const saved = _chapterState()[key];
+  const open = saved === undefined ? !!defaultOpen : saved;
+  return `
+    <details class="td-chap" data-chap="${key}"${open ? ' open' : ''}>
+      <summary class="td-chapter td-chap-summary">
+        <span class="td-chapter-title">${title}</span>
+        <span class="td-chapter-sub">${sub}</span>
+        <span class="td-chap-caret" aria-hidden="true"></span>
+      </summary>
+      <div class="td-section">`;
+}
+
+function _chapterClose() {
+  return `</div></details>`;
+}
+
+// 'toggle' doesn't bubble, so capture it. Registered once, survives every re-render.
+document.addEventListener('toggle', function (e) {
+  const d = e.target;
+  if (!d || !d.matches || !d.matches('details.td-chap[data-chap]')) return;
+  _setChapterOpen(d.getAttribute('data-chap'), d.open);
+}, true);
+
+// Helper: the [ Minimal ] [ Full Plan ] lens toggle inside the Daily header
+function _dailyViewToggle(active) {
+  const btn = (view, label) => `
+    <button onclick="setDailyView('${view}')" class="td-btn-pill ${active === view ? 'active' : ''}"
+            aria-pressed="${active === view}">${label}</button>
+  `;
+  return `
+    <div class="ip-view-toggle" role="group" aria-label="Daily view">
+      ${btn('minimal', 'Minimal')}${btn('medium', 'Medium')}${btn('full', 'Full Plan')}
+    </div>
+  `;
 }
 
 // Helper: bridge links at bottom of screen
@@ -173,6 +429,21 @@ const ScreenRenderers = {
 
         <div class="td-pill" style="margin-bottom:2rem;">${yesterdayHtml}</div>
 
+        <div id="strategic-hud">${_renderStrategicHud()}</div>
+
+        <div id="handle-next-card">${_renderHandleNext(_prepCache.data)}</div>
+        ${(() => {
+          const atlasOnline = typeof AtlasAPI !== 'undefined' && AtlasAPI.online;
+          if (atlasOnline && Date.now() - _prepCache.fetchedAt > 60000) {
+            AtlasAPI.getPreparation().then(prep => {
+              _prepCache = { data: prep, fetchedAt: Date.now() };
+              const el = document.getElementById('handle-next-card');
+              if (el) el.innerHTML = _renderHandleNext(_prepCache.data);
+            }).catch(() => {});
+          }
+          return '';
+        })()}
+
         <div class="td-chapter" style="margin-top:1.5rem;">
           <span class="td-chapter-title">At a Glance</span>
           <span class="td-chapter-sub">Where things stand right now.</span>
@@ -190,6 +461,7 @@ const ScreenRenderers = {
         </div>
 
         ${(() => {
+          // Strategic HUD data source: fetch live governance, then refresh the HUD in place.
           const atlasOnline = typeof AtlasAPI !== 'undefined' && AtlasAPI.online;
           if (atlasOnline && Date.now() - _atlasCache.fetchedAt > 60000) {
             Promise.all([
@@ -197,20 +469,32 @@ const ScreenRenderers = {
               AtlasAPI.getDailyBrief(),
             ]).then(([unified, brief]) => {
               _atlasCache = { data: { unified, brief }, fetchedAt: Date.now() };
-              const el = document.getElementById('atlas-context-card');
-              if (el) el.innerHTML = _renderAtlasCard(_atlasCache.data);
-            });
+              const el = document.getElementById('strategic-hud');
+              if (el) el.innerHTML = _renderStrategicHud();
+            }).catch(() => {});
           }
-          const cached = _atlasCache.data ? _renderAtlasCard(_atlasCache.data) : '';
-          return atlasOnline ? `
+          return '';
+        })()}
+
+        ${(() => {
+          if (Date.now() - _projectsCache.fetchedAt > 60000) {
+            fetch('projects.json').then(r => r.ok ? r.json() : null).then(data => {
+              if (!data) return;
+              _projectsCache = { data, fetchedAt: Date.now() };
+              const el = document.getElementById('projects-card');
+              if (el) el.innerHTML = _renderProjectsCard(_projectsCache.data);
+            }).catch(() => {});
+          }
+          const cached = _projectsCache.data ? _renderProjectsCard(_projectsCache.data) : '';
+          return `
             <div class="td-chapter">
-              <span class="td-chapter-title">Atlas Context</span>
-              <span class="td-chapter-sub">Live governance state from your system.</span>
+              <span class="td-chapter-title">Active Projects</span>
+              <span class="td-chapter-sub">Recent work from your machine. Add one to your tasks.</span>
             </div>
-            <div class="td-section" id="atlas-context-card">
-              ${cached || '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">Loading Atlas data...</div>'}
+            <div class="td-section" id="projects-card">
+              ${cached || '<div style="color:var(--ip-gray-600);font-size:0.8125rem;">Loading projects...</div>'}
             </div>
-          ` : '';
+          `;
         })()}
 
         ${(() => {
@@ -274,11 +558,19 @@ const ScreenRenderers = {
   // =========================================================================
   // DAILY (plan your day + execution scaffolding)
   // =========================================================================
+  // Daily has two lenses over the same DayPlan. Minimal is the execution view
+  // (what to do now); Full is the planning view. state.UI.dailyView picks.
   Daily() {
-    const todayPlan = Helpers.getDayPlan();
+    const plan = Helpers.getDayPlan();
+    if (state.UI?.dailyView === 'minimal') return this.renderDailyMinimal(plan);
+    return this.renderDailyFull(plan);
+  },
+
+  renderDailyFull(todayPlan) {
     const todayDate = stateManager.getTodayDate();
     const dailyProgress = Helpers.calculateDailyProgress();
     const td = getTodayFields();
+    const isMedium = state.UI?.dailyView === 'medium';
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -286,15 +578,12 @@ const ScreenRenderers = {
 
     return `
       <div style="max-width:48rem;">
+        ${_dailyViewToggle(isMedium ? 'medium' : 'full')}
         <h1 style="font-size:2.25rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.25rem;">Daily Plan</h1>
         <div style="color:var(--ip-gray-600);font-size:0.9375rem;margin-bottom:1.75rem;">${Helpers.formatDate(todayPlan.date)}</div>
 
-        <!-- Plan Your Day — the morning ritual fields -->
-        <div class="td-chapter" style="margin-top:0;">
-          <span class="td-chapter-title">Plan Your Day</span>
-          <span class="td-chapter-sub">Set your target and priorities before you move.</span>
-        </div>
-        <div class="td-section">
+        <!-- Plan Your Day . the morning ritual fields -->
+        ${_chapterOpen('plan', 'Plan Your Day', 'Set your target and priorities before you move.', true)}
           <div class="td-label">Win Target <span class="td-label-step">Step 5</span></div>
           <div class="td-help">What's the one thing that makes today count? Not a list. The thing.</div>
           <input type="text" class="td-input" value="${UI.sanitize(td.winTarget || '')}" placeholder="The one outcome that makes today a win." onblur="saveTodayField('winTarget', this.value)" style="margin-bottom:1.25rem;" />
@@ -306,17 +595,18 @@ const ScreenRenderers = {
               <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
                 <span style="font-size:0.875rem;font-weight:700;color:var(--ip-gray-300);width:1.25rem;">${i}</span>
                 <input type="text" class="td-input" value="${UI.sanitize(td['p'+i] || '')}" placeholder="Priority ${i}" onblur="saveTodayField('p${i}', this.value)" style="flex:1;" />
+                ${td['p'+i+'TaskId'] ? `<button class="td-btn" style="font-size:0.75rem;padding:0.3rem 0.625rem;flex-shrink:0;" title="Completes the real Atlas task, not just this text" onclick="completeSeededPriority(${i})">Done</button>` : ''}
               </div>
-              <div style="display:flex;align-items:center;gap:0.5rem;padding-left:1.75rem;">
+              ${isMedium ? '' : `<div style="display:flex;align-items:center;gap:0.5rem;padding-left:1.75rem;">
                 <input type="text" class="td-input" value="${UI.sanitize(td['p'+i+'why'] || '')}" placeholder="Why this matters" onblur="saveTodayField('p${i}why', this.value)" style="flex:1;font-size:0.8125rem;padding:0.5rem 0.625rem;" />
                 <span style="font-size:0.625rem;color:var(--ip-gray-300);text-transform:uppercase;letter-spacing:0.06em;">Link:</span>
                 ${buildLinkSelect('az', i)}
                 ${buildLinkSelect('area', i)}
-              </div>
+              </div>`}
             </div>
           `).join('')}
 
-          <div class="td-label" style="margin-top:1.25rem;">3 Ways to Win <span class="td-label-step">Min / Max</span></div>
+          ${isMedium ? '' : `<div class="td-label" style="margin-top:1.25rem;">3 Ways to Win <span class="td-label-step">Min / Max</span></div>
           <div class="td-help">Three win conditions. Min is the floor, max is the stretch.</div>
           ${[1,2,3].map(i => `
             <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;">
@@ -324,7 +614,7 @@ const ScreenRenderers = {
               <input type="text" class="td-input" value="${UI.sanitize(td['x'+i] || '')}" placeholder="Min" onblur="saveTodayField('x${i}', this.value)" style="flex:1;font-size:0.8125rem;padding:0.5rem 0.625rem;" />
               <input type="text" class="td-input" value="${UI.sanitize(td['y'+i] || '')}" placeholder="Max" onblur="saveTodayField('y${i}', this.value)" style="flex:1;font-size:0.8125rem;padding:0.5rem 0.625rem;" />
             </div>
-          `).join('')}
+          `).join('')}`}
 
           <div class="td-label" style="margin-top:1.25rem;">The Lever</div>
           <div class="td-help">What are you pulling today? The one action with outsized impact.</div>
@@ -333,14 +623,10 @@ const ScreenRenderers = {
           <div class="td-label">Reset Move</div>
           <div class="td-help">When the day cracks, what's your move? Walk, music, 5 breaths.</div>
           <input type="text" class="td-input" value="${UI.sanitize(td.resetMove || '')}" placeholder="Your reset move when things crack" onblur="saveTodayField('resetMove', this.value)" />
-        </div>
+        ${_chapterClose()}
 
-        <!-- Daily Operating Protocol — where you are in the day -->
-        <div class="td-chapter" style="margin-top:0;">
-          <span class="td-chapter-title">Daily Operating Protocol</span>
-          <span class="td-chapter-sub">Where you are right now.</span>
-        </div>
-        <div class="td-section">
+        <!-- Daily Operating Protocol . where you are in the day -->
+        ${isMedium ? '' : `${_chapterOpen('protocol', 'Daily Operating Protocol', 'Where you are right now.', false)}
           ${(() => {
             const hour = new Date().getHours();
             const blocks = [
@@ -363,14 +649,9 @@ const ScreenRenderers = {
               `;
             }).join('');
           })()}
-        </div>
+        ${_chapterClose()}`}
 
-        <!-- Day Mode -->
-        <div class="td-chapter">
-          <span class="td-chapter-title">Day Mode</span>
-          <span class="td-chapter-sub">What kind of day is it?</span>
-        </div>
-        <div class="td-section">
+        ${isMedium ? '' : `${_chapterOpen('daymode', 'Day Mode', 'What kind of day is it?', false)}
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             ${['A', 'B', 'C'].map(type => `
               <button onclick="setDayType('${type}')" class="td-btn-pill ${todayPlan.day_type === type ? 'active' : ''}" style="padding:0.625rem 1.25rem;font-size:0.875rem;">
@@ -378,20 +659,19 @@ const ScreenRenderers = {
               </button>
             `).join('')}
           </div>
-        </div>
+        ${_chapterClose()}`}
 
         <!-- Time Blocks with routine dropdowns -->
-        <div class="td-chapter">
-          <span class="td-chapter-title">Time Blocks</span>
-          <span class="td-chapter-sub">Build the scaffolding for the day.</span>
-        </div>
-        <div class="td-section">
-          <div class="td-help">Each block is a bet on what you'll do when. Check it off when it's done.</div>
+        ${_chapterOpen('blocks', 'Time Blocks', 'Build the scaffolding for the day.', true)}
+          <div class="td-help" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+            <span>Each block is a bet on what you'll do when. Check it off when it's done.</span>
+            ${typeof CalendarSync !== 'undefined' ? CalendarSync.renderSyncButton() : ''}
+          </div>
           ${todayPlan.time_blocks.map(block => {
             const routineMatch = _findRoutineMatch(block.title);
             const isExpanded = _expandedRoutines.has(block.id);
             const completion = routineMatch ? (todayPlan.routines_completed?.[routineMatch] || { completed: false, steps: {} }) : null;
-            const routineSteps = routineMatch ? state.Routine[routineMatch] : [];
+            const routineSteps = routineMatch ? Helpers.computeRoutineStepTimes(block.time, state.Routine[routineMatch]) : [];
 
             return `
               <div class="td-row" style="flex-wrap:wrap;">
@@ -415,8 +695,9 @@ const ScreenRenderers = {
                     </div>
                     ${routineSteps.map((step, idx) => `
                       <label style="display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;cursor:pointer;">
-                        <input type="checkbox" ${completion.steps?.[idx] ? 'checked' : ''} onchange="toggleRoutineStep('${routineMatch}', ${idx}, this.checked)" style="width:0.875rem;height:0.875rem;accent-color:var(--ip-black);" />
-                        <span style="font-size:0.8125rem;color:var(--ip-gray-700);${completion.steps?.[idx] ? 'text-decoration:line-through;opacity:0.5;' : ''}">${UI.sanitize(step)}</span>
+                        <input type="checkbox" ${completion.steps?.[idx] ? 'checked' : ''} onchange="toggleRoutineStep('${_jsAttrArg(routineMatch)}', ${idx}, this.checked)" style="width:0.875rem;height:0.875rem;accent-color:var(--ip-black);" />
+                        <span style="font-size:0.6875rem;color:var(--ip-gray-500);font-family:monospace;width:4.5rem;flex-shrink:0;">${UI.sanitize(step.time)}</span>
+                        <span style="font-size:0.8125rem;color:var(--ip-gray-700);${completion.steps?.[idx] ? 'text-decoration:line-through;opacity:0.5;' : ''}">${UI.sanitize(step.text)}</span>
                       </label>
                     `).join('')}
                   </div>
@@ -429,14 +710,10 @@ const ScreenRenderers = {
               <i class="fas fa-plus" style="margin-right:0.375rem;font-size:0.625rem;"></i>Add block
             </button>
           </div>
-        </div>
+        ${_chapterClose()}
 
         <!-- Goals -->
-        <div class="td-chapter">
-          <span class="td-chapter-title">Goals</span>
-          <span class="td-chapter-sub">X is the floor. Y is the stretch.</span>
-        </div>
-        <div class="td-section">
+        ${_chapterOpen('goals', 'Goals', 'X is the floor. Y is the stretch.', false)}
           <div class="td-label">Baseline (X) <span class="td-label-step">The minimum viable day</span></div>
           <div class="td-help">What's the one outcome that makes today count? Not ambitious. Real.</div>
           <div style="display:flex;align-items:center;gap:0.625rem;margin-bottom:1.25rem;">
@@ -456,9 +733,9 @@ const ScreenRenderers = {
           <div style="text-align:right;">
             <button onclick="saveGoals()" class="td-btn" style="padding:0.5rem 1rem;font-size:0.8125rem;">Save goals</button>
           </div>
-        </div>
+        ${_chapterClose()}
 
-        <!-- Contingencies (collapsed) -->
+        ${isMedium ? '' : `<!-- Contingencies (collapsed) -->
         <details style="margin-bottom:1.5rem;">
           <summary style="cursor:pointer;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ip-gray-600);padding:0.5rem 0;">
             Contingencies . When the plan breaks. Pick the play.
@@ -481,7 +758,7 @@ const ScreenRenderers = {
               <div style="font-size:0.75rem;color:var(--ip-gray-600);">Reassess, one task only</div>
             </button>
           </div>
-        </details>
+        </details>`}
 
         <!-- Progress summary -->
         <div class="td-stat" style="padding:1rem 0;border-top:1px solid var(--ip-gray-200);">
@@ -503,6 +780,117 @@ const ScreenRenderers = {
           { screen: 'History', text: 'Write a journal entry or review' },
           { screen: 'Home', text: 'Back to overview' }
         ])}
+      </div>
+    `;
+  },
+
+  // Minimal Mode: the act-now lens over the same DayPlan. Everything the morning
+  // ritual decided is read-only here. The only writes are the ones you make while
+  // executing: block completion, routine steps, reset move.
+  renderDailyMinimal(plan) {
+    if (!Helpers.isPlanReady(plan)) {
+      return `
+        <div class="ip-minimal">
+          ${_dailyViewToggle('minimal')}
+          <div class="ip-minimal-empty">
+            <div class="ip-minimal-empty-title">No plan for today yet.</div>
+            <div class="ip-minimal-empty-sub">Minimal Mode shows the block you're in. Build the day first.</div>
+            <button class="td-btn ip-minimal-open" onclick="setDailyView('full')">Plan your day</button>
+          </div>
+        </div>
+      `;
+    }
+
+    const td = getTodayFields();
+    const progress = Helpers.calculateDailyProgress();
+    const current = Helpers.getCurrentTimeBlock(plan);
+    const next = Helpers.getNextTimeBlock(plan);
+    const routine = Helpers.getActiveRoutine(plan);
+    // Keep the original slot number: a filled p2 with an empty p1 is still "2".
+    const priorities = [1, 2, 3].map(i => ({ num: i, text: td['p' + i] })).filter(p => p.text);
+
+    const nowCard = current ? `
+      <div class="ip-now-label">Now</div>
+      <div class="ip-now-title">${UI.sanitize(current.title)}</div>
+      <div class="ip-now-meta">Started ${UI.sanitize(current.time)}</div>
+      <button class="ip-now-check ${current.completed ? 'is-done' : ''}"
+              onclick="toggleTimeBlockCompletion('${current.id}')">
+        ${current.completed ? '<i class="fas fa-check"></i> Done' : 'Mark done'}
+      </button>
+    ` : `
+      <div class="ip-now-label">Now</div>
+      <div class="ip-now-title">The day hasn't started.</div>
+      <div class="ip-now-meta">${next ? `First block: ${UI.sanitize(next.title)} at ${UI.sanitize(next.time)}` : 'Nothing scheduled.'}</div>
+    `;
+
+    return `
+      <div class="ip-minimal">
+        ${_dailyViewToggle('minimal')}
+
+        <div class="ip-now">${nowCard}</div>
+
+        ${routine ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">${UI.sanitize(routine.name)} routine . ${routine.done}/${routine.total} steps</div>
+            ${routine.steps.map((step, idx) => `
+              <label class="ip-min-step">
+                <input type="checkbox" ${routine.completion.steps?.[idx] ? 'checked' : ''}
+                       onchange="toggleRoutineStep('${_jsAttrArg(routine.name)}', ${idx}, this.checked)" />
+                <span class="ip-min-step-time">${UI.sanitize(step.time)}</span>
+                <span class="${routine.completion.steps?.[idx] ? 'is-done' : ''}">${UI.sanitize(step.text)}</span>
+              </label>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${td.winTarget ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">Today counts if</div>
+            <div class="ip-min-hero">${UI.sanitize(td.winTarget)}</div>
+          </div>
+        ` : ''}
+
+        ${priorities.length ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">Top 3</div>
+            ${priorities.map(p => `
+              <div class="ip-min-priority">
+                <span class="ip-min-priority-num">${p.num}</span>
+                <span>${UI.sanitize(p.text)}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${td.lever ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">The lever</div>
+            <div class="ip-min-body">${UI.sanitize(td.lever)}</div>
+          </div>
+        ` : ''}
+
+        ${td.resetMove ? `
+          <div class="ip-min-card">
+            <div class="ip-min-label">Reset move</div>
+            <div class="ip-min-body">${UI.sanitize(td.resetMove)}</div>
+            <button class="td-btn-ghost ip-min-reset" onclick="activateResetMove()">I used it</button>
+          </div>
+        ` : ''}
+
+        ${next ? `
+          <div class="ip-min-card ip-min-next">
+            <div class="ip-min-label">Next</div>
+            <div class="ip-min-body">${UI.sanitize(next.time)} . ${UI.sanitize(next.title)}</div>
+          </div>
+        ` : ''}
+
+        <div class="ip-min-progress">
+          Blocks <strong>${progress.timeBlocks.completed}/${progress.timeBlocks.total}</strong>
+          . Goals <strong>${progress.goals.completed}/${progress.goals.total}</strong>
+          . Overall <strong>${progress.overall}%</strong>
+        </div>
+
+        <button class="td-btn ip-minimal-open" onclick="setDailyView('full')">Open Full Plan</button>
       </div>
     `;
   },
@@ -786,6 +1174,9 @@ const ScreenRenderers = {
         <h1 style="font-size:2.25rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.25rem;">History</h1>
         <div class="td-help" style="margin-bottom:1.75rem;">What happened. What you learned.</div>
 
+        ${_renderStatsSection()}
+        ${_renderTimelineSection()}
+
         <!-- Calendar -->
         <div class="td-chapter" style="margin-top:0;">
           <span class="td-chapter-title">Calendar</span>
@@ -963,7 +1354,8 @@ const ScreenRenderers = {
                   ${routine.map((step, index) => `
                     <div class="td-row">
                       <span style="color:var(--ip-gray-300);font-weight:700;font-size:0.875rem;width:1.5rem;text-align:center;">${index + 1}</span>
-                      <input type="text" value="${UI.sanitize(step)}" onchange="updateRoutineStep('${routineName}', ${index}, this.value)" class="td-input" style="flex:1;" placeholder="Step..." />
+                      <input type="text" value="${UI.sanitize(step.text)}" onchange="updateRoutineStep('${routineName}', ${index}, this.value)" class="td-input" style="flex:1;" placeholder="Step..." />
+                      <input type="number" min="1" max="240" value="${step.duration}" onchange="updateRoutineStepDuration('${routineName}', ${index}, this.value)" class="td-input" style="width:4rem;" title="Minutes" />
                       <div style="display:flex;gap:0.125rem;">
                         ${index > 0 ? `<button onclick="moveRoutineStep('${routineName}', ${index}, 'up')" style="background:none;border:none;cursor:pointer;color:var(--ip-gray-600);padding:0.25rem;font-size:0.625rem;"><i class="fas fa-chevron-up"></i></button>` : ''}
                         ${index < routine.length - 1 ? `<button onclick="moveRoutineStep('${routineName}', ${index}, 'down')" style="background:none;border:none;cursor:pointer;color:var(--ip-gray-600);padding:0.25rem;font-size:0.625rem;"><i class="fas fa-chevron-down"></i></button>` : ''}

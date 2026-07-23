@@ -16,15 +16,15 @@ import {
   UIComponentStateData,
   UIListItem,
   StreamMetrics,
-} from './types';
+} from '../src/core/types.js';
 import {
   gaugeProps,
   chartProps,
   listProps,
   indicatorProps,
   validateUIPatch,
-} from './ui-surface';
-import { generateUUID, now, computeHash, applyPatch } from './delta';
+} from './ui-surface.js';
+import { generateUUID, now, computeHash, applyPatch } from '../src/core/delta.js';
 
 // === SIMPLIFIED STREAMING SYSTEM ===
 

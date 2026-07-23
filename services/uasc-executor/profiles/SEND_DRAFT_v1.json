@@ -1,7 +1,11 @@
 {
   "id": "SEND_DRAFT",
   "version": 1,
-  "description": "Apply a draft — render template, log the send, mark draft applied",
+  "description": "Send a draft notification via ntfy.sh push",
+  "policy_gate": {
+    "action": "request_approval",
+    "params": { "reason": "SEND_DRAFT pushes a real notification to the phone" }
+  },
   "inputs": [
     {
       "name": "draft_id",
@@ -26,32 +30,28 @@
   ],
   "steps": [
     {
-      "name": "render_message",
-      "type": "log",
-      "message": "Sending draft [{template_id}]: {message_text}",
-      "level": "info"
-    },
-    {
-      "name": "log_target",
-      "type": "log",
-      "message": "Target entity: {target_entity_id}",
-      "level": "info",
-      "condition": "target_entity_id != ''"
-    },
-    {
-      "name": "log_sent",
-      "type": "log",
-      "message": "Draft {draft_id} applied at {timestamp}",
-      "level": "info"
+      "name": "push_notification",
+      "type": "http",
+      "method": "POST",
+      "url": "https://ntfy.sh",
+      "body": {
+        "topic": "atlas-bruke",
+        "title": "Atlas: {template_id}",
+        "message": "{message_text}",
+        "tags": ["robot", "atlas"]
+      },
+      "expected_status": 200,
+      "timeout_seconds": 10,
+      "retries": 2
     }
   ],
   "on_success": {
     "type": "log",
-    "message": "Draft sent successfully"
+    "message": "Draft {draft_id} pushed to phone at {timestamp}"
   },
   "on_failure": {
     "type": "log",
-    "message": "Draft send failed",
+    "message": "Draft push failed for {draft_id}",
     "level": "error"
   }
 }

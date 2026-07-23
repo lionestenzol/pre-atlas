@@ -1,0 +1,99 @@
+{
+  "auth.py": [
+    "dataclasses.dataclass",
+    "hashlib",
+    "hmac",
+    "time",
+    "typing.Callable",
+    "typing.Optional",
+    "typing.Tuple"
+  ],
+  "daemon.py": [
+    "__future__.annotations",
+    "datetime.datetime",
+    "hashlib",
+    "hmac",
+    "json",
+    "os",
+    "time",
+    "typing.Any",
+    "typing.Optional",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "executor.py": [
+    "dataclasses.dataclass",
+    "dataclasses.field",
+    "datetime.datetime",
+    "json",
+    "platform",
+    "subprocess",
+    "time",
+    "typing.Any",
+    "typing.Dict",
+    "typing.List",
+    "typing.Optional",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "scripts/build_brief.py": [
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "os",
+    "re",
+    "sys",
+    "typing.Optional",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "scripts/run_actions.py": [
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "os",
+    "re",
+    "shutil",
+    "subprocess",
+    "sys",
+    "time",
+    "typing.Optional",
+    "urllib.request"
+  ],
+  "scripts/validate_actions.py": [
+    "json",
+    "os",
+    "re",
+    "sys",
+    "typing.Optional"
+  ],
+  "server.py": [
+    "__future__.annotations",
+    "argparse",
+    "auth.AuthResult",
+    "auth.Authenticator",
+    "executor.ProfileExecutor",
+    "fastapi.Depends",
+    "fastapi.FastAPI",
+    "fastapi.HTTPException",
+    "fastapi.Header",
+    "fastapi.Request",
+    "fastapi.responses.JSONResponse",
+    "json",
+    "os",
+    "sqlite3",
+    "starlette.exceptions.HTTPException",
+    "typing.Optional",
+    "typing.Tuple",
+    "uuid",
+    "uvicorn"
+  ],
+  "test_server_smoke.py": [
+    "__future__.annotations",
+    "auth.AuthResult",
+    "fastapi.testclient.TestClient",
+    "pytest",
+    "server",
+    "unittest.mock.MagicMock"
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "api/server.ts": [
+    "atlas/close-signal.ts",
+    "atlas/directive.ts",
+    "atlas/lattice-projection.ts",
+    "atlas/preferences-store.ts",
+    "atlas/signals-store.ts",
+    "cli/sqlite-storage.ts",
+    "clients/aegis-client.ts",
+    "core/cockpit.ts",
+    "core/delta.ts",
+    "core/event-emitter.ts",
+    "core/executor-bridge.ts",
+    "core/timeline-logger.ts",
+    "core/types-core.ts",
+    "core/work-controller.ts",
+    "governance/governance_daemon.ts"
+  ],
+  "atlas/close-signal.ts": [
+    "atlas/preferences-store.ts"
+  ],
+  "atlas/directive.ts": [
+    "core/work-controller.ts"
+  ],
+  "atlas/lattice-projection.ts": [
+    "atlas/signals-store.ts",
+    "core/delta.ts",
+    "core/types-core.ts"
+  ],
+  "atlas/preferences-store.ts": [],
+  "atlas/signals-store.ts": [],
+  "cli/app.ts": [
+    "cli/input.ts",
+    "cli/renderer.ts",
+    "core/types.ts"
+  ],
+  "cli/atlas-ai.ts": [],
+  "cli/atlas.ts": [],
+  "cli/index.ts": [
+    "cli/app.ts"
+  ],
+  "cli/input.ts": [],
+  "cli/renderer.ts": [
+    "core/cockpit.ts",
+    "core/types.ts"
+  ],
+  "cli/sqlite-storage.ts": [
+    "core/dictionary.ts",
+    "core/types.ts"
+  ],
+  "cli/storage.ts": [
+    "core/dictionary.ts",
+    "core/types.ts"
+  ],
+  "clients/aegis-client.ts": [],
+  "core/ai-design.ts": [
+    "core/delta.ts",
+    "core/preparation.ts",
+    "core/types.ts"
+  ],
+  "core/cockpit.ts": [
+    "core/delta.ts",
+    "core/routing.ts",
+    "core/types.ts"
+  ],
+  "core/daily-screen.ts": [
+    "core/delta.ts",
+    "core/routing.ts",
+    "core/types.ts"
+  ],
+  "core/delta-sync.ts": [
+    "core/delta.ts",
+    "core/types.ts"
+  ],
+  "core/delta.ts": [
+    "core/types.ts"
+  ],
+  "core/dictionary.ts": [
+    "core/delta.ts",
+    "core/types.ts"
+  ],
+  "core/event-emitter.ts": [],
+  "core/executor-bridge.ts": [
+    "core/types-core.ts"
+  ],
+  "core/fabric-tests.ts": [
+    "core/cockpit.ts",
+    "core/delta-sync.ts",
+    "core/delta.ts",
+    "core/dictionary.ts",
+    "core/preparation.ts",
+    "core/routing.ts",
+    "core/templates.ts",
+    "core/types.ts"
+  ],
+  "core/messaging.ts": [
+    "core/delta.ts",
+    "core/types.ts"
+  ],
+  "core/preparation.ts": [
+    "core/delta.ts",
+    "core/routing.ts",
+    "core/templates.ts",
+    "core/types.ts"
+  ],
+  "core/routing.ts": [
+    "core/types.ts"
+  ],
+  "core/run-tests.ts": [
+    "core/fabric-tests.ts"
+  ],
+  "core/tasks.ts": [
+    "core/delta.ts",
+    "core/types.ts"
+  ],
+  "core/templates.ts": [
+    "core/types.ts"
+  ],
+  "core/timeline-logger.ts": [],
+  "core/types-core.ts": [],
+  "core/types-extended.ts": [
+    "core/types-core.ts"
+  ],
+  "core/types-sync.ts": [
+    "core/types-core.ts"
+  ],
+  "core/types.ts": [
+    "core/types-core.ts",
+    "core/types-extended.ts",
+    "core/types-sync.ts"
+  ],
+  "core/vector-discovery.ts": [
+    "core/delta.ts",
+    "core/types.ts"
+  ],
+  "core/work-controller.ts": [
+    "core/event-emitter.ts",
+    "core/timeline-logger.ts"
+  ],
+  "governance/governance_daemon.ts": [
+    "cli/sqlite-storage.ts",
+    "core/cockpit.ts",
+    "core/delta.ts",
+    "core/event-emitter.ts",
+    "core/preparation.ts",
+    "core/routing.ts",
+    "core/timeline-logger.ts",
+    "core/types.ts",
+    "core/work-controller.ts"
+  ],
+  "tests/api-tests.ts": [],
+  "tests/atlas-artifact-schema-tests.ts": [],
+  "tests/lattice-projection-droplist-tests.ts": [
+    "atlas/lattice-projection.ts",
+    "atlas/signals-store.ts",
+    "core/types-core.ts"
+  ],
+  "tests/work-controller-tests.ts": [
+    "core/work-controller.ts"
+  ],
+  "tools/gate.ts": [
+    "tools/gate_client.ts"
+  ],
+  "tools/gate_client.ts": [],
+  "tools/migrate-to-sqlite.ts": [
+    "cli/sqlite-storage.ts",
+    "core/types.ts"
+  ]
+}

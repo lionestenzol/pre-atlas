@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atlas — monitor wall</title>
+<style>
+  :root { --bg:#15140f; --tile:#1d1c16; --line:#33312a; --text:#e8e6dd; --muted:#8a877c;
+          --up:#1D9E75; --down:#5f5d54; --accent:#C0563D; --font:-apple-system,system-ui,sans-serif;
+          --tile-min:340px; --tile-h:30vh; }
+  * { box-sizing:border-box; scrollbar-width:thin; scrollbar-color:#3c3a32 transparent; }
+  ::-webkit-scrollbar { width:9px; height:9px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:#3c3a32; border-radius:6px; border:2px solid var(--bg); }
+  ::-webkit-scrollbar-thumb:hover { background:#56534a; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font); }
+  header { display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--line);
+           position:sticky; top:0; background:var(--bg); z-index:10; flex-wrap:wrap; }
+  header h1 { font-size:14px; font-weight:600; margin:0; letter-spacing:.3px; }
+  header .sub { font-size:12px; color:var(--muted); }
+  header .spacer { flex:1; }
+  button, select, input { background:var(--tile); color:var(--text); border:1px solid var(--line); border-radius:8px;
+           padding:6px 11px; font-size:13px; cursor:pointer; font-family:var(--font); }
+  input { cursor:text; }
+  button:hover, select:hover { border-color:var(--muted); }
+  button.go { background:var(--up); border-color:var(--up); color:#06231a; font-weight:600; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .seg button { border:0; border-radius:0; padding:6px 10px; }
+  .seg button.on { background:var(--line); color:var(--text); }
+  label.ctl { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(var(--tile-min),1fr)); gap:12px; padding:14px; }
+  .tile { background:var(--tile); border:1px solid var(--line); border-radius:11px; overflow:hidden;
+          display:flex; flex-direction:column; height:var(--tile-h); min-height:200px; }
+  .tile.focus { outline:2px solid var(--accent); outline-offset:-1px; }
+  .bar { display:flex; align-items:center; gap:7px; padding:7px 11px; border-bottom:1px solid var(--line); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--down); flex:none; }
+  .dot.up { background:var(--up); }
+  .name { font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta { font-size:10px; color:var(--muted); white-space:nowrap; }
+  .bar .spacer { flex:1; }
+  .bar a, .bar .mini { font-size:12px; color:var(--muted); text-decoration:none; cursor:pointer; padding:1px 5px; border-radius:6px; }
+  .bar a:hover, .bar .mini:hover { color:var(--text); background:var(--bg); }
+  /* camera tile: render the surface at a fixed logical size, scale it to fit → whole
+     screen visible, no internal scrollbars, scales with the tile/window. */
+  .frame { flex:1; position:relative; overflow:hidden; background:#0e0d0a; }
+  .scaler { position:absolute; top:0; left:0; width:1280px; height:1024px; transform-origin:0 0; }
+  iframe { width:1280px; height:1024px; border:0; background:#fff; }
+  .ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ATLAS · monitor wall</h1>
+  <span class="sub" id="count">loading…</span>
+  <span class="spacer"></span>
+  <input id="filter" type="search" placeholder="filter…" style="width:130px;" oninput="setFilter(this.value)">
+  <label class="ctl">sort
+    <select id="sort" onchange="setSort(this.value)">
+      <option value="group">group</option>
+      <option value="name">name</option>
+      <option value="recent">recently edited</option>
+    </select>
+  </label>
+  <span class="seg" id="size-seg">
+    <button data-size="22vh" onclick="setSize(this,'22vh','260px')">S</button>
+    <button data-size="30vh" class="on" onclick="setSize(this,'30vh','340px')">M</button>
+    <button data-size="44vh" onclick="setSize(this,'44vh','460px')">L</button>
+  </span>
+  <label class="ctl"><input type="checkbox" id="liveonly" style="width:auto;" onchange="setLiveOnly(this.checked)"> live only</label>
+  <button class="go" onclick="startAll(this)">▶ start all</button>
+  <button onclick="reloadAll()" title="reload all">↻</button>
+  <a href="system-map.html" style="color:var(--muted);font-size:13px;text-decoration:none;padding:6px 0;">system map ↗</a>
+</header>
+<div class="grid" id="grid"></div>
+
+<script>
+const API = 'http://localhost:3072';
+let ALL = [], view = [], sortBy = 'group', filterStr = '', liveOnly = false;
+let io = null;
+const liveSet = new Set();  // urls that have loaded
+
+function tileEl(s, i) {
+  const el = document.createElement('div');
+  el.className = 'tile'; el.dataset.idx = i;
+  el.innerHTML =
+    '<div class="bar"><span class="dot' + (liveSet.has(s.url)?' up':'') + '" id="dot'+i+'"></span>'
+    + '<span class="name" title="'+s.file+' — click to select in graph" onclick="tileClick('+i+')" style="cursor:pointer">'+s.name+'</span>'
+    + '<span class="spacer"></span><span class="meta">'+s.group+' :'+s.port+'</span>'
+    + '<span class="mini" onclick="reloadOne('+i+')">↻</span>'
+    + '<a href="'+s.url+'" target="_blank" rel="noopener">↗</a></div>'
+    + '<div class="frame"><div class="ph">…</div><div class="scaler"><iframe id="if'+i+'" data-src="'+s.url+'"></iframe></div></div>';
+  return el;
+}
+function markUp(i, url){
+  const d=document.getElementById('dot'+i); if(d) d.classList.add('up');
+  liveSet.add(url);
+  const tile=document.querySelector('.tile[data-idx="'+i+'"]');
+  if(tile){ const ph=tile.querySelector('.ph'); if(ph) ph.style.display='none'; scaleTile(tile); }
+  updateCount();
+}
+function loadTile(i){
+  const f=document.getElementById('if'+i);
+  if(!f || f.src || !f.dataset.src) return;
+  f.addEventListener('load', ()=>markUp(i, f.dataset.src), { once:true });
+  f.src=f.dataset.src;  // listener attached first → only the REAL load marks live
+}
+function reloadOne(i){ const f=document.getElementById('if'+i); if(f && f.dataset.src){ f.addEventListener('load', ()=>markUp(i, f.dataset.src), {once:true}); f.src=f.dataset.src; } }
+function reloadAll(){ document.querySelectorAll('iframe[data-src]').forEach(f=>{ if(f.src) f.src=f.dataset.src; }); }
+function updateCount(){ document.getElementById('count').textContent = liveSet.size+' live · '+view.length+' shown · '+ALL.length+' total'; }
+
+function scaleTile(tile){
+  const frame=tile.querySelector('.frame'), scaler=tile.querySelector('.scaler');
+  if(!frame||!scaler) return;
+  scaler.style.transform = 'scale(' + (frame.clientWidth/1280) + ')';
+}
+function scaleAll(){ document.querySelectorAll('.tile').forEach(scaleTile); }
+let rT=null;
+window.addEventListener('resize', ()=>{ clearTimeout(rT); rT=setTimeout(scaleAll, 120); });
+
+function sortedView(){
+  let list = ALL.filter(s => !filterStr || (s.name+' '+s.file+' '+s.group).toLowerCase().includes(filterStr));
+  if (liveOnly) list = list.filter(s => liveSet.has(s.url));
+  if (sortBy==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  else if (sortBy==='recent') list.sort((a,b)=>b.mtime-a.mtime);
+  else list.sort((a,b)=>(a.group+'/'+a.file).localeCompare(b.group+'/'+b.file));
+  return list;
+}
+function render(){
+  view = sortedView();
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  view.forEach((s,i)=>grid.appendChild(tileEl(s,i)));
+  observeTiles();
+  view.slice(0, 8).forEach((_,i)=>loadTile(i));  // eager above-the-fold; IO loads the rest on scroll
+  scaleAll();
+  updateCount();
+  setTimeout(focusFromHash, 250);
+}
+function observeTiles(){
+  if(io) io.disconnect();
+  io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ loadTile(+e.target.dataset.idx); io.unobserve(e.target); } });
+  }, { rootMargin:'400px' });
+  document.querySelectorAll('.tile').forEach(t=>io.observe(t));
+}
+function setSort(v){ sortBy=v; render(); }
+function setFilter(v){ filterStr=(v||'').toLowerCase(); render(); }
+function setLiveOnly(v){ liveOnly=v; render(); }
+function setSize(btn,h,min){
+  document.documentElement.style.setProperty('--tile-h', h);
+  document.documentElement.style.setProperty('--tile-min', min);
+  document.querySelectorAll('#size-seg button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  setTimeout(scaleAll, 60);
+}
+
+async function loadSurfaces(){
+  try { const r=await fetch(API+'/map/surfaces'); if(r.ok){ const d=await r.json(); ALL=d.surfaces||[]; } } catch(e){}
+  render();
+}
+async function startAll(btn){
+  if(btn){ btn.disabled=true; btn.textContent='starting…'; }
+  let token='';
+  try { const r=await fetch(API+'/admin/write-token'); if(r.ok) token=(await r.json()).token; } catch(e){}
+  const names=[...new Set(ALL.map(s=>s.launch).filter(Boolean))];
+  for(const n of names){
+    try { await fetch(API+'/map/launch/'+encodeURIComponent(n),{method:'POST',headers:{'X-Atlas-Token':token}}); } catch(e){}
+  }
+  setTimeout(()=>{ reloadAll(); if(btn){ btn.disabled=false; btn.textContent='▶ start all'; } }, 3500);
+}
+
+// Jump to a tile when opened with #focus=<service> (from a system-map node).
+function focusFromHash(){
+  const m=(location.hash||'').match(/focus=([^&]+)/);
+  if(!m) return;
+  const want=decodeURIComponent(m[1]).toLowerCase();
+  const idx=view.findIndex(s=>(s.name+' '+s.group+' '+(s.launch||'')).toLowerCase().includes(want));
+  if(idx<0) return;
+  const tile=document.querySelectorAll('.tile')[idx];
+  if(tile){ tile.scrollIntoView({behavior:'smooth',block:'center'}); tile.classList.add('focus'); setTimeout(()=>tile.classList.remove('focus'),2800); }
+}
+window.addEventListener('hashchange', focusFromHash);
+
+// ===== Two-way sync with the system-map graph (brick 2) =====
+// Derive the subsystem name (= graph node id) from a surface's file path:
+// services/<name>/..., apps/<name>/..., tools/<name>/... → <name>; else group.
+function subsysOf(s){
+  const parts = (s.file||'').split(/[\\/]/);
+  const i = parts.findIndex(p => p==='services' || p==='apps' || p==='tools');
+  if (i >= 0 && parts[i+1]) return parts[i+1];
+  return s.group;
+}
+// Tile name clicked → tell the parent map to select this subsystem.
+function tileClick(i){
+  const s = view[i]; if(!s) return;
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type:'atlas-tile', key: subsysOf(s) }, '*');
+  }
+}
+// Parent map selected a subsystem → focus + highlight all its tiles, scroll to first.
+function focusSubsys(key){
+  if(!key) return;
+  const want = (''+key).toLowerCase();
+  const tiles = document.querySelectorAll('.tile');
+  let first = -1;
+  view.forEach((s,i)=>{
+    const t = tiles[i]; if(!t) return;
+    const match = subsysOf(s).toLowerCase() === want
+      || (s.name+' '+s.group+' '+(s.launch||'')).toLowerCase().includes(want);
+    t.classList.toggle('focus', match);
+    if(match && first<0) first = i;
+  });
+  if(first>=0 && tiles[first]) tiles[first].scrollIntoView({behavior:'smooth',block:'center'});
+}
+window.addEventListener('message', (e)=>{
+  const d = e.data;
+  if (d && d.type === 'atlas-focus') focusSubsys(d.key);
+});
+
+loadSurfaces();
+setInterval(updateCount, 2500);
+</script>
+</body>
+</html>

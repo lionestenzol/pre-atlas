@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DropList — Anatomy Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0e0d; --bg2:#101413; --panel:#161b19; --panel2:#1c2220;
+    --line:#2a322f; --line2:#39433f; --text:#e9e7e0; --muted:#8b918c; --faint:#7a807c;
+    --signal:#ffaa33; --signal-press:#e8951c; --done:#5fd97a; --stuck:#ff5d5d; --skip:#8a8f8c; --carry:#69b4ff;
+    --shadow:0 18px 50px -18px rgba(0,0,0,.85);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:15px; line-height:1.5;
+    overflow:hidden; overscroll-behavior:none;
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(255,170,51,.05), transparent 60%),
+      linear-gradient(rgba(255,255,255,.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.012) 1px, transparent 1px);
+    background-size:auto, 34px 34px, 34px 34px;
+  }
+  .display{font-family:'Chakra Petch',sans-serif;}
+  #app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;position:relative;}
+
+  header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px 12px;border-bottom:1px solid var(--line);background:linear-gradient(var(--bg2),transparent);}
+  .brand{font-family:'Chakra Petch';font-weight:700;letter-spacing:.16em;font-size:15px;}
+  .brand b{color:var(--signal);}
+  .clock{font-size:12px;color:var(--muted);text-align:right;letter-spacing:.05em;}
+  .clock .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--signal);margin-right:6px;box-shadow:0 0 10px var(--signal);animation:pulse 2.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  main{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px 16px;}
+  .scr{animation:fade .28s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .kicker{font-family:'Chakra Petch';font-weight:600;letter-spacing:.22em;font-size:11px;color:var(--faint);text-transform:uppercase;margin:0 0 4px;}
+  .lead{font-family:'Chakra Petch';font-weight:600;font-size:20px;letter-spacing:.02em;margin:0 0 2px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 16px;}
+
+  .now-wrap{display:flex;flex-direction:column;gap:14px;min-height:100%;}
+  .console{border:1px solid var(--line2);border-radius:18px;background:linear-gradient(180deg,var(--panel2),var(--panel));box-shadow:var(--shadow);position:relative;overflow:hidden;}
+  .console::before{content:"";position:absolute;inset:0;border-radius:18px;padding:1px;
+    background:linear-gradient(140deg,rgba(255,170,51,.35),transparent 40%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  .console .strip{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.18em;color:var(--faint);font-family:'Chakra Petch';font-weight:600;text-transform:uppercase;}
+  .console .strip .live{margin-left:auto;color:var(--signal);}
+  .console .body{padding:18px 18px 20px;}
+  .field{margin-bottom:16px;} .field:last-child{margin-bottom:0;}
+  .flabel{font-family:'Chakra Petch';font-weight:600;letter-spacing:.18em;font-size:10.5px;color:var(--faint);text-transform:uppercase;margin-bottom:5px;}
+  .job-title{font-family:'Chakra Petch';font-weight:700;font-size:25px;line-height:1.15;letter-spacing:.01em;}
+  .step-now{font-size:17px;color:var(--text);}
+  .nextmove{font-size:18px;line-height:1.4;color:#fff;background:rgba(255,170,51,.07);border-left:3px solid var(--signal);padding:12px 14px;border-radius:0 10px 10px 0;}
+  .nextmove .arrow{color:var(--signal);font-weight:600;}
+  .done-means{font-size:13.5px;color:var(--muted);font-style:italic;}
+  .after{font-size:12.5px;color:var(--faint);}
+  .after b{color:var(--muted);font-style:normal;}
+
+  .steps{display:flex;flex-direction:column;gap:0;margin-top:2px;}
+  .step{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .step:last-child{border-bottom:0;}
+  .step .box{width:17px;height:17px;border:1.5px solid var(--line2);border-radius:5px;flex:0 0 auto;display:grid;place-items:center;font-size:11px;color:transparent;}
+  .step.done .box{background:var(--done);border-color:var(--done);color:#0c0e0d;}
+  .step.done span{color:var(--faint);text-decoration:line-through;}
+  .step.active{color:#fff;}
+  .step.active .box{border-color:var(--signal);box-shadow:0 0 0 3px rgba(255,170,51,.15);}
+  .step .marker{margin-left:auto;font-size:9.5px;letter-spacing:.16em;color:var(--signal);font-family:'Chakra Petch';font-weight:600;}
+
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+  .btn{font-family:'Chakra Petch';font-weight:600;letter-spacing:.08em;font-size:14px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);padding:15px 12px;border-radius:13px;cursor:pointer;transition:transform .08s, background .15s, border-color .15s;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn:active{transform:scale(.97);}
+  .btn.primary{grid-column:1/-1;background:var(--done);border-color:var(--done);color:#08110a;font-size:16px;letter-spacing:.1em;box-shadow:0 10px 24px -10px rgba(95,217,122,.6);}
+  .btn.stuck{color:var(--stuck);border-color:#43302f;}
+  .btn.stuck:active,.btn.stuck.on{background:rgba(255,93,93,.12);}
+  .btn.skip{color:var(--skip);}
+  .btn.ghost{background:transparent;}
+  .btn.wide{grid-column:1/-1;}
+  .btn.signal{background:var(--signal);border-color:var(--signal);color:#1a1205;font-size:16px;letter-spacing:.1em;box-shadow:0 10px 24px -10px rgba(255,170,51,.6);}
+  .btn.signal:active{background:var(--signal-press);border-color:var(--signal-press);}
+
+  .empty{text-align:center;padding:48px 20px;color:var(--muted);}
+  .empty .big{font-family:'Chakra Petch';font-weight:700;font-size:22px;color:var(--text);margin-bottom:8px;}
+  .handrail{margin-top:auto;text-align:center;padding-top:28px;padding-bottom:14px;margin-bottom:8px;}
+  .handrail button{background:none;border:0;color:var(--faint);font-family:'IBM Plex Mono';font-size:12px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;letter-spacing:.04em;}
+
+  textarea,input[type=text]{width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:12px;color:var(--text);font-family:'IBM Plex Mono';font-size:15px;padding:14px;resize:none;line-height:1.6;}
+  textarea:focus,input:focus{outline:none;border-color:var(--signal);box-shadow:0 0 0 3px rgba(255,170,51,.12);}
+  textarea::placeholder,input::placeholder{color:var(--faint);}
+  .hint{font-size:12px;color:var(--faint);margin:8px 2px 16px;}
+
+  .list{display:flex;flex-direction:column;gap:9px;}
+  .row{border:1px solid var(--line);background:var(--panel);border-radius:13px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s, background .15s;}
+  .row:active{background:var(--panel2);}
+  .row.active{border-color:var(--signal);background:rgba(255,170,51,.06);}
+  .row .ttl{font-size:14.5px;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row.done .ttl{color:var(--faint);text-decoration:line-through;}
+  .chip{font-family:'Chakra Petch';font-weight:600;font-size:9.5px;letter-spacing:.14em;padding:4px 8px;border-radius:20px;border:1px solid var(--line2);text-transform:uppercase;flex:0 0 auto;}
+  .chip.active{color:var(--signal);border-color:var(--signal);background:rgba(255,170,51,.08);}
+  .chip.waiting{color:var(--muted);}
+  .chip.done{color:var(--done);border-color:#234e30;}
+  .chip.stuck{color:var(--stuck);border-color:#43302f;}
+  .chip.skipped{color:var(--skip);}
+  .chip.carry{color:var(--carry);border-color:#243a4e;}
+  .seg{font-family:'Chakra Petch';font-weight:600;letter-spacing:.16em;font-size:10.5px;color:var(--faint);text-transform:uppercase;margin:20px 0 8px;display:flex;align-items:center;gap:10px;}
+  .seg::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  .sheet-bg{position:fixed;inset:0;background:rgba(4,6,5,.66);backdrop-filter:blur(3px);z-index:50;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s;}
+  .sheet{width:100%;max-width:520px;background:var(--bg2);border:1px solid var(--line2);border-bottom:0;border-radius:20px 20px 0 0;max-height:88vh;overflow-y:auto;padding:8px 18px 26px;animation:up .26s cubic-bezier(.2,.8,.2,1);}
+  @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+  .grab{width:38px;height:4px;background:var(--line2);border-radius:4px;margin:8px auto 14px;}
+  .sheet h3{font-family:'Chakra Petch';font-weight:700;font-size:18px;margin:0 0 2px;}
+  .miniL{font-family:'Chakra Petch';font-weight:600;letter-spacing:.16em;font-size:10px;color:var(--faint);text-transform:uppercase;margin:16px 0 6px;}
+  .blocks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+  .blocks button{font-family:'IBM Plex Mono';font-size:12.5px;text-align:left;padding:11px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);color:var(--muted);cursor:pointer;}
+  .blocks button.on{border-color:var(--signal);color:#fff;background:rgba(255,170,51,.1);}
+  .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .three button{font-family:'Chakra Petch';font-weight:600;font-size:12px;letter-spacing:.06em;padding:13px 6px;border-radius:11px;border:1px solid var(--line2);background:var(--panel);color:var(--muted);cursor:pointer;text-transform:uppercase;}
+  .three button.on{border-color:var(--signal);color:#fff;background:rgba(255,170,51,.1);}
+  .three.four{grid-template-columns:1fr 1fr;}
+
+  .stepedit{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line);}
+  .stepedit input{flex:1;background:transparent;border:0;border-bottom:1px solid transparent;padding:4px 0;border-radius:0;}
+  .stepedit input:focus{box-shadow:none;border-bottom-color:var(--line2);}
+  .stepedit .x{color:var(--faint);background:none;border:0;cursor:pointer;font-size:16px;padding:4px;}
+  .addstep{color:var(--signal);background:none;border:0;font-family:'Chakra Petch';font-weight:600;font-size:12px;letter-spacing:.1em;cursor:pointer;padding:10px 0 0;text-transform:uppercase;}
+
+  .lcard{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:14px;margin-bottom:11px;}
+  .lcard .lh{font-family:'Chakra Petch';font-weight:600;letter-spacing:.14em;font-size:10.5px;text-transform:uppercase;margin-bottom:9px;display:flex;justify-content:space-between;}
+  .lcard ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;}
+  .lcard li{font-size:13.5px;color:var(--muted);padding-left:16px;position:relative;}
+  .lcard li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:1px;}
+  .lc-done .lh{color:var(--done);} .lc-done li::before{background:var(--done);}
+  .lc-stuck .lh{color:var(--stuck);} .lc-stuck li::before{background:var(--stuck);}
+  .lc-skip .lh{color:var(--skip);} .lc-skip li::before{background:var(--skip);}
+  .lc-carry .lh{color:var(--carry);} .lc-carry li::before{background:var(--carry);}
+  .lc-add .lh{color:var(--signal);} .lc-add li::before{background:var(--signal);}
+  .none{color:var(--faint);font-size:12.5px;font-style:italic;}
+  .picker{display:flex;flex-direction:column;gap:7px;}
+  .picker label{display:flex;align-items:center;gap:10px;font-size:13.5px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;}
+  .picker label.on{border-color:var(--signal);background:rgba(255,170,51,.07);color:#fff;}
+  .picker input{accent-color:var(--signal);}
+  .reflab{font-family:'Chakra Petch';font-weight:600;letter-spacing:.12em;font-size:10.5px;color:var(--faint);text-transform:uppercase;margin:16px 0 6px;}
+
+  .day-row{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:13px 15px;margin-bottom:9px;cursor:pointer;}
+  .day-row .d{font-family:'Chakra Petch';font-weight:700;font-size:15px;}
+  .day-row .stat{display:flex;gap:14px;margin-top:7px;font-size:11.5px;color:var(--muted);}
+  .day-row .stat b{font-family:'Chakra Petch';}
+
+  nav{flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:linear-gradient(transparent,var(--bg2));padding:8px 8px calc(8px + env(safe-area-inset-bottom));}
+  nav button{flex:1;background:none;border:0;color:var(--faint);font-family:'Chakra Petch';font-weight:600;letter-spacing:.1em;font-size:10.5px;text-transform:uppercase;cursor:pointer;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:5px;border-radius:10px;}
+  nav button .ic{font-size:17px;line-height:1;font-family:'IBM Plex Mono';}
+  nav button.on{color:var(--signal);}
+  nav button.on .ic{filter:drop-shadow(0 0 8px rgba(255,170,51,.6));}
+
+  .fab{position:absolute;right:16px;bottom:78px;width:54px;height:54px;border-radius:50%;background:var(--signal);border:0;color:#1a1205;font-size:28px;font-weight:600;box-shadow:0 12px 30px -8px rgba(255,170,51,.7);cursor:pointer;z-index:30;display:grid;place-items:center;font-family:'Chakra Petch';}
+  .fab:active{transform:scale(.92);}
+  .loading{height:100%;display:grid;place-items:center;color:var(--faint);font-family:'Chakra Petch';letter-spacing:.2em;}
+
+  /* ===================== ANATOMY INSTRUMENT ===================== */
+  #ctl{position:fixed;top:10px;right:12px;z-index:60;display:flex;gap:8px;}
+  #ctl button{font-family:'Chakra Petch';font-weight:600;letter-spacing:.1em;font-size:10.5px;text-transform:uppercase;
+    border:1px solid var(--line2);background:rgba(16,20,19,.9);backdrop-filter:blur(6px);color:var(--muted);
+    padding:8px 11px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+  #ctl button.on{color:var(--signal);border-color:var(--signal);background:rgba(255,170,51,.1);}
+  #ctl button b{font-family:'IBM Plex Mono';color:var(--signal);}
+
+  #ledgerPanel{position:fixed;z-index:40;right:0;top:0;bottom:0;width:340px;transform:translateX(102%);
+    transition:transform .26s cubic-bezier(.2,.8,.2,1);background:linear-gradient(180deg,var(--bg2),var(--bg));
+    border-left:1px solid var(--line2);box-shadow:-20px 0 50px -20px rgba(0,0,0,.8);
+    overflow-y:auto;padding:54px 16px 20px;}
+  #ledgerPanel.open{transform:none;}
+  @media(max-width:980px){
+    #ledgerPanel{top:auto;width:100%;max-height:62vh;transform:translateY(102%);border-left:0;border-top:1px solid var(--line2);
+      border-radius:18px 18px 0 0;box-shadow:0 -20px 50px -20px rgba(0,0,0,.8);padding:16px 16px 24px;}
+    #ledgerPanel.open{transform:none;}
+  }
+  .lp-h{font-family:'Chakra Petch';font-weight:700;letter-spacing:.12em;font-size:13px;text-transform:uppercase;margin:0 0 2px;}
+  .lp-h b{color:var(--signal);}
+  .lp-sub{color:var(--faint);font-size:11px;margin-bottom:16px;}
+  .ledtable{width:100%;border-collapse:collapse;font-size:12px;}
+  .ledtable th{font-family:'Chakra Petch';font-weight:600;letter-spacing:.1em;font-size:9px;color:var(--faint);text-transform:uppercase;text-align:right;padding:0 0 8px;border-bottom:1px solid var(--line);}
+  .ledtable th:first-child{text-align:left;}
+  .ledtable td{padding:9px 0;border-bottom:1px dashed var(--line);text-align:right;font-variant-numeric:tabular-nums;}
+  .ledtable td:first-child{text-align:left;color:var(--muted);font-family:'Chakra Petch';font-weight:600;letter-spacing:.04em;font-size:11px;}
+  .ledtable .dim{color:var(--faint);}
+  .d-pos{color:var(--stuck);} .d-zero{color:var(--done);} .d-na{color:var(--faint);}
+  .ledtable tr.total td{border-bottom:0;padding-top:13px;font-size:13px;}
+  .ledtable tr.total td:first-child{color:var(--signal);font-size:12px;}
+  .ledtable tr.total td b{font-family:'Chakra Petch';}
+  .bigstat{display:flex;gap:10px;margin:16px 0 6px;}
+  .bigstat .b{flex:1;border:1px solid var(--line2);border-radius:12px;background:var(--panel);padding:11px 12px;}
+  .bigstat .bl{font-family:'Chakra Petch';font-weight:600;letter-spacing:.1em;font-size:8.5px;color:var(--faint);text-transform:uppercase;}
+  .bigstat .bv{font-family:'Chakra Petch';font-weight:700;font-size:23px;margin-top:3px;}
+  .bigstat .bv small{font-size:11px;color:var(--muted);font-weight:400;}
+  .lp-note{font-size:11px;color:var(--faint);line-height:1.5;margin:14px 0;}
+  .lp-reset{width:100%;font-family:'Chakra Petch';font-weight:600;letter-spacing:.1em;font-size:11px;text-transform:uppercase;
+    border:1px solid var(--line2);background:var(--panel);color:var(--muted);padding:11px;border-radius:11px;cursor:pointer;margin-top:6px;}
+  .lp-reset:active{background:var(--panel2);}
+
+  /* panel tabs */
+  .lp-tabs{display:flex;gap:6px;margin:0 0 16px;}
+  .lp-tabs button{flex:1;font-family:'Chakra Petch';font-weight:600;letter-spacing:.08em;font-size:10px;text-transform:uppercase;
+    border:1px solid var(--line2);background:var(--panel);color:var(--muted);padding:8px 4px;border-radius:9px;cursor:pointer;}
+  .lp-tabs button.on{color:var(--signal);border-color:var(--signal);background:rgba(255,170,51,.1);}
+
+  /* trace stream */
+  .trace{display:flex;flex-direction:column;gap:0;}
+  .ev{display:flex;align-items:baseline;gap:9px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:11.5px;}
+  .ev .ti{color:var(--faint);font-size:9.5px;font-variant-numeric:tabular-nums;flex:0 0 52px;}
+  .ev .dt{width:7px;height:7px;border-radius:50%;flex:0 0 auto;margin-top:4px;background:var(--faint);}
+  .ev .tx{flex:1;color:var(--text);min-width:0;}
+  .ev .tx b{font-family:'Chakra Petch';font-weight:600;}
+  .ev .lp{flex:0 0 auto;font-size:9px;color:var(--faint);font-family:'Chakra Petch';letter-spacing:.06em;}
+  .ev.k-transition .dt{background:var(--signal);}
+  .ev.k-switch .dt{background:var(--carry);}
+  .ev.k-view .dt{background:var(--skip);}
+  .ev.k-add .dt{background:var(--done);}
+  .ev.k-remove .dt{background:var(--stuck);}
+  .ev.k-action .dt{background:var(--line2);}
+  .ev.k-cycle .dt{background:#fff;}
+  .trace-empty{color:var(--faint);font-style:italic;font-size:12px;padding:18px 0;}
+
+  /* load chart */
+  .spark{width:100%;height:84px;border:1px solid var(--line);border-radius:11px;background:var(--panel);margin:6px 0 4px;display:block;}
+  .spark-lab{display:flex;justify-content:space-between;font-size:9px;color:var(--faint);font-family:'Chakra Petch';letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
+  .loadgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0 4px;}
+  .loadgrid .b{border:1px solid var(--line2);border-radius:11px;background:var(--panel);padding:10px 11px;}
+  .loadgrid .bl{font-family:'Chakra Petch';font-weight:600;letter-spacing:.08em;font-size:8.5px;color:var(--faint);text-transform:uppercase;}
+  .loadgrid .bv{font-family:'Chakra Petch';font-weight:700;font-size:21px;margin-top:3px;}
+  .loadgrid .bv small{font-size:10px;color:var(--muted);font-weight:400;}
+
+  /* autopilot */
+  .ap-ctl{display:flex;gap:6px;margin-bottom:12px;}
+  .ap-ctl button{flex:1;font-family:'Chakra Petch';font-weight:600;letter-spacing:.06em;font-size:10px;text-transform:uppercase;
+    border:1px solid var(--line2);background:var(--panel);color:var(--text);padding:11px 4px;border-radius:10px;cursor:pointer;}
+  .ap-ctl button:disabled{opacity:.4;cursor:default;}
+  .ap-status{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono';margin-bottom:12px;min-height:14px;}
+  .ap-class{border:1px solid var(--line2);border-radius:13px;background:var(--panel);padding:13px 14px;}
+  .ap-label{font-family:'Chakra Petch';font-weight:700;letter-spacing:.06em;font-size:18px;}
+  .ap-class ul{margin:8px 0 0;padding-left:16px;font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px;}
+  .ap-tax{display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted);}
+  .ap-tax div{border-left:2px solid var(--line2);padding-left:9px;}
+  .ap-tax b{font-family:'Chakra Petch';font-weight:600;letter-spacing:.02em;}
+  .ap-defs{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--stuck);}
+  .ap-defs div{display:flex;justify-content:space-between;gap:8px;}
+  .ap-defs span{color:var(--faint);font-size:10px;flex:0 0 auto;}
+  .ev.k-defect .dt{background:var(--stuck);box-shadow:0 0 8px var(--stuck);}
+  .ev.k-defect .tx{color:var(--stuck);}
+
+  /* X-ray overlay decorations */
+  body.xray main{padding-bottom:60px;}
+  .xr-on{position:relative;outline:1.5px dashed rgba(255,170,51,.55);outline-offset:3px;border-radius:8px;}
+  .xr-tab{position:absolute;top:-9px;left:8px;z-index:5;font-family:'Chakra Petch';font-weight:600;letter-spacing:.08em;
+    font-size:8.5px;text-transform:uppercase;color:#1a1205;background:var(--signal);padding:2px 7px;border-radius:6px;
+    cursor:pointer;box-shadow:0 4px 10px -4px rgba(255,170,51,.7);white-space:nowrap;}
+  .xr-tab .cost{background:rgba(0,0,0,.22);padding:0 4px;border-radius:4px;margin-left:5px;}
+  .xr-note{position:absolute;top:16px;left:8px;z-index:6;max-width:min(280px,80vw);font-family:'IBM Plex Mono';
+    font-size:11px;line-height:1.45;color:var(--text);background:rgba(12,14,13,.97);border:1px solid var(--signal);
+    border-radius:9px;padding:9px 11px;box-shadow:var(--shadow);display:none;}
+  .xr-tab.open + .xr-note{display:block;}
+  /* ===================== THE LINE (triage station) ===================== */
+  .ln-dock{border:1px solid var(--line2);border-radius:16px;background:linear-gradient(180deg,var(--panel2),var(--panel));padding:16px;margin:4px 0 18px;box-shadow:var(--shadow);}
+  .ln-dock textarea{min-height:108px;}
+  .ln-controls{display:flex;gap:10px;margin-top:12px;}
+  .ln-controls .btn.signal{flex:1;}
+  .ln-controls .btn.ghost{flex:0 0 auto;}
+  .ln-seed{margin-top:11px;background:none;border:0;color:var(--carry);font-family:'IBM Plex Mono';font-size:12px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+  .ln-err{color:var(--stuck);font-size:12px;margin-top:10px;font-family:'IBM Plex Mono';line-height:1.5;}
+  .ln-line{display:flex;flex-direction:column;gap:9px;}
+  .ln-st{border:1px solid var(--line);border-radius:13px;background:var(--panel);overflow:hidden;position:relative;transition:border-color .2s,box-shadow .2s;}
+  .ln-st::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line2);transition:background .2s;}
+  .ln-st.running{border-color:var(--signal);box-shadow:0 0 0 1px rgba(255,170,51,.2);}
+  .ln-st.running::before{background:var(--signal);animation:pulse 1.1s infinite;}
+  .ln-st.done::before{background:var(--done);}
+  .ln-st.fail::before{background:var(--stuck);}
+  .ln-head{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer;}
+  .ln-num{font-family:'Chakra Petch';font-weight:700;font-size:12px;color:var(--faint);width:22px;flex:0 0 auto;}
+  .ln-st.done .ln-num{color:var(--done);} .ln-st.running .ln-num{color:var(--signal);}
+  .ln-meta{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .ln-name{font-weight:700;font-size:14.5px;letter-spacing:.01em;}
+  .ln-tag{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ln-stat{font-family:'Chakra Petch';font-weight:600;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);border:1px solid var(--line2);border-radius:20px;padding:3px 8px;flex:0 0 auto;}
+  .ln-st.running .ln-stat{color:var(--signal);border-color:var(--signal);}
+  .ln-st.done .ln-stat{color:var(--done);border-color:#234e30;}
+  .ln-st.fail .ln-stat{color:var(--stuck);border-color:#43302f;}
+  .ln-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+  .ln-body.open{max-height:2200px;}
+  .ln-out{padding:0 14px 14px 47px;font-size:12.5px;line-height:1.6;color:#cfccc4;white-space:pre-wrap;word-break:break-word;}
+  .ln-out.empty{color:var(--faint);font-style:italic;}
+  .ln-close{margin-top:18px;border:1px solid #234e30;border-radius:16px;background:linear-gradient(180deg,rgba(95,217,122,.07),transparent);padding:16px;}
+  .ln-close-h{font-family:'Chakra Petch';font-weight:600;letter-spacing:.2em;font-size:10px;text-transform:uppercase;color:var(--done);margin-bottom:10px;}
+  .ln-verdict{font-size:21px;line-height:1.18;margin-bottom:12px;}
+  .ln-close-body{font-size:12px;line-height:1.55;color:#cfccc4;white-space:pre-wrap;margin-bottom:14px;}
+  .ln-fired{color:var(--done);font-family:'Chakra Petch';font-weight:600;letter-spacing:.06em;text-align:center;padding:8px;}
+  .ln-reroute{width:100%;margin:8px 0 2px;font-family:'Chakra Petch';font-weight:600;letter-spacing:.06em;font-size:12px;text-transform:uppercase;color:var(--signal);background:rgba(255,170,51,.07);border:1px solid var(--signal);border-radius:11px;padding:11px;cursor:pointer;}
+  .ln-reroute:disabled{opacity:.6;cursor:default;}
+  .ln-dial{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:0 0 14px;}
+  .ln-dial button{font-family:'Chakra Petch';font-weight:600;font-size:12px;letter-spacing:.06em;padding:13px 6px;border-radius:11px;border:1px solid var(--line2);background:var(--panel);color:var(--muted);cursor:pointer;text-transform:uppercase;transition:border-color .15s,color .15s,background .15s;}
+  .ln-dial button.on{border-color:var(--signal);color:#fff;background:rgba(255,170,51,.1);}
+  .ln-pick{display:flex;flex-direction:column;gap:7px;margin:6px 0 14px;}
+  .ln-pickrow{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:11px;padding:11px 12px;cursor:pointer;color:var(--text);font-family:'IBM Plex Mono';font-size:13.5px;}
+  .ln-pickrow.on{border-color:var(--signal);background:rgba(255,170,51,.08);}
+  .ln-pttl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ln-pickclear{align-self:flex-start;background:none;border:0;color:var(--faint);font-family:'IBM Plex Mono';font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:2px;}
+  .ln-hist{display:flex;flex-direction:column;gap:9px;}
+  .hist-row{border-left:2px solid var(--line2);padding:1px 0 6px 11px;}
+  .hist-t{font-family:'Chakra Petch';font-weight:600;letter-spacing:.08em;font-size:9px;color:var(--faint);text-transform:uppercase;}
+  .hist-note{font-size:12px;color:var(--muted);font-style:italic;margin:3px 0;}
+  .hist-move{font-size:12.5px;line-height:1.5;}
+  .hist-from{color:var(--faint);text-decoration:line-through;}
+  .hist-to{color:var(--text);}
+  .hist-steps{font-size:10.5px;color:var(--faint);margin-top:3px;line-height:1.5;}
+  /* ===================== MINIMUM MODE ===================== */
+  body.min #ctl{display:none;}
+  .min-header{justify-content:center;}
+  .min-wrap{display:flex;flex-direction:column;min-height:100%;gap:16px;padding-top:8px;}
+  .min-card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line2);border-radius:20px;padding:28px 22px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+  .min-card::before{content:"";position:absolute;inset:0;border-radius:20px;padding:1px;background:linear-gradient(140deg,rgba(255,170,51,.30),transparent 42%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  .min-job{font-family:'Chakra Petch';font-weight:600;letter-spacing:.16em;font-size:11px;text-transform:uppercase;color:var(--faint);margin-bottom:14px;}
+  .min-move{font-size:27px;line-height:1.22;color:#fff;font-weight:700;letter-spacing:.005em;}
+  .min-after{margin-top:18px;font-family:'Chakra Petch';font-weight:600;letter-spacing:.08em;font-size:11.5px;color:var(--faint);text-transform:uppercase;}
+  .min-actions{display:flex;flex-direction:column;gap:10px;}
+  .min-actions .btn.primary{font-size:17px;padding:18px;}
+  .min-actions .btn.stuck{padding:15px;background:transparent;}
+  .min-add{display:flex;gap:8px;margin-top:auto;}
+  .min-add input{flex:1;}
+  .min-addbtn{flex:0 0 auto;width:52px;border:1px solid var(--line2);background:var(--panel2);color:var(--signal);border-radius:12px;font-size:24px;line-height:1;cursor:pointer;font-family:'Chakra Petch';}
+  .min-addbtn:active{background:var(--panel);}
+  .min-foot{text-align:center;padding:4px 0 12px;}
+  .min-foot button{background:none;border:0;color:var(--faint);font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.08em;cursor:pointer;}
+  .min-foot button:active{color:var(--muted);}
+  .min-empty{text-align:center;padding:46px 12px 26px;}
+  .min-empty-big{font-size:27px;color:var(--text);margin-bottom:6px;}
+  .min-empty-sub{color:var(--muted);font-size:14px;}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">LOADING...</div></div>
+
+<div id="ctl">
+  <button id="tgMin">&#9680; MIN</button>
+  <button id="tgXray">X-RAY <span>○</span></button>
+  <button id="tgPanel">LEDGER · <b id="liveTotal">0</b></button>
+</div>
+<aside id="ledgerPanel"></aside>
+
+<script>
+/* ===================== DropList running core (cleaned) ===================== */
+const STORE_KEY = 'droplist:state:v1';
+const uid = () => Math.random().toString(36).slice(2,9);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtDate = iso => { try{ const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }catch(e){return iso;} };
+const BLOCK_TYPES = ['Need tool','Need info','Too big','Too tired','Waiting on someone','Not important','Other'];
+
+let S = null;
+let view = 'now';
+let sheet = null;
+let MODE = 'min';
+const MODE_KEY = 'droplist:mode:v1';
+function loadMode(){ try{ const m=localStorage.getItem(MODE_KEY); if(m==='min'||m==='workshop') MODE=m; }catch(e){} }
+function saveMode(){ try{ localStorage.setItem(MODE_KEY, MODE); }catch(e){} }
+
+function blankState(){ return { day: todayISO(), jobs: [], activeId: null, ledger: {}, openDayView: null }; }
+
+function load(){
+  try{ const r = localStorage.getItem(STORE_KEY); if(r){ S = JSON.parse(r); } }catch(e){}
+  if(!S) S = blankState();
+  S.jobs = S.jobs || []; S.ledger = S.ledger || {};
+}
+let saveT;
+function save(){ clearTimeout(saveT); saveT = setTimeout(()=>{ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} },120); }
+
+function activeJob(){ return S.jobs.find(j=>j.id===S.activeId) || null; }
+function todaysJobs(){ return S.jobs; }
+function liveJobs(){ return S.jobs.filter(j=>j.status==='waiting'||j.status==='active'||j.status==='stuck'); }
+function newJob(title){ return { id:uid(), title:title.trim(), why:'', doneMeans:'', nextMove:'', steps:[], status:'waiting' }; }
+function activeStepIndex(j){ if(!j.steps||!j.steps.length) return -1; return j.steps.findIndex(s=>!s.done); }
+function ensureActive(){
+  if(S.activeId && S.jobs.some(j=>j.id===S.activeId && (j.status==='active'))) return;
+  const cand = S.jobs.find(j=>j.status==='active') || S.jobs.find(j=>j.status==='waiting') || S.jobs.find(j=>j.status==='stuck');
+  if(cand){ cand.status='active'; S.activeId=cand.id; } else S.activeId=null;
+}
+function setActive(id){
+  S.jobs.forEach(j=>{ if(j.status==='active' && j.id!==id) j.status='waiting'; });
+  const j = S.jobs.find(x=>x.id===id);
+  if(j){ j.status='active'; S.activeId=id; }
+  save();
+}
+function nextWaitingTitle(){
+  const a = activeJob();
+  const rest = S.jobs.filter(j=>j.id!==(a&&a.id) && (j.status==='waiting'||j.status==='stuck'));
+  return rest.length ? rest[0].title : null;
+}
+function completeActive(){
+  const j = activeJob(); if(!j) return;
+  // Engine-backed: completing here is a real node-complete on the server, then a re-hydrate.
+  // See ~/.claude/rules/common/code-as-furniture.md -- the dead localStorage twin is gone.
+  if(window.EngineClient && EngineClient.wired && j.serverBacked && j.dagId){
+    const step = (j.steps||[]).find(s=>!s.done && s.ready) || (j.steps||[]).find(s=>!s.done);
+    if(step && step.nodeId){
+      step.done = true; save(); render();            // optimistic; hydrate reconciles to server truth
+      EngineClient.complete(j.dagId, step.nodeId);
+      return;
+    }
+  }
+  const si = activeStepIndex(j);
+  if(si>=0){ j.steps[si].done = true; if(activeStepIndex(j) === -1){ j.status='done'; advance(); } }
+  else { j.status='done'; advance(); }
+  save(); render();
+}
+function skipActive(){ const j=activeJob(); if(!j) return; j.status='skipped'; advance(); save(); render(); }
+function advance(){
+  const cand = S.jobs.find(j=>j.status==='waiting') || S.jobs.find(j=>j.status==='stuck');
+  if(cand){ cand.status='active'; S.activeId=cand.id; } else S.activeId=null;
+}
+
+const $app = document.getElementById('app');
+
+function render(){
+  ensureActive();
+  document.body.classList.toggle('min', MODE==='min');
+  $app.innerHTML = shell( screen() );
+  bind();
+  if(sheet) mountSheet();
+  afterRender();
+}
+
+function shell(inner){
+  const now = new Date();
+  const t = now.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  if(MODE==='min'){
+    return `
+  <header class="min-header"><div class="brand display">DROP<b>LIST</b></div></header>
+  <main aria-live="polite" aria-atomic="false">${inner}</main>`;
+  }
+  const navBtn = (id,ic,label)=>`<button data-nav="${id}" class="${view===id?'on':''}"><span class="ic">${ic}</span>${label}</button>`;
+  return `
+  <header>
+    <div class="brand display">DROP<b>LIST</b></div>
+    <div class="clock"><span class="dot"></span>${fmtDate(S.day)}<br>${t}</div>
+  </header>
+  <main aria-live="polite" aria-atomic="false">${inner}</main>
+  ${view==='now'||view==='today' ? `<button class="fab" data-act="quickdrop" aria-label="Quick drop a thought">+</button>`:''}
+  <nav>
+    ${navBtn('now','&#9635;','Now')}
+    ${navBtn('today','&#8803;','Today')}
+    ${navBtn('drop','&#9998;','Drop')}
+    ${navBtn('close','&#9681;','Close')}
+    ${navBtn('ledger','&#9201;','Ledger')}
+  </nav>`;
+}
+
+function screen(){
+  if(MODE==='min') return scrMin();
+  if(view==='now') return scrNow();
+  if(view==='drop') return scrDrop();
+  if(view==='today') return scrToday();
+  if(view==='close') return scrClose();
+  if(view==='ledger') return S.openDayView ? scrDayDetail() : scrLedger();
+  return '';
+}
+
+function lineBodyHTML(){
+  const stations = LINE_STAGES.map((s,i)=>{
+    const stt = LINE.status[s.id] || 'idle';
+    const out = LINE.outputs[s.id];
+    const open = LINE.open.has(s.id);
+    const statTxt = stt==='idle' ? 'idle' : stt;
+    return `<div class="ln-st ${stt}" id="ln-st-${s.id}">
+      <div class="ln-head" data-lntoggle="${s.id}" role="button" tabindex="0" aria-expanded="${open?'true':'false'}" aria-label="Toggle stage ${s.name}">
+        <span class="ln-num">0${i+1}</span>
+        <span class="ln-meta"><span class="ln-name display">${s.name}</span><span class="ln-tag">${s.tag}</span></span>
+        <span class="ln-stat" id="ln-stat-${s.id}">${statTxt}</span>
+      </div>
+      <div class="ln-body ${open?'open':''}"><div class="ln-out ${out?'':'empty'}" id="ln-out-${s.id}">${out?esc(out):'\u2014 waiting for the line \u2014'}</div></div>
+    </div>`;
+  }).join('');
+
+  const close = LINE.verdict ? `
+    <div class="ln-close">
+      <div class="ln-close-h">// Close</div>
+      <div class="ln-verdict display">${esc(LINE.verdict)}</div>
+      <div class="ln-close-body">${esc(LINE.closeText||'')}</div>
+      ${ LINE.fired
+        ? `<div class="ln-fired">&#10003; Fired &rarr; now waiting on the Run Board</div>`
+        : `<button class="btn signal wide" data-act="lineFire" ${LINE.firing?'disabled':''}>${LINE.firing?'Building job&hellip;':'&#9654; Fire to Run Board'}</button>` }
+    </div>` : '';
+
+  return `<div class="ln-line">${stations}</div>${close}`;
+}
+
+function scrMin(){
+  const j = activeJob();
+  const addbox = `<div class="min-add">
+      <input type="text" id="minadd" placeholder="add something to do">
+      <button class="min-addbtn" data-act="minadd">&#43;</button>
+    </div>`;
+  const toggle = `<div class="min-foot"><button data-act="toworkshop">&#9881; workshop</button></div>`;
+  if(!j){
+    return `<div class="scr min-wrap">
+      <div class="min-empty">
+        <div class="min-empty-big display">All clear.</div>
+        <div class="min-empty-sub">Nothing to do right now.</div>
+      </div>
+      ${addbox}
+      ${toggle}
+    </div>`;
+  }
+  const si = activeStepIndex(j);
+  const move = j.nextMove ? j.nextMove : (si>=0 ? j.steps[si].text : j.title);
+  const after = nextWaitingTitle();
+  return `<div class="scr min-wrap">
+    <div class="min-card">
+      <div class="min-job">${esc(j.title)}</div>
+      <div class="min-move display">${esc(move)}</div>
+      ${after?`<div class="min-after">after this &middot; ${esc(after)}</div>`:''}
+    </div>
+    <div class="min-actions">
+      <button class="btn primary" data-act="done">Done &#10003;</button>
+      <button class="btn stuck" data-act="stuck">Stuck</button>
+    </div>
+    ${addbox}
+    ${toggle}
+  </div>`;
+}
+function minAdd(){
+  const inp=document.querySelector('#minadd'); if(!inp) return;
+  const tx=inp.value.trim(); if(!tx) return;
+  S.jobs.push(newJob(tx)); ensureActive();
+  if(typeof logEvent==='function') logEvent('add','Added "'+tx+'"');
+  save(); render();
+  if(window.EngineClient && EngineClient.wired) EngineClient.drop(tx);  // real intake + re-hydrate
+}
+
+function scrNow(){
+  const j = activeJob();
+  if(!j){
+    return `<div class="scr now-wrap">
+      <div class="empty">
+        <div class="big display">Nothing active.</div>
+        <div>Drop what's in your head, then run one move at a time.</div>
+        <div style="margin-top:22px"><button class="btn signal" data-nav="drop">Brain Drop &rarr;</button></div>
+      </div>
+      ${handrail()}
+    </div>`;
+  }
+  const si = activeStepIndex(j);
+  const stepTxt = si>=0 ? j.steps[si].text : j.title;
+  const stepsHTML = (j.steps&&j.steps.length) ? `
+    <div class="field"><div class="flabel">Steps</div><div class="steps" role="list" aria-label="Steps to done">
+      ${j.steps.map((s,i)=>`<div class="step ${s.done?'done':''} ${i===si?'active':''}" role="listitem" aria-label="${s.done?'Done':(i===si?'Active step':'To do')}: ${esc(s.text)}">
+        <span class="box" aria-hidden="true">&#10003;</span><span>${esc(s.text)}</span>${i===si?'<span class="marker">&#9666; Active</span>':''}
+      </div>`).join('')}
+    </div></div>` : '';
+  const nm = j.nextMove ? esc(j.nextMove) : (si>=0?`Do: ${esc(j.steps[si].text)}`:`Start: ${esc(j.title)}`);
+  const dm = j.doneMeans ? `<div class="field"><div class="flabel">Done means</div><div class="done-means">${esc(j.doneMeans)}</div></div>`:'';
+  const after = nextWaitingTitle();
+  const primaryLabel = si>=0 ? 'Step Done &#10003;' : 'Job Done &#10003;';
+  return `<div class="scr now-wrap">
+    <div class="console">
+      <div class="strip">Run Board <span class="live">&#9679; Now</span></div>
+      <div class="body">
+        <div class="field"><div class="flabel">Active Job</div><div class="job-title display">${esc(j.title)}</div></div>
+        <div class="field"><div class="flabel">${si>=0?'Active Step':'The Move'}</div><div class="step-now">${esc(stepTxt)}</div></div>
+        <div class="field"><div class="flabel">Next move</div><div class="nextmove"><span class="arrow">&rarr; </span>${nm}</div></div>
+        ${dm}
+        ${stepsHTML}
+        ${after?`<div class="field"><div class="after"><b>After this:</b> ${esc(after)}</div></div>`:''}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" data-act="done">${primaryLabel}</button>
+      <button class="btn stuck" data-act="stuck">&#9888; Stuck</button>
+      <button class="btn skip" data-act="skip">&#8631; Skip</button>
+      <button class="btn ghost wide" data-act="opendetail" data-id="${j.id}">Edit job / steps</button>
+    </div>
+    ${handrail()}
+  </div>`;
+}
+function handrail(){ return `<div class="handrail"><button data-act="reset">I'm overwhelmed &mdash; give me one move</button></div>`; }
+
+function scrDrop(){
+  const lvl = LINE.level||0;
+  const dial = `
+    <div class="flabel" style="margin-top:2px">Thinking</div>
+    <div class="ln-dial">
+      <button data-lnlevel="0" class="${lvl===0?'on':''}">Capture</button>
+      <button data-lnlevel="1" class="${lvl===1?'on':''}">Reroute</button>
+      <button data-lnlevel="2" class="${lvl===2?'on':''}">Deep</button>
+    </div>`;
+
+  let placeholder, hint, control, body='';
+  if(lvl===0){
+    placeholder = "feed dogs\nwater rabbits\nfind tax papers\ncall school\ncook food\nmove tent...";
+    hint = "No thinking. Each line becomes one job, waiting in Today.";
+    control = `<button class="btn signal wide" data-act="adddrops">Drop into Today &rarr;</button>`;
+  } else if(lvl===1){
+    const tgt = LINE.target ? S.jobs.find(j=>j.id===LINE.target) : null;
+    const live = S.jobs.filter(j=>['waiting','active','stuck','carry'].includes(j.status));
+    placeholder = tgt ? "what did you try? where did it stall? (optional)" : "the one thing you can't see the move on...";
+    hint = tgt
+      ? `Rewrites the next move on &ldquo;${esc(tgt.title)}&rdquo; in place &mdash; no new task.`
+      : "One call. Finds the smallest next move and lands it as a new job.";
+    const picker = live.length ? `
+      <div class="flabel" style="margin-top:14px">Or reroute an existing task</div>
+      <div class="ln-pick">
+        ${live.map(j=>`<button class="ln-pickrow ${LINE.target===j.id?'on':''}" data-lntarget="${j.id}"><span class="ln-pttl">${esc(j.title)}</span><span class="chip ${j.status}">${j.status}</span></button>`).join('')}
+        ${LINE.target?`<button class="ln-pickclear" data-lntarget="">&times; new task instead</button>`:''}
+      </div>` : '';
+    control = `${picker}<button class="btn signal wide" data-act="dropReroute" ${LINE.running?'disabled':''}>${LINE.running?(tgt?'Rewriting&hellip;':'Finding the move&hellip;'):(tgt?'&#9654; Rewrite the move':'&#9654; Find the move')}</button>`;
+  } else {
+    placeholder = "the tangled thing. an idea, a half-formed product, a mess you keep circling...";
+    hint = "Eight stations chew it to a verdict &mdash; build, kill, schedule &mdash; then you fire it.";
+    control = `<div class="ln-controls">
+        <button class="btn signal" data-act="lineRun" ${LINE.running?'disabled':''}>${LINE.running?'&#9632; Running&hellip;':'&#9654; Run the line'}</button>
+        <button class="btn ghost" data-act="lineReset">Reset</button>
+      </div>
+      <button class="ln-seed" data-act="lineSeed">load a sample drop &#8617;</button>`;
+    body = lineBodyHTML();
+  }
+
+  return `<div class="scr">
+    <div class="kicker">Intake</div>
+    <div class="lead display">Brain Drop</div>
+    <div class="sub">One box. Slide how hard the system should think before it lands.</div>
+    ${dial}
+    <textarea id="dropbox" rows="${lvl===0?9:5}" placeholder="${placeholder}" aria-label="Capture box — drop a thought to triage">${esc(LINE.raw||'')}</textarea>
+    <div class="hint">${hint}</div>
+    ${LINE.err?`<div class="ln-err" style="margin:-6px 0 12px">${esc(LINE.err)}</div>`:''}
+    ${control}
+    ${body}
+  </div>`;
+}
+
+function scrToday(){
+  const jobs = todaysJobs();
+  if(!jobs.length){
+    return `<div class="scr"><div class="empty"><div class="big display">Empty queue.</div><div>Nothing dropped yet today.</div>
+      <div style="margin-top:22px"><button class="btn signal" data-nav="drop">Brain Drop &rarr;</button></div></div></div>`;
+  }
+  const order = {active:0,waiting:1,stuck:2,carry:3,skipped:4,done:5};
+  const sorted = [...jobs].sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+  const live = sorted.filter(j=>['active','waiting','stuck','carry'].includes(j.status));
+  const closed = sorted.filter(j=>['done','skipped'].includes(j.status));
+  const rowHTML = j=>`<div class="row ${j.status} ${j.status==='active'?'active':''}" data-act="opendetail" data-id="${j.id}" role="button" tabindex="0" aria-label="Open job ${esc(j.title)} (${j.status})">
+      <span class="ttl">${esc(j.title)}</span><span class="chip ${j.status}">${j.status}</span></div>`;
+  return `<div class="scr">
+    <div class="kicker">Today's Queue</div>
+    <div class="lead display">${live.length} live &middot; ${closed.length} closed</div>
+    <div class="sub">One runs at a time. Tap a job to open it.</div>
+    <div class="list">${live.map(rowHTML).join('')}</div>
+    ${closed.length?`<div class="seg">Closed</div><div class="list">${closed.map(rowHTML).join('')}</div>`:''}
+  </div>`;
+}
+
+function scrClose(){
+  const done = S.jobs.filter(j=>j.status==='done');
+  const stuck = S.jobs.filter(j=>j.status==='stuck');
+  const skipped = S.jobs.filter(j=>j.status==='skipped');
+  const carry = S.jobs.filter(j=>['waiting','active','carry'].includes(j.status));
+  const added = S.jobs.filter(j=>j.addedDuringDay);
+  const lcard = (cls,label,items,emptyMsg,extra=j=>'')=>`
+    <div class="lcard ${cls}"><div class="lh"><span>${label}</span><span>${items.length}</span></div>
+    ${items.length?`<ul>${items.map(j=>`<li>${esc(j.title)}${extra(j)}</li>`).join('')}</ul>`:`<div class="none">${emptyMsg}</div>`}
+    </div>`;
+  const carryFirst = [...stuck, ...carry];
+  const pickerHTML = carryFirst.length ? `
+    <div class="reflab">First job tomorrow</div>
+    <div class="hint" style="margin-top:0">The one line mechanically handed to tomorrow. Protect this.</div>
+    <div class="picker">
+      ${carryFirst.map((j,i)=>`<label class="${ (S._fjtId||carryFirst[0].id)===j.id?'on':''}">
+        <input type="radio" name="fjt" data-fjt="${j.id}" ${ (S._fjtId||carryFirst[0].id)===j.id?'checked':''}>
+        <span>${esc(j.nextMove||j.title)}</span></label>`).join('')}
+    </div>` : `<div class="reflab">First job tomorrow</div><input type="text" id="fjt_free" placeholder="What's the first move tomorrow?" value="${esc(S._fjt||'')}">`;
+  return `<div class="scr">
+    <div class="kicker">Close Day</div>
+    <div class="lead display">Turn today into a record</div>
+    <div class="sub">${fmtDate(S.day)} &mdash; proof + tomorrow's first move.</div>
+    ${lcard('lc-done','Completed',done,'Nothing closed yet today.')}
+    ${lcard('lc-stuck','Stuck',stuck,'No jams.',j=>j.nextMove?` &mdash; <i>${esc(j.nextMove)}</i>`:'')}
+    ${lcard('lc-skip','Skipped',skipped,'Nothing skipped.')}
+    ${lcard('lc-carry','Carry to tomorrow',carry,'Clean &mdash; nothing left.')}
+    ${added.length?lcard('lc-add','Added during day',added,''):''}
+    <div class="reflab">What worked?</div>
+    <input type="text" id="worked" placeholder="e.g. animal tasks moved fast grouped" value="${esc(S._worked||'')}">
+    <div class="reflab">What blocked motion?</div>
+    <input type="text" id="blocked" placeholder="e.g. paperwork has no known location" value="${esc(S._blocked||'')}">
+    ${pickerHTML}
+    <div style="height:16px"></div>
+    <button class="btn signal wide" data-act="saveday">Save to Ledger &amp; Start Tomorrow &rarr;</button>
+    <div class="hint" style="text-align:center">Completed &amp; skipped clear. Stuck + carry roll forward. First job goes active.</div>
+  </div>`;
+}
+
+function scrLedger(){
+  const days = Object.keys(S.ledger).sort().reverse();
+  if(!days.length){
+    return `<div class="scr"><div class="empty"><div class="big display">No history yet.</div><div>Close a day to start the proof wall.</div></div></div>`;
+  }
+  return `<div class="scr">
+    <div class="kicker">History</div>
+    <div class="lead display">Proof the day happened</div>
+    <div class="sub">${days.length} day${days.length>1?'s':''} on record.</div>
+    ${days.map(d=>{const L=S.ledger[d];return `<div class="day-row" data-act="openday" data-d="${d}">
+      <div class="d display">${fmtDate(d)}</div>
+      <div class="stat"><span><b style="color:var(--done)">${L.completed.length}</b> done</span>
+      <span><b style="color:var(--stuck)">${L.stuck.length}</b> stuck</span>
+      <span><b style="color:var(--skip)">${L.skipped.length}</b> skip</span>
+      <span><b style="color:var(--carry)">${L.carry.length}</b> carry</span></div>
+      ${L.firstJob?`<div class="stat"><span style="color:var(--signal)">&#9656; next: ${esc(L.firstJob)}</span></div>`:''}
+    </div>`;}).join('')}
+  </div>`;
+}
+function scrDayDetail(){
+  const d = S.openDayView, L = S.ledger[d];
+  const block=(cls,label,arr)=>`<div class="lcard ${cls}"><div class="lh"><span>${label}</span><span>${arr.length}</span></div>${arr.length?`<ul>${arr.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:`<div class="none">&mdash;</div>`}</div>`;
+  return `<div class="scr">
+    <button class="addstep" data-act="closeday" style="padding-top:0">&larr; All days</button>
+    <div class="lead display" style="margin-top:8px">${fmtDate(d)}</div>
+    ${block('lc-done','Completed',L.completed)}
+    ${block('lc-stuck','Stuck',L.stuck)}
+    ${block('lc-skip','Skipped',L.skipped)}
+    ${block('lc-carry','Carried',L.carry)}
+    ${L.added&&L.added.length?block('lc-add','Added',L.added):''}
+    ${L.worked?`<div class="reflab">What worked</div><div class="done-means" style="font-size:14px">${esc(L.worked)}</div>`:''}
+    ${L.blocked?`<div class="reflab">What blocked motion</div><div class="done-means" style="font-size:14px">${esc(L.blocked)}</div>`:''}
+    ${L.firstJob?`<div class="reflab">First job that morning</div><div class="nextmove" style="margin-top:4px"><span class="arrow">&rarr; </span>${esc(L.firstJob)}</div>`:''}
+  </div>`;
+}
+
+function mountSheet(){
+  const old = document.querySelector('.sheet-bg'); if(old) old.remove();
+  const prevFocus = document.activeElement;
+  const el = document.createElement('div');
+  el.className='sheet-bg';
+  // a11y: real modal dialog -- role + aria-modal, focus moved in, Escape closes, Tab is trapped.
+  // See ~/.claude/rules/common/code-as-furniture.md -- keyboard trap fixed, not documented-and-left.
+  el.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" tabindex="-1" onclick="event.stopPropagation()"><div class="grab"></div>${sheet.html()}</div>`;
+  const panel = el.querySelector('.sheet');
+  const focusables = ()=> Array.prototype.slice.call(panel.querySelectorAll(
+    'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'));
+  const closeSheet = ()=>{
+    sheet=null; el.remove(); render();
+    if(prevFocus && typeof prevFocus.focus==='function') prevFocus.focus();
+  };
+  // keydown bound to el so the listener auto-detaches when the sheet is removed (any close path).
+  el.addEventListener('keydown',(ev)=>{
+    if(ev.key==='Escape'){ ev.preventDefault(); closeSheet(); return; }
+    if(ev.key!=='Tab') return;
+    const f = focusables(); if(!f.length){ ev.preventDefault(); panel.focus(); return; }
+    const first=f[0], last=f[f.length-1];
+    if(ev.shiftKey && document.activeElement===first){ ev.preventDefault(); last.focus(); }
+    else if(!ev.shiftKey && document.activeElement===last){ ev.preventDefault(); first.focus(); }
+  });
+  el.addEventListener('click', closeSheet);
+  document.body.appendChild(el);
+  sheet.bind(el);
+  // Move focus into the dialog (first field, else the panel) for keyboard/screen-reader users.
+  const f = focusables(); (f[0] || panel).focus();
+}
+
+function openDetail(id){
+  const j = S.jobs.find(x=>x.id===id); if(!j) return;
+  markSheetOpen('detail');
+  sheet = {
+    html(){
+      return `<h3 class="display">${esc(j.title)}</h3>
+      <div class="hint" style="margin:4px 0 0">Status: ${j.status}</div>
+      <div class="miniL">The move (next physical action)</div>
+      <input type="text" id="d_next" placeholder="Go to folder, look for tax docs..." value="${esc(j.nextMove)}">
+      <div class="miniL">Done means</div>
+      <input type="text" id="d_done" placeholder="Folder checked." value="${esc(j.doneMeans)}">
+      <div class="miniL">Steps (optional)</div>
+      <div id="stepwrap">${(j.steps||[]).map((s,i)=>`<div class="stepedit"><span class="box" style="width:15px;height:15px;border:1.5px solid var(--line2);border-radius:4px;display:inline-block"></span><input type="text" data-si="${i}" value="${esc(s.text)}"><button class="x" data-delstep="${i}">&#10005;</button></div>`).join('')}</div>
+      <button class="addstep" data-addstep>+ Add step</button>
+      ${(j.history&&j.history.length)?`
+      <div class="miniL" style="margin-top:18px">Reroute history (${j.history.length})</div>
+      <div class="ln-hist">
+        ${j.history.slice().reverse().map(h=>`<div class="hist-row">
+          <div class="hist-t">${fmtTS(h.t)}</div>
+          ${h.note?`<div class="hist-note">${esc(h.note)}</div>`:''}
+          <div class="hist-move"><span class="hist-from">${esc(h.fromMove||'(no move yet)')}</span> &rarr; <span class="hist-to">${esc(h.toMove||'')}</span></div>
+          ${(h.steps&&h.steps.length)?`<div class="hist-steps">steps then: ${h.steps.map(s=>(s.done?'\u2713':'\u25CB')+' '+esc(s.text)).join(' &middot; ')}</div>`:''}
+        </div>`).join('')}
+      </div>`:''}
+      <div style="height:18px"></div>
+      ${j.status!=='active'?`<button class="btn signal wide" data-makeactive>Make this the active job</button><div style="height:10px"></div>`:''}
+      <button class="btn ghost wide" data-savedetail>Save &amp; close</button>`;
+    },
+    bind(el){
+      el.querySelector('[data-savedetail]').onclick = ()=> persistDetail(el,j,false);
+      const ma = el.querySelector('[data-makeactive]'); if(ma) ma.onclick=()=>persistDetail(el,j,true);
+      el.querySelector('[data-addstep]').onclick = ()=>{ persistDetailValues(el,j); j.steps = j.steps||[]; j.steps.push({text:'',done:false}); save(); remountSheet(); };
+      el.querySelectorAll('[data-delstep]').forEach(b=>b.onclick=()=>{ persistDetailValues(el,j); j.steps.splice(+b.dataset.delstep,1); save(); remountSheet(); });
+    }
+  };
+}
+function persistDetailValues(el,j){
+  const n=el.querySelector('#d_next'), d=el.querySelector('#d_done');
+  if(n) j.nextMove=n.value; if(d) j.doneMeans=d.value;
+  el.querySelectorAll('[data-si]').forEach(inp=>{ const i=+inp.dataset.si; if(j.steps[i]) j.steps[i].text=inp.value; });
+}
+function persistDetail(el,j,makeActive){
+  persistDetailValues(el,j);
+  if(j.steps) j.steps = j.steps.filter(s=>s.text.trim()!=='');
+  if(makeActive){ setActive(j.id); view='now'; }
+  save(); sheet=null; const bg=document.querySelector('.sheet-bg'); if(bg) bg.remove(); render();
+}
+function remountSheet(){ const bg=document.querySelector('.sheet-bg'); if(bg) bg.remove(); mountSheet(); }
+
+function openStuck(){
+  const j = activeJob(); if(!j) return;
+  markSheetOpen('reroute');
+  let pickedBlock = j._block||null;
+  let disp = 'today';
+  sheet = {
+    html(){
+      return `<h3 class="display" style="color:var(--stuck)">Stuck &mdash; not failure, a reroute</h3>
+      <div class="hint" style="margin:4px 0 0">${esc(j.title)}</div>
+      <div class="miniL">Where did it stop?</div>
+      <input type="text" id="s_where" placeholder="Could not find folder." value="${esc(j._where||'')}">
+      <div class="miniL">Block type</div>
+      <div class="blocks">${BLOCK_TYPES.map(b=>`<button data-block="${b}" class="${pickedBlock===b?'on':''}">${b}</button>`).join('')}</div>
+      <div class="miniL">Smaller next move</div>
+      <input type="text" id="s_smaller" placeholder="Search email for 'tax return' + '1040'." value="${esc(j._smaller||'')}">
+      <button class="ln-reroute" data-lnreroute>&#9776; Can't see the move? Run the Line &rarr;</button>
+      <div class="miniL">Then</div>
+      <div class="three four">
+        <button data-disp="today" class="${disp==='today'?'on':''}">Return today</button>
+        <button data-disp="stuck" class="${disp==='stuck'?'on':''}">Park (stuck)</button>
+        <button data-disp="carry" class="${disp==='carry'?'on':''}">Carry tomorrow</button>
+        <button data-disp="delete" class="${disp==='delete'?'on':''}">Delete</button>
+      </div>
+      <div class="hint" style="margin-top:6px">${disp==='stuck'?'Stays today, leaves the active slot. Comes back as active once waiting jobs are cleared.':(disp==='today'?'Becomes the active job right now.':(disp==='carry'?'Off the board today, rolls into tomorrow.':(disp==='delete'?'Gone.':'')))}</div>
+      <div style="height:18px"></div>
+      <button class="btn signal wide" data-savestuck>Reroute &rarr;</button>`;
+    },
+    bind(el){
+      el.querySelectorAll('[data-block]').forEach(b=>b.onclick=()=>{ pickedBlock=b.dataset.block; j._block=pickedBlock; remountSheet(); });
+      el.querySelectorAll('[data-disp]').forEach(b=>b.onclick=()=>{ disp=b.dataset.disp; remountSheet(); });
+      const w=el.querySelector('#s_where'), sm=el.querySelector('#s_smaller');
+      if(w) w.oninput=()=>j._where=w.value;
+      if(sm) sm.oninput=()=>j._smaller=sm.value;
+      const rb=el.querySelector('[data-lnreroute]');
+      if(rb) rb.onclick=async()=>{
+        rb.disabled=true; const orig=rb.innerHTML; rb.innerHTML='Reading the block&hellip;';
+        try{
+          const blk = j._block ? ('Block type: '+j._block+'. ') : '';
+          const wh = (el.querySelector('#s_where')?.value || j._where || '');
+          const res = await fetch("/api/ai/complete",{
+            method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
+            body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:200,
+              system:'A task is stuck. Given the task, where it stalled, and the block type, return ONLY the single smallest concrete next physical action that breaks the block. One imperative line. No preamble, no quotes, no explanation.',
+              messages:[{role:"user", content:'TASK: '+j.title+'\n'+blk+(wh?('Stalled at: '+wh):'')}] })
+          });
+          if(!res.ok) throw new Error('reroute '+res.status);
+          const data = await res.json();
+          const move = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim().replace(/^["'\s]+|["'\s]+$/g,'');
+          const inp=el.querySelector('#s_smaller'); if(inp) inp.value=move; j._smaller=move;
+        }catch(e){
+          const inp=el.querySelector('#s_smaller'); if(inp) inp.placeholder='Line unreachable here \u2014 type the move';
+        }
+        rb.disabled=false; rb.innerHTML=orig;
+      };
+      el.querySelector('[data-savestuck]').onclick=()=>{
+        const smaller = (el.querySelector('#s_smaller').value||'').trim();
+        j._where = el.querySelector('#s_where').value;
+        if(disp==='delete'){
+          S.jobs = S.jobs.filter(x=>x.id!==j.id); if(S.activeId===j.id) S.activeId=null;
+        } else {
+          if(smaller && smaller!==j.nextMove){ pushHistory(j, ((j._block?('['+j._block+'] '):'')+(j._where||'')).trim(), smaller, j.doneMeans); j.nextMove = smaller; }
+          else if(smaller) j.nextMove = smaller;
+          if(disp==='today'){ j.status='active'; S.activeId=j.id; S.jobs.forEach(x=>{if(x.id!==j.id&&x.status==='active')x.status='waiting';}); }
+          else if(disp==='stuck'){ j.status='stuck'; advance(); }
+          else { j.status='carry'; advance(); }
+        }
+        save(); sheet=null; const bg=document.querySelector('.sheet-bg'); if(bg) bg.remove();
+        view='now'; render();
+      };
+    }
+  };
+}
+
+function openQuickDrop(){
+  markSheetOpen('quickdrop');
+  let dest='today';
+  sheet={
+    html(){
+      return `<h3 class="display">New drop</h3>
+      <div class="hint" style="margin:4px 0 0">Capture without hijacking the active job.</div>
+      <div class="miniL">What came up?</div>
+      <input type="text" id="q_text" placeholder="Buy animal feed">
+      <div class="miniL">Add to</div>
+      <div class="three">
+        <button data-dest="today" class="${dest==='today'?'on':''}">Today</button>
+        <button data-dest="tomorrow" class="${dest==='tomorrow'?'on':''}">Tomorrow</button>
+        <button data-dest="ledger" class="${dest==='ledger'?'on':''}">Ledger only</button>
+      </div>
+      <div style="height:18px"></div>
+      <button class="btn signal wide" data-saveq>Save</button>`;
+    },
+    bind(el){
+      const inp=el.querySelector('#q_text'); setTimeout(()=>inp.focus(),120);
+      el.querySelectorAll('[data-dest]').forEach(b=>b.onclick=()=>{ dest=b.dataset.dest; const cur=inp.value; remountSheet(); setTimeout(()=>{const ni=document.querySelector('#q_text'); if(ni){ni.value=cur;}},0); });
+      el.querySelector('[data-saveq]').onclick=()=>{
+        const t=inp.value.trim(); if(!t){ sheet=null; const bg=document.querySelector('.sheet-bg'); if(bg)bg.remove(); render(); return;}
+        const j=newJob(t); j.addedDuringDay=true;
+        if(dest==='tomorrow') j.status='carry';
+        else if(dest==='ledger') j.status='skipped';
+        else j.status='waiting';
+        S.jobs.push(j); save();
+        sheet=null; const bg=document.querySelector('.sheet-bg'); if(bg)bg.remove(); render();
+      };
+    }
+  };
+  render();
+}
+
+function doReset(){
+  const exists = S.jobs.find(j=>j._handrail && j.status!=='done');
+  let j = exists;
+  if(!j){
+    j = newJob('Stabilize'); j._handrail=true;
+    j.nextMove='Go to the kitchen. Drink water, eat something simple.';
+    j.doneMeans='Food is cooking or eaten.';
+    S.jobs.push(j);
+  }
+  setActive(j.id); view='now'; render();
+}
+
+function saveDay(){
+  const w=document.querySelector('#worked'); if(w) S._worked=w.value;
+  const b=document.querySelector('#blocked'); if(b) S._blocked=b.value;
+  const free=document.querySelector('#fjt_free'); if(free) S._fjt=free.value;
+
+  const done=S.jobs.filter(j=>j.status==='done').map(j=>j.title);
+  const stuck=S.jobs.filter(j=>j.status==='stuck');
+  const skipped=S.jobs.filter(j=>j.status==='skipped').map(j=>j.title);
+  const carry=S.jobs.filter(j=>['waiting','active','carry'].includes(j.status));
+  const added=S.jobs.filter(j=>j.addedDuringDay).map(j=>j.title);
+
+  const carryFirst=[...stuck,...carry];
+  let firstJob='';
+  if(carryFirst.length){
+    const chosenId = S._fjtId || carryFirst[0].id;
+    const cj = carryFirst.find(j=>j.id===chosenId)||carryFirst[0];
+    firstJob = cj.nextMove||cj.title;
+    S._fjtChosenId = cj.id;
+  } else { firstJob = S._fjt||''; }
+
+  S.ledger[S.day] = {
+    completed:done,
+    stuck:stuck.map(j=>j.title+(j.nextMove?` &mdash; ${j.nextMove}`:'')),
+    skipped, added,
+    carry:carry.map(j=>j.title),
+    worked:S._worked||'', blocked:S._blocked||'', firstJob
+  };
+
+  const rolled = [...stuck, ...carry].map(j=>{
+    const nj = newJob(j.title);
+    nj.nextMove=j.nextMove; nj.doneMeans=j.doneMeans; nj.why=j.why;
+    nj.steps=(j.steps||[]).map(s=>({text:s.text,done:false}));
+    nj.status='waiting';
+    if(S._fjtChosenId===j.id) nj._first=true;
+    return nj;
+  });
+  let act = rolled.find(j=>j._first) || rolled[0] || null;
+  if(act){ act.status='active'; }
+
+  S.jobs = rolled;
+  S.activeId = act?act.id:null;
+  S.day = nextDayISO(S.day);
+  delete S._worked; delete S._blocked; delete S._fjt; delete S._fjtId; delete S._fjtChosenId;
+  save();
+  metricsCycle();
+  view='now'; render();
+}
+function nextDayISO(iso){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
+
+function bind(){
+  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{ view=b.dataset.nav; S.openDayView=null; render(); });
+  document.querySelectorAll('[data-act]').forEach(b=>{
+    const a=b.dataset.act;
+    b.onclick=(e)=>{
+      if(a==='done') completeActive();
+      else if(a==='skip') skipActive();
+      else if(a==='stuck'){ openStuck(); mountSheet(); }
+      else if(a==='opendetail'){ openDetail(b.dataset.id); mountSheet(); }
+      else if(a==='adddrops') addDrops();
+      else if(a==='saveday') saveDay();
+      else if(a==='reset') doReset();
+      else if(a==='quickdrop') openQuickDrop();
+      else if(a==='openday'){ S.openDayView=b.dataset.d; render(); }
+      else if(a==='closeday'){ S.openDayView=null; render(); }
+      else if(a==='lineRun'){ lineRun(); }
+      else if(a==='lineReset'){ lineReset(); }
+      else if(a==='lineSeed'){ lineSeed(); }
+      else if(a==='lineFire'){ lineFire(); }
+      else if(a==='dropReroute'){ dropReroute(); }
+      else if(a==='minadd'){ minAdd(); }
+      else if(a==='toworkshop'){ MODE='workshop'; saveMode(); view='now'; render(); }
+    };
+  });
+  { const ma=document.querySelector('#minadd'); if(ma) ma.onkeydown=(e)=>{ if(e.key==='Enter'){ e.preventDefault(); minAdd(); } }; }
+  document.querySelectorAll('[data-lnlevel]').forEach(b=>b.onclick=()=>{
+    const db=document.querySelector('#dropbox'); if(db) LINE.raw=db.value;
+    LINE.level=+b.dataset.lnlevel; LINE.err=''; render();
+  });
+  document.querySelectorAll('[data-lntarget]').forEach(b=>b.onclick=()=>{ const id=b.dataset.lntarget; LINE.target=id||null; LINE.err=''; render(); });
+  document.querySelectorAll('[data-lntoggle]').forEach(h=>h.onclick=()=>{ const id=h.dataset.lntoggle; if(LINE.open.has(id)) LINE.open.delete(id); else LINE.open.add(id); render(); });
+  { const db=document.querySelector('#dropbox'); if(db) db.oninput=()=>{ LINE.raw=db.value; }; }
+  document.querySelectorAll('[data-fjt]').forEach(r=>r.onchange=()=>{ S._fjtId=r.dataset.fjt; });
+  ['worked','blocked'].forEach(id=>{const el=document.querySelector('#'+id); if(el) el.oninput=()=>{S['_'+id]=el.value;};});
+}
+function addDrops(){
+  const box=document.querySelector('#dropbox'); if(!box) return;
+  const lines=box.value.split('\n').map(l=>l.trim().replace(/^[-\u2022\d.)\s]+/,'').trim()).filter(Boolean);
+  if(!lines.length){ view='today'; render(); return; }
+  lines.forEach(l=>S.jobs.push(newJob(l)));
+  ensureActive(); LINE.raw=''; save(); view='today'; render();
+  if(window.EngineClient && EngineClient.wired) EngineClient.dropMany(lines);  // real intake + re-hydrate
+}
+
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ===================== ANATOMY INSTRUMENT LAYER ===================== */
+const MET_KEY = 'droplist:metrics:v1';
+const BASE = { capture:2, run:1, reroute:4, quickdrop:2, detail:2, close:2, handrail:1 };
+const FLOW_ORDER = ['capture','run','reroute','quickdrop','detail','close','handrail','navigate','browse'];
+const FLOW_LABEL = {
+  capture:'Capture', run:'Run', reroute:'Reroute', quickdrop:'Quick Drop',
+  detail:'Detail', close:'Close', handrail:'Handrail', navigate:'Navigation', browse:'Browse'
+};
+let xray=false;
+let panelOpen=false;
+let panelTab='flow';
+let M = { flows:{}, total:0, cycles:0, taskLog:[], events:[], switches:0, retouches:0, peakLoops:0, dwell:{reroute:[],detail:[],quickdrop:[]}, everActive:[] };
+let taskJobId=null, taskTaps=0;
+let sheetOpenAt=0, sheetType=null;
+
+function loadMetrics(){
+  try{ const r=localStorage.getItem(MET_KEY); if(r) M=JSON.parse(r); }catch(e){}
+  M.flows=M.flows||{}; M.taskLog=M.taskLog||[]; M.events=M.events||[];
+  M.switches=M.switches||0; M.retouches=M.retouches||0; M.peakLoops=M.peakLoops||0;
+  M.dwell=M.dwell||{reroute:[],detail:[],quickdrop:[]}; M.everActive=M.everActive||[];
+  M.defects=M.defects||[];
+}
+let metT;
+function saveMetrics(){ clearTimeout(metT); metT=setTimeout(()=>{ try{localStorage.setItem(MET_KEY,JSON.stringify(M));}catch(e){} },150); }
+function metricsCycle(){ M.cycles=(M.cycles||0)+1; }
+
+function flowFor(t){
+  if(!t || !t.closest) return null;
+  const navEl=t.closest('[data-nav]');
+  if(navEl){ const v=navEl.dataset.nav; if(v==='drop') return {flow:'capture'}; if(v==='close') return {flow:'close'}; return {flow:'navigate'}; }
+  if(t.closest('[data-block]')||t.closest('[data-disp]')) return {flow:'reroute'};
+  if(t.closest('[data-dest]')) return {flow:'quickdrop'};
+  if(t.closest('[data-fjt]')) return {flow:'close'};
+  if(t.closest('[data-savestuck]')) return {flow:'reroute',terminal:true};
+  if(t.closest('[data-saveq]')) return {flow:'quickdrop',terminal:true};
+  if(t.closest('[data-savedetail]')) return {flow:'detail',terminal:true};
+  if(t.closest('[data-makeactive]')) return {flow:'detail',terminal:true};
+  if(t.closest('[data-addstep]')||t.closest('[data-delstep]')) return {flow:'detail'};
+  const actEl=t.closest('[data-act]');
+  if(actEl){
+    const a=actEl.dataset.act;
+    const map={
+      done:{flow:'run',terminal:true}, skip:{flow:'run',terminal:true},
+      stuck:{flow:'reroute'}, adddrops:{flow:'capture',terminal:true},
+      saveday:{flow:'close',terminal:true}, reset:{flow:'handrail',terminal:true},
+      quickdrop:{flow:'quickdrop'}, opendetail:{flow:'detail'},
+      openday:{flow:'browse'}, closeday:{flow:'browse'}
+    };
+    return map[a]||{flow:'navigate'};
+  }
+  return null;
+}
+
+document.addEventListener('click', e=>{
+  // ignore taps on the instrument UI itself
+  if(e.target.closest('#ctl')||e.target.closest('#ledgerPanel')||e.target.closest('.xr-tab')) return;
+  if(!(e.target.closest('#app')||e.target.closest('.sheet-bg'))) return;
+  const snap=snapState();
+  const f=flowFor(e.target);
+  if(f){
+    const flow=f.flow;
+    M.flows[flow]=M.flows[flow]||{taps:0,done:0};
+    M.flows[flow].taps++;
+    M.total++;
+    if(f.terminal) M.flows[flow].done++;
+    if(activeJob()) taskTaps++;
+  }
+  setTimeout(()=>{ diffAndLog(snap); reconcileTask(); saveMetrics(); renderPanel(); if(xray) annotate(); }, 0);
+}, true);
+
+// A11y: Enter/Space on our role="button" rows/heads fires the same onclick handler
+// (job rows :653, station heads :478 are focusable divs, not native buttons).
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Enter' && e.key!==' ') return;
+  const el=e.target;
+  if(!el || ['BUTTON','INPUT','TEXTAREA','A','SELECT'].includes(el.tagName)) return;
+  if(el.getAttribute('role')==='button' && el.hasAttribute('tabindex')){ e.preventDefault(); el.click(); }
+});
+
+function openLoops(){ return S.jobs.filter(j=>['waiting','active','stuck','carry'].includes(j.status)).length; }
+const WEIGHTS={waiting:1, active:1, stuck:2, carry:1.5};
+function weightedLoad(){ return +S.jobs.reduce((s,j)=>s+(WEIGHTS[j.status]||0),0).toFixed(2); }
+function snapState(){
+  return {
+    view, activeId:S.activeId, sheetOpen:!!sheet,
+    statuses:Object.fromEntries(S.jobs.map(j=>[j.id,j.status])),
+    titles:Object.fromEntries(S.jobs.map(j=>[j.id,j.title])),
+    ids:S.jobs.map(j=>j.id)
+  };
+}
+function markSheetOpen(type){ sheetOpenAt=Date.now(); sheetType=type; }
+function logEvent(kind,text){
+  const loops=openLoops(), wload=weightedLoad();
+  M.events.push({ t:Date.now(), kind, text, loops, wload });
+  if(M.events.length>140) M.events=M.events.slice(-140);
+  if(loops>M.peakLoops) M.peakLoops=loops;
+}
+function diffAndLog(snap){
+  if(!snap.sheetOpen && sheet){ logEvent('action','Opened '+(sheetType||'')+' sheet'); }
+  if(snap.sheetOpen && !sheet){
+    if(sheetOpenAt && sheetType){ (M.dwell[sheetType]=M.dwell[sheetType]||[]).push(Math.round((Date.now()-sheetOpenAt)/1000)); }
+    logEvent('action','Closed sheet'); sheetOpenAt=0;
+  }
+  if(snap.view!==view){ logEvent('view','View \u2192 '+view.toUpperCase()); }
+  S.jobs.forEach(j=>{ if(!snap.ids.includes(j.id)) logEvent('add','+ '+j.title+' \u00b7 '+j.status); });
+  snap.ids.forEach(id=>{ if(!S.jobs.some(j=>j.id===id)) logEvent('remove','\u2715 '+(snap.titles[id]||'job')); });
+  S.jobs.forEach(j=>{
+    const was=snap.statuses[j.id];
+    if(was!==undefined && was!==j.status && j.status!=='active'){ logEvent('transition', j.title+': '+was+' \u2192 '+j.status); }
+  });
+  if(snap.activeId!==S.activeId && S.activeId){
+    if(snap.activeId) M.switches++;
+    const a=activeJob();
+    if(a){
+      if(M.everActive.includes(a.id)){ M.retouches++; logEvent('switch','\u21BA back to: '+a.title); }
+      else { M.everActive.push(a.id); logEvent('switch','\u25B8 now active: '+a.title); }
+    }
+  }
+}
+
+function reconcileTask(){
+  const a=activeJob(); const aid=a?a.id:null;
+  if(aid!==taskJobId){
+    if(taskJobId!=null && taskTaps>0){ M.taskLog.push(taskTaps); saveMetrics(); }
+    taskJobId=aid; taskTaps=0;
+  }
+}
+
+function dCell(actual, designed, hasData){
+  if(!hasData) return `<td class="d-na">&mdash;</td>`;
+  const d=actual-designed;
+  const cls = d>0?'d-pos':'d-zero';
+  return `<td class="${cls}">${d>0?'+':''}${d}</td>`;
+}
+
+function renderPanel(){
+  document.getElementById('liveTotal').textContent = M.total;
+  const panel=document.getElementById('ledgerPanel');
+  const tabs=`<div class="lp-tabs">
+    <button data-tab="flow" class="${panelTab==='flow'?'on':''}">Flow</button>
+    <button data-tab="trace" class="${panelTab==='trace'?'on':''}">Trace</button>
+    <button data-tab="load" class="${panelTab==='load'?'on':''}">Load</button>
+    <button data-tab="auto" class="${panelTab==='auto'?'on':''}">Auto</button>
+  </div>`;
+  const body = panelTab==='flow'?flowTab() : panelTab==='trace'?traceTab() : panelTab==='load'?loadTab() : autoTab();
+  panel.innerHTML = `
+    <div class="lp-h">FLOW <b>LEDGER</b></div>
+    <div class="lp-sub">Every interaction is recorded. Flow = cost &middot; Trace = sequence &middot; Load = pressure &middot; Auto = self-test.</div>
+    ${tabs}${body}
+    <button class="lp-reset" id="lpReset">Reset session counters</button>`;
+  panel.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ panelTab=b.dataset.tab; renderPanel(); });
+  panel.querySelectorAll('[data-ap]').forEach(b=>b.onclick=()=>{ const m=b.dataset.ap; if(m==='stop') apStop('stopped by user'); else apStart(m); });
+  const rb=document.getElementById('lpReset');
+  if(rb) rb.onclick=()=>{
+    apStop('reset');
+    M={flows:{},total:0,cycles:0,taskLog:[],events:[],switches:0,retouches:0,peakLoops:0,dwell:{reroute:[],detail:[],quickdrop:[]},everActive:[],defects:[]};
+    taskJobId=null; taskTaps=0; sheetOpenAt=0; AP.step=0; AP.result=null; saveMetrics(); reconcileTask(); renderPanel();
+  };
+}
+function autoTab(){
+  const r = AP.running ? {label:'RUNNING', color:'var(--signal)', reasons:[AP.lastAction||'\u2026']} : (AP.result || classify());
+  const defs = M.defects.slice(-12).reverse();
+  return `
+    <div class="ap-ctl">
+      <button data-ap="happy" ${AP.running?'disabled':''}>\u25B6 Happy</button>
+      <button data-ap="monkey" ${AP.running?'disabled':''}>\u25A2 Monkey</button>
+      <button data-ap="stop" ${AP.running?'':'disabled'}>\u25A0 Stop</button>
+    </div>
+    <div class="ap-status">${AP.running?('Step '+AP.step+' &middot; '+esc(AP.lastAction)) : (AP.step?('Last run: '+AP.step+' steps'):'Idle \u2014 press a mode to self-drive the app')}</div>
+    <div class="ap-class" style="border-color:${r.color}">
+      <div class="ap-label" style="color:${r.color}">${r.label}</div>
+      <ul>${r.reasons.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    </div>
+    <div class="miniL" style="margin-top:16px">Path taxonomy</div>
+    <div class="ap-tax">
+      <div style="border-color:var(--done)"><b style="color:var(--done)">Success</b> &mdash; day closed, loops &rarr; 0, ~1 tap/task, few switches</div>
+      <div style="border-color:var(--carry)"><b style="color:var(--carry)">Stuck &rarr; managed</b> &mdash; work parked, re-touched, resolved</div>
+      <div style="border-color:var(--skip)"><b style="color:var(--skip)">Unsuccessful</b> &mdash; closed with loops still open; carried/abandoned</div>
+      <div style="border-color:var(--signal)"><b style="color:var(--signal)">Mismanaged</b> &mdash; thrash: high taps/task, switches, re-touches</div>
+      <div style="border-color:var(--stuck)"><b style="color:var(--stuck)">Broken</b> &mdash; an invariant failed mid-run</div>
+    </div>
+    ${defs.length?`<div class="miniL" style="margin-top:16px">Defects (${M.defects.length})</div>
+      <div class="ap-defs">${defs.map(d=>`<div><span style="color:var(--stuck)">\u26A0 ${esc(d.text)}</span><span>@step ${d.step}</span></div>`).join('')}</div>`:''}
+    <div class="lp-note">
+      Autopilot fires real clicks through the live handlers, so everything lands in Trace &amp; Load. <b style="color:var(--muted)">Happy</b> runs the scripted ideal path; <b style="color:var(--muted)">Monkey</b> taps at random (fuzzing). Invariants are checked after every step \u2014 any violation flips the verdict to Broken. Reset clears all counters before a clean run.
+    </div>`;
+}
+
+function flowTab(){
+  let designedTotal=0;
+  const rows = ['capture','run','reroute','quickdrop','detail','close','handrail'].map(f=>{
+    const fd=M.flows[f]||{taps:0,done:0};
+    const designed = BASE[f]*fd.done;
+    designedTotal += designed;
+    const has = fd.done>0;
+    return `<tr>
+      <td>${FLOW_LABEL[f]}</td>
+      <td class="dim">${fd.done||'&mdash;'}</td>
+      <td class="dim">${has?designed:'&mdash;'}</td>
+      <td>${fd.taps||0}</td>
+      ${dCell(fd.taps||0, designed, has)}
+    </tr>`;
+  }).join('');
+  const overhead=(M.flows.navigate||{taps:0}).taps+(M.flows.browse||{taps:0}).taps;
+  const tasks=M.taskLog.length;
+  const avg = tasks? (M.taskLog.reduce((a,b)=>a+b,0)/tasks) : 0;
+  return `
+    <div class="bigstat">
+      <div class="b"><div class="bl">Per task (avg)</div><div class="bv">${tasks?avg.toFixed(1):'&mdash;'}<small> / 1 designed</small></div></div>
+      <div class="b"><div class="bl">Tasks cleared</div><div class="bv">${tasks}</div></div>
+    </div>
+    <table class="ledtable">
+      <thead><tr><th>Flow</th><th>x</th><th>Des</th><th>Act</th><th>&Delta;</th></tr></thead>
+      <tbody>${rows}
+        <tr class="total"><td>End&#8209;to&#8209;end</td><td class="dim"></td><td class="dim"><b>${designedTotal}</b></td><td><b>${M.total}</b></td>${dCell(M.total, designedTotal, M.total>0)}</tr>
+      </tbody>
+    </table>
+    <div class="lp-note">
+      <b style="color:var(--muted)">x</b> = times that flow completed. Navigation + Browse taps (${overhead}) carry no designed cost &mdash; pure overhead, shown as positive &Delta;.<br><br>
+      Day cycles closed: <b style="color:var(--signal)">${M.cycles||0}</b>
+    </div>`;
+}
+
+function traceTab(){
+  if(!M.events.length) return `<div class="trace-empty">No events yet. Interact with the app &mdash; every move, state change, and view switch lands here.</div>`;
+  const fmt=t=>new Date(t).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const evs=M.events.slice(-90).reverse();
+  return `<div class="trace">${evs.map(e=>`<div class="ev k-${e.kind}">
+    <span class="ti">${fmt(e.t)}</span><span class="dt"></span>
+    <span class="tx">${esc(e.text)}</span><span class="lp">${e.loops}</span>
+  </div>`).join('')}</div>
+  <div class="lp-note">Trailing number = open loops at that moment (your live load). Dot colour keys the event kind: orange = state change, blue = active switch, grey = view/sheet, green = added, red = removed.</div>`;
+}
+
+function sparkSVG(loops, wloads){
+  const w=308,h=84,pad=8;
+  if(loops.length<2) return `<svg class="spark" viewBox="0 0 ${w} ${h}"><text x="${w/2}" y="${h/2+4}" fill="#5c635e" font-size="11" text-anchor="middle" font-family="IBM Plex Mono">need more events</text></svg>`;
+  const hasW = wloads && wloads.length===loops.length;
+  const max=Math.max(1,...loops,...(hasW?wloads:[])), n=loops.length;
+  const X=i=>pad+(w-2*pad)*(i/(n-1)), Y=v=>(h-pad)-(h-2*pad)*(v/max);
+  const pts=loops.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+  const area=`${pad},${h-pad} ${pts} ${w-pad},${h-pad}`;
+  const wline = hasW ? `<polyline points="${wloads.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')}" fill="none" stroke="#ffaa33" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray="3 3"/>` : '';
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${area}" fill="rgba(255,170,51,.10)" stroke="none"/>
+    ${wline}
+    <polyline points="${pts}" fill="none" stroke="#ffaa33" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function loadTab(){
+  const loops=M.events.map(e=>e.loops);
+  const wloads=M.events.map(e=>e.wload!=null?e.wload:e.loops);
+  const cur=loops.length?loops[loops.length-1]:openLoops();
+  const wcur=weightedLoad();
+  const peak=Math.max(M.peakLoops||0,cur);
+  const dw=Object.values(M.dwell).flat();
+  const avgDw=dw.length?(dw.reduce((x,y)=>x+y,0)/dw.length):0;
+  return `
+    <div class="spark-lab"><span>Loops (solid) vs weighted (dashed)</span><span>peak ${peak}</span></div>
+    ${sparkSVG(loops, wloads)}
+    <div class="loadgrid">
+      <div class="b"><div class="bl">Open loops now</div><div class="bv">${cur}</div></div>
+      <div class="b"><div class="bl">Weighted pressure</div><div class="bv">${wcur}</div></div>
+      <div class="b"><div class="bl">Peak loops</div><div class="bv">${peak}</div></div>
+      <div class="b"><div class="bl">Context switches</div><div class="bv">${M.switches}</div></div>
+      <div class="b"><div class="bl">Re-touches</div><div class="bv">${M.retouches}<small> back</small></div></div>
+      <div class="b"><div class="bl">Avg dwell</div><div class="bv">${dw.length?avgDw.toFixed(0):'&mdash;'}<small>s in sheets</small></div></div>
+    </div>
+    <div class="lp-note">
+      <b style="color:var(--muted)">Open loops</b> = jobs still demanding attention (count). <b style="color:var(--muted)">Weighted pressure</b> scores them by status &mdash; waiting/active &times;1, carry &times;1.5, <b style="color:var(--stuck)">stuck &times;2</b> &mdash; so a pile of jams reads heavier than the raw count. Both should fall to 0 as you close the day.<br><br>
+      <b style="color:var(--muted)">Switches</b> = active job changed &middot; <b style="color:var(--muted)">Re-touches</b> = a job went active again after leaving &middot; <b style="color:var(--muted)">Dwell</b> = seconds deliberating in sheets.
+    </div>`;
+}
+
+/* ----- X-ray annotation overlay ----- */
+const NOTES = [
+  ['.console','Run Board',null,'The single active job. Only one runs at a time \u2014 the whole UX premise.'],
+  ['.job-title','Active job',null,'S.activeId: the only job with status "active". ensureActive() guarantees one exists if any are live.'],
+  ['.nextmove','The command','1','One physical action. Orange = do this now. Falls back to "Do: step" or "Start: title" if blank.'],
+  ['.btn.primary','Done','1','completeActive(): finishes the active step, or the whole job if no steps remain \u2192 advance().'],
+  ['.btn.stuck','Stuck','4','openStuck(): reroute sheet \u2014 where it stopped, block type, smaller move, then return today / park as stuck / carry / delete.'],
+  ['.btn.skip','Skip','1','skipActive(): status \u2192 skipped \u2192 advance(). Terminal; cleared at day rollover.'],
+  ['.btn.ghost','Edit','2','openDetail(): edit the move, done-means, and steps for this job.'],
+  ['.handrail button','Handrail','1','doReset(): injects one hardcoded "Stabilize" job and makes it active. No planning.'],
+  ['.fab','Quick Drop','2','openQuickDrop(): capture a new item to today/tomorrow/ledger without hijacking the active job.'],
+  ['nav','View router',null,'Switches S.view \u2192 screen(). Drop & Close taps are tagged to those flows, not to navigation.'],
+  ['#dropbox','Brain Drop',null,'Each non-empty line \u2192 one waiting job via addDrops(). Leading bullets/numbers are stripped.'],
+  ['.btn[data-act="adddrops"]','Drop in','1','addDrops(): parses lines into jobs, jumps to Today.'],
+  ['.list','Today queue',null,'Sorted active \u2192 waiting \u2192 stuck \u2192 carry \u2192 skipped \u2192 done. Tap a row to open its Detail sheet.'],
+  ['.picker','First job tomorrow',null,'The one line mechanically handed to tomorrow. Chosen id rolls forward as the next active job.'],
+  ['.btn[data-act="saveday"]','Save day','2','saveDay(): writes ledger[day], rolls stuck+carry into fresh waiting jobs, advances the date.']
+];
+function annotate(){
+  const seen=new Set();
+  NOTES.forEach(([sel,title,cost,desc])=>{
+    document.querySelectorAll('#app '+sel).forEach(elm=>{
+      if(seen.has(elm)) return; seen.add(elm);
+      if(elm.querySelector(':scope > .xr-tab')) return;
+      elm.classList.add('xr-on');
+      const tab=document.createElement('span');
+      tab.className='xr-tab';
+      tab.innerHTML = title + (cost?`<span class="cost">${cost} tap${cost==='1'?'':'s'}</span>`:'');
+      const note=document.createElement('span');
+      note.className='xr-note';
+      note.textContent=desc;
+      tab.addEventListener('click',ev=>{ ev.stopPropagation(); ev.preventDefault(); tab.classList.toggle('open'); });
+      elm.appendChild(tab);
+      elm.appendChild(note);
+    });
+  });
+}
+function afterRender(){ if(xray) annotate(); }
+
+/* ----- invariants, classifier, autopilot ----- */
+function checkInvariants(){
+  const v=[]; const KNOWN=['waiting','active','stuck','carry','done','skipped'];
+  const act=S.jobs.filter(j=>j.status==='active');
+  if(act.length>1) v.push('more than one active job ('+act.length+')');
+  if(S.activeId){ const j=S.jobs.find(x=>x.id===S.activeId);
+    if(!j) v.push('activeId points to a missing job');
+    else if(j.status!=='active') v.push('activeId job is "'+j.status+'", not active'); }
+  S.jobs.forEach(j=>{ if(!KNOWN.includes(j.status)) v.push('unknown status "'+j.status+'"'); });
+  if(liveJobs().length>0 && !S.activeId && !sheet) v.push('live jobs exist but none is active');
+  return v;
+}
+function logDefect(text){
+  if(M.defects.some(d=>d.text===text && d.step===AP.step)) return;
+  M.defects.push({t:Date.now(), text, step:AP.step});
+  if(M.defects.length>60) M.defects=M.defects.slice(-60);
+  logEvent('defect', text);
+}
+function classify(){
+  const tasks=M.taskLog.length;
+  const avg=tasks? M.taskLog.reduce((a,b)=>a+b,0)/tasks : 0;
+  const loopsEnd=M.events.length? M.events[M.events.length-1].loops : openLoops();
+  const sw=M.switches, rt=M.retouches, closed=(M.cycles||0)>0;
+  if(M.defects.length>0) return {label:'BROKEN', color:'var(--stuck)', reasons:[M.defects.length+' invariant violation(s) \u2014 see defects below']};
+  if(closed && loopsEnd===0 && avg<=1.4 && sw<=tasks+1) return {label:'SUCCESS', color:'var(--done)', reasons:['day closed, loops cleared to 0','per-task cost near the designed 1 ('+avg.toFixed(1)+')']};
+  if(closed && rt>0 && loopsEnd<=1) return {label:'STUCK \u2192 MANAGED', color:'var(--carry)', reasons:[rt+' re-touch(es), but work resolved','parked items were picked back up']};
+  if(closed && loopsEnd>2) return {label:'UNSUCCESSFUL', color:'var(--skip)', reasons:['closed with '+loopsEnd+' loops still open','work carried or abandoned']};
+  if(avg>2.2 || sw>tasks*2+1 || rt>=3) return {label:'MISMANAGED', color:'var(--signal)', reasons:['thrash: '+avg.toFixed(1)+' taps/task, '+sw+' switches, '+rt+' re-touches']};
+  return {label:'IN PROGRESS', color:'var(--muted)', reasons:['not enough signal yet \u2014 keep going or close the day']};
+}
+
+let AP={running:false, mode:null, step:0, max:60, speed:240, timer:null, lastAction:'', result:null};
+let apPhase=0;
+function clickSel(sel){ const el=document.querySelector(sel); if(el){ el.click(); return true; } return false; }
+function isVisible(el){ return !!el && el.offsetParent!==null; }
+function happyStep(){
+  if(sheet){ if(clickSel('[data-savedetail]')||clickSel('[data-saveq]')||clickSel('[data-savestuck]')) return 'resolve sheet'; clickSel('.sheet-bg'); return 'dismiss sheet'; }
+  if(apPhase===0){ clickSel('[data-nav="drop"]'); apPhase=1; return 'open Drop'; }
+  if(apPhase===1){ const t=document.querySelector('#dropbox'); if(t) t.value='feed dogs\nwater rabbits\nfind tax papers\ncook food'; clickSel('[data-act="adddrops"]'); apPhase=2; return 'drop 4 tasks'; }
+  if(apPhase===2){ if(activeJob()){ if(view!=='now'){ clickSel('[data-nav="now"]'); return 'go to Now'; } clickSel('[data-act="done"]'); return 'mark done'; } apPhase=3; return 'queue cleared'; }
+  if(apPhase===3){ clickSel('[data-nav="close"]'); apPhase=4; return 'open Close'; }
+  if(apPhase===4){ clickSel('[data-act="saveday"]'); apPhase=5; return 'save the day'; }
+  return null;
+}
+function monkeyStep(){
+  if(Math.random()<0.4){
+    const inp=document.querySelector('.sheet input[type=text], #dropbox, #worked, #blocked, #fjt_free');
+    if(inp) inp.value = inp.tagName==='TEXTAREA' ? 'alpha\nbeta\ngamma' : 'rnd '+Math.random().toString(36).slice(2,6);
+  }
+  const sel='[data-act],[data-nav],[data-block],[data-disp],[data-dest],[data-savestuck],[data-saveq],[data-savedetail],[data-makeactive],[data-addstep],[data-delstep],[data-fjt],.row,.sheet-bg';
+  const els=[...document.querySelectorAll(sel)].filter(isVisible);
+  if(!els.length) return 'no targets';
+  const el=els[Math.floor(Math.random()*els.length)];
+  const lbl=el.dataset.act||el.dataset.nav||el.dataset.disp||el.dataset.block||el.dataset.dest||(el.classList.contains('row')?'row':(el.classList.contains('sheet-bg')?'backdrop':'save'));
+  el.click();
+  return 'tap '+lbl;
+}
+function apTick(){
+  if(!AP.running) return;
+  let action=null;
+  try{ action = AP.mode==='happy'? happyStep() : monkeyStep(); }
+  catch(err){ logDefect('exception: '+err.message); }
+  if(action===null){ apStop('happy path complete'); return; }
+  AP.step++; AP.lastAction=action;
+  setTimeout(()=>{ checkInvariants().forEach(logDefect); saveMetrics(); if(panelTab==='auto'||panelTab==='trace'||panelTab==='load') renderPanel(); }, 40);
+  if(AP.mode==='happy' && AP.step>250){ apStop('step cap'); return; }
+  if(AP.mode==='monkey' && AP.step>=AP.max){ apStop('reached '+AP.max+' steps'); return; }
+  AP.timer=setTimeout(apTick, AP.speed);
+}
+function apStart(mode){
+  apStop();
+  AP.running=true; AP.mode=mode; AP.step=0; AP.result=null; apPhase=0;
+  logEvent('action','\u25B6 Autopilot ('+mode+') started');
+  panelTab='auto'; renderPanel();
+  AP.timer=setTimeout(apTick, AP.speed);
+}
+function apStop(reason){
+  if(AP.timer){ clearTimeout(AP.timer); AP.timer=null; }
+  const was=AP.running; AP.running=false;
+  if(was){ logEvent('action','\u25A0 Autopilot stopped \u00b7 '+(reason||'')); AP.result=classify(); saveMetrics(); renderPanel(); }
+}
+
+
+document.getElementById('tgMin').onclick=function(){ MODE='min'; saveMode(); this.setAttribute('aria-pressed','true'); render(); };
+document.getElementById('tgXray').onclick=function(){
+  xray=!xray;
+  this.classList.toggle('on',xray);
+  this.setAttribute('aria-pressed', xray?'true':'false');
+  this.querySelector('span').textContent = xray?'\u25CF':'\u25CB';
+  document.body.classList.toggle('xray',xray);
+  render();
+};
+// initial pressed-state for assistive tech
+document.getElementById('tgMin').setAttribute('aria-pressed', MODE==='min'?'true':'false');
+document.getElementById('tgXray').setAttribute('aria-pressed','false');
+document.getElementById('tgPanel').onclick=function(){
+  panelOpen=!panelOpen;
+  this.classList.toggle('on',panelOpen);
+  document.getElementById('ledgerPanel').classList.toggle('open',panelOpen);
+  renderPanel();
+};
+
+/* ===================== Reroute history ===================== */
+function pushHistory(j, note, newMove, newDone){
+  j.history = j.history || [];
+  j.history.push({
+    t: Date.now(),
+    fromMove: j.nextMove || '',
+    fromDone: j.doneMeans || '',
+    steps: (j.steps||[]).map(s=>({text:s.text, done:!!s.done})),
+    note: note || '',
+    toMove: newMove || j.nextMove || ''
+  });
+}
+function fmtTS(t){ try{ return new Date(t).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+
+/* ===================== THE LINE — chain engine ===================== */
+let LINE = { raw:'', level:0, target:null, outputs:{}, status:{}, open:new Set(), running:false, verdict:'', closeText:'', err:'', fired:false, firing:false };
+
+const LINE_STAGES = [
+  { id:"intake", name:"Intake", tag:"What did I just drop?",
+    sys:`You are the Intake Agent. Read the user's raw input and classify it.
+Identify input_type (idea | task | project | animal/livestock log | expense | relationship note | business concept | code/build note | research question | schedule item | emotional/context note | unknown/mixed).
+Extract: 1.input_type 2.main topic 3.entities 4.dates/times 5.tasks 6.decisions 7.questions 8.urgency 9.missing context 10.recommended next agent.
+Return clean scannable fields. Be terse. No preamble.` },
+  { id:"qualify", name:"Qualifier", tag:"Is this worth moving forward?",
+    sys:`You are the Qualifier Agent. Given the intake, decide what this input should BECOME.
+Classify as one of: discard | daily note | task | reminder | project | product idea | research item | system rule | build packet | business asset | memory item.
+Evaluate leverage, urgency, money potential, dependency level, required effort, proof needed, next best move.
+Return: classification / why / what would make it valuable / what happens next. Terse, decisive.` },
+  { id:"structure", name:"Structure", tag:"Make it usable.",
+    sys:`You are the Structure Agent. Turn the input into a clean usable object. Preserve original intent. Do NOT expand beyond what's useful.
+Produce: title / one-line definition / category / user-or-customer / problem / promise / required objects / dependencies / open loops / immediate next action.` },
+  { id:"relationships", name:"Relationship Map", tag:"What does this connect to?",
+    sys:`You are the Relationship Agent. Map this input against likely existing objects.
+Identify parent project, child tasks, related ideas, dependencies, blockers, people, assets, dates, recurring patterns, conflicts, downstream effects.
+Return edges ONLY, one per line, in the format:  SOURCE -> RELATIONSHIP -> TARGET` },
+  { id:"action", name:"Action Plan", tag:"What happens next?",
+    sys:`You are the Action Agent. Given the structured object and relationship map, decide the next move. It MUST be concrete and executable.
+Return: 1.next action 2.reason 3.estimated effort (low/medium/high) 4.done condition 5.blocker 6.who/what is needed 7.what NOT to do yet.` },
+  { id:"verify", name:"Verifier", tag:"Did the AI mess up?",
+    sys:`You are the Verification Agent. Compare the ORIGINAL raw input against everything produced so far.
+Check for invented details, missing details, wrong assumptions, vague next actions, overcomplication, loss of user intent, unsupported conclusions, unclear dependencies.
+Return: PASS or FAIL / corrections needed / confidence score (0-100). If FAIL, give the revised key outputs. Be strict and honest.` },
+  { id:"close", name:"Close", tag:"Close it like a sale.",
+    sys:`You are the Close Agent. Force this into a decision. Pick ONE outcome: build now | schedule | store for later | turn into prompt | turn into document | turn into code task | ask one question | kill/pause.
+Use this format exactly:
+1. What this is
+2. Why it matters
+3. What proof is needed
+4. What objection/blocker exists
+5. How to handle it
+6. FINAL CLOSE DECISION: <one of the outcomes above>
+7. Next irreversible move` },
+  { id:"storage", name:"Storage", tag:"Where does it live?",
+    sys:`You are the Storage Agent. Decide where this output lives.
+Options: Daily Log | Project Bible | Build Packet | Research Queue | Task List | Prompt Library | Asset Library | Finance Log | Rabbit/Farm Log | Personal Context | Archive.
+Return: storage location / filename-or-title / tags / one-line summary / retrieval keywords / update rule.` }
+];
+
+async function lineCall(stage, raw, ctx){
+  const userMsg = `RAW DROP FROM USER:\n"""\n${raw}\n"""\n\n` +
+    (ctx ? `CONTEXT FROM EARLIER STATIONS:\n${ctx}\n\n` : '') +
+    `Do your job as the ${stage.name} Agent now. Output only your station's result.`;
+  const res = await fetch("/api/ai/complete", {
+    method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
+    body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:1000,
+      system: stage.sys, messages:[{role:"user", content:userMsg}] })
+  });
+  if(!res.ok) throw new Error("Station "+stage.name+" returned "+res.status);
+  const data = await res.json();
+  return data.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+}
+
+async function lineRun(){
+  if(LINE.running) return;
+  const box = document.querySelector('#dropbox'); if(box) LINE.raw = box.value.trim();
+  if(!LINE.raw){ LINE.err='Drop something first.'; render(); return; }
+  LINE.running=true; LINE.err=''; LINE.outputs={}; LINE.status={}; LINE.open=new Set();
+  LINE.verdict=''; LINE.closeText=''; LINE.fired=false;
+  render();
+  for(const stage of LINE_STAGES){
+    LINE.status[stage.id]='running'; LINE.open=new Set([stage.id]);
+    render(); const el=document.querySelector('#ln-st-'+stage.id); if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+    const ctx = LINE_STAGES.filter(s=>LINE.outputs[s.id]).map(s=>'### '+s.name+'\n'+LINE.outputs[s.id]).join('\n\n');
+    try{
+      const out = await lineCall(stage, LINE.raw, ctx);
+      LINE.outputs[stage.id]=out; LINE.status[stage.id]='done';
+    }catch(e){
+      LINE.outputs[stage.id]='\u26A0 '+e.message+'\nThe line stopped here.';
+      LINE.status[stage.id]='fail';
+      LINE.err=e.message+' \u2014 in your own browser the runner needs your own endpoint + key.';
+      LINE.running=false; render(); return;
+    }
+    render();
+  }
+  if(LINE.outputs.close){
+    const t=LINE.outputs.close; const m=t.match(/FINAL CLOSE DECISION[:\s]*([^\n]+)/i);
+    LINE.verdict = m ? m[1].trim().replace(/[<>*]/g,'') : 'See station 07';
+    LINE.closeText = t;
+  }
+  LINE.running=false;
+  render();
+}
+
+async function dropReroute(){
+  if(LINE.running) return;
+  const tgt = LINE.target ? S.jobs.find(j=>j.id===LINE.target) : null;
+  const box = document.querySelector('#dropbox'); const note = box ? box.value.trim() : '';
+  if(!tgt && !note){ LINE.err='Drop something first.'; render(); return; }
+  LINE.running=true; LINE.err=''; render();
+
+  if(tgt){
+    let move=null;
+    try{
+      const res = await fetch("/api/ai/complete",{
+        method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
+        body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:220,
+          system:'A task is stalled. Given the task and what the user tried, return ONLY a JSON object, no markdown: {"nextMove": the single smallest concrete next physical action, "doneMeans": the observable done condition}. Keep both tight.',
+          messages:[{role:"user", content:'TASK: '+tgt.title+(note?('\nTRIED / STALLED AT: '+note):'')}] })
+      });
+      if(!res.ok) throw new Error('reroute '+res.status);
+      const data=await res.json();
+      let txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim().replace(/```json|```/g,'').trim();
+      move=JSON.parse(txt);
+    }catch(e){ move={ nextMove: note || tgt.nextMove, doneMeans: tgt.doneMeans }; }
+    pushHistory(tgt, note, move.nextMove||tgt.nextMove, move.doneMeans);
+    if(move.nextMove) tgt.nextMove=move.nextMove;
+    if(move.doneMeans) tgt.doneMeans=move.doneMeans;
+    if(typeof logEvent==='function') logEvent('action','Reroute rewrote the move on "'+tgt.title+'"');
+    setActive(tgt.id);
+    LINE.running=false; LINE.target=null; LINE.raw=''; view='now'; render();
+    return;
+  }
+
+  LINE.raw = note;
+  let job=null;
+  try{
+    const res = await fetch("/api/ai/complete",{
+      method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
+      body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:300,
+        system:'The user dropped ONE thing they are stuck on or unsure how to start. Return ONLY a JSON object, no markdown, no prose: {"title": short imperative task name, "nextMove": the single smallest concrete next physical action, "doneMeans": the observable done condition}. Keep every value tight.',
+        messages:[{role:"user", content:LINE.raw}] })
+    });
+    if(!res.ok) throw new Error('reroute '+res.status);
+    const data=await res.json();
+    let txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim().replace(/```json|```/g,'').trim();
+    job=JSON.parse(txt);
+  }catch(e){
+    job={ title:(LINE.raw.split('\n')[0]||'New task').slice(0,80), nextMove:'', doneMeans:'' };
+  }
+  const nj=newJob(job.title||'New task');
+  nj.nextMove=job.nextMove||''; nj.doneMeans=job.doneMeans||''; nj.fromLine=true; nj.status='waiting';
+  S.jobs.push(nj); ensureActive();
+  if(typeof logEvent==='function') logEvent('add','Reroute \u2192 "'+nj.title+'"');
+  save();
+  LINE.running=false; LINE.raw=''; view='now'; render();
+}
+
+async function lineFire(){
+  if(LINE.firing || LINE.fired) return;
+  LINE.firing=true; render();
+  let job=null;
+  try{
+    const ctx = LINE_STAGES.map(s=>LINE.outputs[s.id]?('### '+s.name+'\n'+LINE.outputs[s.id]):'').filter(Boolean).join('\n\n');
+    const res = await fetch("/api/ai/complete", {
+      method:"POST", headers:{"Content-Type":"application/json","X-Atlas-Token":(window.__DL_TOKEN__||"")},
+      body: JSON.stringify({ model:(window.DL_MODEL||"anthropic/claude-sonnet-4-20250514"), max_tokens:600,
+        system:'You convert a finished triage into ONE actionable task for a do-one-thing app. Return ONLY a JSON object, no markdown fences, no prose: {"title": short imperative task name, "nextMove": the single concrete next physical action, "doneMeans": the observable done condition, "why": one tight line on why it matters}. Keep every value short.',
+        messages:[{role:"user", content:'RAW DROP:\n'+LINE.raw+'\n\nTRIAGE OUTPUT:\n'+ctx+'\n\nEmit the job JSON only.'}] })
+    });
+    if(!res.ok) throw new Error('dispatch '+res.status);
+    const data=await res.json();
+    let txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim().replace(/```json|```/g,'').trim();
+    job=JSON.parse(txt);
+  }catch(e){
+    job={ title:(LINE.raw.split('\n')[0]||'New task').slice(0,80), nextMove:LINE.verdict||'', doneMeans:'', why:'' };
+  }
+  const nj=newJob(job.title||'New task');
+  nj.nextMove=job.nextMove||''; nj.doneMeans=job.doneMeans||''; nj.why=job.why||'';
+  nj.status='waiting'; nj.fromLine=true;
+  S.jobs.push(nj); ensureActive();
+  if(typeof logEvent==='function') logEvent('add','Line \u2192 fired "'+nj.title+'" to board');
+  save();
+  LINE.fired=true; LINE.firing=false;
+  view='now'; render();
+  if(window.EngineClient && EngineClient.wired) EngineClient.drop(nj.title);  // real intake + re-hydrate
+}
+
+function lineReset(){ LINE.raw=''; LINE.outputs={}; LINE.status={}; LINE.open=new Set(); LINE.verdict=''; LINE.closeText=''; LINE.err=''; LINE.fired=false; render(); }
+function lineSeed(){
+  LINE.raw=`Thinking about a doe i bred last week, the new zealand white. need to track kindling date and check the nest box. also half-wondering if i could turn the whole rabbit operation into a little local meat subscription thing but i never finish stuff like that. mostly i just want to not lose the breeding date again.`;
+  render();
+}
+
+/* ----- boot ----- */
+(function(){
+  loadMode();
+  loadMetrics();
+  load();
+  const a=activeJob(); if(a && !M.everActive.includes(a.id)) M.everActive.push(a.id);
+  render();
+  reconcileTask();
+  logEvent('action','Session opened \u00b7 '+openLoops()+' open loops');
+  saveMetrics();
+  renderPanel();
+})();
+</script>
+<script>
+/* Engine client (KEYSTONE wire). Makes line.html a real client of the DropList engine instead
+   of a localStorage-only twin. READS hydrate S.jobs from the DAG store; WRITES (drop/complete)
+   go to the authenticated API and then re-hydrate from server truth. localStorage is demoted to
+   an optimistic first-paint cache, never the source of truth. Graceful: if the engine is
+   unreachable, wired stays false and the app behaves exactly as the offline demo (no regression).
+   The old bridge fetched /api/now and handed it to tryWireLive() -- a function that was never
+   defined -- so every server response was parsed and discarded.
+   See ~/.claude/rules/common/code-as-furniture.md -- no broken code left in place. */
+(function(){
+  var TOKEN = (window.__DL_TOKEN__||'');
+  function hdrs(write){ var h={'Accept':'application/json'}; if(write){ h['Content-Type']='application/json'; h['X-Atlas-Token']=TOKEN; } return h; }
+  function mapStatus(s){ return s==='complete' ? 'done' : 'waiting'; }
+
+  // Map one engine DAG (via its checklist, which carries node ids + per-node status) into a UI job.
+  async function jobFromChecklist(dagId, fallbackGoal){
+    var cl = await fetch('/api/dag/'+encodeURIComponent(dagId)+'/checklist', {headers:hdrs(false), cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('checklist '+r.status); return r.json(); });
+    var tasks = cl.tasks || [];
+    var steps = tasks.map(function(t){
+      return { text:t.title||'', done:t.status==='done', ready:t.status==='ready', nodeId:t.id, doneCond:t.done_condition||'' };
+    });
+    var nextTask = tasks.find(function(t){ return t.status!=='done'; });
+    return {
+      id: cl.dag_id, dagId: cl.dag_id, serverBacked:true,
+      title: cl.goal || fallbackGoal || '(untitled)',
+      why:'', doneMeans: steps.map(function(s){return s.doneCond;}).filter(Boolean).join('; '),
+      nextMove: nextTask ? nextTask.title : '',
+      steps: steps, status: mapStatus(cl.status)
+    };
+  }
+
+  var EngineClient = {
+    wired:false,
+    // READ: rebuild S.jobs from the engine and re-render -- the single source of truth.
+    // The engine separates capture (a secured PACKET) from planning (a DAG). DAG-backed
+    // jobs carry steps + node ids and are completable; a captured packet that has not yet
+    // been planned into a DAG shows as a pending job so a drop is never lost. A packet that
+    // already owns a DAG (matched by source_drop) is represented by that DAG, not duplicated.
+    async hydrate(){
+      try{
+        var pair = await Promise.all([
+          fetch('/api/dags', {headers:hdrs(false), cache:'no-store'}),
+          fetch('/api/packets', {headers:hdrs(false), cache:'no-store'})
+        ]);
+        if(!pair[0].ok) throw new Error('dags '+pair[0].status);
+        var dags = (await pair[0].json()).dags || [];
+        var packets = pair[1].ok ? ((await pair[1].json()).packets || []) : [];
+        var openDags = dags.filter(function(d){ return d.status!=='complete'; });
+        var dagJobs = await Promise.all(openDags.map(function(d){ return jobFromChecklist(d.dag_id, d.goal); }));
+        var planned = {};
+        dags.forEach(function(d){ if(d.source_drop) planned[d.source_drop]=true; });
+        var pktJobs = packets.filter(function(p){
+          var id = p.drop_id || p.id;
+          return id && !planned[id] && p.status!=='done' && p.status!=='dropped';
+        }).map(function(p){
+          return { id:'pkt:'+(p.drop_id||p.id), dropId:(p.drop_id||p.id), serverBacked:true, pending:true,
+                   title: p.next_action || p.normalized_input || p.title || '(captured)',
+                   why:'', doneMeans:'', nextMove:'', steps:[], status:'waiting' };
+        });
+        if(typeof S==='undefined' || !S) return false;
+        var jobs = dagJobs.concat(pktJobs);   // DAG-backed jobs first -> they win the active slot
+        // Merge-not-replace: keep local-only jobs the engine has never seen (captured while
+        // offline / not yet synced) so a hydrate on reconnect can't destroy un-pushed work.
+        // Engine jobs carry serverBacked; anything else is local user content. Dedupe by id so
+        // a local job that has since become a DAG is not shown twice.
+        // See ~/.claude/rules/common/code-as-furniture.md -- data-loss fix, not documented-and-left.
+        var seen = {};
+        jobs.forEach(function(j){ if(j && j.id) seen[j.id]=true; });
+        var localOnly = (S.jobs||[]).filter(function(j){
+          return j && !j.serverBacked && j.id && !seen[j.id] && j.status!=='done';
+        });
+        var prevActive = S.activeId;
+        S.jobs = jobs.concat(localOnly);
+        var keep = prevActive && S.jobs.filter(function(j){ return j.id===prevActive && j.status!=='done'; })[0];
+        if(keep){ keep.status='active'; S.activeId=keep.id; }
+        else if(typeof ensureActive==='function'){ ensureActive(); }
+        this.wired = true;
+        if(typeof save==='function') save();
+        if(typeof render==='function') render();
+        console.log('[droplist line] hydrated '+dagJobs.length+' job(s) + '+pktJobs.length+' pending capture(s) from engine');
+        return true;
+      }catch(err){
+        console.log('[droplist line] engine unreachable, staying on local demo state:', err && err.message || err);
+        return false;
+      }
+    },
+    // WRITE: a captured thought goes through the intake valve (bouncer + chainer -> packet + DAG).
+    async dropRaw(raw){
+      var r = await fetch('/api/drop', {method:'POST', headers:hdrs(true), body:JSON.stringify({raw:raw})});
+      if(!r.ok) throw new Error('drop '+r.status);
+      return r.json();
+    },
+    async drop(raw){
+      try{ await this.dropRaw(raw); await this.hydrate(); }
+      catch(err){ console.log('[droplist line] drop failed, kept local optimistic copy:', err && err.message || err); }
+    },
+    async dropMany(list){
+      try{ for(var i=0;i<list.length;i++){ await this.dropRaw(list[i]); } await this.hydrate(); }
+      catch(err){ console.log('[droplist line] dropMany failed:', err && err.message || err); }
+    },
+    // WRITE: mark an engine node done (unblocks dependents, writes a dag_events row), then re-hydrate.
+    async complete(dagId, nodeId){
+      try{
+        var r = await fetch('/api/dag/'+encodeURIComponent(dagId)+'/node/'+encodeURIComponent(nodeId)+'/complete',
+          {method:'POST', headers:hdrs(true), body:'{}'});
+        if(!r.ok && r.status!==409) throw new Error('complete '+r.status);
+        await this.hydrate();
+      }catch(err){ console.log('[droplist line] complete failed:', err && err.message || err); }
+    }
+  };
+  window.EngineClient = EngineClient;
+  // Back-compat with the old bridge contract: tryWireLive now triggers a real hydrate.
+  window.tryWireLive = function(){ return EngineClient.hydrate(); };
+
+  // ---- Swappable LLM picker (Task B, litellm). Populates from /api/ai/models
+  // (only providers the server has keys for), persists choice, and sets the
+  // window.DL_MODEL that the 5 AI call sites read. No model = AI buttons still
+  // work as no-ops (they already try/catch to a manual fallback). ----
+  var MODEL_KEY = 'droplist:model:v1';
+  window.DL_MODEL = (function(){ try{ return localStorage.getItem(MODEL_KEY) || ''; }catch(e){ return ''; } })();
+  var KEY_PROVIDERS = ['anthropic','openai','gemini','openrouter','ollama'];
+  async function bootModelPicker(){
+    var models = [], def = null, configured = {};
+    try{
+      var r = await fetch('/api/ai/models');
+      if(r.ok){ var j = await r.json(); models = j.models||[]; def = j.default||null; }
+    }catch(e){ /* offline / desktop pre-server — leave DL_MODEL as-is */ }
+    try{
+      var rk = await fetch('/api/ai/keys');
+      if(rk.ok){ configured = (await rk.json()).configured || {}; }
+    }catch(e){}
+    if(!window.DL_MODEL && def) window.DL_MODEL = def;
+    if(models.length && !models.some(function(m){return m.id===window.DL_MODEL;})) window.DL_MODEL = def || models[0].id;
+    if(window.DL_MODEL){ try{ localStorage.setItem(MODEL_KEY, window.DL_MODEL); }catch(e){} }
+
+    var old = document.getElementById('dl-ai-ctrl'); if(old) old.remove();   // idempotent re-render
+    var wrap = document.createElement('div');
+    wrap.id = 'dl-ai-ctrl';
+    wrap.style.cssText = 'position:fixed;top:8px;right:10px;z-index:9999;font:12px/1.2 system-ui,sans-serif;display:flex;gap:6px;align-items:center;';
+
+    if(models.length){
+      var sel = document.createElement('select');
+      sel.setAttribute('aria-label','AI model');
+      sel.title = 'AI model — keys stay server-side';
+      sel.style.cssText = 'background:#121614;color:#8b918c;border:1px solid #2a302c;border-radius:7px;padding:4px 8px;max-width:200px;';
+      models.forEach(function(m){
+        var o = document.createElement('option');
+        o.value = m.id; o.textContent = m.provider + ' · ' + m.model;
+        if(m.id===window.DL_MODEL) o.selected = true;
+        o.style.color = '#0c0e0d';
+        sel.appendChild(o);
+      });
+      sel.onchange = function(){ window.DL_MODEL = sel.value; try{ localStorage.setItem(MODEL_KEY, sel.value); }catch(e){} };
+      wrap.appendChild(sel);
+    }
+
+    // 🔑 key affordance — ALWAYS shown (even with zero models) so you can add your
+    // first key. Optional, like HYDRA's token field; key is stored server-side.
+    var keyBtn = document.createElement('button');
+    keyBtn.type = 'button';
+    keyBtn.textContent = models.length ? '🔑' : '🔑 Add API key';
+    keyBtn.setAttribute('aria-label','Set an AI provider API key');
+    keyBtn.setAttribute('aria-expanded','false');
+    keyBtn.style.cssText = 'background:#121614;color:#8b918c;border:1px solid #2a302c;border-radius:7px;padding:4px 9px;cursor:pointer;';
+    wrap.appendChild(keyBtn);
+
+    var panel = document.createElement('div');
+    panel.style.cssText = 'display:none;position:absolute;top:34px;right:0;background:#101413;border:1px solid #2a302c;border-radius:9px;padding:10px;width:244px;box-shadow:0 6px 24px #0008;';
+    var psel = document.createElement('select');
+    psel.setAttribute('aria-label','Provider');
+    psel.style.cssText = 'width:100%;box-sizing:border-box;background:#0c0e0d;color:#cdd3cf;border:1px solid #2a302c;border-radius:6px;padding:5px;margin-bottom:6px;';
+    KEY_PROVIDERS.forEach(function(p){
+      var o=document.createElement('option'); o.value=p; o.textContent = p + (configured[p] ? '  ✓ set' : '');
+      psel.appendChild(o);
+    });
+    var inp = document.createElement('input');
+    inp.type='password'; inp.placeholder='paste key (base URL for ollama)';
+    inp.setAttribute('aria-label','API key');
+    inp.style.cssText='width:100%;box-sizing:border-box;background:#0c0e0d;color:#cdd3cf;border:1px solid #2a302c;border-radius:6px;padding:6px;margin-bottom:6px;';
+    var save = document.createElement('button');
+    save.type='button'; save.textContent='Save key';
+    save.style.cssText='width:100%;background:#1c2a24;color:#7fe3b3;border:1px solid #2f5a47;border-radius:6px;padding:6px;cursor:pointer;';
+    var msg = document.createElement('div');
+    msg.setAttribute('aria-live','polite');
+    msg.style.cssText='color:#8b918c;margin-top:6px;min-height:14px;';
+    msg.textContent = 'Stored on the server, never in the browser.';
+    save.onclick = async function(){
+      save.disabled=true; msg.textContent='Saving…';
+      try{
+        var rr = await fetch('/api/ai/keys', {method:'POST',
+          headers:{'Content-Type':'application/json','X-Atlas-Token':(window.__DL_TOKEN__||'')},
+          body: JSON.stringify({provider:psel.value, key:inp.value})});
+        if(rr.ok){ inp.value=''; msg.textContent='Saved ✓'; bootModelPicker(); }
+        else { msg.textContent='Failed ('+rr.status+') — check the write token'; }
+      }catch(e){ msg.textContent='Error: '+(e&&e.message||e); }
+      save.disabled=false;
+    };
+    panel.appendChild(psel); panel.appendChild(inp); panel.appendChild(save); panel.appendChild(msg);
+    wrap.appendChild(panel);
+    keyBtn.onclick = function(){
+      var open = panel.style.display==='none';
+      panel.style.display = open ? 'block' : 'none';
+      keyBtn.setAttribute('aria-expanded', open ? 'true':'false');
+      if(open) inp.focus();
+    };
+
+    document.body.appendChild(wrap);
+  }
+  bootModelPicker();
+
+  // Boot: overlay engine truth on top of the instant localStorage first-paint.
+  EngineClient.hydrate();
+})();
+</script>
+</body>
+</html>

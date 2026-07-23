@@ -1,0 +1,14 @@
+{
+  "surface": "droplist",
+  "headline": "Capture → packet → DAG execution engine",
+  "capabilities": [
+    { "id": "now",       "label": "See what's live right now",   "direction": "read",  "exposure": "public", "criticality": 0, "invoke": "GET /api/now" },
+    { "id": "list_dags", "label": "List execution DAGs",         "direction": "read",  "exposure": "agent",  "criticality": 0, "invoke": "GET /api/dags" },
+    { "id": "get_dag",   "label": "Inspect one DAG",             "direction": "read",  "exposure": "agent",  "criticality": 0, "invoke": "GET /api/dag/{dag_id}", "needs": ["dag_id"] },
+    { "id": "packets",   "label": "View the capture queue",      "direction": "read",  "exposure": "agent",  "criticality": 0, "invoke": "GET /api/packets" },
+    { "id": "brief",     "label": "Read the current brief",      "direction": "read",  "exposure": "agent",  "criticality": 0, "invoke": "GET /api/brief" },
+    { "id": "entities",  "label": "List tracked entities",       "direction": "read",  "exposure": "agent",  "criticality": 0, "invoke": "GET /api/entities" },
+    { "id": "state",     "label": "Read engine state",           "direction": "read",  "exposure": "agent",  "criticality": 0, "invoke": "GET /api/state" },
+    { "id": "drop",      "label": "Capture a new item",          "direction": "write", "exposure": "agent",  "criticality": 1, "invoke": "POST /api/drop", "needs": ["text"] }
+  ]
+}

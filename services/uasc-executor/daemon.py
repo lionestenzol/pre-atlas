@@ -22,6 +22,9 @@ import urllib.request
 from datetime import datetime
 from typing import Any, Optional
 
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 DELTA_URL = os.environ.get("ATLAS_DELTA_URL", "http://localhost:3001")
 UASC_URL = os.environ.get("ATLAS_UASC_URL", "http://localhost:3008")
@@ -32,7 +35,7 @@ UASC_REQUEST_TIMEOUT_S = int(os.environ.get("ATLAS_UASC_TIMEOUT_S", "120"))
 MAX_RETRIES = int(os.environ.get("ATLAS_DAEMON_MAX_RETRIES", "3"))
 RETRY_DELAY_S = int(os.environ.get("ATLAS_DAEMON_RETRY_DELAY_S", "5"))
 UASC_CLIENT_ID = os.environ.get("ATLAS_UASC_CLIENT_ID", "atlas-execution-daemon")
-UASC_SECRET = os.environ.get("ATLAS_UASC_SECRET", "atlas-execution-daemon-local-secret")
+UASC_SECRET = os.environ["ATLAS_UASC_SECRET"]
 
 
 def utc_now() -> str:

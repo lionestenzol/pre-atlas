@@ -8,6 +8,7 @@ import {
   resolveEditTarget,
   type EditTarget,
 } from '../adapter/v1-to-edit-prompt.js';
+import { toPascalCase, buildComponentNameMap } from './component-names.js';
 import type { VitePool } from '../sandbox/vite-pool.js';
 import type { CloneSessionState, EditEvent } from './session-store.js';
 import type { SessionStore } from './session-store.js';
@@ -65,30 +66,6 @@ const LAYER_TINTS: Record<Region['layer'], string> = {
 
 function formatErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-function toPascalCase(value: string): string {
-  const cleaned = value
-    .split(/[\s-]+/)
-    .map((part) => part.replace(/[^a-zA-Z0-9]/g, ''))
-    .filter((part) => part.length > 0)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
-  const joined = cleaned.join('');
-  return /^[0-9]/.test(joined) ? `R${joined}` : joined;
-}
-
-function buildSeenNameMap(envelope: AnatomyV1): Map<string, string> {
-  const seen = new Map<string, number>();
-  const result = new Map<string, string>();
-  const sorted = [...envelope.regions].sort((l, r) => l.n - r.n);
-  for (const region of sorted) {
-    const baseName = toPascalCase(region.name) || `Region${region.n}`;
-    const idx = seen.get(baseName) ?? 0;
-    seen.set(baseName, idx + 1);
-    const componentName = idx === 0 ? baseName : `${baseName}${region.n}`;
-    result.set(region.id, componentName);
-  }
-  return result;
 }
 
 function parseDeterministicIntent(intent: string): DeterministicEdit {
@@ -154,6 +131,7 @@ interface FileChange {
 
 async function buildFileChanges(
   state: CloneSessionState,
+  envelope: AnatomyV1,
   target: EditTarget,
   edit: DeterministicEdit,
 ): Promise<{ files: FileChange[]; outcome: EditEvent['outcome']; message?: string }> {
@@ -161,7 +139,7 @@ async function buildFileChanges(
     return { files: [], outcome: 'unresolved', message: `id "${target.id}" not in regions[] or chains[]` };
   }
 
-  const componentNames = buildSeenNameMap(state.envelope);
+  const componentNames = buildComponentNameMap(envelope);
 
   if (target.kind === 'region') {
     const region = target.region;
@@ -233,6 +211,16 @@ export async function* runEdit(
     return;
   }
 
+  const envelope = state.envelope;
+  if (envelope === undefined) {
+    yield {
+      type: 'error',
+      phase: 'resolve',
+      message: `session ${opts.sessionId} is an image clone · region edits need the LLM edit path`,
+    };
+    return;
+  }
+
   if (deps.pool.getSession(opts.sessionId) === undefined) {
     yield { type: 'error', phase: 'resolve', message: `session ${opts.sessionId} not active in pool` };
     return;
@@ -242,7 +230,7 @@ export async function* runEdit(
 
   let prompt: string;
   try {
-    prompt = buildEditPrompt(state.envelope, { id: opts.targetId, intent: opts.intent });
+    prompt = buildEditPrompt(envelope, { id: opts.targetId, intent: opts.intent });
   } catch (err) {
     yield { type: 'error', phase: 'edit-prompt', message: formatErrorMessage(err) };
     return;
@@ -251,13 +239,13 @@ export async function* runEdit(
 
   yield { type: 'status', phase: 'parse-intent', message: 'parsing intent (deterministic stub)' };
   const edit = parseDeterministicIntent(opts.intent);
-  const target = resolveEditTarget(state.envelope, opts.targetId);
+  const target = resolveEditTarget(envelope, opts.targetId);
 
   yield { type: 'status', phase: 'apply', message: `applying ${edit.kind} edit` };
 
   let result: { files: FileChange[]; outcome: EditEvent['outcome']; message?: string };
   try {
-    result = await buildFileChanges(state, target, edit);
+    result = await buildFileChanges(state, envelope, target, edit);
   } catch (err) {
     const message = formatErrorMessage(err);
     yield { type: 'error', phase: 'apply', message };
@@ -327,5 +315,5 @@ export const __test = {
   applyHideEdit,
   applyNoteEdit,
   toPascalCase,
-  buildSeenNameMap,
+  buildSeenNameMap: buildComponentNameMap,
 };

@@ -13,6 +13,7 @@
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import Database from 'better-sqlite3';
+import { makeDatabase } from '../cli/db-driver';
 
 export interface PreferenceRecord {
   key: string;
@@ -59,7 +60,7 @@ export class PreferencesStore {
   constructor(dataDir: string) {
     if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
     const dbPath = join(dataDir, 'preferences.db');
-    this.db = new Database(dbPath);
+    this.db = makeDatabase(dbPath);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('busy_timeout = 5000');
     this.db.exec(DDL);

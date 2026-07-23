@@ -1,0 +1,2917 @@
+{
+  "phase": "003_CROSS_REFERENCE_MATRIX",
+  "sequence": "05_merge_matrices",
+  "generated_at": "2026-05-28T00:56:08.950860+00:00",
+  "method": "Merge era_1..era_4 matrices + fs_overlay by cluster name. Each cluster carries 4 era columns per channel (chatgpt, cc, fs_ctime, fs_mtime). Era 4 computed at merge time for completeness; Era 1-3 were the explicit Phase 3 sequences.",
+  "eras": [
+    {
+      "label": "era_1_pre_cc",
+      "start": "2024-08-21",
+      "end": "2026-02-08"
+    },
+    {
+      "label": "era_2_early_cc",
+      "start": "2026-02-09",
+      "end": "2026-03-31"
+    },
+    {
+      "label": "era_3_heavy_cc",
+      "start": "2026-04-01",
+      "end": "2026-05-15"
+    },
+    {
+      "label": "era_4_now",
+      "start": "2026-05-16",
+      "end": "2099-01-01"
+    }
+  ],
+  "totals_by_era": {
+    "era_1_pre_cc": {
+      "chatgpt_in_era": 4989,
+      "cc_in_era": 0
+    },
+    "era_2_early_cc": {
+      "chatgpt_in_era": 924,
+      "cc_in_era": 646
+    },
+    "era_3_heavy_cc": {
+      "chatgpt_in_era": 550,
+      "cc_in_era": 278
+    },
+    "era_4_now": {
+      "chatgpt_in_era": 71,
+      "cc_in_era": 93
+    }
+  },
+  "substring_warnings_carried_forward": [
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "stem",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "6321",
+            "title": "Bartering Dual Economy System"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "6281",
+            "title": "Business Ecosystem Integration"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "6098",
+            "title": "Document Processing System Design"
+          }
+        ]
+      }
+    },
+    {
+      "cluster": "productivity_skills",
+      "warning": {
+        "seed_term": "fest",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "6289",
+            "title": "Manifesting Through Desire"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "5988",
+            "title": "Manifestation and Facial Hair"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "5690",
+            "title": "OFP Lifestyle Explained"
+          }
+        ]
+      }
+    }
+  ],
+  "fs_unmatched_hits": [],
+  "clusters": [
+    {
+      "name": "anatomy",
+      "seed_terms": [
+        "anatomy",
+        "anatomy-v1",
+        "anatomyv1",
+        "anatomy-extension",
+        "anatomy-research",
+        "anatomy-rewrite",
+        "anatomy-map",
+        "anatomy-frame",
+        "anatomy-sidecar"
+      ],
+      "channels": {
+        "chatgpt": {
+          "era_1_pre_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_2_early_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_3_heavy_cc": {
+            "count": 2,
+            "samples": [
+              {
+                "id": "316",
+                "date": "2026-04-26",
+                "preview": "Site Anatomy Engine"
+              },
+              {
+                "id": "171",
+                "date": "2026-05-06",
+                "preview": "UI Anatomy and Components"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 0,
+            "samples": []
+          }
+        },
+        "cc": {
+          "era_1_pre_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_2_early_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_3_heavy_cc": {
+            "count": 11,
+            "samples": [
+              {
+                "id": "8ed779dd-223f-4752-8b46-07fbc14cc921",
+                "date": "2026-04-25",
+                "preview": "ship anatomy patch 3 for SPEC 03 (canvas pre-capture) \u2014 reconsider firewall for that one."
+              },
+              {
+                "id": "agent-a67f62918e9be4b29",
+                "date": "2026-04-26",
+                "preview": "Goal: I need to write a new JSON Schema file at `C:/Users/bruke/Pre Atlas/contracts/schemas/AnatomyV1.v1.json` that EXACTLY matches the style of the 47 existing"
+              },
+              {
+                "id": "agent-a6c8ce5b23c406661",
+                "date": "2026-04-26",
+                "preview": "Goal: I'm writing a JSON Schema for anatomy v1 captures and need to validate against 7 real production files. Help me understand their actual shape so my schema"
+              },
+              {
+                "id": "c9590916-4b42-4226-8289-ece8f5716855",
+                "date": "2026-04-26",
+                "preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 i"
+              },
+              {
+                "id": "agent-a80ff93e7b4b8b4ea",
+                "date": "2026-05-01",
+                "preview": "Inventory every \"anatomy\" implementation in the Pre Atlas repo. Report under 400 words.  Search the cwd (`C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pensive-sin"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 2,
+            "samples": [
+              {
+                "id": "agent-abfc94117da3cc8ae",
+                "date": "2026-05-25",
+                "preview": "I need a COMPLETE, accurate map of the \"anatomy\" (live URL \u2192 deterministic React clone, plus region-based editing) subsystem inside a TypeScript/Express service"
+              },
+              {
+                "id": "agent-af642a8907c55f6e8",
+                "date": "2026-05-25",
+                "preview": "I need a COMPLETE, accurate map of a Chrome MV3 browser extension called the \"anatomy extension.\" It captures the structure of a live web page and emits an \"Ana"
+              }
+            ]
+          }
+        },
+        "fs_ctime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [],
+          "era_3_heavy_cc": [
+            "anatomy-map",
+            "anatomy-extension",
+            "anatomy-research",
+            "anatomy-rewrite"
+          ],
+          "era_4_now": []
+        },
+        "fs_mtime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [],
+          "era_3_heavy_cc": [
+            "anatomy-map",
+            "anatomy-extension",
+            "anatomy-research",
+            "anatomy-rewrite"
+          ],
+          "era_4_now": []
+        }
+      },
+      "fs_items": [
+        {
+          "name": "anatomy-map",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\anatomy-map",
+          "ctime": "2026-04-22T09:53:02.262479",
+          "mtime": "2026-04-22T15:43:41.423056",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-map"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "anatomy-extension",
+          "surface": "pre_atlas_tools",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\anatomy-extension",
+          "ctime": "2026-04-22T18:48:59.819211",
+          "mtime": "2026-04-26T22:00:34.654472",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-extension"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "anatomy-research",
+          "surface": "pre_atlas_tools",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\anatomy-research",
+          "ctime": "2026-04-22T19:45:33.965567",
+          "mtime": "2026-04-23T12:02:24.287346",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-research"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "anatomy-rewrite",
+          "surface": "pre_atlas_tools",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\anatomy-rewrite",
+          "ctime": "2026-04-23T14:47:56.107286",
+          "mtime": "2026-04-23T14:50:14.710398",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-rewrite"
+          ],
+          "fs_error": null
+        }
+      ],
+      "fs_matched_count": 4,
+      "fs_portfolio_hit_count": 4
+    },
+    {
+      "name": "mb3d_fractals",
+      "seed_terms": [
+        "mb3d",
+        "mandelbulb",
+        "mandelbulber",
+        "m3p",
+        "m3f",
+        ".fract",
+        "mandelbox",
+        "fractal",
+        "raymarcher",
+        "fragmentarium"
+      ],
+      "channels": {
+        "chatgpt": {
+          "era_1_pre_cc": {
+            "count": 2,
+            "samples": [
+              {
+                "id": "4986",
+                "date": "2025-03-20",
+                "preview": "Logistics and Fractal Thinking"
+              },
+              {
+                "id": "3945",
+                "date": "2025-06-01",
+                "preview": "Fractal Thinking and Execution"
+              }
+            ]
+          },
+          "era_2_early_cc": {
+            "count": 2,
+            "samples": [
+              {
+                "id": "682",
+                "date": "2026-03-27",
+                "preview": "Fractal Visual Verification"
+              },
+              {
+                "id": "685",
+                "date": "2026-03-27",
+                "preview": "Raymarched Mandelbulb Spec"
+              }
+            ]
+          },
+          "era_3_heavy_cc": {
+            "count": 3,
+            "samples": [
+              {
+                "id": "119",
+                "date": "2026-05-10",
+                "preview": "Mandelbulb3D as a Forge"
+              },
+              {
+                "id": "123",
+                "date": "2026-05-10",
+                "preview": "Mandelbulb3D Overview"
+              },
+              {
+                "id": "86",
+                "date": "2026-05-12",
+                "preview": "RGB Mandelbulb Generation"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 1,
+            "samples": [
+              {
+                "id": "43",
+                "date": "2026-05-18",
+                "preview": "Mandelbulb AudioVisual DAW"
+              }
+            ]
+          }
+        },
+        "cc": {
+          "era_1_pre_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_2_early_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_3_heavy_cc": {
+            "count": 8,
+            "samples": [
+              {
+                "id": "7ba2eb8c-c02a-44fb-8675-187fe9bb4529",
+                "date": "2026-05-10",
+                "preview": "ive been usin claude computer use with mandelbulb 3d its way too slowand using way too many tojens is there away we can examine the exe for bugs an see how the "
+              },
+              {
+                "id": "agent-a69bdf93fdc6f5d59",
+                "date": "2026-05-10",
+                "preview": "Audit the existing Mandelbulb3D (MB3D) skill scaffolding. Goal: tell the user what programmatic-control assets already exist, which work end-to-end, and which a"
+              },
+              {
+                "id": "agent-aa7b886131aa69506",
+                "date": "2026-05-10",
+                "preview": "Map the headless / programmatic / CLI / batch surface of Mandelbulb3D (MB3D), a Pascal/Delphi 3D-fractal renderer. Goal: tell the user what they can already inv"
+              },
+              {
+                "id": "agent-a108874b4fef7d87a",
+                "date": "2026-05-12",
+                "preview": "Assess how much Mandelbulb3D (MB3D) capability Mandelbulber 2 (Mb2) actually covers. The user is considering Mb2 as a substrate instead of reverse-engineering M"
+              },
+              {
+                "id": "agent-a4b747d3a25fee930",
+                "date": "2026-05-12",
+                "preview": "Deep-read pass on the Mandelbulb 3D Pascal source at `C:\\repos\\mb3d-source\\`. The user has built CLI/skill wrappers around MB3D and wants to understand how the "
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 0,
+            "samples": []
+          }
+        },
+        "fs_ctime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [],
+          "era_3_heavy_cc": [
+            "fractal-machine",
+            "m3p-to-fract",
+            "mandelbulber2_install",
+            "mb3d-blender",
+            "mb3d_anim_demo",
+            "mandelbulb3d",
+            "mandelbulber2"
+          ],
+          "era_4_now": []
+        },
+        "fs_mtime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [],
+          "era_3_heavy_cc": [
+            "fractal-machine",
+            "m3p-to-fract",
+            "mandelbulber2_install",
+            "mb3d-blender",
+            "mb3d_anim_demo",
+            "mandelbulb3d",
+            "mandelbulber2"
+          ],
+          "era_4_now": []
+        }
+      },
+      "fs_items": [
+        {
+          "name": "fractal-machine",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\fractal-machine",
+          "ctime": "2026-05-14T15:16:37.651298",
+          "mtime": "2026-05-15T22:02:41.310123",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "none",
+          "matched_terms": [
+            "fractal"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "m3p-to-fract",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\m3p-to-fract",
+          "ctime": "2026-05-12T10:00:08.908159",
+          "mtime": "2026-05-12T10:11:27.036333",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "m3p"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mandelbulber2_install",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\mandelbulber2_install",
+          "ctime": "2026-05-11T22:24:20.404483",
+          "mtime": "2026-05-13T07:34:26.491248",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mandelbulb",
+            "mandelbulber"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mb3d-blender",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\mb3d-blender",
+          "ctime": "2026-05-12T11:36:17.715992",
+          "mtime": "2026-05-12T11:40:30.201156",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mb3d"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mb3d_anim_demo",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\mb3d_anim_demo",
+          "ctime": "2026-05-11T08:54:34.082679",
+          "mtime": "2026-05-12T15:16:42.514528",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mb3d"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mandelbulb3d",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulb3d",
+          "ctime": "2026-05-10T16:35:09.741361",
+          "mtime": "2026-05-12T11:16:57.433939",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mandelbulb"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mandelbulber2",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulber2",
+          "ctime": "2026-05-11T22:43:30.960265",
+          "mtime": "2026-05-14T06:04:25.788095",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mandelbulb",
+            "mandelbulber"
+          ],
+          "fs_error": null
+        }
+      ],
+      "fs_matched_count": 7,
+      "fs_portfolio_hit_count": 7
+    },
+    {
+      "name": "audio_music",
+      "seed_terms": [
+        "strudel",
+        "stem",
+        "stemai",
+        "surge",
+        "surge-xt",
+        "nih-plug",
+        "airwindows",
+        "musescore",
+        "fl356",
+        "fl 3",
+        "fl3",
+        "vst3",
+        "vst",
+        "daw",
+        "midi",
+        "synth",
+        "sampler",
+        "audio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "era_1_pre_cc": {
+            "count": 89,
+            "samples": [
+              {
+                "id": "6321",
+                "date": "2024-11-06",
+                "preview": "Bartering Dual Economy System"
+              },
+              {
+                "id": "6281",
+                "date": "2024-11-15",
+                "preview": "Business Ecosystem Integration"
+              },
+              {
+                "id": "6107",
+                "date": "2024-11-29",
+                "preview": "Synthesizing Ideas for GPT"
+              },
+              {
+                "id": "6098",
+                "date": "2024-11-30",
+                "preview": "Document Processing System Design"
+              },
+              {
+                "id": "5902",
+                "date": "2025-01-06",
+                "preview": "AI Multi-Agent Systems"
+              }
+            ]
+          },
+          "era_2_early_cc": {
+            "count": 89,
+            "samples": [
+              {
+                "id": "1533",
+                "date": "2026-02-09",
+                "preview": "Your System and Infrastructure"
+              },
+              {
+                "id": "1494",
+                "date": "2026-02-13",
+                "preview": "Unzip and Analyze System"
+              },
+              {
+                "id": "1471",
+                "date": "2026-02-14",
+                "preview": "Tattoo Surface Governance System"
+              },
+              {
+                "id": "1420",
+                "date": "2026-02-16",
+                "preview": "System Stress Test"
+              },
+              {
+                "id": "1422",
+                "date": "2026-02-16",
+                "preview": "Virtual Casting System Design"
+              }
+            ]
+          },
+          "era_3_heavy_cc": {
+            "count": 28,
+            "samples": [
+              {
+                "id": "612",
+                "date": "2026-04-01",
+                "preview": "System Breakthrough Moment"
+              },
+              {
+                "id": "577",
+                "date": "2026-04-02",
+                "preview": "Agenda Bins and Systems"
+              },
+              {
+                "id": "580",
+                "date": "2026-04-02",
+                "preview": "System Audit Workflow"
+              },
+              {
+                "id": "565",
+                "date": "2026-04-03",
+                "preview": "System Structure Breakdown"
+              },
+              {
+                "id": "568",
+                "date": "2026-04-03",
+                "preview": "MuseScore 4 Plugins Guide"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 3,
+            "samples": [
+              {
+                "id": "65",
+                "date": "2026-05-16",
+                "preview": "FL Studio Hybrid System"
+              },
+              {
+                "id": "43",
+                "date": "2026-05-18",
+                "preview": "Mandelbulb AudioVisual DAW"
+              },
+              {
+                "id": "7",
+                "date": "2026-05-20",
+                "preview": "Online Income System"
+              }
+            ]
+          }
+        },
+        "cc": {
+          "era_1_pre_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_2_early_cc": {
+            "count": 262,
+            "samples": [
+              {
+                "id": "agent-a3dfc3b",
+                "date": "2026-02-09",
+                "preview": "I need to understand the exact structure and content of the user's conversation data at C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor to design an agent sy"
+              },
+              {
+                "id": "agent-a583652",
+                "date": "2026-02-09",
+                "preview": "I need to perform a deep behavioral analysis of a user's 1,397 ChatGPT conversations stored in the Pre Atlas system at C:\\Users\\bruke\\Pre Atlas\\services\\cogniti"
+              },
+              {
+                "id": "agent-aeff131",
+                "date": "2026-02-09",
+                "preview": "I need to design an implementation plan for a 5-agent idea intelligence system that will be built as Python scripts in the existing cognitive-sensor directory a"
+              },
+              {
+                "id": "agent-a6c684c",
+                "date": "2026-02-13",
+                "preview": "I need to understand the current state of the loop triage system in C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor.  1. Read `loops_latest.json` \u2014 what loop"
+              },
+              {
+                "id": "agent-a1b63ec",
+                "date": "2026-02-16",
+                "preview": "I need to find the exact melanin absorption coefficients currently used in a Blender shader called \"SKIN_MASTER_STUDIO_V1\". The shader uses a Beer-Lambert chrom"
+              }
+            ]
+          },
+          "era_3_heavy_cc": {
+            "count": 55,
+            "samples": [
+              {
+                "id": "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+                "date": "2026-04-28",
+                "preview": "You are executing Phase 2 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. Phase 2 wires the BDI Desire to Intention"
+              },
+              {
+                "id": "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4",
+                "date": "2026-04-28",
+                "preview": "You are executing Phase 1 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. Phase 1 wires the E to M feedback arrow: "
+              },
+              {
+                "id": "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+                "date": "2026-04-28",
+                "preview": "You are executing Phase 1 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. Phase 1 wires the E to M feedback arrow: "
+              },
+              {
+                "id": "7df31495-e016-4783-939b-fd3994d110be",
+                "date": "2026-04-28",
+                "preview": "You are executing Phase 3 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. Phase 3 polishes mode integration. The mo"
+              },
+              {
+                "id": "agent-a0521a601cbc435aa",
+                "date": "2026-04-28",
+                "preview": "I'm planning architectural completion of Pre Atlas (a personal MAPE-K autonomic system). One of three identified holes is the **E \u2192 M feedback arrow**: when Cor"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 6,
+            "samples": [
+              {
+                "id": "84b9c8a1-a26c-439a-bce6-f218ae45859e",
+                "date": "2026-05-18",
+                "preview": "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> This is an automated run of a scheduled tas"
+              },
+              {
+                "id": "942c280a-138f-4ebb-94d7-d70254cf7b68",
+                "date": "2026-05-21",
+                "preview": "<scheduled-task name=\"strudel-source-tracker\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-source-tracker\\SKILL.md\"> This is an automated run of a sched"
+              },
+              {
+                "id": "129f0546-60d3-4d54-83d8-d1da8fc7e99c",
+                "date": "2026-05-25",
+                "preview": "<scheduled-task name=\"strudel-skill-eval\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\strudel-skill-eval\\SKILL.md\"> This is an automated run of a scheduled tas"
+              },
+              {
+                "id": "agent-a63658b120431ec7a",
+                "date": "2026-05-25",
+                "preview": "I need a COMPLETE, accurate map of the \"vision\" (screenshot \u2192 code) subsystem inside a TypeScript/Express service called canvas-engine. I'm comparing it against"
+              },
+              {
+                "id": "agent-abfc94117da3cc8ae",
+                "date": "2026-05-25",
+                "preview": "I need a COMPLETE, accurate map of the \"anatomy\" (live URL \u2192 deterministic React clone, plus region-based editing) subsystem inside a TypeScript/Express service"
+              }
+            ]
+          }
+        },
+        "fs_ctime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [
+            "STEMai",
+            "STRUDEL"
+          ],
+          "era_3_heavy_cc": [
+            "musescore-mcp",
+            "operator-system"
+          ],
+          "era_4_now": [
+            "airwindows",
+            "nih-plug",
+            "surge-xt"
+          ]
+        },
+        "fs_mtime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [
+            "STEMai"
+          ],
+          "era_3_heavy_cc": [
+            "musescore-mcp",
+            "operator-system",
+            "STRUDEL"
+          ],
+          "era_4_now": [
+            "airwindows",
+            "nih-plug",
+            "surge-xt"
+          ]
+        }
+      },
+      "fs_items": [
+        {
+          "name": "airwindows",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\airwindows",
+          "ctime": "2026-05-16T21:36:24.935556",
+          "mtime": "2026-05-16T21:37:39.285663",
+          "ctime_era": "era_4_now",
+          "mtime_era": "era_4_now",
+          "signal_band": "strong",
+          "matched_terms": [
+            "airwindows"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "musescore-mcp",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\musescore-mcp",
+          "ctime": "2026-04-02T21:27:08.181766",
+          "mtime": "2026-04-02T21:32:16.673974",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "none",
+          "matched_terms": [
+            "musescore"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "nih-plug",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\nih-plug",
+          "ctime": "2026-05-16T20:55:55.121507",
+          "mtime": "2026-05-16T21:53:21.852370",
+          "ctime_era": "era_4_now",
+          "mtime_era": "era_4_now",
+          "signal_band": "strong",
+          "matched_terms": [
+            "nih-plug"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "operator-system",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\operator-system",
+          "ctime": "2026-05-05T16:31:10.316124",
+          "mtime": "2026-05-06T17:33:09.882279",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "stem"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "STEMai",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\STEMai",
+          "ctime": "2026-03-01T19:42:51.852156",
+          "mtime": "2026-03-11T16:48:17.879102",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_2_early_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "stem",
+            "stemai"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "STRUDEL",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\STRUDEL",
+          "ctime": "2026-02-23T18:20:48.839844",
+          "mtime": "2026-04-26T13:14:40.088749",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "strudel"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "surge-xt",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\surge-xt",
+          "ctime": "2026-05-16T21:37:44.019147",
+          "mtime": "2026-05-16T21:41:14.829104",
+          "ctime_era": "era_4_now",
+          "mtime_era": "era_4_now",
+          "signal_band": "strong",
+          "matched_terms": [
+            "surge",
+            "surge-xt"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "strudel",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "partial",
+          "matched_terms": [
+            "strudel"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "strudel-skills",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "partial",
+          "matched_terms": [
+            "strudel"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "STEMai",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "partial",
+          "matched_terms": [
+            "stem",
+            "stemai"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        }
+      ],
+      "fs_matched_count": 10,
+      "fs_portfolio_hit_count": 10
+    },
+    {
+      "name": "atlas_core",
+      "seed_terms": [
+        "atlas",
+        "pre atlas",
+        "pre-atlas",
+        "delta-kernel",
+        "delta kernel",
+        "cognitive-sensor",
+        "cognitive sensor",
+        "cycleboard",
+        "cortex",
+        "optogon",
+        "aegis",
+        "aegis-fabric",
+        "openclaw",
+        "mirofish",
+        "perception",
+        "triangulation",
+        "mosaic",
+        "inpact",
+        "in-pact",
+        "blueprint-generator",
+        "code-converter",
+        "ai-exec-pipeline",
+        "uasc",
+        "ws-gateway",
+        "polaris",
+        "crucix",
+        "governance",
+        "RECOVER",
+        "CLOSURE",
+        "MAINTENANCE",
+        "COMPOUND",
+        "SCALE"
+      ],
+      "channels": {
+        "chatgpt": {
+          "era_1_pre_cc": {
+            "count": 64,
+            "samples": [
+              {
+                "id": "6521",
+                "date": "2024-08-24",
+                "preview": "Voice Perception as Strength"
+              },
+              {
+                "id": "6490",
+                "date": "2024-09-07",
+                "preview": "Perception in Tough Workplaces"
+              },
+              {
+                "id": "6464",
+                "date": "2024-10-11",
+                "preview": "Perception vs Reality Balance"
+              },
+              {
+                "id": "6454",
+                "date": "2024-10-13",
+                "preview": "Organizing Perception and Behavior"
+              },
+              {
+                "id": "6223",
+                "date": "2024-11-23",
+                "preview": "Challenging Perceptions Through Performance"
+              }
+            ]
+          },
+          "era_2_early_cc": {
+            "count": 17,
+            "samples": [
+              {
+                "id": "1510",
+                "date": "2026-02-11",
+                "preview": "Atlas Program Overview"
+              },
+              {
+                "id": "1503",
+                "date": "2026-02-12",
+                "preview": "Perception of Deficiency"
+              },
+              {
+                "id": "1471",
+                "date": "2026-02-14",
+                "preview": "Tattoo Surface Governance System"
+              },
+              {
+                "id": "1377",
+                "date": "2026-02-19",
+                "preview": "OpenClaw Uses and Applications"
+              },
+              {
+                "id": "1323",
+                "date": "2026-02-21",
+                "preview": "Atlas Rebuild Strategy"
+              }
+            ]
+          },
+          "era_3_heavy_cc": {
+            "count": 12,
+            "samples": [
+              {
+                "id": "600",
+                "date": "2026-04-01",
+                "preview": "Atlas Execution Orchestrator"
+              },
+              {
+                "id": "475",
+                "date": "2026-04-10",
+                "preview": "Atlas Development Challenges"
+              },
+              {
+                "id": "375",
+                "date": "2026-04-18",
+                "preview": "Logo Concepts for OPTOGON"
+              },
+              {
+                "id": "376",
+                "date": "2026-04-18",
+                "preview": "Optogon System Analysis"
+              },
+              {
+                "id": "339",
+                "date": "2026-04-23",
+                "preview": "OpenClaw Ecosystem Shift"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 0,
+            "samples": []
+          }
+        },
+        "cc": {
+          "era_1_pre_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_2_early_cc": {
+            "count": 151,
+            "samples": [
+              {
+                "id": "agent-a008dc1",
+                "date": "2026-02-09",
+                "preview": "Search the codebase at C:\\Users\\bruke\\Pre Atlas for anything related to \"vectorized conversations\". Look for:  1. Files that contain vector embeddings or vector"
+              },
+              {
+                "id": "agent-a145acc",
+                "date": "2026-02-09",
+                "preview": "I need to examine the actual vectorized conversation data in C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor. Read the following files to understand what the"
+              },
+              {
+                "id": "agent-a1d3798",
+                "date": "2026-02-09",
+                "preview": "Explore C:\\Users\\bruke\\Pre Atlas\\services\\delta-kernel to understand how the TypeScript side integrates with the cognitive sensor, and what patterns exist for a"
+              },
+              {
+                "id": "agent-a1dea06",
+                "date": "2026-02-09",
+                "preview": "Read the first 100 lines of C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor\\dashboard.html to understand the UI pattern used for dashboards in this project. "
+              },
+              {
+                "id": "agent-a3dfc3b",
+                "date": "2026-02-09",
+                "preview": "I need to understand the exact structure and content of the user's conversation data at C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor to design an agent sy"
+              }
+            ]
+          },
+          "era_3_heavy_cc": {
+            "count": 138,
+            "samples": [
+              {
+                "id": "agent-a02b76db8266ffeae",
+                "date": "2026-04-26",
+                "preview": "Review one new TypeScript file in isolation. It's a small CLI validator I wrote for a JSON Schema project.  File: `C:/Users/bruke/Pre Atlas/.claude/worktrees/ni"
+              },
+              {
+                "id": "agent-a67f62918e9be4b29",
+                "date": "2026-04-26",
+                "preview": "Goal: I need to write a new JSON Schema file at `C:/Users/bruke/Pre Atlas/contracts/schemas/AnatomyV1.v1.json` that EXACTLY matches the style of the 47 existing"
+              },
+              {
+                "id": "agent-aa0b2a7aa94f2297c",
+                "date": "2026-04-26",
+                "preview": "Review a JSON Schema addition and its integration. I added a new draft-07 schema to a contracts directory and wired it up.  Files to review (all in `C:/Users/br"
+              },
+              {
+                "id": "c9590916-4b42-4226-8289-ece8f5716855",
+                "date": "2026-04-26",
+                "preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 i"
+              },
+              {
+                "id": "c24b8a5e-094f-4394-927c-603800a09017",
+                "date": "2026-04-27",
+                "preview": "what is optogon"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 41,
+            "samples": [
+              {
+                "id": "55a5dc3b-c43a-47c4-be90-c973d2ab7908",
+                "date": "2026-05-16",
+                "preview": "<scheduled-task name=\"atlas-midday\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-midday\\SKILL.md\"> This is an automated run of a scheduled task. The user "
+              },
+              {
+                "id": "d46d96c5-588f-48c7-b817-3d6ec5011a1a",
+                "date": "2026-05-16",
+                "preview": "<scheduled-task name=\"atlas-morning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-morning\\SKILL.md\"> This is an automated run of a scheduled task. The use"
+              },
+              {
+                "id": "dd48f4cf-f74c-4731-b711-c08120622082",
+                "date": "2026-05-16",
+                "preview": "<scheduled-task name=\"atlas-evening\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-evening\\SKILL.md\"> This is an automated run of a scheduled task. The use"
+              },
+              {
+                "id": "ad3cb0f8-3dfc-48f7-a1af-8ca99a91df57",
+                "date": "2026-05-17",
+                "preview": "<scheduled-task name=\"atlas-evening\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-evening\\SKILL.md\"> This is an automated run of a scheduled task. The use"
+              },
+              {
+                "id": "e6ddf4ea-fafc-47f1-a657-8dd5fcb9074a",
+                "date": "2026-05-17",
+                "preview": "<scheduled-task name=\"atlas-morning\" file=\"C:\\Users\\bruke\\.claude\\scheduled-tasks\\atlas-morning\\SKILL.md\"> This is an automated run of a scheduled task. The use"
+              }
+            ]
+          }
+        },
+        "fs_ctime": {
+          "era_1_pre_cc": [
+            "Pre Atlas",
+            "cognitive-sensor",
+            "delta-kernel"
+          ],
+          "era_2_early_cc": [
+            "POLARIS",
+            "aegis-fabric",
+            "mirofish",
+            "mosaic-dashboard",
+            "mosaic-orchestrator",
+            "openclaw",
+            "blueprint-generator"
+          ],
+          "era_3_heavy_cc": [
+            "atlas",
+            "cortex",
+            "crucix",
+            "optogon",
+            "perception",
+            "triangulation",
+            "uasc-executor",
+            "ws-gateway",
+            "ai-exec-pipeline",
+            "code-converter",
+            "inpact"
+          ],
+          "era_4_now": []
+        },
+        "fs_mtime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [
+            "POLARIS"
+          ],
+          "era_3_heavy_cc": [
+            "aegis-fabric",
+            "cortex",
+            "crucix",
+            "delta-kernel",
+            "mirofish",
+            "mosaic-dashboard",
+            "mosaic-orchestrator",
+            "openclaw",
+            "optogon",
+            "perception",
+            "triangulation",
+            "uasc-executor",
+            "ws-gateway",
+            "ai-exec-pipeline",
+            "blueprint-generator",
+            "code-converter"
+          ],
+          "era_4_now": [
+            "atlas",
+            "Pre Atlas",
+            "cognitive-sensor",
+            "inpact"
+          ]
+        }
+      },
+      "fs_items": [
+        {
+          "name": "atlas",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\atlas",
+          "ctime": "2026-04-11T07:44:32.335967",
+          "mtime": "2026-05-27T08:49:04.026216",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_4_now",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "POLARIS",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\POLARIS",
+          "ctime": "2026-02-22T13:32:01.334536",
+          "mtime": "2026-03-09T07:56:30.062666",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_2_early_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "polaris"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "Pre Atlas",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\Pre Atlas",
+          "ctime": "2026-01-08T08:17:39.390811",
+          "mtime": "2026-05-27T10:34:19.618242",
+          "ctime_era": "era_1_pre_cc",
+          "mtime_era": "era_4_now",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas",
+            "pre atlas"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "pre-atlas",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas",
+            "pre-atlas"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "atlas",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "inpact-site",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "strong",
+          "matched_terms": [
+            "inpact"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "POLARIS",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "partial",
+          "matched_terms": [
+            "polaris"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "aegis-fabric",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\aegis-fabric",
+          "ctime": "2026-02-22T16:44:27.447682",
+          "mtime": "2026-04-27T14:28:51.534119",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "aegis",
+            "aegis-fabric"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "cognitive-sensor",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor",
+          "ctime": "2026-01-03T17:47:55.141462",
+          "mtime": "2026-05-27T19:01:04.475175",
+          "ctime_era": "era_1_pre_cc",
+          "mtime_era": "era_4_now",
+          "signal_band": "strong",
+          "matched_terms": [
+            "cognitive-sensor"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "cortex",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\cortex",
+          "ctime": "2026-04-08T18:15:17.460554",
+          "mtime": "2026-04-19T05:03:30.006142",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "cortex"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "crucix",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\crucix",
+          "ctime": "2026-04-06T23:10:34.237186",
+          "mtime": "2026-04-06T23:10:53.985041",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "crucix"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "delta-kernel",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\delta-kernel",
+          "ctime": "2026-01-06T15:58:39.428885",
+          "mtime": "2026-04-16T10:58:08.684314",
+          "ctime_era": "era_1_pre_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "delta-kernel"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mirofish",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\mirofish",
+          "ctime": "2026-03-25T23:44:33.157850",
+          "mtime": "2026-04-14T16:12:04.472789",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mirofish"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mosaic-dashboard",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\mosaic-dashboard",
+          "ctime": "2026-03-26T01:06:31.845822",
+          "mtime": "2026-04-14T16:13:04.902935",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mosaic"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mosaic-orchestrator",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\mosaic-orchestrator",
+          "ctime": "2026-03-25T22:39:24.929574",
+          "mtime": "2026-04-16T10:52:05.662391",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mosaic"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "openclaw",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\openclaw",
+          "ctime": "2026-03-26T00:41:53.139972",
+          "mtime": "2026-04-14T16:13:04.931933",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "openclaw"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "optogon",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\optogon",
+          "ctime": "2026-04-19T04:15:48.733433",
+          "mtime": "2026-04-19T04:20:58.191542",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "optogon"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "perception",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\perception",
+          "ctime": "2026-04-26T08:17:30.609285",
+          "mtime": "2026-04-26T09:15:09.472719",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "perception"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "triangulation",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\triangulation",
+          "ctime": "2026-04-26T09:17:44.825783",
+          "mtime": "2026-04-26T09:29:08.522664",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "triangulation"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "uasc-executor",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\uasc-executor",
+          "ctime": "2026-04-06T12:23:27.531076",
+          "mtime": "2026-04-14T16:12:35.512636",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "uasc"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "ws-gateway",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\ws-gateway",
+          "ctime": "2026-04-06T06:55:07.961910",
+          "mtime": "2026-04-14T16:12:35.333871",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "ws-gateway"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "ai-exec-pipeline",
+          "surface": "pre_atlas_apps",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\ai-exec-pipeline",
+          "ctime": "2026-04-21T12:46:26.741599",
+          "mtime": "2026-04-21T13:05:42.283189",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "ai-exec-pipeline"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "blueprint-generator",
+          "surface": "pre_atlas_apps",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\blueprint-generator",
+          "ctime": "2026-02-21T20:54:27.589884",
+          "mtime": "2026-04-14T16:13:04.551937",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "blueprint-generator"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "code-converter",
+          "surface": "pre_atlas_apps",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\code-converter",
+          "ctime": "2026-04-06T11:04:28.768788",
+          "mtime": "2026-04-14T16:13:04.556937",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "code-converter"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "inpact",
+          "surface": "pre_atlas_apps",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\inpact",
+          "ctime": "2026-04-13T20:18:57.429386",
+          "mtime": "2026-05-25T20:17:35.397428",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_4_now",
+          "signal_band": "strong",
+          "matched_terms": [
+            "inpact"
+          ],
+          "fs_error": null
+        }
+      ],
+      "fs_matched_count": 25,
+      "fs_portfolio_hit_count": 25
+    },
+    {
+      "name": "web_extract",
+      "seed_terms": [
+        "scrapling",
+        "scrape",
+        "scraping",
+        "sitepull",
+        "web-audit",
+        "web-extract",
+        "competitor-monitor",
+        "competitor monitor",
+        "brightdata",
+        "datadome",
+        "cloudflare",
+        "anti-bot",
+        "playwright",
+        "puppeteer",
+        "headless",
+        "humanize"
+      ],
+      "channels": {
+        "chatgpt": {
+          "era_1_pre_cc": {
+            "count": 1,
+            "samples": [
+              {
+                "id": "2530",
+                "date": "2025-10-17",
+                "preview": "Scrape or bite mark"
+              }
+            ]
+          },
+          "era_2_early_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_3_heavy_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_4_now": {
+            "count": 0,
+            "samples": []
+          }
+        },
+        "cc": {
+          "era_1_pre_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_2_early_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_3_heavy_cc": {
+            "count": 13,
+            "samples": [
+              {
+                "id": "agent-a01d4e01e13ff1183",
+                "date": "2026-05-01",
+                "preview": "Find and read sitepull at `C:\\Users\\bruke\\web-audit\\` (a sibling repo, NOT inside Pre Atlas). Report under 350 words.  Goal: ground truth on what sitepull actua"
+              },
+              {
+                "id": "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a",
+                "date": "2026-05-02",
+                "preview": "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prompt:**  ``` Fork D4Vinci/Scrapling on Git"
+              },
+              {
+                "id": "agent-a0dfeeae8f407a9ed",
+                "date": "2026-05-03",
+                "preview": "WEAPON MODE \u2014 single mission, no scope expansion.  TARGET: Close the \"Scrapling browser modes are not yet usable\" loop by running `scrapling install --force` an"
+              },
+              {
+                "id": "agent-a1c28c9cd1aa6fc4c",
+                "date": "2026-05-03",
+                "preview": "End-to-end source verification of sitepull / web-audit. Repo at `C:\\Users\\bruke\\web-audit`.  Context: I previously made claims about sitepull based on its READM"
+              },
+              {
+                "id": "agent-a27072086b81bf4f9",
+                "date": "2026-05-03",
+                "preview": "WEAPON MODE \u2014 single mission, no scope expansion.  TARGET: Close the \"Pattern 3 (adaptive selector heal) is claimed but not verified end-to-end\" loop in the scr"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 1,
+            "samples": [
+              {
+                "id": "agent-ab53a14ce78e18e5c",
+                "date": "2026-05-17",
+                "preview": "I'm giving Bruke a guided tour of his binre RE/debug pipeline at `C:\\Users\\bruke\\binre\\`. This is a personal project that orchestrates DiE (Detect It Easy) + De"
+              }
+            ]
+          }
+        },
+        "fs_ctime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [],
+          "era_3_heavy_cc": [
+            "competitor-monitor",
+            "Scrapling",
+            "scrapling-smoke",
+            "web-audit",
+            "competitor-monitor",
+            "scrapling-official",
+            "web-audit",
+            "web-extract-workflow"
+          ],
+          "era_4_now": []
+        },
+        "fs_mtime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [],
+          "era_3_heavy_cc": [
+            "competitor-monitor",
+            "Scrapling",
+            "scrapling-smoke",
+            "web-audit",
+            "competitor-monitor",
+            "scrapling-official",
+            "web-audit",
+            "web-extract-workflow"
+          ],
+          "era_4_now": []
+        }
+      },
+      "fs_items": [
+        {
+          "name": "competitor-monitor",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\competitor-monitor",
+          "ctime": "2026-05-04T01:32:00.874969",
+          "mtime": "2026-05-04T01:35:23.333676",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "competitor-monitor"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "Scrapling",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\Scrapling",
+          "ctime": "2026-05-02T18:14:46.314682",
+          "mtime": "2026-05-02T20:01:04.298724",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "scrapling-smoke",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\scrapling-smoke",
+          "ctime": "2026-05-02T19:40:50.270212",
+          "mtime": "2026-05-02T19:58:51.900055",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "web-audit",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\web-audit",
+          "ctime": "2026-04-17T18:19:00.581978",
+          "mtime": "2026-05-10T10:04:18.173115",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "web-audit"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "competitor-monitor",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "strong",
+          "matched_terms": [
+            "competitor-monitor"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "Scrapling",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "competitor-monitor",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\competitor-monitor",
+          "ctime": "2026-05-03T12:24:40.296658",
+          "mtime": "2026-05-03T12:24:40.312757",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "competitor-monitor"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "scrapling-official",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\scrapling-official",
+          "ctime": "2026-05-02T18:15:03.970235",
+          "mtime": "2026-05-02T18:15:04.524079",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "web-audit",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\web-audit",
+          "ctime": "2026-04-17T17:30:56.756896",
+          "mtime": "2026-04-17T19:15:17.396520",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "partial",
+          "matched_terms": [
+            "web-audit"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "web-extract-workflow",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\web-extract-workflow",
+          "ctime": "2026-05-02T19:45:45.396290",
+          "mtime": "2026-05-02T19:46:08.936962",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "web-extract"
+          ],
+          "fs_error": null
+        }
+      ],
+      "fs_matched_count": 10,
+      "fs_portfolio_hit_count": 10
+    },
+    {
+      "name": "productivity_skills",
+      "seed_terms": [
+        "weapon",
+        "fest",
+        "festival",
+        "mini-ship",
+        "miniship",
+        "autopilot",
+        "project-finisher",
+        "handoff",
+        "handoff-out",
+        "eval-harness",
+        "cookbook",
+        "search-first",
+        "security-review",
+        "strategic-compact",
+        "tdd-workflow",
+        "verification-loop",
+        "coding-standards",
+        "backend-patterns",
+        "frontend-patterns",
+        "wasp-patterns",
+        "codex-delegate",
+        "codex-partner",
+        "continuous-learning",
+        "slash command",
+        "/weapon",
+        "/fest",
+        "/mini-ship",
+        "/autopilot"
+      ],
+      "channels": {
+        "chatgpt": {
+          "era_1_pre_cc": {
+            "count": 10,
+            "samples": [
+              {
+                "id": "6289",
+                "date": "2024-11-12",
+                "preview": "Manifesting Through Desire"
+              },
+              {
+                "id": "5988",
+                "date": "2024-12-14",
+                "preview": "Manifestation and Facial Hair"
+              },
+              {
+                "id": "5690",
+                "date": "2025-02-04",
+                "preview": "OFP Lifestyle Explained"
+              },
+              {
+                "id": "5642",
+                "date": "2025-02-08",
+                "preview": "Hallucinations vs Manifestations"
+              },
+              {
+                "id": "5029",
+                "date": "2025-03-18",
+                "preview": "Angel Numbers and Manifestation"
+              }
+            ]
+          },
+          "era_2_early_cc": {
+            "count": 4,
+            "samples": [
+              {
+                "id": "1260",
+                "date": "2026-02-24",
+                "preview": "Strudel Logic and Cookbook"
+              },
+              {
+                "id": "1262",
+                "date": "2026-02-24",
+                "preview": "Strudel Beat Cookbook Summary"
+              },
+              {
+                "id": "722",
+                "date": "2026-03-25",
+                "preview": "Fest.build Explanation"
+              },
+              {
+                "id": "696",
+                "date": "2026-03-26",
+                "preview": "Fest.build Execution Engine"
+              }
+            ]
+          },
+          "era_3_heavy_cc": {
+            "count": 1,
+            "samples": [
+              {
+                "id": "618",
+                "date": "2026-04-01",
+                "preview": "Fest.build Claude Wasp Combo"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 0,
+            "samples": []
+          }
+        },
+        "cc": {
+          "era_1_pre_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_2_early_cc": {
+            "count": 10,
+            "samples": [
+              {
+                "id": "agent-a9754e290206d157a",
+                "date": "2026-02-25",
+                "preview": "I need to verify that Strudel code examples from a cookbook document actually parse and evaluate correctly.   Look at the Strudel project at C:\\Users\\bruke\\STRU"
+              },
+              {
+                "id": "agent-a68552af63657dbb4",
+                "date": "2026-03-03",
+                "preview": "Fix 7 audit issues in the WallPaper Android app build config and manifest. The project is at C:/Users/bruke/android/WallPaper. Package: com.focusblack.wallos.  "
+              },
+              {
+                "id": "agent-a6eeed689c5fafcd0",
+                "date": "2026-03-03",
+                "preview": "Audit the AndroidManifest.xml for the WallPaper project at C:/Users/bruke/android/WallPaper. Use the MCP tool `mcp__android-dev__project_manifest_info` to get m"
+              },
+              {
+                "id": "agent-a5cc2ccd623eeaa77",
+                "date": "2026-03-15",
+                "preview": "Design an implementation plan for fixing and enhancing the chord-pad autopilot system. Here's the full context:  ## Codebase Context  **Key files:** - `chord-pa"
+              },
+              {
+                "id": "agent-a629ea6c733f0f70c",
+                "date": "2026-03-15",
+                "preview": "Explore the chord-pad UI rendering, arpeggiator integration, and timing system to understand several issues:  1. **Arpeggiator + autopilot**: Read `chord-pad/sr"
+              }
+            ]
+          },
+          "era_3_heavy_cc": {
+            "count": 27,
+            "samples": [
+              {
+                "id": "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+                "date": "2026-04-28",
+                "preview": "You are executing Phase 2 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. Phase 2 wires the BDI Desire to Intention"
+              },
+              {
+                "id": "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4",
+                "date": "2026-04-28",
+                "preview": "You are executing Phase 1 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. Phase 1 wires the E to M feedback arrow: "
+              },
+              {
+                "id": "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+                "date": "2026-04-28",
+                "preview": "You are executing Phase 1 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. Phase 1 wires the E to M feedback arrow: "
+              },
+              {
+                "id": "7df31495-e016-4783-939b-fd3994d110be",
+                "date": "2026-04-28",
+                "preview": "You are executing Phase 3 of the pre-atlas-closed-loop fest.  CONTEXT Pre Atlas is a personal MAPE-K autonomic system. Phase 3 polishes mode integration. The mo"
+              },
+              {
+                "id": "agent-a0d3f2e6823318059",
+                "date": "2026-04-28",
+                "preview": "Audit the Phase 2 (Goal Wire) work that landed in worktree `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\wt-goal-wire`. The tasks were defined here:  - C:\\Users\\b"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 3,
+            "samples": [
+              {
+                "id": "567642ee-dbb8-4061-b572-96de01bca697",
+                "date": "2026-05-18",
+                "preview": "i need you to help me plan. I want o use es tool to plan a fest /project-finisher /mini-ship /weapon"
+              },
+              {
+                "id": "4c7b8149-57e9-4f8f-a996-bf09cca9f0f8",
+                "date": "2026-05-26",
+                "preview": "# Resume \u2014 Claude/ChatGPT Mining Project (Post-Fest)  You're picking up an in-flight project. Prior session **closed the festival /sharded-soaring-castle**. Com"
+              },
+              {
+                "id": "2ffbf12e-4008-4472-af6d-f59ff005e6ad",
+                "date": "2026-05-27",
+                "preview": "what are all the customizations that ive added to my cc bc my shit keeps getting better and better for example i have /jargonize /weapon  /fest  my custom instr"
+              }
+            ]
+          }
+        },
+        "fs_ctime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [
+            "autopilot",
+            "cookbook",
+            "fest",
+            "project-finisher",
+            "weapon"
+          ],
+          "era_3_heavy_cc": [
+            "backend-patterns",
+            "codex-delegate",
+            "coding-standards",
+            "continuous-learning-v2",
+            "eval-harness",
+            "frontend-patterns",
+            "handoff-out",
+            "mini-ship",
+            "search-first",
+            "security-review",
+            "strategic-compact",
+            "tdd-workflow",
+            "verification-loop",
+            "wasp-patterns",
+            "codex-partner",
+            "mini-ship"
+          ],
+          "era_4_now": [
+            "fest-reconcile"
+          ]
+        },
+        "fs_mtime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [
+            "autopilot",
+            "cookbook",
+            "fest",
+            "project-finisher",
+            "weapon"
+          ],
+          "era_3_heavy_cc": [
+            "backend-patterns",
+            "codex-delegate",
+            "coding-standards",
+            "continuous-learning-v2",
+            "eval-harness",
+            "frontend-patterns",
+            "handoff-out",
+            "mini-ship",
+            "search-first",
+            "security-review",
+            "strategic-compact",
+            "tdd-workflow",
+            "verification-loop",
+            "wasp-patterns",
+            "codex-partner",
+            "mini-ship"
+          ],
+          "era_4_now": [
+            "fest-reconcile"
+          ]
+        }
+      },
+      "fs_items": [
+        {
+          "name": "autopilot",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\autopilot",
+          "ctime": "2026-03-26T09:51:25.408568",
+          "mtime": "2026-03-26T09:57:36.892953",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_2_early_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "autopilot"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "backend-patterns",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\backend-patterns",
+          "ctime": "2026-04-01T01:01:38.396208",
+          "mtime": "2026-04-01T01:01:38.396208",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "backend-patterns"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "codex-delegate",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\codex-delegate",
+          "ctime": "2026-04-25T16:47:36.236543",
+          "mtime": "2026-05-02T08:00:45.274688",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "codex-delegate"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "coding-standards",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\coding-standards",
+          "ctime": "2026-04-01T01:01:38.349482",
+          "mtime": "2026-04-01T01:01:38.351484",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "coding-standards"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "continuous-learning-v2",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\continuous-learning-v2",
+          "ctime": "2026-04-01T01:01:38.134828",
+          "mtime": "2026-04-01T01:01:38.203394",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "continuous-learning"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "cookbook",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\cookbook",
+          "ctime": "2026-03-26T09:36:50.363720",
+          "mtime": "2026-03-26T12:09:32.612348",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_2_early_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "cookbook"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "eval-harness",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\eval-harness",
+          "ctime": "2026-04-01T01:01:38.440207",
+          "mtime": "2026-04-01T01:01:38.441213",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "eval-harness"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "fest",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\fest",
+          "ctime": "2026-03-25T13:20:37.835879",
+          "mtime": "2026-03-25T13:34:57.345156",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_2_early_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "fest"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "frontend-patterns",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\frontend-patterns",
+          "ctime": "2026-04-01T01:01:38.373208",
+          "mtime": "2026-04-01T01:01:38.374208",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "frontend-patterns"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "handoff-out",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\handoff-out",
+          "ctime": "2026-05-05T16:33:31.985976",
+          "mtime": "2026-05-05T16:33:31.987972",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "handoff",
+            "handoff-out"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mini-ship",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\mini-ship",
+          "ctime": "2026-05-04T09:56:57.956391",
+          "mtime": "2026-05-04T09:56:58.062390",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "mini-ship"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "project-finisher",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\project-finisher",
+          "ctime": "2026-03-24T10:43:43.565068",
+          "mtime": "2026-03-24T10:44:00.578630",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_2_early_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "project-finisher"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "search-first",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\search-first",
+          "ctime": "2026-04-01T01:01:38.419228",
+          "mtime": "2026-04-01T01:01:38.420222",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "search-first"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "security-review",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\security-review",
+          "ctime": "2026-04-01T01:01:38.290892",
+          "mtime": "2026-04-01T01:01:38.306477",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "partial",
+          "matched_terms": [
+            "security-review"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "strategic-compact",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\strategic-compact",
+          "ctime": "2026-04-01T01:01:38.258927",
+          "mtime": "2026-04-01T01:01:38.268894",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "partial",
+          "matched_terms": [
+            "strategic-compact"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "tdd-workflow",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\tdd-workflow",
+          "ctime": "2026-04-01T01:01:38.327482",
+          "mtime": "2026-04-01T01:01:38.328483",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "tdd-workflow"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "verification-loop",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\verification-loop",
+          "ctime": "2026-04-01T01:01:38.463206",
+          "mtime": "2026-04-01T01:01:38.464226",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "verification-loop"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "wasp-patterns",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\wasp-patterns",
+          "ctime": "2026-04-01T12:50:30.695511",
+          "mtime": "2026-04-01T12:51:23.156184",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "wasp-patterns"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "weapon",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\weapon",
+          "ctime": "2026-03-25T20:45:26.471686",
+          "mtime": "2026-03-26T13:47:40.538963",
+          "ctime_era": "era_2_early_cc",
+          "mtime_era": "era_2_early_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "weapon"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "codex-partner",
+          "surface": "pre_atlas_tools",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\codex-partner",
+          "ctime": "2026-04-25T16:45:48.453805",
+          "mtime": "2026-04-26T14:01:35.646046",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "codex-partner"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "fest-reconcile",
+          "surface": "pre_atlas_tools",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\fest-reconcile",
+          "ctime": "2026-05-27T13:18:38.344708",
+          "mtime": "2026-05-27T19:25:44.657383",
+          "ctime_era": "era_4_now",
+          "mtime_era": "era_4_now",
+          "signal_band": "none",
+          "matched_terms": [
+            "fest"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "mini-ship",
+          "surface": "pre_atlas_tools",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\mini-ship",
+          "ctime": "2026-05-02T11:42:18.287493",
+          "mtime": "2026-05-02T17:19:28.234768",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "none",
+          "matched_terms": [
+            "mini-ship"
+          ],
+          "fs_error": null
+        }
+      ],
+      "fs_matched_count": 22,
+      "fs_portfolio_hit_count": 22
+    },
+    {
+      "name": "canvas_render",
+      "seed_terms": [
+        "canvas-engine",
+        "canvas-demo",
+        "screenshot-to-code",
+        "three-js",
+        "three.js",
+        "threejs",
+        "three-stack",
+        "three-js-migrate",
+        "react-three-fiber",
+        "r3f",
+        "drei",
+        "anime-js",
+        "anime.js",
+        "animejs",
+        "anime-js-migrate",
+        "remotion",
+        "webgl",
+        "webgpu",
+        "shader",
+        "raymarch",
+        "virtualstudio",
+        "comfyui"
+      ],
+      "channels": {
+        "chatgpt": {
+          "era_1_pre_cc": {
+            "count": 1,
+            "samples": [
+              {
+                "id": "1705",
+                "date": "2026-01-24",
+                "preview": "ComfyUI Workflow Explanation"
+              }
+            ]
+          },
+          "era_2_early_cc": {
+            "count": 8,
+            "samples": [
+              {
+                "id": "1447",
+                "date": "2026-02-15",
+                "preview": "VirtualStudio Landing Page"
+              },
+              {
+                "id": "1452",
+                "date": "2026-02-15",
+                "preview": "ComfyUI Overview"
+              },
+              {
+                "id": "1404",
+                "date": "2026-02-16",
+                "preview": "ComfyUI Overview"
+              },
+              {
+                "id": "1435",
+                "date": "2026-02-16",
+                "preview": "Skin Shader Analysis"
+              },
+              {
+                "id": "1386",
+                "date": "2026-02-18",
+                "preview": "ComfyUI Extraction Workflow"
+              }
+            ]
+          },
+          "era_3_heavy_cc": {
+            "count": 3,
+            "samples": [
+              {
+                "id": "136",
+                "date": "2026-05-09",
+                "preview": "Babylon.js vs Three.js"
+              },
+              {
+                "id": "137",
+                "date": "2026-05-09",
+                "preview": "Anime.js Three.js Integration"
+              },
+              {
+                "id": "143",
+                "date": "2026-05-09",
+                "preview": "Anime.js and Emotion"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 0,
+            "samples": []
+          }
+        },
+        "cc": {
+          "era_1_pre_cc": {
+            "count": 0,
+            "samples": []
+          },
+          "era_2_early_cc": {
+            "count": 27,
+            "samples": [
+              {
+                "id": "agent-a11cb6f",
+                "date": "2026-02-15",
+                "preview": "You need to rewrite 3 React component files in the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero\\app\\src\\sections\\  For ALL"
+              },
+              {
+                "id": "agent-a431fc5",
+                "date": "2026-02-15",
+                "preview": "You need to rewrite 3 React component files in the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero\\app\\src\\sections\\  For ALL"
+              },
+              {
+                "id": "agent-aa651b7",
+                "date": "2026-02-15",
+                "preview": "Perform a thorough code audit of the VirtualStudio Cinematic Hero project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero\\app\\src\\  R"
+              },
+              {
+                "id": "agent-ab98334",
+                "date": "2026-02-15",
+                "preview": "Explore the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero. I need a comprehensive understanding of:  1. The overall project"
+              },
+              {
+                "id": "agent-ad5b22a",
+                "date": "2026-02-15",
+                "preview": "Explore the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero. Focus on:  1. Dependencies and package management (package.json,"
+              }
+            ]
+          },
+          "era_3_heavy_cc": {
+            "count": 44,
+            "samples": [
+              {
+                "id": "agent-a05ded370a41d2d49",
+                "date": "2026-05-01",
+                "preview": "Read `services/canvas-engine/` at the cwd `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pensive-sinoussi-eb4d9c` and report under 400 words. This is a fresh inves"
+              },
+              {
+                "id": "agent-a728dfd6bec07e329",
+                "date": "2026-05-01",
+                "preview": "Read `services/canvas-engine/` (relative to cwd `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pensive-sinoussi-eb4d9c`) and report under 400 words.  Goal: I need "
+              },
+              {
+                "id": "agent-aa22c004d8e637dc0",
+                "date": "2026-05-02",
+                "preview": "Read three services in `C:\\Users\\bruke\\Pre Atlas\\services\\` and report on each in under 200 words apiece:  - `canvas-engine/` \u2014 TypeScript/Express, supposed to "
+              },
+              {
+                "id": "agent-a35a4a4f9e2fb1fca",
+                "date": "2026-05-04",
+                "preview": "You are auditing PR #11 in the lionestenzol/pre-atlas GitHub repo. Branch: `claude/flamboyant-gates-54fb9c`. Title: \"fix(scraper-pipeline): apply Codex audit fi"
+              },
+              {
+                "id": "agent-a3df1f61f57111852",
+                "date": "2026-05-04",
+                "preview": "Audit the ACTUAL code state of canvas-engine for shipping as paid developer SaaS (\"URL \u2192 React clone\").  CONTEXT: User's MEMORY.md claims \"TS/Express/Vite. 6 ph"
+              }
+            ]
+          },
+          "era_4_now": {
+            "count": 8,
+            "samples": [
+              {
+                "id": "7708126a-5eb6-4df6-bc90-97e941ee67c6",
+                "date": "2026-05-24",
+                "preview": "Read the image at C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine\\scripts\\fixtures\\sample-ui.png and reply with ONE short sentence describing what UI it shows. "
+              },
+              {
+                "id": "agent-a8af0eeba0bd3a814",
+                "date": "2026-05-24",
+                "preview": "I'm planning to add a new \"static image \u2192 code\" (LLM vision) input path into an existing service called canvas-engine, which currently does \"live URL \u2192 faithful"
+              },
+              {
+                "id": "efc6eb4a-1c73-4d9c-974f-30d90f4b6862",
+                "date": "2026-05-24",
+                "preview": "Read the image at C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine\\scripts\\fixtures\\sample-ui.png and reply with ONE short sentence describing what UI it shows. "
+              },
+              {
+                "id": "facbfca6-65b8-4fed-bf87-94fa23bb9c7b",
+                "date": "2026-05-24",
+                "preview": "cd services/canvas-engine && npm run start'"
+              },
+              {
+                "id": "4328aa45-60dd-41f3-9c13-21cfc81e4da0",
+                "date": "2026-05-25",
+                "preview": "In C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine, the helper that converts a region name to a PascalCase component name now exists in THREE places and must no"
+              }
+            ]
+          }
+        },
+        "fs_ctime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [],
+          "era_3_heavy_cc": [
+            "anime-js",
+            "r3f",
+            "remotion-test",
+            "three-js",
+            "three-stack",
+            "anime-js",
+            "anime-js-migrate",
+            "react-three-fiber",
+            "remotion",
+            "three-js",
+            "three-js-migrate",
+            "canvas-engine",
+            "canvas-demo"
+          ],
+          "era_4_now": [
+            "screenshot-to-code"
+          ]
+        },
+        "fs_mtime": {
+          "era_1_pre_cc": [],
+          "era_2_early_cc": [],
+          "era_3_heavy_cc": [
+            "anime-js",
+            "r3f",
+            "remotion-test",
+            "three-js",
+            "three-stack",
+            "anime-js",
+            "anime-js-migrate",
+            "react-three-fiber",
+            "remotion",
+            "three-js",
+            "three-js-migrate",
+            "canvas-demo"
+          ],
+          "era_4_now": [
+            "screenshot-to-code",
+            "canvas-engine"
+          ]
+        }
+      },
+      "fs_items": [
+        {
+          "name": "anime-js",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\anime-js",
+          "ctime": "2026-05-09T16:00:46.214882",
+          "mtime": "2026-05-09T21:02:48.850290",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "partial",
+          "matched_terms": [
+            "anime-js"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "r3f",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\r3f",
+          "ctime": "2026-05-09T22:34:55.773555",
+          "mtime": "2026-05-09T22:53:06.022850",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "none",
+          "matched_terms": [
+            "r3f"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "remotion-test",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\remotion-test",
+          "ctime": "2026-05-09T16:25:46.534254",
+          "mtime": "2026-05-09T16:44:07.161273",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "partial",
+          "matched_terms": [
+            "remotion"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "screenshot-to-code",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\screenshot-to-code",
+          "ctime": "2026-05-23T21:18:04.633659",
+          "mtime": "2026-05-23T21:19:12.562886",
+          "ctime_era": "era_4_now",
+          "mtime_era": "era_4_now",
+          "signal_band": "strong",
+          "matched_terms": [
+            "screenshot-to-code"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "three-js",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\three-js",
+          "ctime": "2026-05-09T22:16:08.901341",
+          "mtime": "2026-05-09T22:27:54.204227",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "three-js"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "three-stack",
+          "surface": "standalone_repo",
+          "path": "C:\\Users\\bruke\\three-stack",
+          "ctime": "2026-05-10T10:30:42.693568",
+          "mtime": "2026-05-10T10:37:06.364364",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "partial",
+          "matched_terms": [
+            "three-stack"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "comfyui-controller",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "partial",
+          "matched_terms": [
+            "comfyui"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "virtualstudio",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "partial",
+          "matched_terms": [
+            "virtualstudio"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "VirtualStudio-Cinematic-Hero",
+          "surface": "github_repo",
+          "path": null,
+          "ctime": null,
+          "mtime": null,
+          "ctime_era": "unknown",
+          "mtime_era": "unknown",
+          "signal_band": "partial",
+          "matched_terms": [
+            "virtualstudio"
+          ],
+          "fs_error": "no_path_in_portfolio"
+        },
+        {
+          "name": "anime-js",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js",
+          "ctime": "2026-05-09T16:30:39.653063",
+          "mtime": "2026-05-09T19:30:21.389846",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anime-js"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "anime-js-migrate",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js-migrate",
+          "ctime": "2026-05-09T17:43:16.262584",
+          "mtime": "2026-05-09T17:44:55.096985",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "anime-js",
+            "anime-js-migrate"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "react-three-fiber",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\react-three-fiber",
+          "ctime": "2026-05-09T22:47:00.233871",
+          "mtime": "2026-05-09T23:03:49.418151",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "react-three-fiber"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "remotion",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\remotion",
+          "ctime": "2026-04-23T18:57:38.635320",
+          "mtime": "2026-04-23T19:01:52.570259",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "partial",
+          "matched_terms": [
+            "remotion"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "three-js",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\three-js",
+          "ctime": "2026-05-09T22:18:29.824380",
+          "mtime": "2026-05-09T22:28:40.007737",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "strong",
+          "matched_terms": [
+            "three-js"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "three-js-migrate",
+          "surface": "custom_skill",
+          "path": "C:\\Users\\bruke\\.claude\\skills\\three-js-migrate",
+          "ctime": "2026-05-09T22:28:47.093383",
+          "mtime": "2026-05-09T22:32:26.732783",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "stale",
+          "matched_terms": [
+            "three-js",
+            "three-js-migrate"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "canvas-engine",
+          "surface": "pre_atlas_services",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine",
+          "ctime": "2026-04-26T09:37:37.630724",
+          "mtime": "2026-05-25T15:46:02.029982",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_4_now",
+          "signal_band": "strong",
+          "matched_terms": [
+            "canvas-engine"
+          ],
+          "fs_error": null
+        },
+        {
+          "name": "canvas-demo",
+          "surface": "pre_atlas_apps",
+          "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\canvas-demo",
+          "ctime": "2026-04-23T20:32:55.874905",
+          "mtime": "2026-04-23T21:02:25.514745",
+          "ctime_era": "era_3_heavy_cc",
+          "mtime_era": "era_3_heavy_cc",
+          "signal_band": "partial",
+          "matched_terms": [
+            "canvas-demo"
+          ],
+          "fs_error": null
+        }
+      ],
+      "fs_matched_count": 17,
+      "fs_portfolio_hit_count": 17
+    }
+  ]
+}

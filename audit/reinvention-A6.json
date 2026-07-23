@@ -1,0 +1,102 @@
+{
+  "audit_name": "Track A6: crucix + ws-gateway Hand-Roll Audit",
+  "date": "2026-05-29",
+  "services": ["crucix", "ws-gateway"],
+  "crucix_purpose": "Crucix is a local OSINT intelligence engine that aggregates 26+ data sources, computes signal deltas across sweep cycles, evaluates alerts via LLM with tiered urgency, and provides Telegram/Discord bot interfaces for remote control.",
+  "hand_roll_candidates": [
+    {
+      "service": "crucix",
+      "module": "lib/delta/MemoryManager",
+      "severity": "HIGH",
+      "description": "Custom state and delta tracking system for storing sweep cycle outputs and computing changes over time. Maintains persistent state in runs/ directory with manual pruning logic.",
+      "current_implementation": "Custom MemoryManager class in lib/delta/memory.mjs",
+      "library_alternatives": [
+        "bull (job queue + state tracking)",
+        "bee-queue (lightweight queue with state)",
+        "temporal.io (workflow state engine)",
+        "leveldb (persistent key-value store)"
+      ],
+      "justification": "This is a genuine candidate—delta computation and sweep-cycle state management could be delegated to a battle-tested persistence + queue library. Domain logic (OSINT delta semantics) is thin; infrastructure (storage, pruning, versioning) is standard."
+    },
+    {
+      "service": "crucix",
+      "module": "lib/llm/index.mjs (LLM Factory Pattern)",
+      "severity": "MEDIUM",
+      "description": "Custom abstraction layer providing unified interface to 9 LLM providers (Anthropic, OpenAI, OpenRouter, Gemini, Codex, MiniMax, Mistral, Ollama, Grok). Factory function handles provider selection and initialization.",
+      "current_implementation": "createLLMProvider(llmConfig) factory with 9 pluggable providers",
+      "library_alternatives": [
+        "langchain (LLM abstraction + 50+ providers)",
+        "llm-proxy (unified LLM interface)",
+        "vercel/ai (React-native LLM abstraction)",
+        "litellm (API-level LLM router)"
+      ],
+      "justification": "Custom LLM factory is a genuine candidate. The problem (provider abstraction) is solved well by langchain + litellm. Current implementation duplicates this work. Domain logic is thin (provider selection); infrastructure (API calls, error handling, response parsing) is standard."
+    },
+    {
+      "service": "crucix",
+      "module": "lib/alerts/telegram.mjs",
+      "severity": "HIGH",
+      "description": "768-line custom Telegram bot implementation with: polling API (5s interval, offset tracking), tiered alert system (FLASH/PRIORITY/ROUTINE with cooldowns), semantic deduplication (content hashing, 4h window), rate limiting, LLM evaluation with sophisticated prompt, rule-based fallback, two-way bot commands, message chunking (4096 char limit), bot identity management, Markdown formatting.",
+      "current_implementation": "Custom Telegram polling bot with built-in alert orchestration",
+      "library_alternatives": [
+        "telegraf.js (Telegram bot framework, handles polling + webhooks)",
+        "telegram.py (Python Telegram bot library)",
+        "node-telegram-bot-api (Telegram bot wrapper)",
+        "AlertManager (CNCF alert routing + dedup)",
+        "opsgenie-node (enterprise alert orchestration)"
+      ],
+      "justification": "This is a high-severity candidate. telegraf.js + opsgenie-node would eliminate 700+ lines of custom code. Tiered alert logic (FLASH/PRIORITY/ROUTINE) is domain-specific and worth keeping, but polling infrastructure, command dispatch, and rate limiting are standard. Current implementation couples domain (alert tiers) with infrastructure (Telegram polling). Split into telegraf.js (infrastructure) + custom alert evaluator (domain)."
+    },
+    {
+      "service": "crucix",
+      "module": "lib/alerts/discord.mjs",
+      "severity": "MEDIUM",
+      "description": "Custom Discord bot integration (file exists, not fully audited; assumed similar pattern to Telegram with Discord.js as optional dependency in package.json).",
+      "current_implementation": "Custom Discord bot (discord.js in optional deps)",
+      "library_alternatives": [
+        "discord.js (already listed as optional dep—use directly)",
+        "eris (lighter Discord bot framework)"
+      ],
+      "justification": "discord.js is already in package.json as optional dep. If custom implementation exists, it should be removed in favor of discord.js directly. Domain logic (alert tiers, evaluation) can wrap discord.js without reimplementation."
+    },
+    {
+      "service": "crucix",
+      "module": "dashboard/inject.mjs",
+      "severity": "MEDIUM",
+      "description": "Custom dashboard synthesis pipeline (file exists, not fully audited; transforms OSINT data into dashboard format for browser clients via SSE).",
+      "current_implementation": "Custom dashboard aggregation + formatting",
+      "library_alternatives": [
+        "recharts (data visualization)",
+        "apache-superset (BI dashboard)",
+        "grafana (monitoring dashboard)",
+        "observable (reactive dashboard framework)"
+      ],
+      "justification": "Dashboard logic depends on domain (OSINT data shape, geopolitical signals). If inject.mjs is pure data transformation (normalization, aggregation), candidate for extraction into schema-based transform library. If it includes visualization, investigate whether recharts or vega-lite would reduce DOM manipulation code."
+    },
+    {
+      "service": "crucix",
+      "module": "server.mjs: SSE event broadcasting",
+      "severity": "LOW",
+      "description": "Manual Set<Response> management for Server-Sent Events broadcasting to multiple browser clients. Implements subscribe/broadcast pattern directly.",
+      "current_implementation": "Manual response tracking in Set + write(chunk) calls",
+      "library_alternatives": [
+        "socket.io (already used in ws-gateway, not in crucix)",
+        "sse-js (SSE abstraction)",
+        "eventsource (Node.js SSE middleware)"
+      ],
+      "justification": "Low priority—current SSE implementation is simple and correct. However, if real-time updates are critical, migrating to Socket.IO (used in ws-gateway) would provide fallback transports (polling, WebSocket) and unified client library. Candidate only if scaling real-time reliability matters."
+    }
+  ],
+  "ws_gateway_audit": {
+    "result": "CLEAN",
+    "note": "ws-gateway correctly outsources all infrastructure to battle-tested libraries (nats@^2.28.2, socket.io@^4.8.1). No hand-roll candidates detected. Proper retry logic, error handling, graceful shutdown. Architecture is minimal and well-executed.",
+    "candidates_found": 0
+  },
+  "summary": {
+    "total_candidates": 5,
+    "high_severity": 2,
+    "medium_severity": 2,
+    "low_severity": 1,
+    "ws_gateway_assessment": "No hand-rolls detected—clean use of standard libraries"
+  }
+}

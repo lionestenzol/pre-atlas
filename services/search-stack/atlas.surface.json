@@ -1,0 +1,49 @@
+{
+  "surface": "search-stack",
+  "headline": "Multi-provider search/extract router over 28 search providers on port 3070",
+  "capabilities": [
+    {
+      "id": "status",
+      "label": "Check provider health and status",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /healthz"
+    },
+    {
+      "id": "budget",
+      "label": "View per-provider budget/quota usage",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /budget"
+    },
+    {
+      "id": "search",
+      "label": "Run a routed search across providers",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /search",
+      "needs": ["q"]
+    },
+    {
+      "id": "extract",
+      "label": "Extract page content from a URL",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /extract",
+      "needs": ["url"]
+    },
+    {
+      "id": "memory_save",
+      "label": "Save a result as an intel drop to DropList",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "POST /memory/save",
+      "needs": ["result"]
+    }
+  ]
+}

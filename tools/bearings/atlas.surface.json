@@ -1,0 +1,32 @@
+{
+  "surface": "bearings",
+  "kind": "cli",
+  "lifecycle": "live",
+  "headline": "Deterministic zero-LLM 'where am I' digest -- parses git log + transcript JSONL into commits-by-category, honest LOC split, shipped-vs-oriented conversations, and the orientation tax. ~1 second, no agents.",
+  "capabilities": [
+    {
+      "id": "digest",
+      "label": "Orientation digest for a repo/date range (read-only, JSON)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python C:/Users/bruke/.claude/scripts/bearings/bearings.py --json",
+      "needs": ["repo", "date", "days"],
+      "evidence": "C:/Users/bruke/.claude/scripts/bearings/bearings.py:314-318 (argparse: --repo, --date, --days, --ledger, --json)",
+      "notes": "`--json` is baked into invoke (not caller-optional) -- verified empirically that bearings.py's plain-text mode mojibakes em-dashes in commit subjects on Windows (returncode 0, but output corrupted: '#' BEARINGS � Pre Atlas � ...'); --json sidesteps it because json.dumps default-escapes non-ASCII. `repo` defaults to cwd (the gateway sets cwd to repo_root for tools with no system-map entry, i.e. this repo) when omitted. `date`/`days` narrow or widen the window; omit both for 'today'.",
+      "triggers": ["where am i", "what did i do today", "catch me up", "gather my bearings", "orientation digest", "recap my day", "wtf have i done today"]
+    },
+    {
+      "id": "digest_and_log",
+      "label": "Same digest, ALSO appends it to the durable bearings ledger",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python C:/Users/bruke/.claude/scripts/bearings/bearings.py --json --ledger",
+      "needs": ["repo", "date", "days"],
+      "evidence": "C:/Users/bruke/.claude/scripts/bearings/bearings.py:317 (--ledger, action=store_true)",
+      "notes": "Appends to ~/.claude/logs/bearings/<repo-slug>/<date>.md -- a private local log file, not a mutation of any tracked repo state. Marked write for honest labeling (it does append to disk) even though the blast radius is a personal cache file, not shared/tracked state.",
+      "triggers": ["log my bearings", "save today's digest to the ledger", "bearings with ledger", "record today's orientation"]
+    }
+  ]
+}

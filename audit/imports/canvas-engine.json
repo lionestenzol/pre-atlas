@@ -1,0 +1,243 @@
+{
+  "adapter/v1-schema.ts": [],
+  "adapter/v1-to-edit-prompt.ts": [
+    "adapter/v1-schema.ts"
+  ],
+  "adapter/v1-to-prompt.ts": [
+    "adapter/v1-schema.ts"
+  ],
+  "load-env.ts": [],
+  "pattern-library/index.ts": [
+    "adapter/v1-schema.ts",
+    "pattern-library/normalize.ts",
+    "pattern-library/patterns/card-action.ts",
+    "pattern-library/patterns/card-content.ts",
+    "pattern-library/patterns/card-stat.ts",
+    "pattern-library/patterns/clickable-button.ts",
+    "pattern-library/patterns/clickable-cta.ts",
+    "pattern-library/patterns/clickable-icon-button.ts",
+    "pattern-library/patterns/clickable-link.ts",
+    "pattern-library/patterns/clickable-pill.ts",
+    "pattern-library/patterns/default-card.ts",
+    "pattern-library/patterns/form-inline.ts",
+    "pattern-library/patterns/form-newsletter.ts",
+    "pattern-library/patterns/form-stacked.ts",
+    "pattern-library/patterns/heading-eyebrow.ts",
+    "pattern-library/patterns/heading-hero.ts",
+    "pattern-library/patterns/heading-tagged.ts",
+    "pattern-library/patterns/landmark-aside.ts",
+    "pattern-library/patterns/landmark-footer.ts",
+    "pattern-library/patterns/landmark-header.ts",
+    "pattern-library/patterns/landmark-nav.ts",
+    "pattern-library/patterns/landmark-section.ts",
+    "pattern-library/patterns/list-grid.ts",
+    "pattern-library/patterns/list-tags.ts",
+    "pattern-library/patterns/list-vertical.ts",
+    "pattern-library/types.ts"
+  ],
+  "pattern-library/normalize.ts": [
+    "adapter/v1-schema.ts",
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/card-action.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/card-content.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/card-stat.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/clickable-button.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/clickable-cta.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/clickable-icon-button.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/clickable-link.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/clickable-pill.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/default-card.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/form-inline.ts": [
+    "pattern-library/types.ts"
+  ],
+  "pattern-library/patterns/form-newsletter.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/form-stacked.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/heading-eyebrow.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/heading-hero.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/heading-tagged.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/landmark-aside.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/landmark-footer.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/landmark-header.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/landmark-nav.ts": [
+    "pattern-library/types.ts"
+  ],
+  "pattern-library/patterns/landmark-section.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/list-grid.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/list-tags.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/patterns/list-vertical.ts": [
+    "pattern-library/types.ts",
+    "pattern-library/util.ts"
+  ],
+  "pattern-library/types.ts": [
+    "adapter/v1-schema.ts"
+  ],
+  "pattern-library/util.ts": [
+    "adapter/v1-schema.ts"
+  ],
+  "pipeline/asset-extract.test.ts": [
+    "adapter/v1-schema.ts",
+    "pipeline/asset-extract.ts",
+    "pipeline/image-to-envelope.ts",
+    "pipeline/url-to-clone.ts"
+  ],
+  "pipeline/asset-extract.ts": [
+    "adapter/v1-schema.ts"
+  ],
+  "pipeline/claude-cli.ts": [],
+  "pipeline/component-names.ts": [
+    "adapter/v1-schema.ts"
+  ],
+  "pipeline/edit-loop.ts": [
+    "adapter/v1-schema.ts",
+    "adapter/v1-to-edit-prompt.ts",
+    "pipeline/component-names.ts",
+    "pipeline/session-store.ts",
+    "sandbox/vite-pool.ts"
+  ],
+  "pipeline/image-edit.ts": [
+    "pipeline/claude-cli.ts",
+    "pipeline/edit-loop.ts",
+    "pipeline/session-store.ts",
+    "pipeline/vision-backend.ts",
+    "sandbox/vite-pool.ts",
+    "vendor/lovable/parse-blocks.ts",
+    "vendor/lovable/system-prompt.ts"
+  ],
+  "pipeline/image-to-clone-guided.test.ts": [
+    "pipeline/image-to-clone-guided.ts",
+    "pipeline/image-to-envelope.ts"
+  ],
+  "pipeline/image-to-clone-guided.ts": [
+    "adapter/v1-schema.ts",
+    "pipeline/component-names.ts",
+    "pipeline/image-to-clone.ts",
+    "pipeline/image-to-envelope.ts",
+    "pipeline/url-to-clone.ts",
+    "sandbox/vite-pool.ts",
+    "vendor/lovable/parse-blocks.ts"
+  ],
+  "pipeline/image-to-clone.ts": [
+    "pipeline/claude-cli.ts",
+    "pipeline/session-store.ts",
+    "pipeline/url-to-clone.ts",
+    "pipeline/vision-backend.ts",
+    "sandbox/vite-pool.ts",
+    "vendor/lovable/parse-blocks.ts",
+    "vendor/lovable/system-prompt.ts"
+  ],
+  "pipeline/image-to-envelope.test.ts": [
+    "adapter/v1-schema.ts",
+    "pattern-library/index.ts",
+    "pipeline/image-to-envelope.ts",
+    "pipeline/url-to-clone.ts"
+  ],
+  "pipeline/image-to-envelope.ts": [
+    "adapter/v1-schema.ts",
+    "pipeline/asset-extract.ts",
+    "pipeline/claude-cli.ts",
+    "pipeline/image-to-clone.ts",
+    "pipeline/url-to-clone.ts",
+    "pipeline/vision-backend.ts",
+    "sandbox/vite-pool.ts"
+  ],
+  "pipeline/session-store.ts": [
+    "adapter/v1-schema.ts"
+  ],
+  "pipeline/sitepull-resolver.ts": [
+    "adapter/v1-schema.ts"
+  ],
+  "pipeline/url-to-clone.ts": [
+    "adapter/v1-schema.ts",
+    "adapter/v1-to-prompt.ts",
+    "pattern-library/index.ts",
+    "pipeline/asset-extract.ts",
+    "pipeline/component-names.ts",
+    "pipeline/session-store.ts",
+    "sandbox/vite-pool.ts"
+  ],
+  "pipeline/vision-backend.ts": [],
+  "sandbox/vite-pool.ts": [],
+  "server.ts": [
+    "load-env.ts",
+    "pipeline/edit-loop.ts",
+    "pipeline/image-edit.ts",
+    "pipeline/image-to-clone-guided.ts",
+    "pipeline/image-to-clone.ts",
+    "pipeline/image-to-envelope.ts",
+    "pipeline/session-store.ts",
+    "pipeline/sitepull-resolver.ts",
+    "pipeline/url-to-clone.ts",
+    "sandbox/vite-pool.ts",
+    "vendor/lovable/VENDOR_SHA.ts",
+    "vendor/lovable/generate.ts"
+  ],
+  "vendor/lovable/VENDOR_SHA.ts": [],
+  "vendor/lovable/generate.ts": [
+    "vendor/lovable/parse-blocks.ts",
+    "vendor/lovable/system-prompt.ts"
+  ],
+  "vendor/lovable/parse-blocks.ts": [],
+  "vendor/lovable/system-prompt.ts": []
+}

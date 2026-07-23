@@ -10,7 +10,7 @@
 <style>
 /* ── Root: viewport authority ── */
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;width:100%;overflow:hidden;margin:0;padding:0}
+html,body{min-height:100%;width:100%;overflow-x:hidden;overflow-y:auto;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0f;color:#e5e5e5;display:flex;flex-direction:column}
 
 /* ── Top bar: fixed height, never shrinks ── */
@@ -33,10 +33,10 @@ header .sub{color:#888;font-size:12px}
 .layer-btn.pred-btn.active{background:#164e63;border-color:#06b6d4;color:#22d3ee}
 
 /* ── Main area: flex row, fills remaining viewport ── */
-.main-area{display:flex;flex:1;overflow:hidden;padding:0 24px 14px;gap:14px}
+.main-area{display:flex;flex:1;overflow:visible;padding:0 24px 14px;gap:14px;min-height:calc(100vh - 240px)}
 
 /* ── Map panel: flex-grow, owns rendering surface ── */
-.atlas-box{flex:1;background:#111118;border:1px solid #2a2a3a;border-radius:12px;overflow:hidden;position:relative;min-width:0}
+.atlas-box{flex:1;background:#111118;border:1px solid #2a2a3a;border-radius:12px;overflow:hidden;position:relative;min-width:0;min-height:600px;resize:both}
 
 /* ── Sidebar: fixed width, SOLE SCROLLER ── */
 .sidebar{width:420px;min-width:380px;overflow-y:auto;overflow-x:hidden;display:block;flex-shrink:0;padding:0}
@@ -49,7 +49,7 @@ header .sub{color:#888;font-size:12px}
 *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent}
 
 /* ── Panels ── */
-.panel{background:#111118;border:1px solid #2a2a3a;border-radius:12px;padding:16px;overflow:hidden;transition:max-height 0.3s ease}
+.panel{background:#111118;border:1px solid #2a2a3a;border-radius:12px;padding:16px;overflow:hidden;transition:max-height 0.3s ease;resize:both;min-width:240px}
 .panel.collapsed>.panel-body,.inspector.collapsed>.panel-body{display:none}
 .panel.collapsed,.inspector.collapsed{padding:16px 16px 12px}
 .panel-title{font-size:13px;font-weight:600;color:#aaa;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
@@ -61,7 +61,7 @@ header .sub{color:#888;font-size:12px}
 #lev-panel.expanded{max-height:none}
 #lev-panel:not(.expanded){max-height:260px}
 #summary-panel{overflow-y:auto}
-.inspector{border:1px solid #2a2a3a;border-radius:12px;background:#111118;padding:16px;overflow:hidden;overflow-y:auto;flex-shrink:1;transition:max-height 0.3s ease}
+.inspector{border:1px solid #2a2a3a;border-radius:12px;background:#111118;padding:16px;overflow:hidden;overflow-y:auto;flex-shrink:1;transition:max-height 0.3s ease;resize:both;min-width:240px}
 .inspector.expanded{max-height:none}
 .inspector:not(.expanded){max-height:320px}
 .inspector-empty{color:#555;font-size:12px;text-align:center;padding:30px 0}
@@ -151,6 +151,15 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     <div id="graph-container"><div class="graph-tooltip" id="graph-tooltip"></div></div>
   </div>
   <div class="sidebar" id="sidebar">
+    <div class="panel" id="conv-panel" style="height:55vh;min-height:120px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;resize:both">
+      <div class="panel-title" onclick="togglePanel('conv-panel')">
+        Conversation Viewer
+        <span style="float:right;font-size:11px;color:#666" id="conv-meta">click any point</span>
+      </div>
+      <div class="panel-body" id="conv-body" style="overflow-y:auto;flex:1;font-size:12px;line-height:1.45">
+        <div style="color:#64748b;padding:8px">Click a point in the atlas to load the full conversation here.</div>
+      </div>
+    </div>
     <div class="panel" id="pred-panel" style="display:none;max-height:350px;overflow-y:auto">
       <div class="panel-title" onclick="togglePanel('pred-panel')">Prediction Engine</div>
       <div class="panel-body" id="pred-body"></div>
@@ -318,6 +327,81 @@ function buildLeverageTrace(){
   return traces;
 }
 
+// ── Conversation Viewer (click-to-full-text) ──
+function _escHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function _findNearestPointIndex(px, py){
+  // O(n) nearest-point lookup in atlas D-space. ~250k points, ~10-30ms per click.
+  let bestI=-1, bestD=Infinity;
+  const X=D.x, Y=D.y, n=X.length;
+  for(let i=0;i<n;i++){
+    const dx=X[i]-px, dy=Y[i]-py;
+    const d=dx*dx+dy*dy;
+    if(d<bestD){bestD=d; bestI=i;}
+  }
+  return bestI;
+}
+
+function _renderConv(payload){
+  const meta=document.getElementById('conv-meta');
+  const body=document.getElementById('conv-body');
+  if(!payload||!payload.messages){
+    meta.textContent='(no data)';
+    body.innerHTML='<div style="color:#ef4444;padding:8px">Conversation not found.</div>';
+    return;
+  }
+  const title=payload.title||'(untitled)';
+  const msgs=payload.messages||[];
+  meta.textContent='#'+payload.convo_id+' · '+msgs.length+' msgs';
+  let html='<div style="padding:6px 8px;border-bottom:1px solid #1a1a2a;font-weight:700;color:#e5e5e5">'+_escHtml(title)+'</div>';
+  msgs.forEach((m,idx)=>{
+    const role=String(m.role||'?').toLowerCase();
+    const roleColor=role==='user'?'#22d3ee':role==='assistant'?'#6366f1':'#f59e0b';
+    let text=m.text;
+    if(text!=null && typeof text!=='string') text=JSON.stringify(text);
+    text=_escHtml(text||'').replace(/\n/g,'<br>');
+    html+='<div style="padding:6px 8px;border-bottom:1px solid #14141e">'+
+      '<div style="font-size:10px;color:'+roleColor+';font-weight:700;text-transform:uppercase;margin-bottom:2px">'+
+      _escHtml(role)+' · #'+idx+'</div>'+
+      '<div style="color:#cbd5e1;white-space:pre-wrap;word-break:break-word">'+text+'</div></div>';
+  });
+  body.innerHTML=html;
+  body.scrollTop=0;
+}
+
+const _API_BASE = (location.protocol === 'file:' || location.port !== '8765') ? 'http://localhost:8765' : '';
+function _loadConv(convoId){
+  const meta=document.getElementById('conv-meta');
+  const body=document.getElementById('conv-body');
+  meta.textContent='loading #'+convoId+'...';
+  body.innerHTML='<div style="color:#64748b;padding:8px">Fetching...</div>';
+  fetch(_API_BASE+'/api/conv/'+encodeURIComponent(convoId))
+    .then(r=>{
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
+    })
+    .then(_renderConv)
+    .catch(err=>{
+      meta.textContent='error';
+      body.innerHTML='<div style="color:#ef4444;padding:8px">Failed to load conv '+_escHtml(convoId)+': '+_escHtml(err.message)+'<br><br>Is the triage server running?<br><code style="color:#94a3b8">python triage_server.py</code></div>';
+    });
+}
+
+function _attachAtlasClickHandler(){
+  const el=document.getElementById('atlas-chart');
+  if(!el||!el.on) return;
+  // Plotly attaches .on(); strip prior handlers to avoid stacking on Plotly.react.
+  el.removeAllListeners && el.removeAllListeners('plotly_click');
+  el.on('plotly_click', function(data){
+    if(!data||!data.points||!data.points.length) return;
+    const pt=data.points[0];
+    const i=_findNearestPointIndex(pt.x, pt.y);
+    if(i<0) return;
+    const cid=D.convo_ids[i];
+    _loadConv(cid);
+  });
+}
+
 let activeLayer='cluster';
 function switchLayer(name){
   activeLayer=name;
@@ -328,7 +412,7 @@ function switchLayer(name){
   else if(name==='time') t=buildTimeTrace();
   else if(name==='convo') t=buildConvoTrace();
   else if(name==='leverage') t=buildLeverageTrace();
-  Plotly.react('atlas-chart',t,getChartLayout());
+  Plotly.react('atlas-chart',t,getChartLayout()).then(_attachAtlasClickHandler);
 }
 
 // ── Leverage UI ──
@@ -669,6 +753,57 @@ function buildPredictionPanel(pred){
 }
 
 switchLayer('cluster');
+</script>
+<script>
+/* Window Manager: drag-from-title + resize-from-corner on every .panel/.inspector. */
+(function(){
+  let zTop = 1000;
+  function makeWindow(panel){
+    if(!panel || panel.dataset.wm) return;
+    panel.dataset.wm = '1';
+    const title = panel.querySelector(':scope > .panel-title');
+    if(!title) return;
+    title.title = 'Drag to move · click to collapse';
+    let sx, sy, ox, oy, moved;
+    function onMove(e){
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if(!moved && Math.abs(dx)+Math.abs(dy) > 4){
+        moved = true;
+        const r = panel.getBoundingClientRect();
+        panel.style.position = 'fixed';
+        panel.style.left = r.left+'px';
+        panel.style.top = r.top+'px';
+        panel.style.width = r.width+'px';
+        panel.style.margin = '0';
+        panel.style.zIndex = ++zTop;
+        ox = r.left; oy = r.top;
+        document.body.style.userSelect = 'none';
+      }
+      if(moved){
+        panel.style.left = (ox+dx)+'px';
+        panel.style.top  = (oy+dy)+'px';
+      }
+    }
+    function onUp(){
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.userSelect = '';
+      if(moved){
+        title.addEventListener('click', function blk(ev){ev.stopPropagation(); ev.preventDefault();}, {capture:true, once:true});
+      }
+    }
+    title.addEventListener('mousedown', e => {
+      if(e.button !== 0) return;
+      sx = e.clientX; sy = e.clientY; moved = false;
+      panel.style.zIndex = ++zTop;
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+  function init(){ document.querySelectorAll('.panel, .inspector').forEach(makeWindow); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
 </script>
 </body>
 </html>

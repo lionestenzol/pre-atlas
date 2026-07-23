@@ -24,7 +24,7 @@ import { executeOnUASC } from '../core/executor-bridge.js';
 
 // === TYPES ===
 
-export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily' | 'atlas_map_reload';
+export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily' | 'atlas_map_reload' | 'zoekt_reindex';
 
 export interface JobRun {
   job: JobName;
@@ -49,6 +49,7 @@ export interface DaemonState {
   last_stall_check: number | null;
   last_sensor_daily: number | null;
   last_atlas_map_reload: number | null;
+  last_zoekt_reindex: number | null;
   job_history: JobRun[];
   current_job: JobRun | null;
 }
@@ -64,6 +65,7 @@ export class GovernanceDaemon {
   private refreshProcess: ChildProcess | null = null;
   private agentProcess: ChildProcess | null = null;
   private sensorProcess: ChildProcess | null = null;
+  private zoektReindexProcess: ChildProcess | null = null;
   private workController: WorkController;
   private timeline: TimelineLogger;
 
@@ -79,9 +81,11 @@ export class GovernanceDaemon {
   private readonly STALL_CHECK_CRON = '0 21 * * *';   // 21:00 daily — stall detection
   private readonly SENSOR_DAILY_CRON = '45 5 * * *';  // 05:45 daily — cognitive-sensor pipeline, ahead of Day Start
   private readonly ATLAS_MAP_RELOAD_CRON = '5 6 * * *'; // 06:05 daily — refresh atlas-map-api snapshot after sensor daily
+  private readonly ZOEKT_REINDEX_CRON = '35 5 * * *';  // 05:35 daily — Layer 2 of zoekt reindex failsafe; --if-stale no-ops if index already fresh
   private readonly REFRESH_TIMEOUT_MS = 120000;       // 2 minutes
   private readonly AGENT_PIPELINE_TIMEOUT_MS = 600000; // 10 minutes
   private readonly SENSOR_DAILY_TIMEOUT_MS = 900000;   // 15 minutes — multi-phase pipeline (ingest, es_scan, triage, backlog); measured >5min in practice
+  private readonly ZOEKT_REINDEX_TIMEOUT_MS = 1200000; // 20 minutes — full reindex of 3 repos with per-file scip spawn
 
   /**
    * workController is optional only so callers without an API server (tests,
@@ -109,6 +113,7 @@ export class GovernanceDaemon {
       last_stall_check: null,
       last_sensor_daily: null,
       last_atlas_map_reload: null,
+      last_zoekt_reindex: null,
       job_history: [],
       current_job: null,
     };
@@ -209,6 +214,14 @@ export class GovernanceDaemon {
     }, { noOverlap: true, name: 'atlas_map_reload' });
     this.cronJobs.push(atlasMapReloadJob);
 
+    // Zoekt Reindex (Layer 2 of the 3-layer index failsafe). Complements the
+    // PreAtlas-ZoektReindex scheduled task (L1) and -Boot logon task (L3);
+    // --if-stale keeps the layers complementary rather than redundant.
+    const zoektReindexJob = cron.schedule(this.ZOEKT_REINDEX_CRON, () => {
+      this.runJob('zoekt_reindex');
+    }, { noOverlap: true, name: 'zoekt_reindex' });
+    this.cronJobs.push(zoektReindexJob);
+
     // Run initial heartbeat immediately
     this.runJob('heartbeat');
 
@@ -224,6 +237,7 @@ export class GovernanceDaemon {
     console.log(`  - Stall Check: ${this.STALL_CHECK_CRON}`);
     console.log(`  - Sensor Daily: ${this.SENSOR_DAILY_CRON}`);
     console.log(`  - Atlas Map Reload: ${this.ATLAS_MAP_RELOAD_CRON}`);
+    console.log(`  - Zoekt Reindex: ${this.ZOEKT_REINDEX_CRON}`);
   }
 
   /**
@@ -255,6 +269,10 @@ export class GovernanceDaemon {
     if (this.sensorProcess) {
       this.sensorProcess.kill();
       this.sensorProcess = null;
+    }
+    if (this.zoektReindexProcess) {
+      this.zoektReindexProcess.kill();
+      this.zoektReindexProcess = null;
     }
 
     this.state.running = false;
@@ -318,6 +336,9 @@ export class GovernanceDaemon {
           break;
         case 'atlas_map_reload':
           await this.runAtlasMapReload();
+          break;
+        case 'zoekt_reindex':
+          await this.runZoektReindex();
           break;
       }
 
@@ -1402,6 +1423,72 @@ export class GovernanceDaemon {
     });
   }
 
+  /**
+   * Zoekt Reindex (Layer 2 of the 3-layer index failsafe): refresh the zoekt
+   * code-search index once a day via reindex.py --if-stale. Complementary to the
+   * PreAtlas-ZoektReindex scheduled task (L1) and -Boot logon task (L3); the
+   * --if-stale gate means it only reindexes when the index is >24h stale, so the
+   * layers never double-run. Non-critical: runJob catches and logs failures.
+   */
+  private async runZoektReindex(): Promise<void> {
+    const reindexPy = process.env.ZOEKT_REINDEX_PY || 'C:\\Users\\bruke\\zoekt-win\\reindex.py';
+    const reindexCwd = path.dirname(reindexPy);
+
+    if (!fs.existsSync(reindexPy)) {
+      throw new Error(`reindex.py not found at: ${reindexPy}`);
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        if (this.zoektReindexProcess) {
+          this.zoektReindexProcess.kill();
+          this.zoektReindexProcess = null;
+        }
+        reject(new Error(`Zoekt reindex timed out after ${this.ZOEKT_REINDEX_TIMEOUT_MS}ms`));
+      }, this.ZOEKT_REINDEX_TIMEOUT_MS);
+
+      this.zoektReindexProcess = spawn('python', [reindexPy, '--if-stale'], {
+        cwd: reindexCwd,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      this.zoektReindexProcess.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      this.zoektReindexProcess.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      this.zoektReindexProcess.on('close', async (code) => {
+        clearTimeout(timeout);
+        this.zoektReindexProcess = null;
+
+        if (code === 0) {
+          await this.updateSystemState({
+            'daemon.last_zoekt_reindex': now(),
+            'daemon.zoekt_reindex_output': stdout.slice(-500),
+          });
+          this.timeline.emit('ZOEKT_REINDEX_COMPLETE', 'governance_daemon', {
+            output_length: stdout.length,
+          });
+          resolve();
+        } else {
+          reject(new Error(`reindex.py exited with code ${code}: ${stderr.slice(-500)}`));
+        }
+      });
+
+      this.zoektReindexProcess.on('error', (err) => {
+        clearTimeout(timeout);
+        this.zoektReindexProcess = null;
+        reject(err);
+      });
+    });
+  }
+
   private async runAtlasMapReload(): Promise<void> {
     const tokenPath = path.join(this.repoRoot, '.atlas-write-token');
     try {
@@ -1659,6 +1746,9 @@ export class GovernanceDaemon {
         break;
       case 'atlas_map_reload':
         this.state.last_atlas_map_reload = timestamp;
+        break;
+      case 'zoekt_reindex':
+        this.state.last_zoekt_reindex = timestamp;
         break;
     }
   }

@@ -2465,7 +2465,7 @@ app.get('/api/daemon/status', (req, res) => {
 app.post('/api/daemon/run', async (req, res) => {
   const { job } = req.body;
 
-  const validJobs: JobName[] = ['heartbeat', 'refresh', 'day_start', 'day_end', 'sensor_daily'];
+  const validJobs: JobName[] = ['heartbeat', 'refresh', 'day_start', 'day_end', 'sensor_daily', 'zoekt_reindex'];
   if (!job || !validJobs.includes(job)) {
     res.status(400).json({
       ok: false,

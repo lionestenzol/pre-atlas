@@ -1,6 +1,9 @@
 # reap_orphans.ps1 - kill orphaned/duplicate dev servers so a port scan reflects Atlas only.
-# Wave 0.3, atlas-consolidation-AC0002. Allow-list derived from scripts/start_atlas.ps1 ($services, lines 20-34).
-# Never touches :5173 (noutube-native) or any process whose cmdline matches the Atlas allow-list.
+# Wave 0.3, atlas-consolidation-AC0002. Allow-list derived from .claude/launch.json via
+# _atlas_manifest.ps1 (was hardcoded to 12 surfaces; drifted 25+ behind reality). The
+# manifest is the single source of truth shared with status_atlas.ps1 and scan_atlas_live.ps1.
+# Never touches :5173 (noutube-native, when it's the owner) or any process whose cmdline
+# matches any Atlas surface matcher token.
 # See ~/.claude/rules/common/code-as-furniture.md - re-detects at run time; PIDs are never hardcoded.
 param(
     [switch]$DryRun,
@@ -8,42 +11,33 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 
-# --- Allow-list: one regex per service command in start_atlas.ps1 ---
-$AtlasPorts = @{
-    3001 = 'src[/\\]api[/\\]server\.ts'                       # delta-kernel (npx tsx src/api/server.ts)
-    3002 = 'src[/\\]api[/\\]server\.ts'                       # aegis-fabric
-    3004 = 'uvicorn\s+openclaw\.api:app'                      # openclaw
-    3006 = 'http-server.*-p\s*3006'                           # inpact
-    3007 = 'server\.py'                                       # code-converter
-    3008 = 'server\.py\s+--port\s+3008'                       # uasc
-    3009 = 'uvicorn\s+cortex\.main:app'                       # cortex
-    3010 = 'uvicorn\s+optogon\.main:app'                      # optogon
-    3050 = 'canvas-engine'                                    # canvas-engine (tsx src/server.ts under canvas-engine)
-    3071 = '-m\s+memory_hub\.server'                          # memory-hub
-    3072 = '-m\s+atlas_map_api\.server'                       # atlas-map-api
-    8887 = 'serve\.py'                                        # atlas-substrate (C:\Users\bruke\atlas)
-}
+. "$PSScriptRoot\_atlas_manifest.ps1"
+$AtlasManifest  = Get-AtlasManifest
 $WhitelistPorts = @(5173)   # noutube-native Electron app - never touch
 
-function Get-Cmdline([int]$ProcId) {
-    (Get-CimInstance Win32_Process -Filter "ProcessId=$ProcId" -ErrorAction SilentlyContinue).CommandLine
+# Perf: enumerate Win32_Process ONCE into a PID hashtable, then reuse everywhere.
+# Prior version called Get-CimInstance Win32_Process -Filter ProcessId=X once per
+# listener (~700ms each x 50 listeners = 35s) plus 3 full unfiltered enumerations.
+# One bulk enumeration costs ~750ms; per-PID lookup is now a hashtable hit.
+# See ~/.claude/rules/common/code-as-furniture.md - fix lands inline, not documented-and-left.
+$procsByPid = @{}
+Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | ForEach-Object {
+    $procsByPid[[int]$_.ProcessId] = $_
 }
-function Get-ExeName([int]$ProcId) {
-    (Get-CimInstance Win32_Process -Filter "ProcessId=$ProcId" -ErrorAction SilentlyContinue).Name
-}
+function Get-Cmdline([int]$ProcId) { $procsByPid[$ProcId].CommandLine }
+function Get-ExeName([int]$ProcId) { $procsByPid[$ProcId].Name }
 
 # memory_hub / atlas_map_api run as a launcher-parent + listener-child pair: the parent
 # python.exe spawns a child python.exe that actually binds the port. "Not the port owner"
 # is NOT a safe orphan signal for these - killing the parent kills the child (the live
 # service on :3071/:3072) with it. Walk the ancestor chain of the port owner so the
 # launcher parent is never mistaken for a leaked duplicate.
-# See ~/.claude/rules/common/code-as-furniture.md - fix lands inline, not documented-and-left.
 function Get-AncestorPids([int]$ProcId) {
     $ancestors = @()
     $cur = $ProcId
     for ($i = 0; $i -lt 10; $i++) {
         if (-not $cur -or $cur -eq 0 -or $cur -eq 4) { break }
-        $proc = Get-CimInstance Win32_Process -Filter "ProcessId=$cur" -ErrorAction SilentlyContinue
+        $proc = $procsByPid[$cur]
         if (-not $proc -or -not $proc.ParentProcessId) { break }
         $ancestors += [int]$proc.ParentProcessId
         $cur = [int]$proc.ParentProcessId
@@ -51,26 +45,30 @@ function Get-AncestorPids([int]$ProcId) {
     return $ancestors
 }
 
+# Get-TcpListeners is provided by _atlas_manifest.ps1 (hashtable: port -> pid).
+# netstat -ano -p TCP is ~30x faster than Get-NetTCPConnection on this box
+# (175ms vs 5200ms); the helper dedupes IPv4/IPv6 rows and skips PIDs 0/4.
+
 $candidates = @()   # each: @{ Pid; Port; Reason; Cmdline }
 $self = $PID
+$listeners = Get-TcpListeners   # hashtable: port -> pid
 
 # --- 1. Known squatters + any non-Atlas listener on an Atlas port ---
-$listeners = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
-    Select-Object LocalPort, OwningProcess -Unique
-foreach ($l in $listeners) {
-    if ($l.OwningProcess -eq $self -or $l.OwningProcess -eq 0 -or $l.OwningProcess -eq 4) { continue }
-    if ($WhitelistPorts -contains $l.LocalPort) { continue }
-    $cmd = Get-Cmdline $l.OwningProcess
+foreach ($port in $listeners.Keys) {
+    $procId = $listeners[$port]
+    if ($procId -eq $self) { continue }
+    if ($WhitelistPorts -contains $port) { continue }
+    $cmd = Get-Cmdline $procId
     if (-not $cmd) { continue }
-    if ($l.LocalPort -eq 8799 -and $cmd -match 'iTunes-Titles-Backup') {
-        $candidates += @{ ProcId = $l.OwningProcess; Port = $l.LocalPort; Reason = 'squatter: iTunes-Titles-Backup static server on :8799'; Cmdline = $cmd }
+    if ($port -eq 8799 -and $cmd -match 'iTunes-Titles-Backup') {
+        $candidates += @{ ProcId = $procId; Port = $port; Reason = 'squatter: iTunes-Titles-Backup static server on :8799'; Cmdline = $cmd }
     }
-    elseif ($l.LocalPort -eq 8765 -and $cmd -match '-m\s+http\.server\s+8765') {
-        $candidates += @{ ProcId = $l.OwningProcess; Port = $l.LocalPort; Reason = 'squatter: bare python -m http.server on :8765'; Cmdline = $cmd }
+    elseif ($port -eq 8765 -and $cmd -match '-m\s+http\.server\s+8765') {
+        $candidates += @{ ProcId = $procId; Port = $port; Reason = 'squatter: bare python -m http.server on :8765'; Cmdline = $cmd }
     }
-    elseif ($AtlasPorts.ContainsKey([int]$l.LocalPort)) {
-        if ($cmd -notmatch $AtlasPorts[[int]$l.LocalPort]) {
-            $candidates += @{ ProcId = $l.OwningProcess; Port = $l.LocalPort; Reason = "non-Atlas listener on Atlas port :$($l.LocalPort)"; Cmdline = $cmd }
+    elseif ($AtlasManifest.ContainsKey($port)) {
+        if (-not (Test-CmdlineMatches -Cmdline $cmd -Matchers $AtlasManifest[$port].Matchers)) {
+            $candidates += @{ ProcId = $procId; Port = $port; Reason = "non-Atlas listener on Atlas port :$port (expected $($AtlasManifest[$port].Name))"; Cmdline = $cmd }
         }
     }
 }
@@ -84,17 +82,13 @@ $dupSpecs = @(
     @{ Module = '-m\s+atlas_map_api\.server'; Port = 3072 }
 )
 foreach ($spec in $dupSpecs) {
-    $owner = (Get-NetTCPConnection -State Listen -LocalPort $spec.Port -ErrorAction SilentlyContinue |
-        Select-Object -First 1).OwningProcess
-    # Exclude the owner's whole ancestor chain (launcher parent, its parent, etc.) - these
-    # are the reloader/launcher processes that spawned the listener, not leaked duplicates.
+    $owner = if ($listeners.ContainsKey($spec.Port)) { $listeners[$spec.Port] } else { $null }
     $ownerAncestors = if ($owner) { Get-AncestorPids -ProcId $owner } else { @() }
-    $ownerProc = if ($owner) { Get-CimInstance Win32_Process -Filter "ProcessId=$owner" -ErrorAction SilentlyContinue } else { $null }
+    $ownerProc = if ($owner) { $procsByPid[[int]$owner] } else { $null }
     $ownerDirectParent = if ($ownerProc -and $ownerProc.ParentProcessId) { [int]$ownerProc.ParentProcessId } else { $null }
-    $procs = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
-        $_.CommandLine -match $spec.Module -and $_.Name -match '^python(\.exe)?$'
-    }
-    foreach ($p in $procs) {
+    foreach ($p in $procsByPid.Values) {
+        if ($p.Name -notmatch '^python(\.exe)?$') { continue }
+        if (-not $p.CommandLine -or $p.CommandLine -notmatch $spec.Module) { continue }
         if ($p.ProcessId -eq $owner) { continue }   # the live service - keep
         if ($ownerAncestors -contains $p.ProcessId) { continue }   # launcher/reloader parent chain - keep
         if ($ownerDirectParent -and $p.ProcessId -eq $ownerDirectParent) { continue }   # direct parent belt-and-suspenders - keep
@@ -103,10 +97,9 @@ foreach ($spec in $dupSpecs) {
 }
 
 # --- 3. Lingering bash wrappers that spawned the squatters (match on iTunes-Titles-Backup) ---
-$wrappers = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
-    $_.Name -eq 'bash.exe' -and $_.CommandLine -match 'iTunes-Titles-Backup.*http\.server'
-}
-foreach ($w in $wrappers) {
+foreach ($w in $procsByPid.Values) {
+    if ($w.Name -ne 'bash.exe') { continue }
+    if (-not $w.CommandLine -or $w.CommandLine -notmatch 'iTunes-Titles-Backup.*http\.server') { continue }
     $candidates += @{ ProcId = $w.ProcessId; Port = $null; Reason = 'lingering bash wrapper that spawned a squatter'; Cmdline = $w.CommandLine }
 }
 

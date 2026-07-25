@@ -25,7 +25,7 @@ import { executeOnUASC } from '../core/executor-bridge.js';
 
 // === TYPES ===
 
-export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily' | 'atlas_map_reload' | 'zoekt_reindex' | 'closure_scan';
+export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily' | 'atlas_map_reload' | 'zoekt_reindex' | 'sourcegraph_scip_reindex' | 'closure_scan';
 
 export interface JobRun {
   job: JobName;
@@ -51,6 +51,7 @@ export interface DaemonState {
   last_sensor_daily: number | null;
   last_atlas_map_reload: number | null;
   last_zoekt_reindex: number | null;
+  last_sourcegraph_scip_reindex: number | null;
   last_closure_scan: number | null;
   job_history: JobRun[];
   current_job: JobRun | null;
@@ -68,6 +69,7 @@ export class GovernanceDaemon {
   private agentProcess: ChildProcess | null = null;
   private sensorProcess: ChildProcess | null = null;
   private zoektReindexProcess: ChildProcess | null = null;
+  private sourcegraphScipReindexProcess: ChildProcess | null = null;
   private workController: WorkController;
   private timeline: TimelineLogger;
 
@@ -84,11 +86,13 @@ export class GovernanceDaemon {
   private readonly SENSOR_DAILY_CRON = '45 5 * * *';  // 05:45 daily — cognitive-sensor pipeline, ahead of Day Start
   private readonly ATLAS_MAP_RELOAD_CRON = '5 6 * * *'; // 06:05 daily — refresh atlas-map-api snapshot after sensor daily
   private readonly ZOEKT_REINDEX_CRON = '35 5 * * *';  // 05:35 daily — Layer 2 of zoekt reindex failsafe; --if-stale no-ops if index already fresh
+  private readonly SOURCEGRAPH_SCIP_CRON = '40 5 * * *';  // 05:40 daily — Layer 2 of sourcegraph-scip reindex failsafe; 5min offset from zoekt so shells do not stack
   private readonly CLOSURE_SCAN_CRON = '0 7 * * 1';    // Monday 07:00 — surface idle worktree branches for closure review (Bruke's 40.6%-Monday cadence)
   private readonly REFRESH_TIMEOUT_MS = 120000;       // 2 minutes
   private readonly AGENT_PIPELINE_TIMEOUT_MS = 600000; // 10 minutes
   private readonly SENSOR_DAILY_TIMEOUT_MS = 900000;   // 15 minutes — multi-phase pipeline (ingest, es_scan, triage, backlog); measured >5min in practice
   private readonly ZOEKT_REINDEX_TIMEOUT_MS = 1200000; // 20 minutes — full reindex of 3 repos with per-file scip spawn
+  private readonly SOURCEGRAPH_SCIP_REINDEX_TIMEOUT_MS = 1200000; // 20 minutes — per-project scip-typescript / scip-python + expt-convert over 15 services
   private readonly CLOSURE_SCAN_TIMEOUT_MS = 300000;   // 5 minutes — read-only git metadata across worktrees
 
   /**
@@ -118,6 +122,7 @@ export class GovernanceDaemon {
       last_sensor_daily: null,
       last_atlas_map_reload: null,
       last_zoekt_reindex: null,
+      last_sourcegraph_scip_reindex: null,
       last_closure_scan: null,
       job_history: [],
       current_job: null,
@@ -227,6 +232,15 @@ export class GovernanceDaemon {
     }, { noOverlap: true, name: 'zoekt_reindex' });
     this.cronJobs.push(zoektReindexJob);
 
+    // Sourcegraph SCIP reindex (Layer 2 of the 3-layer index failsafe). Complements the
+    // PreAtlas-SourcegraphScipReindex scheduled task (L1) and -Boot logon task (L3);
+    // --if-stale keeps the layers complementary rather than redundant. 5min offset from
+    // zoekt so the two heavy indexers don't spawn back-to-back on the same low-CPU minute.
+    const sourcegraphScipReindexJob = cron.schedule(this.SOURCEGRAPH_SCIP_CRON, () => {
+      this.runJob('sourcegraph_scip_reindex');
+    }, { noOverlap: true, name: 'sourcegraph_scip_reindex' });
+    this.cronJobs.push(sourcegraphScipReindexJob);
+
     const closureScanJob = cron.schedule(this.CLOSURE_SCAN_CRON, () => {
       this.runJob('closure_scan');
     }, { noOverlap: true, name: 'closure_scan' });
@@ -248,6 +262,7 @@ export class GovernanceDaemon {
     console.log(`  - Sensor Daily: ${this.SENSOR_DAILY_CRON}`);
     console.log(`  - Atlas Map Reload: ${this.ATLAS_MAP_RELOAD_CRON}`);
     console.log(`  - Zoekt Reindex: ${this.ZOEKT_REINDEX_CRON}`);
+    console.log(`  - Sourcegraph SCIP Reindex: ${this.SOURCEGRAPH_SCIP_CRON}`);
     console.log(`  - Closure Scan: ${this.CLOSURE_SCAN_CRON}`);
   }
 
@@ -284,6 +299,10 @@ export class GovernanceDaemon {
     if (this.zoektReindexProcess) {
       this.zoektReindexProcess.kill();
       this.zoektReindexProcess = null;
+    }
+    if (this.sourcegraphScipReindexProcess) {
+      this.sourcegraphScipReindexProcess.kill();
+      this.sourcegraphScipReindexProcess = null;
     }
 
     this.state.running = false;
@@ -350,6 +369,9 @@ export class GovernanceDaemon {
           break;
         case 'zoekt_reindex':
           await this.runZoektReindex();
+          break;
+        case 'sourcegraph_scip_reindex':
+          await this.runSourcegraphScipReindex();
           break;
         case 'closure_scan':
           await this.runClosureScan();
@@ -1504,6 +1526,74 @@ export class GovernanceDaemon {
   }
 
   /**
+   * Sourcegraph SCIP Reindex (Layer 2 of the 3-layer index failsafe): refresh
+   * the SCIP symbol index once a day via reindex.py --if-stale. Complementary
+   * to the PreAtlas-SourcegraphScipReindex scheduled task (L1) and -Boot logon
+   * task (L3); the --if-stale gate means it only reindexes when the newest
+   * shard is >24h stale, so the layers never double-run. Non-critical: runJob
+   * catches and logs failures. Mirrors runZoektReindex exactly.
+   */
+  private async runSourcegraphScipReindex(): Promise<void> {
+    const reindexPy = process.env.SOURCEGRAPH_SCIP_REINDEX_PY
+      || 'C:\\Users\\bruke\\Pre Atlas\\services\\sourcegraph-scip\\reindex.py';
+    const reindexCwd = path.dirname(reindexPy);
+
+    if (!fs.existsSync(reindexPy)) {
+      throw new Error(`sourcegraph-scip reindex.py not found at: ${reindexPy}`);
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        if (this.sourcegraphScipReindexProcess) {
+          this.sourcegraphScipReindexProcess.kill();
+          this.sourcegraphScipReindexProcess = null;
+        }
+        reject(new Error(`Sourcegraph SCIP reindex timed out after ${this.SOURCEGRAPH_SCIP_REINDEX_TIMEOUT_MS}ms`));
+      }, this.SOURCEGRAPH_SCIP_REINDEX_TIMEOUT_MS);
+
+      this.sourcegraphScipReindexProcess = spawn('python', [reindexPy, '--if-stale'], {
+        cwd: reindexCwd,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      this.sourcegraphScipReindexProcess.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      this.sourcegraphScipReindexProcess.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      this.sourcegraphScipReindexProcess.on('close', async (code) => {
+        clearTimeout(timeout);
+        this.sourcegraphScipReindexProcess = null;
+
+        if (code === 0) {
+          await this.updateSystemState({
+            'daemon.last_sourcegraph_scip_reindex': now(),
+            'daemon.sourcegraph_scip_reindex_output': stdout.slice(-500),
+          });
+          this.timeline.emit('SOURCEGRAPH_SCIP_REINDEX_COMPLETE', 'governance_daemon', {
+            output_length: stdout.length,
+          });
+          resolve();
+        } else {
+          reject(new Error(`sourcegraph-scip reindex.py exited with code ${code}: ${stderr.slice(-500)}`));
+        }
+      });
+
+      this.sourcegraphScipReindexProcess.on('error', (err) => {
+        clearTimeout(timeout);
+        this.sourcegraphScipReindexProcess = null;
+        reject(err);
+      });
+    });
+  }
+
+  /**
    * Closure Scan: enumerate worktrees, rank branches idle beyond threshold,
    * and emit a dated capsule scan report for human review. Read-only per
    * TRUST_BOUNDARY.md -- merge/tag/delete decisions stay human-gated.
@@ -1787,6 +1877,9 @@ export class GovernanceDaemon {
         break;
       case 'zoekt_reindex':
         this.state.last_zoekt_reindex = timestamp;
+        break;
+      case 'sourcegraph_scip_reindex':
+        this.state.last_sourcegraph_scip_reindex = timestamp;
         break;
       case 'closure_scan':
         this.state.last_closure_scan = timestamp;

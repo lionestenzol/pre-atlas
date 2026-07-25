@@ -15,6 +15,7 @@ import { route } from '../core/routing';
 import { Mode, SystemStateData, ActionType, InboxData, TaskData, ThreadData, DraftData, PendingActionData, EntityType } from '../core/types';
 import { WorkController, ActiveJob } from '../core/work-controller';
 import { isLatticeResumeJob, resolveLatticePython, buildResumeArgs } from './lattice_resume.js';
+import { runClosureScan } from './closure_daemon.js';
 import { getTimelineLogger, TimelineLogger } from '../core/timeline-logger.js';
 import { getEffectiveRiskTier, buildCockpit, createPendingAction, CockpitBuildContext } from '../core/cockpit.js';
 import { emitEvent } from '../core/event-emitter.js';
@@ -24,7 +25,7 @@ import { executeOnUASC } from '../core/executor-bridge.js';
 
 // === TYPES ===
 
-export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily' | 'atlas_map_reload' | 'zoekt_reindex';
+export type JobName = 'heartbeat' | 'refresh' | 'day_start' | 'day_end' | 'mode_recalc' | 'work_queue' | 'agent_pipeline' | 'preparation' | 'stall_check' | 'sensor_daily' | 'atlas_map_reload' | 'zoekt_reindex' | 'closure_scan';
 
 export interface JobRun {
   job: JobName;
@@ -50,6 +51,7 @@ export interface DaemonState {
   last_sensor_daily: number | null;
   last_atlas_map_reload: number | null;
   last_zoekt_reindex: number | null;
+  last_closure_scan: number | null;
   job_history: JobRun[];
   current_job: JobRun | null;
 }
@@ -82,10 +84,12 @@ export class GovernanceDaemon {
   private readonly SENSOR_DAILY_CRON = '45 5 * * *';  // 05:45 daily — cognitive-sensor pipeline, ahead of Day Start
   private readonly ATLAS_MAP_RELOAD_CRON = '5 6 * * *'; // 06:05 daily — refresh atlas-map-api snapshot after sensor daily
   private readonly ZOEKT_REINDEX_CRON = '35 5 * * *';  // 05:35 daily — Layer 2 of zoekt reindex failsafe; --if-stale no-ops if index already fresh
+  private readonly CLOSURE_SCAN_CRON = '0 7 * * 1';    // Monday 07:00 — surface idle worktree branches for closure review (Bruke's 40.6%-Monday cadence)
   private readonly REFRESH_TIMEOUT_MS = 120000;       // 2 minutes
   private readonly AGENT_PIPELINE_TIMEOUT_MS = 600000; // 10 minutes
   private readonly SENSOR_DAILY_TIMEOUT_MS = 900000;   // 15 minutes — multi-phase pipeline (ingest, es_scan, triage, backlog); measured >5min in practice
   private readonly ZOEKT_REINDEX_TIMEOUT_MS = 1200000; // 20 minutes — full reindex of 3 repos with per-file scip spawn
+  private readonly CLOSURE_SCAN_TIMEOUT_MS = 300000;   // 5 minutes — read-only git metadata across worktrees
 
   /**
    * workController is optional only so callers without an API server (tests,
@@ -114,6 +118,7 @@ export class GovernanceDaemon {
       last_sensor_daily: null,
       last_atlas_map_reload: null,
       last_zoekt_reindex: null,
+      last_closure_scan: null,
       job_history: [],
       current_job: null,
     };
@@ -222,6 +227,11 @@ export class GovernanceDaemon {
     }, { noOverlap: true, name: 'zoekt_reindex' });
     this.cronJobs.push(zoektReindexJob);
 
+    const closureScanJob = cron.schedule(this.CLOSURE_SCAN_CRON, () => {
+      this.runJob('closure_scan');
+    }, { noOverlap: true, name: 'closure_scan' });
+    this.cronJobs.push(closureScanJob);
+
     // Run initial heartbeat immediately
     this.runJob('heartbeat');
 
@@ -238,6 +248,7 @@ export class GovernanceDaemon {
     console.log(`  - Sensor Daily: ${this.SENSOR_DAILY_CRON}`);
     console.log(`  - Atlas Map Reload: ${this.ATLAS_MAP_RELOAD_CRON}`);
     console.log(`  - Zoekt Reindex: ${this.ZOEKT_REINDEX_CRON}`);
+    console.log(`  - Closure Scan: ${this.CLOSURE_SCAN_CRON}`);
   }
 
   /**
@@ -339,6 +350,9 @@ export class GovernanceDaemon {
           break;
         case 'zoekt_reindex':
           await this.runZoektReindex();
+          break;
+        case 'closure_scan':
+          await this.runClosureScan();
           break;
       }
 
@@ -1489,6 +1503,30 @@ export class GovernanceDaemon {
     });
   }
 
+  /**
+   * Closure Scan: enumerate worktrees, rank branches idle beyond threshold,
+   * and emit a dated capsule scan report for human review. Read-only per
+   * TRUST_BOUNDARY.md -- merge/tag/delete decisions stay human-gated.
+   * Addresses the fan-out-then-abandon signature quantified in
+   * FORENSIC_DOSSIER_2026-06-26 (86 branches -> ~17 real capsules).
+   */
+  private async runClosureScan(): Promise<void> {
+    const result = await Promise.race([
+      runClosureScan(this.repoRoot),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Closure scan timed out after ${this.CLOSURE_SCAN_TIMEOUT_MS}ms`)), this.CLOSURE_SCAN_TIMEOUT_MS)),
+    ]);
+    await this.updateSystemState({
+      'daemon.last_closure_scan': now(),
+      'daemon.closure_scan_report': result.report_path,
+      'daemon.closure_scan_candidates': result.candidates.length,
+    });
+    this.timeline.emit('CLOSURE_SCAN_COMPLETE', 'governance_daemon', {
+      worktree_count: result.worktree_count,
+      candidates: result.candidates.length,
+      report_path: result.report_path,
+    });
+  }
+
   private async runAtlasMapReload(): Promise<void> {
     const tokenPath = path.join(this.repoRoot, '.atlas-write-token');
     try {
@@ -1749,6 +1787,9 @@ export class GovernanceDaemon {
         break;
       case 'zoekt_reindex':
         this.state.last_zoekt_reindex = timestamp;
+        break;
+      case 'closure_scan':
+        this.state.last_closure_scan = timestamp;
         break;
     }
   }

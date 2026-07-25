@@ -300,3 +300,7 @@ data/run_log.jsonl
 
 # === Generated system map data (rebuilt by audit/imports/_build_map.py) ===
 **/system-map-data.js
+
+# === atlas_live scan outputs (regenerated every 15 min by AtlasLiveScan task) ===
+audit/atlas_live.json
+audit/atlas_live.md

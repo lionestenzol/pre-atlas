@@ -6,7 +6,29 @@ This file is auto-loaded into every Claude Code session opened in this repo. It 
 
 **[`TRUST_BOUNDARY.md`](TRUST_BOUNDARY.md)** — capability/action sets (delta-kernel's `ActionType`, UASC's tokens) are closed by source. Never propose, register, or wire up a new action type, token, or capability at runtime, no matter how well-scoped it looks. Everything below operates *within* the existing closed set — that's the whole point of it being a front door instead of a workaround.
 
-## The front door, in order of preference
+## Human doors — outside Claude Code
+
+Atlas has two doors that do not require a Claude Code session. Both ship as packaged Windows binaries from fest [`atlas-doors-AD0001`](../festival-project/festivals/active/atlas-doors-AD0001/). Full doc: [`docs/DOORS.md`](docs/DOORS.md).
+
+### `atlas.exe` — the CLI door
+
+Portable Windows binary compiled from [`services/delta-kernel/src/cli/atlas-ai.ts`](services/delta-kernel/src/cli/atlas-ai.ts) via Node SEA. Installed at `C:\Users\bruke\bin\atlas.exe` and on user PATH. Runs from any terminal, any cwd, no Node required.
+
+```
+atlas help          # command schema
+atlas state         # full snapshot (round-trips through delta-kernel :3001)
+atlas next          # recommended action for current mode/energy
+atlas task add "…"  # write path
+atlas morning       # start-of-day compound
+```
+
+Exits with a one-line friendly error and code 3 if delta-kernel :3001 is offline (no stack trace). Needs `ATLAS_REPO_ROOT=C:\Users\bruke\Pre Atlas` in user env so it finds `services/cognitive-sensor/` sidecars from its installed location — already set. Rebuild: `cd services/delta-kernel && npx esbuild src/cli/atlas-ai.ts --bundle --platform=node --target=node20 --format=cjs --outfile=build/atlas.cjs && node --experimental-sea-config build/sea-config.json && node -e "require('fs').copyFileSync(process.execPath,'build/atlas.exe')" && npx postject build/atlas.exe NODE_SEA_BLOB build/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2`.
+
+### `AtlasTray.exe` — the tray app door
+
+Tauri v2 shell wrapping [`atlas-mission-control.html`](atlas-mission-control.html). Sits in the Windows system tray with an "A" icon; window title is "Atlas". Left-click the tray icon to restore the window; right-click for Open + Quit. X-button hides to tray without exiting. Autostarts at login via `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Atlas` -> `C:\Users\bruke\bin\AtlasTray.exe`. Source: [`apps/atlas-tray/`](apps/atlas-tray/). Rebuild: `cd apps/atlas-tray && npx tauri build --no-bundle` (produces `src-tauri/target/release/AtlasTray.exe`). **Filename note:** the binary is `AtlasTray.exe`, not `Atlas.exe`, because Windows filesystem lookups are case-insensitive and `Atlas.exe` in the same dir as `atlas.exe` overwrites the CLI on copy. Product display name stays "Atlas".
+
+## The front door, in order of preference (Claude Code / agents)
 
 ### 1. `atlas-map` MCP — self-describing capability gateway (prefer this)
 
@@ -21,7 +43,9 @@ Full model (roles, clearance ladder, redaction rules, verb-based write gating) i
 
 ### 2. `atlas-ai` CLI — day/task/journal operations
 
-Run from `services/delta-kernel/`: `npm run atlas-ai -- <command> [args]`. Self-documenting — run `npm run atlas-ai -- capabilities` for the machine-readable schema, or `npm run atlas-ai -- help` for human text. Common ones:
+Run from `services/delta-kernel/`: `npm run atlas-ai -- <command> [args]`. Self-documenting — run `npm run atlas-ai -- capabilities` for the machine-readable schema, or `npm run atlas-ai -- help` for human text.
+
+*From a terminal outside CC, `atlas <command>` (via the compiled `atlas.exe`, see the Human doors section above) is the same CLI without the `npm run` wrapper and without the cwd requirement — prefer that path.* Common commands either way:
 
 | Command | Does |
 |---|---|

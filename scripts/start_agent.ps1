@@ -1,3 +1,10 @@
+# NOTE (2026-07-26, fest atlas-doors-AD0001/003_TRUST/03_retire): this script uses
+# `npx tsx services/delta-kernel/src/cli/atlas-ai.ts agent --daemon --interval 60`
+# because `atlas.exe agent --daemon` from the compiled Human door does not currently
+# accept `--interval`. Kept as-is so the daemon keeps working; migrate to
+# `atlas agent --daemon --interval 60` once the CLI teaches the interval flag.
+# See ~/.claude/rules/common/code-as-furniture.md — headstone, not orphan.
+
 $ErrorActionPreference = "Stop"
 
 # Check Ollama

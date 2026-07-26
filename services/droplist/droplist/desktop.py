@@ -102,11 +102,19 @@ def _wait_for_server(port: int, timeout: float = 15.0) -> bool:
 
 
 def main() -> None:
-    import webview  # imported here so CLI users without the [desktop] extra still import the module
-
-    # Resolve + seed the per-user data dir BEFORE importing server (which imports
-    # storage, which snapshots DROPLIST_DATA into a module constant at import time).
+    # Argv-gated dispatch: `DropList.exe` with any argument runs the CLI
+    # (droplist.dropctl); with no argv the desktop window opens. Same binary,
+    # two modes. Data dir resolution runs for both paths so the CLI hits the
+    # same per-user data the desktop app uses.
     _prepare_data_dir()
+    if len(sys.argv) > 1:
+        # Absolute import: as a PyInstaller --onefile entry script this module
+        # runs as __main__ with no package parent — the same relative-import
+        # trap the desktop path documents. Absolute works in both modes.
+        from droplist import dropctl
+        raise SystemExit(dropctl.main(sys.argv[1:]))
+
+    import webview  # imported here so CLI users without the [desktop] extra still import the module
 
     # Absolute, NOT `from . import server`: as a PyInstaller --onefile entry script
     # this module runs as __main__ with no package parent, so a relative import

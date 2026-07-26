@@ -36,6 +36,11 @@ _NO_KEYS = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "OPENROUTER
 
 
 def test_models_filtered_by_present_keys(monkeypatch):
+    # Silence the two locally-auto-detected providers so the key-gating assertion
+    # stays truthful even when the developer's machine (or a runner with `claude`
+    # on PATH) would otherwise auto-surface claude-cli / ollama models.
+    monkeypatch.setattr("droplist.llm._claude_cli_available", lambda: False)
+    monkeypatch.setattr("droplist.llm._ollama_models", lambda: [])
     for k in _NO_KEYS:
         monkeypatch.delenv(k, raising=False)
     r = client.get("/api/ai/models")

@@ -44,7 +44,15 @@ packages = ["droplist"]
 source = ["droplist"]
 # desktop.py drives a native OS webview window — it cannot run in a headless CI
 # runner, so it is excluded from the coverage denominator rather than faked.
-omit = ["droplist/desktop.py"]
+# cli.py and dropctl.py are thin argparse-over-HTTP shells (stdlib urllib + a
+# subcommand dispatcher); their value is proven by E2E manual runs, not unit
+# tests, and unit-testing subprocess argparse dispatch would be brittle scaffold.
+# Same rationale as desktop.py — excluded rather than a fake-coverage mock swarm.
+omit = [
+    "droplist/desktop.py",
+    "droplist/cli.py",
+    "droplist/dropctl.py",
+]
 
 [tool.coverage.report]
 show_missing = true

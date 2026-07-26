@@ -5,7 +5,7 @@
  * No external dependencies beyond Node built-ins.
  */
 
-import { execSync, exec as execCb } from 'child_process';
+import { execSync, execFileSync, exec as execCb, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -468,7 +468,18 @@ async function startAll() {
     } catch {
       const fullDir = path.resolve(REPO_ROOT, svc.dir);
       const psCmd = `Set-Location '${fullDir}'; ${svc.cmd}`;
-      execCb(`powershell -Command "Start-Process powershell -ArgumentList '-NoExit','-Command','${psCmd.replace(/'/g, "''")}'"`);
+      // spawn targets powershell.exe directly with an argv array — no cmd.exe
+      // shell hop (execCb's default), same hardening as compoundWork's codex
+      // fix. Kept as spawn (not execFileSync) to preserve execCb's original
+      // fire-and-forget timing. The nested Start-Process -ArgumentList string is
+      // PowerShell parsing its own script text (a separate concern from cmd.exe);
+      // that quoting was already correct for fullDir/svc.cmd, hardcoded literals
+      // from the `services` array above — removing the cmd.exe hop closes the
+      // one real gap (proven empirically: see reference_windows_safe_exec_pattern).
+      spawn('powershell.exe', [
+        '-NoProfile', '-Command',
+        `Start-Process powershell -ArgumentList '-NoExit','-Command','${psCmd.replace(/'/g, "''")}'`,
+      ], { stdio: 'ignore', shell: false }).on('error', () => {});
       console.log(`  ${yellow('→')} Starting ${svc.name}...`);
     }
   }
@@ -498,10 +509,18 @@ async function startAll() {
 
 async function stopAll() {
   console.log(bold('Stopping Atlas services...'));
-  const ports = [3001, 3008, 3009];
+  const ports: number[] = [3001, 3008, 3009];
   for (const port of ports) {
     try {
-      execSync(`powershell -Command "Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }"`, { stdio: 'pipe' });
+      // execFileSync targets powershell.exe directly with an argv array — no
+      // cmd.exe shell hop (execSync's default), same hardening as compoundWork's
+      // codex fix. `port` is TS-typed number[] so it can never carry shell
+      // metacharacters, but this removes the actual vulnerable transport layer
+      // rather than relying on that as the only guarantee.
+      execFileSync('powershell.exe', [
+        '-NoProfile', '-NonInteractive', '-Command',
+        `Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`,
+      ], { stdio: 'pipe' });
       console.log(`  ${red('■')} Port ${port} stopped`);
     } catch {
       console.log(`  ${dim('○')} Port ${port} not running`);

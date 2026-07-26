@@ -4,6 +4,7 @@ UASC Executor — Profile Execution Engine
 Executes steps defined in JSON profiles: shell, http, log.
 """
 
+import os
 import subprocess
 import json
 import time
@@ -11,8 +12,12 @@ import platform
 import urllib.request
 import urllib.error
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 from datetime import datetime
+
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 
 @dataclass
@@ -67,6 +72,17 @@ class ProfileExecutor:
             version=profile['version'],
             status='success',
         )
+
+        policy_gate = profile.get('policy_gate')
+        if policy_gate:
+            gate_result = self._check_policy_gate(profile['id'], policy_gate)
+            if gate_result is not None:
+                result.status = 'failed'
+                result.error = gate_result
+                handler = profile.get('on_failure')
+                if handler:
+                    self._execute_step(handler)
+                return result
 
         for step in profile.get('steps', []):
             step_result = self._execute_step(step)
@@ -131,7 +147,7 @@ class ProfileExecutor:
         return result
 
     def _execute_shell(self, step: dict) -> StepResult:
-        cmd = self._interpolate(step.get('cmd', ''))
+        cmd = self._interpolate_shell(step.get('cmd', ''))
         timeout = step.get('timeout_seconds', 60)
 
         try:
@@ -180,13 +196,20 @@ class ProfileExecutor:
         expected_status = step.get('expected_status', 200)
         timeout = step.get('timeout_seconds', 30)
         retries = step.get('retries', 1)
+        headers = dict(step.get('headers', {}))
+        for k, v in headers.items():
+            headers[k] = self._interpolate(str(v))
+
+        if body is not None:
+            body = self._interpolate_body(body)
 
         for attempt in range(retries):
             try:
                 data = json.dumps(body).encode() if body else None
+                req_headers = {'Content-Type': 'application/json'} if body else {}
+                req_headers.update(headers)
                 req = urllib.request.Request(
-                    url, data=data, method=method,
-                    headers={'Content-Type': 'application/json'} if body else {},
+                    url, data=data, method=method, headers=req_headers,
                 )
 
                 with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -232,10 +255,86 @@ class ProfileExecutor:
             status='success', output=message,
         )
 
+    def _check_policy_gate(self, profile_id: str, gate: dict) -> Optional[str]:
+        """Ask aegis-fabric for a policy decision before running a profile.
+
+        Returns None if the run may proceed, or an error string (fail-closed)
+        if it must not.
+        """
+        base_url = os.environ.get('AEGIS_FABRIC_URL')
+        api_key = os.environ.get('AEGIS_API_KEY')
+        agent_id = os.environ.get('AEGIS_AGENT_ID')
+
+        if not (base_url and api_key and agent_id):
+            return 'Policy gate configured but AEGIS_FABRIC_URL/AEGIS_API_KEY/AEGIS_AGENT_ID not set (fail-closed)'
+
+        action = gate.get('action', 'request_approval')
+        params = self._interpolate_body({**gate.get('params', {}), 'profile_id': profile_id})
+        body = json.dumps({'agent_id': agent_id, 'action': action, 'params': params}).encode()
+
+        req = urllib.request.Request(
+            f'{base_url}/api/v1/agent/action', data=body, method='POST',
+            headers={'Content-Type': 'application/json', 'X-API-Key': api_key},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                decision = json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            # aegis-fabric returns 403 (denied) / 202 (pending_approval) with a
+            # real decision body, not a transport failure -- parse it.
+            try:
+                decision = json.loads(e.read().decode())
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return f'Policy gate returned HTTP {e.code} with unreadable body, refusing to run (fail-closed)'
+        except (urllib.error.URLError, TimeoutError) as e:
+            return f'Policy gate unreachable, refusing to run (fail-closed): {e}'
+
+        status = decision.get('status')
+        effect = decision.get('policy_decision', {}).get('effect')
+        if status == 'executed' and effect == 'ALLOW':
+            return None
+        reason = decision.get('policy_decision', {}).get('reason', 'no reason given')
+        return f'Policy gate blocked run: status={status} effect={effect} reason={reason}'
+
     def _interpolate(self, text: str) -> str:
         for key, value in self.variables.items():
             text = text.replace(f'{{{key}}}', str(value))
         return text
+
+    # Characters that let a value escape its intended token position when the
+    # resulting string is handed to subprocess.run(..., shell=True) — cmd.exe on
+    # Windows (& | < > ^ " %) or /bin/sh elsewhere (& | < > ; ` $ "). `inputs` on
+    # a `shell` step's variables originate from POST /exec's request body (any
+    # HMAC-authenticated caller's free-text fields, e.g. BRIEF_v1.json's `goal`/
+    # `context`), so plain str.replace with no escaping is direct shell injection.
+    # Path 2 hardened: reject rather than attempt to escape (cmd.exe quoting has
+    # no fully-safe form — proven this session: shell:true+array still lets `&`
+    # through). See ~/.claude/rules/common/code-as-furniture.md.
+    _SHELL_METACHARACTERS = set('&|<>^"%`$;\n\r')
+
+    def _interpolate_shell(self, text: str) -> str:
+        for key, value in self.variables.items():
+            token = f'{{{key}}}'
+            if token not in text:
+                continue
+            str_value = str(value)
+            bad = self._SHELL_METACHARACTERS & set(str_value)
+            if bad:
+                raise ValueError(
+                    f"input '{key}' contains shell metacharacter(s) {sorted(bad)!r} — "
+                    "rejected to prevent shell injection"
+                )
+            text = text.replace(token, str_value)
+        return text
+
+    def _interpolate_body(self, body: Any) -> Any:
+        if isinstance(body, str):
+            return self._interpolate(body)
+        if isinstance(body, dict):
+            return {k: self._interpolate_body(v) for k, v in body.items()}
+        if isinstance(body, list):
+            return [self._interpolate_body(item) for item in body]
+        return body
 
     def _evaluate_condition(self, condition: str) -> bool:
         condition = condition.strip()

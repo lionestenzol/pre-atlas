@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pre Atlas — System White Paper</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#121724; --panel2:#0f1320; --ink:#e6edf3; --dim:#9aa7b8;
+    --line:#222b3a; --accent:#4ea1ff; --hub:#ffd24a; --live:#3ddc84; --gate:#ffb454;
+    --infra:#5ac8fa; --legacy:#6b7689; --bridge:#c08cff; --danger:#ff6b6b;
+    --chip:#1b2334; --shadow:0 1px 0 rgba(255,255,255,.03), 0 8px 24px rgba(0,0,0,.35);
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 80px}
+  header.hero{border:1px solid var(--line);border-radius:16px;background:linear-gradient(160deg,#151c2c,#0d111b);padding:28px 30px;box-shadow:var(--shadow)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+  h1{margin:6px 0 4px;font-size:30px;letter-spacing:-.01em}
+  .sub{color:var(--dim);max-width:780px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .meta .pill{font-family:var(--mono);font-size:11px;color:var(--dim);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:22px 0 10px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .n{font-size:24px;font-weight:700}
+  .stat .l{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+  nav.toc{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:6px;margin:24px 0;padding:10px;background:rgba(11,14,20,.88);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px}
+  nav.toc a{font-size:12px;color:var(--dim);padding:6px 10px;border-radius:8px}
+  nav.toc a:hover{background:var(--chip);color:var(--ink)}
+  section{margin:40px 0;scroll-margin-top:70px}
+  h2{font-size:20px;border-left:3px solid var(--accent);padding-left:12px;margin:0 0 6px}
+  h2 .num{color:var(--dim);font-family:var(--mono);font-size:14px;margin-right:8px}
+  .lead{color:var(--dim);max-width:840px;margin:0 0 18px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  /* SHAPE flow */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .stage{flex:1;min-width:200px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px;position:relative}
+  .stage .ic{font-size:20px} .stage h3{margin:4px 0 2px;font-size:15px}
+  .stage .bl{font-size:12px;color:var(--dim);min-height:46px}
+  .arrow{display:flex;align-items:center;justify-content:center;width:30px;color:var(--accent);font-size:20px;flex:0 0 30px}
+  .members{margin-top:8px}
+  .hubcard{margin-top:14px;background:linear-gradient(120deg,#2a2410,#1a1a12);border:1px solid var(--hub);border-radius:12px;padding:14px 16px}
+  .hubcard h3{margin:0 0 2px;color:var(--hub);font-size:15px}
+  .layergrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  .layer{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px}
+  .layer h4{margin:0 0 3px;font-size:13px} .layer .bl{font-size:11.5px;color:var(--dim);margin-bottom:6px}
+  .rolechip{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:6px;margin:2px 3px 2px 0;border:1px solid var(--line);background:#0a0d15}
+  /* controls / table */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .controls input{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 12px;font-size:13px;min-width:200px}
+  .btn{cursor:pointer;user-select:none;font-size:12px;background:var(--chip);border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:6px 12px}
+  .btn.on{background:var(--accent);border-color:var(--accent);color:#04101f;font-weight:600}
+  .cardlist{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .scard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+  .scard .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .scard .nm{font-weight:700;font-size:15px}
+  .scard .desc{font-size:12.5px;color:var(--ink);opacity:.92;margin:6px 0 8px}
+  .scard .facts{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;flex-wrap:wrap;gap:10px}
+  .tag{display:inline-block;font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:6px;border:1px solid var(--line);margin:1px 2px 1px 0;white-space:nowrap}
+  .t-auto{color:var(--live);border-color:#264} .t-port{color:var(--accent)}
+  .t-retired{color:var(--legacy)} .t-stale{color:#caa} .t-orphan{color:#b9a} .t-notest{color:#e9a}
+  .t-hub{color:#04101f;background:var(--hub);border-color:var(--hub);font-weight:700}
+  .gov{font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:5px}
+  .gov-active{color:var(--live);border:1px solid #264} .gov-gated{color:var(--gate);border:1px solid #443}
+  .gov-dormant{color:var(--legacy);border:1px solid var(--line)} .gov-demand{color:var(--infra);border:1px solid #244}
+  /* figure */
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12px;color:var(--dim)}
+  .legend i{display:inline-block;width:22px;height:0;border-top-width:3px;border-top-style:solid;vertical-align:middle;margin-right:6px}
+  svg text{font-family:var(--sans)}
+  /* seams */
+  .seam{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2)}
+  .seam h4{margin:0 0 6px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .d-live{background:var(--live)} .d-dormant{background:var(--gate)} .d-gap{background:var(--bridge)} .d-busted{background:var(--danger)}
+  code.k,.seam code{font-family:var(--mono);font-size:11px;background:#0a0d15;border:1px solid var(--line);padding:1px 5px;border-radius:5px;color:#cfe3ff}
+  .seam p{margin:6px 0;color:var(--dim);font-size:13px}
+  /* health */
+  .acc{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;background:var(--panel)}
+  .acc>summary{cursor:pointer;padding:14px 16px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center}
+  .acc>summary::-webkit-details-marker{display:none}
+  .acc>summary .c{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .acc .body{padding:0 16px 16px}
+  .catrow{margin:12px 0}
+  .catrow .h{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:3px}
+  .catrow .cd{font-size:12px;color:var(--dim);margin-bottom:7px}
+  .item{display:inline-block;font-size:12px;background:var(--chip);border:1px solid var(--line);border-radius:7px;padding:4px 9px;margin:2px 3px 2px 0}
+  .item b{font-family:var(--mono);font-weight:600} .item .d{color:var(--dim)}
+  .note{font-size:12px;color:var(--dim);border-left:2px solid var(--gate);padding:6px 12px;margin:12px 0;background:rgba(255,180,84,.05)}
+  table{width:100%;border-collapse:collapse;font-size:13px} th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)} td.num{text-align:right;font-family:var(--mono)}
+  footer{margin-top:50px;border-top:1px solid var(--line);padding-top:18px;color:var(--dim);font-size:12px}
+  @media (max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}.grid2,.grid3,.cardlist,.layergrid{grid-template-columns:1fr}.arrow{transform:rotate(90deg)}}
+  @media print{nav.toc{display:none}.panel,header.hero,.seam,.scard{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="kicker">Pre Atlas · Personal Behavioral Governance System</div>
+    <h1>System White Paper</h1>
+    <p class="sub">The whole repo on one page — what each of the 35 subsystems <i>is</i>, the shape they form (a single loop: sense → sort → act → surface, orbiting one state engine), how they connect, where the spine is live vs. dormant, and the full arsenal you can deploy against it.</p>
+    <div class="meta">
+      <span class="pill" id="m-root"></span>
+      <span class="pill" id="m-gen"></span>
+      <span class="pill">branch · experiment/droplist-remediation-2026-06-15</span>
+      <span class="pill">synthesized · 2026-06-22</span>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <nav class="toc">
+    <a href="#summary">Summary</a>
+    <a href="#shape">The shape</a>
+    <a href="#contents">Subsystems (35)</a>
+    <a href="#connections">Connections</a>
+    <a href="#spine">The spine</a>
+    <a href="#health">Health</a>
+    <a href="#arsenal">Arsenal</a>
+    <a href="#ports">Ports &amp; state</a>
+  </nav>
+
+  <section id="summary">
+    <h2><span class="num">01</span>What this system is</h2>
+    <p class="lead">Pre Atlas is one machine for governing your own behavior. At its center is <code class="k">delta-kernel</code> — a deterministic state engine that runs your life as a six-mode lifecycle (<b>RECOVER → CLOSURE → MAINTENANCE → BUILD → COMPOUND → SCALE</b>). Around it, sensors read your conversations, a triage core decides what matters, an execution arm acts on it, and a handful of surfaces let you see and steer the whole thing. 35 subsystems, but <b>one loop</b>.</p>
+    <div class="grid3">
+      <div class="panel"><h4 style="margin-top:0">The architecture is real</h4><p style="color:var(--dim);font-size:13px">Hub-and-spoke around a SQLite state engine, one-way HTTP seams. Every dependency edge in the repo terminates at <code class="k">delta-kernel</code>. ~80% of the spine is wired and several seams are proven end-to-end.</p></div>
+      <div class="panel"><h4 style="margin-top:0">The gap is activation, not code</h4><p style="color:var(--dim);font-size:13px">The "runs but doesn't <i>do</i>" feeling is accurate: the act-loop exists end-to-end but is <b>unscheduled</b> behind <b>three default-off gates</b>. Two env vars + one cron entry would light it. Today only the kernel's own daemon fires.</p></div>
+      <div class="panel"><h4 style="margin-top:0">The arc: islands → country</h4><p style="color:var(--dim);font-size:13px">The ongoing work is making droplist · cycleboard · inPACT · lattice into <i>one item backbone</i> seen through many windows. Unified read, a consuming surface, and write-through are shipped; cross-surface identity is the last brick.</p></div>
+    </div>
+  </section>
+
+  <section id="shape">
+    <h2><span class="num">02</span>The shape — one loop, many parts</h2>
+    <p class="lead">Forget the folders. Functionally, the 35 subsystems play <b>roles in a single loop</b>. Information flows left to right and feeds back: your conversations are <b>sensed</b>, the result is <b>sorted</b> into decisions, decisions are <b>acted</b> on, and everything is shown on the <b>surfaces</b> you look at — all routed through the one hub.</p>
+    <div class="panel">
+      <div class="flow" id="flow"></div>
+      <div class="hubcard"><h3>🧭 The Hub — delta-kernel</h3><div style="font-size:12.5px;color:var(--ink);opacity:.92">The deterministic core every stage routes through. Holds the canonical mode/state, the signals store, and the viewmodels the surfaces render. A governance daemon fires 9 cron jobs (a */5 heartbeat + preparation). If this stops, ten subsystems lose their hub.</div></div>
+      <div style="font-size:12px;color:var(--dim);margin-top:10px">Supporting layers — the rails the loop runs on, plus the side projects:</div>
+      <div class="layergrid" id="layers"></div>
+    </div>
+  </section>
+
+  <section id="contents">
+    <h2><span class="num">03</span>Every subsystem — described</h2>
+    <p class="lead">All 35, each with what it actually is and does. Filter by role, search, or jump to the live/legacy split. Facts line shows stack · port · size · governance.</p>
+    <div class="controls">
+      <input id="q" placeholder="search name / description…" oninput="render()">
+      <span class="btn on" data-f="all" onclick="setF(this)">all</span>
+      <span class="btn" data-f="live" onclick="setF(this)">live only</span>
+      <span class="btn" data-f="autostart" onclick="setF(this)">autostart</span>
+      <span class="btn" data-f="retired" onclick="setF(this)">retired</span>
+      <span class="btn" data-f="stub" onclick="setF(this)">stubs</span>
+    </div>
+    <div id="rolefilters" class="controls"></div>
+    <div id="cards"></div>
+    <p class="note" id="count-note"></p>
+  </section>
+
+  <section id="connections">
+    <h2><span class="num">04</span>Connections — the dependency graph</h2>
+    <p class="lead">19 directed edges. <code class="k">delta-kernel</code> is the gravitational center (10 in-bound). Edges are colored by the <b>verified state</b> of the seam, not the wishful architecture.</p>
+    <div class="panel">
+      <div id="figure"></div>
+      <div class="legend">
+        <span><i style="border-color:var(--live)"></i>live seam (proven e2e)</span>
+        <span><i style="border-color:var(--gate);border-top-style:dashed"></i>gated / dormant arm</span>
+        <span><i style="border-color:var(--infra)"></i>infrastructure link</span>
+        <span><i style="border-color:var(--bridge);border-top-style:dashed"></i>new bridge (built, dormant)</span>
+        <span><i style="border-color:var(--legacy)"></i>legacy chain</span>
+      </div>
+      <div id="orphan-tray" style="margin-top:14px;font-size:12px;color:var(--dim)"></div>
+    </div>
+  </section>
+
+  <section id="spine">
+    <h2><span class="num">05</span>The spine — verified relationships</h2>
+    <p class="lead">First-hand <code class="k">code-recon</code> (2026-06-21/22, no subagents — they confabulate causal stories). The real topology is <b>not</b> the arrow-sketch. Each seam is cited to file:line and tagged <span class="dot d-live"></span> live · <span class="dot d-dormant"></span> dormant · <span class="dot d-gap"></span> gap-closed · <span class="dot d-busted"></span> busted.</p>
+    <div class="grid2">
+      <div class="seam"><h4><span class="dot d-live"></span>droplist → delta-kernel → lattice <span class="tag">the real "to lattice" path</span></h4><p>droplist <code>graph_engine.py:236</code> → POST <code>/api/signals/ingest</code> → kernel signals-store → <code>lattice-projection.ts:204</code> → <code>apps/lattice</code> viewmodel. <b>Live-proven e2e</b> (<code>7640010</code>): drop → DAG settle → authed ingest (202) → lattice items with provenance=droplist.</p></div>
+      <div class="seam"><h4><span class="dot d-live"></span>intake chainer → packet / DAG</h4><p>droplist <code>server.py:148</code> POST /api/drop → <code>intake.py:33</code> → <code>engine.process_drop</code> → settles the secured packet. The bouncer + chainer that turns a raw drop into a runnable graph.</p></div>
+      <div class="seam"><h4><span class="dot d-live"></span>inPACT ↔ cycleboard ↔ kernel</h4><p>Shared state via kernel <code>/api/cycleboard</code> (<code>inpact/cli/inpact.ts:96</code>). Cycle Board is a <b>view</b>, not an engine — a localStorage SPA syncing the kernel, zero realtime.</p></div>
+      <div class="seam"><h4><span class="dot d-live"></span>item backbone — unified read + write</h4><p>atlas-map-api <code>GET /items</code> aggregates droplist DAGs + cycleboard cards + inPACT projects into one shape. <b>373 items live.</b> lattice consumes it; write-through flips droplist status from lattice. Last brick: shared identity across surfaces.</p></div>
+      <div class="seam"><h4><span class="dot d-gap"></span>auto-triage → droplist <span class="tag">the one real gap — now bridged</span></h4><p>Was the only missing rung. Built <code>cognitive-sensor/droplist_bridge.py</code> + Rung 4 in auto_triage (6/6 tests). <b>Dormant</b> until <code class="k">DROPLIST_DROP_URL</code> is set. Uncommitted.</p></div>
+      <div class="seam"><h4><span class="dot d-dormant"></span>the act-loop (intake→sort→route→close)</h4><p>Python arm <code>auto_triage → cortex_bridge → Cortex → decisions_to_atlas</code> is <b>intact in code but unscheduled</b>, behind 3 stacked off-gates. The every-5-min popup is the TS <code>governance_daemon.ts</code> — a <i>different</i> engine, same primitive.</p></div>
+      <div class="seam"><h4><span class="dot d-busted"></span>the Supabase Realtime pipeline</h4><p>The "4-part stateless pipeline on a Supabase bus" <b>does not exist</b>. Reality = SQLite hub-and-spoke, one-way HTTP. Supabase lives only in the <i>other</i> repo (<code>pre-atlas\services\delta-scp</code>, hyphen). The two-repo split is load-bearing.</p></div>
+      <div class="seam"><h4><span class="dot d-live"></span>atlas-map — the GPS substrate</h4><p><code>atlas-map-api</code> :3072 + <code>atlas-cli</code> + an MCP serve the same <code>system-index.json</code> that built this page. It reads everything (so it shows as an "orphan" in the import graph — its links are read-time HTTP). POST guarded by <code class="k">X-Atlas-Token</code>.</p></div>
+    </div>
+    <p class="note"><b>To make the loop live:</b> set <code class="k">DROPLIST_DROP_URL</code> (triage→droplist) + <code class="k">DROPLIST_ATLAS_SIGNALS_URL</code> (droplist→lattice). Then flip <code class="k">AUTO_TRIAGE_APPLY</code> in DRY-RUN first, watch proposals accrue a week, then enable the ARCHIVE-only execute arm last and watched.</p>
+  </section>
+
+  <section id="health">
+    <h2><span class="num">06</span>Health audit</h2>
+    <div class="grid2">
+      <div class="panel"><h4 style="margin-top:0">🎯 Dependency hotspots (in-bound)</h4><div id="h-hot"></div><p style="color:var(--dim);font-size:12px;margin-top:10px">delta-kernel carries the blast radius: 10 subsystems break with it. canvas-engine and cortex are secondary hubs.</p></div>
+      <div class="panel"><h4 style="margin-top:0">🔥 Churn concentration (commits touching)</h4><div id="h-churn"></div><p style="color:var(--dim);font-size:12px;margin-top:10px">droplist + search-stack are where the live work is. Zero-churn = frozen or retired.</p></div>
+      <div class="panel"><h4 style="margin-top:0">⚠️ Risk flags</h4>
+        <p style="font-size:13px"><b style="color:var(--legacy)">Retired (6):</b> <span id="h-retired"></span></p>
+        <p style="font-size:13px"><b style="color:#caa">Stale (11):</b> <span id="h-stale"></span></p>
+        <p style="font-size:13px"><b style="color:#e9a">Missing tests (7):</b> <span id="h-notest"></span></p></div>
+      <div class="panel"><h4 style="margin-top:0">🔌 Anomalies to resolve</h4>
+        <ul style="color:var(--dim);font-size:13px;margin:0;padding-left:18px;line-height:1.7">
+          <li><b>Port collision:</b> <code class="k">aegis-fabric</code> &amp; <code class="k">triangulation</code> both claim :3010.</li>
+          <li><b>Stubs:</b> <code class="k">anatomy-rewrite</code>, <code class="k">atlas-audit</code>, <code class="k">mini-ship</code>, <code class="k">reminders</code> are 0-LOC.</li>
+          <li><b>Vendored mass:</b> <code class="k">anatomy-research</code> = 571,924 LOC, dwarfing the rest combined.</li>
+          <li><b>Retired but autostarted:</b> 4 legacy subsystems still boot with no live consumer.</li>
+        </ul></div>
+    </div>
+  </section>
+
+  <section id="arsenal">
+    <h2><span class="num">07</span>The arsenal — resources you can deploy</h2>
+    <p class="lead">Beyond the repo: the external tooling available to attack Atlas. Each item is what it does, not just its name.</p>
+    <div id="arsenal"></div>
+  </section>
+
+  <section id="ports">
+    <h2><span class="num">08</span>Live ports &amp; persistent state</h2>
+    <div class="grid2">
+      <div class="panel"><h4 style="margin-top:0">Bound ports</h4><table><tbody id="port-rows"></tbody></table></div>
+      <div class="panel"><h4 style="margin-top:0">Where state actually lives</h4>
+        <ul style="color:var(--dim);font-size:13px;line-height:1.8;margin:0;padding-left:18px">
+          <li><code class="k">governance_state.json</code> — the mode / risk / north-star / lanes (hub state, <i>not</i> items)</li>
+          <li>delta-kernel SQLite — signals, cycleboard, viewmodels</li>
+          <li>droplist <code class="k">data/dags/*.json</code> + <code class="k">entities/*.json</code> — packets &amp; your farm data</li>
+          <li>cognitive-sensor <code class="k">thread_cards.json</code> (326) — cycleboard cards</li>
+          <li>inPACT <code class="k">projects.json</code> (42) — bands / langs</li>
+          <li>today — browser localStorage (no file)</li>
+          <li><code class="k">audit/system-index.json</code> — the index that generated this page</li>
+        </ul></div>
+    </div>
+  </section>
+
+  <footer>
+    <p><b>Provenance.</b> Inventory + churn + insights from <code class="k">audit/system-index.json</code> (2026-06-20, 35 subsystems). Edges from <code class="k">SERVICE_EDGES</code>. Descriptions + roles + spine from first-hand <code class="k">code-recon</code> memory (verified 2026-06-21/22). Arsenal from the live session tool registry.</p>
+    <p><b>Regenerate</b> the index with <code class="k">audit/imports/_build_map.py</code> → <code class="k">atlas_reload</code>. This page is a hand-maintained synthesis over that index.</p>
+  </footer>
+
+</div>
+
+<script>
+/* ===================== DATA ===================== */
+const REPO_ROOT="C:\\Users\\bruke\\Pre Atlas", GEN_AT="2026-06-20 23:58 UTC";
+const ORPHANS=["anatomy-extension","anatomy-research","anatomy-rewrite","atlas-audit","atlas-cli","atlas-map-api","canvas-demo","codex-partner","fest-reconcile","memory-hub","webos-333","mini-ship","reminders"];
+const STALE=["anatomy-extension","anatomy-research","anatomy-rewrite","canvas-demo","code-converter","codex-partner","cortex","crucix","optogon","perception","triangulation"];
+const NOTEST=["code-converter","inpact","lattice","anatomy-extension","anatomy-rewrite","codex-partner","fest-reconcile"];
+const RETIRED=["ai-exec-pipeline","blueprint-generator","mirofish","mosaic-dashboard","mosaic-orchestrator","openclaw"];
+const STUBS=["anatomy-rewrite","atlas-audit","mini-ship","reminders"];
+const DEPS_IN={"delta-kernel":10,"canvas-engine":2,"cortex":2,"cognitive-sensor":1,"optogon":1,"triangulation":1,"mosaic-orchestrator":1,"search-stack":1};
+const CHURN={"droplist":91,"search-stack":66,"atlas-map-api":30,"cognitive-sensor":27,"canvas-engine":26,"lattice":24,"fest-reconcile":19,"delta-kernel":11,"memory-hub":9,"atlas-cli":9,"aegis-fabric":6,"atlas-audit":5,"uasc-executor":4,"inpact":3,"mirofish":1,"mosaic-dashboard":1,"mosaic-orchestrator":1,"ai-exec-pipeline":1,"blueprint-generator":1};
+const EDGES=[["lattice","delta-kernel"],["inpact","delta-kernel"],["droplist","delta-kernel"],["cortex","delta-kernel"],["optogon","delta-kernel"],["optogon","cortex"],["mosaic-orchestrator","optogon"],["mosaic-dashboard","mosaic-orchestrator"],["canvas-engine","delta-kernel"],["code-converter","canvas-engine"],["perception","triangulation"],["ws-gateway","delta-kernel"],["uasc-executor","delta-kernel"],["aegis-fabric","delta-kernel"],["inpact","cortex"],["droplist","search-stack"],["cognitive-sensor","delta-kernel"],["crucix","canvas-engine"],["lattice","cognitive-sensor"]];
+const EDGE_STATE={"droplist>delta-kernel":"live","lattice>delta-kernel":"live","inpact>delta-kernel":"live","inpact>cortex":"live","droplist>search-stack":"live","cortex>delta-kernel":"gate","optogon>delta-kernel":"gate","optogon>cortex":"gate","cognitive-sensor>delta-kernel":"gate","aegis-fabric>delta-kernel":"infra","uasc-executor>delta-kernel":"infra","ws-gateway>delta-kernel":"infra","canvas-engine>delta-kernel":"infra","code-converter>canvas-engine":"infra","crucix>canvas-engine":"infra","lattice>cognitive-sensor":"infra","mosaic-orchestrator>optogon":"legacy","mosaic-dashboard>mosaic-orchestrator":"legacy","perception>triangulation":"legacy"};
+const EDGE_COLOR={live:"var(--live)",gate:"var(--gate)",infra:"var(--infra)",legacy:"var(--legacy)",bridge:"var(--bridge)"};
+const BRIDGE_EDGES=[["cognitive-sensor","droplist"]];
+
+/* roles: order matters for the flow */
+const ROLES={
+ sense:{label:"Sense",icon:"👂",color:"#5ac8fa",blurb:"Reads your conversations, history and signals; turns them into structured cards and ideas."},
+ sort:{label:"Sort",icon:"⚖️",color:"#ffb454",blurb:"Triage. Decides what each captured thing is — keep / close / archive — and proposes verdicts."},
+ act:{label:"Act",icon:"🤖",color:"#ff6b6b",blurb:"Execution. Turns approved decisions and raw drops into real, tool-verified actions."},
+ surface:{label:"Surface",icon:"🪟",color:"#3ddc84",blurb:"The faces you look through — daily flow, projection views, boards."},
+ build:{label:"Build tools",icon:"🛠️",color:"#c08cff",blurb:"Generators — produce code, clones and research on demand."},
+ substrate:{label:"Substrate & audit",icon:"🗺️",color:"#4ea1ff",blurb:"The map of itself: indexes, locates and drives the whole fleet."},
+ infra:{label:"Gateway & infra",icon:"🛡️",color:"#7fb0d6",blurb:"Plumbing — auth gateway and real-time transport the rest runs on."},
+ anatomy:{label:"Anatomy R&D",icon:"🔬",color:"#f78fb3",blurb:"Capturing the visual structure of live UIs (a research line)."},
+ devtool:{label:"Dev tooling",icon:"🤝",color:"#a0d8a0",blurb:"Workshop: delegation, reconciliation, ship telemetry."},
+ legacy:{label:"Legacy / paused",icon:"🗄️",color:"#6b7689",blurb:"Retired or paused — kept as furniture, out of the live loop."}
+};
+
+/* name, group, role, lang, fw, port, auto, files, loc, deps, DESCRIPTION, gov */
+const SUB=[
+ ["delta-kernel","services","hub","ts","express",3001,1,110,35043,15,"The deterministic heart. Runs your life as a 6-mode FSM (RECOVER→…→SCALE), holds the canonical governance state, the signals store, and the cycleboard + lattice viewmodels. A governance daemon fires 9 cron jobs. Every dependency edge terminates here.","active"],
+ ["cognitive-sensor","services","sense","py","fastapi",null,0,644,115950,10,"The ears. A Python pipeline that reads your conversation history, clusters ideas (HDBSCAN/UMAP/sentence-transformers), and maintains the idea registry + thread cards (the cycleboard's content). Hosts the dormant auto-triage arm. Largest service by far.","dormant"],
+ ["perception","services","sense","py","unknown",null,0,21,832,0,"Phase A sensor stub — a planned input layer, scaffolded but not built out.",null],
+ ["triangulation","services","sense","py","fastapi",3010,0,16,1294,0,"Phase B stub — planned cross-source correlation layer; minimal so far.",null],
+ ["mirofish","services","sense","py","fastapi",null,0,33,2933,0,"A prediction engine (Neo4j-dependent, Docker-gated). Built, pending merge into cognitive-sensor.",null],
+ ["optogon","services","sort","py","fastapi",null,1,34,3949,0,"The sorter. Proposes triage verdicts on cards and seeds your preferences into the kernel. Writes back only when AUTO_TRIAGE_APPLY=1 — it suggests; it doesn't act until you let it.","gated"],
+ ["cortex","services","act","py","fastapi",null,1,39,3952,0,"The hands. The autonomous execution layer that turns an approved directive into a real action. Double-gated (both flags off) and ARCHIVE-only — the safety interlock on the act-loop.","gated"],
+ ["droplist","services","act","py","fastapi",3073,0,64,8611,0,"The capture engine. Turns a raw 'drop' into a packet → DAG → tool-verified done-condition. The most-evolved instance of the sort-core primitive (own BIBLE/PACKETS/DOCTRINE). Emits Signal.v1 to the kernel; your farm data lives here.","demand"],
+ ["uasc-executor","services","act","py","unknown",3008,1,37,2173,0,"Machine-to-machine command executor with HMAC auth and an audit log (7 commands). Raw HTTP, no framework — the secured remote-execute bridge.",null],
+ ["inpact","apps","surface","js","unknown",null,1,31,11066,0,"The face you chose. The daily-flow UI: onboarding, the cycleboard, your projects. The single human surface the whole country is meant to be seen through.",null],
+ ["lattice","apps","surface","js","unknown",null,0,10,12460,0,"The projection view. Renders the kernel's viewmodel as tree / graph (Cytoscape) / timeline, consumes the unified 373-item backbone, and can write status back. A Replicache client of the kernel.",null],
+ ["crucix","services","surface","html","express",null,0,15,1951,1,"A standalone dashboard server ('jarvis') — a face that lives outside the daemonized fleet.",null],
+ ["mosaic-dashboard","services","surface","ts","next",3000,1,37,2137,21,"Legacy Next.js dashboard (d3/plotly) for the paused Mosaic platform. Still autostarted.",null],
+ ["webos-333","apps","surface","html","unknown",null,0,2,3442,0,"An experimental single-file web-OS mockup.",null],
+ ["canvas-engine","services","build","ts","express",3060,1,71,7001,18,"URL → live React clone via an in-process Vite pool. The screenshot-to-code path; uses the Anthropic SDK.",null],
+ ["code-converter","apps","build","py","fastapi",3007,1,6,1254,2,"Python → C++ converter with an AST engine (30 patterns).",null],
+ ["search-stack","services","build","py","fastapi",null,0,53,3376,0,"A router over 28 search providers across 14 intent kinds (web/code/academic/legal/data/…). The research backbone droplist calls for external retrieval.",null],
+ ["blueprint-generator","apps","build","js","next",null,1,34,998,7,"Legacy Next.js blueprint UI. Retired but still autostarted.",null],
+ ["canvas-demo","apps","build","ts","react",null,0,9,254,10,"A Remotion-vs-dummy-site comparison sandbox.",null],
+ ["atlas-map-api","services","substrate","py","fastapi",3072,0,14,2085,0,"The GPS substrate. FastAPI (:3072) serving the system-index that built this page: /items (unified feed), /map (start/stop/restart services), locate/path/neighbors. The map that drives.",null],
+ ["atlas-cli","tools","substrate","py","unknown",null,0,7,627,0,"The CLI face of the GPS substrate: atlas where | locate | neighbors | path | search | list | show | status | open.",null],
+ ["atlas-audit","tools","substrate","unknown","unknown",null,0,4,0,0,"The audit pipeline + system-index generator (audit.sh) — the tool that produces the data behind this very page.",null],
+ ["memory-hub","services","substrate","py","fastapi",3071,0,8,558,0,"A small memory-aggregation service (:3071).",null],
+ ["aegis-fabric","services","infra","ts","express",3010,1,116,11951,9,"The gateway. Admin gateway + API middleware enforcing tenant-key auth in front of kernel ingest. 116 files — the security perimeter.",null],
+ ["ws-gateway","services","infra","ts","unknown",3006,0,4,122,5,"WebSocket gateway (NATS + socket.io) for real-time fan-out. Minimal so far (4 files).",null],
+ ["anatomy-research","tools","anatomy","mixed","unknown",8080,0,2967,571924,0,"The R&D vault for the Anatomy project (capturing UI structure). 2,967 files / 571k LOC, mostly vendored upstreams — dwarfs the rest of the repo combined.",null],
+ ["anatomy-extension","tools","anatomy","js","unknown",null,0,19,5293,0,"A Chrome MV3 extension that captures UI 'anatomy' — regions and a prominence heatmap — from live pages.",null],
+ ["anatomy-rewrite","tools","anatomy","unknown","unknown",null,0,7,0,0,"An empty scratch dir for an anatomy rewrite (stub).",null],
+ ["codex-partner","tools","devtool","py","unknown",null,0,25,211,0,"Tooling to delegate work to the OpenAI Codex CLI.",null],
+ ["fest-reconcile","tools","devtool","py","unknown",null,0,48,3169,0,"A Festival-methodology manifest reconciler (temporal index).",null],
+ ["mini-ship","tools","devtool","unknown","unknown",null,0,1,0,0,"Telemetry stub for the small-atom ship loop (the skill itself lives in ~/.claude).",null],
+ ["reminders","tools","devtool","unknown","unknown",null,0,0,0,0,"Empty placeholder for scheduling primitives.",null],
+ ["mosaic-orchestrator","services","legacy","py","fastapi",null,1,58,7578,0,"Legacy FastAPI orchestrator for the paused Mosaic platform (58% built).",null],
+ ["openclaw","services","legacy","py","fastapi",null,1,23,918,0,"A small legacy FastAPI service. Retired.",null],
+ ["ai-exec-pipeline","apps","legacy","py","flask",null,0,7,455,3,"A legacy Flask AI-execution pipeline. Superseded by cortex.",null]
+].map(a=>({name:a[0],group:a[1],role:a[2],lang:a[3],fw:a[4],port:a[5],auto:!!a[6],files:a[7],loc:a[8],deps:a[9],desc:a[10],gov:a[11],
+  depsIn:DEPS_IN[a[0]]||0,churn:CHURN[a[0]]||0,retired:RETIRED.includes(a[0]),stale:STALE.includes(a[0]),orphan:ORPHANS.includes(a[0]),notest:NOTEST.includes(a[0]),stub:STUBS.includes(a[0])}));
+
+/* ===================== ARSENAL (with descriptions) ===================== */
+const ARSENAL=[
+ {title:"Claude Skills",count:"~90",cats:[
+   {h:"Build & ship",cd:"Drive work from idea to closed.",items:[["weapon","autonomous finisher — defines DONE, executes every step, closes"],["mini-ship","find & ship the smallest atom you can close now"],["project-finisher","evaluate, structure & complete a stalled project"],["tdd","tests-first, 80%+ coverage enforcement"],["plan","restate, risk-assess, step-by-step before code"],["simplify","reuse/efficiency cleanup on changed code"],["refactor-clean","dead-code removal"]]},
+   {h:"Recon & audit",cd:"Eyes before hands — verify, don't trust.",items:[["code-recon","forensic local navigation, file-evidence proof"],["repo-inventory","map & reconcile a big multi-system repo (this repo's tool)"],["verified-audit","5-phase audit, every finding claim-verified 2+ angles"],["claim-verifier","adversarially refute a load-bearing claim"],["security-review","OWASP / secrets / injection sweep"]]},
+   {h:"Web & research",cd:"Pull and reason over the outside world.",items:[["web-audit","reverse-engineer a hosted app, run it locally"],["scrapling-official","stealth scrape past anti-bot"],["search-stack","route a query across 28 providers"],["deep-research","fan-out + verify + cited report"],["competitor-monitor","weekly intel snapshots on a rival site"]]},
+   {h:"3D / creative / media",cd:"Generate visual & audio artifacts.",items:[["mandelbulb3d","3D fractal authoring/render"],["three-js","WebGL/WebGPU 3D"],["remotion","React → MP4 video"],["anime-js","DOM/SVG animation"],["touchdesigner","node-based realtime visuals"],["st3gg","PNG steganography"]]},
+   {h:"Pre Atlas native",cd:"Built for this repo.",items:[["delta-scp","compress a repo → symbolic token-cheap map"],["fest","Festival-methodology project management"],["anatomy-map","interactive component anatomy diagram"],["handoff-out","package a session for claude.ai"]]},
+   {h:"Learning & meta",cd:"The system that improves itself.",items:[["continuous-learning-v2","instinct capture + evolution"],["learn","extract reusable patterns from a session"],["jargonize","casual → expert-register prompt"],["claude-api","Anthropic SDK / model reference"],["update-config","edit settings.json / hooks / permissions"]]},
+   {h:"Plugin packs",cd:"Role-scoped skill bundles.",items:[["legal","9 skills"],["sales","9 skills"],["human-resources","9 skills"],["feature-dev","guided feature build"],["agent-sdk-dev","scaffold SDK apps"]]},
+ ]},
+ {title:"MCP Servers",count:"~24",cats:[
+   {h:"Pre Atlas stack",cd:"Direct lines into your own systems.",items:[["atlas-map","GPS — where/locate/path/neighbors over the index"],["codex","delegate to OpenAI Codex"],["search-stack","28-provider search/extract"],["everything","instant machine-wide file index (es)"],["n8n-mcp","workflow automation"]]},
+   {h:"Automation & desktop",cd:"Drive the machine and the browser.",items:[["computer-use","mouse/keyboard/screenshot desktop control"],["Claude_in_Chrome","DOM-aware browser automation"],["Claude_Preview","start dev servers, verify changes"],["playwright","headless browser testing"],["steerpop-android","ADB / Gradle / device control"]]},
+   {h:"Creative & session",cd:"Make things; manage the session.",items:[["Blender","drive a live Blender scene"],["musescore","score editing"],["visualize","render inline SVG/HTML widgets"],["ccd_session","chapters, background tasks, widgets"],["scheduled-tasks","cron-style agent runs"]]},
+   {h:"Connected accounts",cd:"Your data, via API.",items:[["Calendar","events & scheduling"],["file-ops","read/create/search files"],["legal · sales · HR","OAuth connectors (Slack, HubSpot, Notion, …)"]]},
+ ]},
+ {title:"Sub-agents",count:"24",cats:[
+   {h:"Review",cd:"Independent eyes on your code.",items:[["code-reviewer","quality/patterns/best-practice"],["security-reviewer","vulnerabilities"],["typescript-reviewer",""],["python-reviewer",""],["claim-verifier","adversarial fact-check"]]},
+   {h:"Plan & design",cd:"Think before building.",items:[["planner","implementation plans"],["architect","system design"],["code-architect","feature blueprints"]]},
+   {h:"Build & fix",cd:"Hands on the code.",items:[["build-error-resolver","get the build green"],["refactor-cleaner","kill dead code"],["tdd-guide","tests-first"]]},
+   {h:"Explore",cd:"Read-only fan-out search.",items:[["Explore","broad multi-file sweeps"],["general-purpose","multi-step research"],["code-explorer","trace a feature end-to-end"]]},
+ ]},
+ {title:"In-repo CLIs & services",count:"~12",cats:[
+   {h:"Operate Atlas",cd:"Run the loop by hand.",items:[["atlas-cli","where|locate|path|search the fleet"],["droplist :3073","drop → packet → DAG"],["atlas-map-api :3072","unified items + drive services"],["delta-kernel :3001","the hub itself"]]},
+   {h:"Audit & build",cd:"Maintain the map.",items:[["_build_map.py","regenerate the system index"],["atlas-audit","run the audit pipeline"],["fest-reconcile","reconcile festival manifests"]]},
+ ]},
+];
+
+/* ===================== RENDER ===================== */
+const $=s=>document.querySelector(s);
+const fmt=n=>n>=1000?(n/1000).toFixed(n>=100000?0:1)+"k":(""+n);
+let state={f:"all",role:null,q:""};
+
+function stats(){
+  const svc=SUB.filter(s=>s.group==="services").length,app=SUB.filter(s=>s.group==="apps").length,tool=SUB.filter(s=>s.group==="tools").length;
+  const auto=SUB.filter(s=>s.auto).length,loc=SUB.reduce((a,s)=>a+s.loc,0)-571924;
+  const cards=[["35","subsystems"],[svc+"/"+app+"/"+tool,"svc / app / tool"],[auto,"autostart"],["19","dependency edges"],[fmt(loc),"LOC (ex-vendor)"],["12","bound ports"]];
+  $("#stats").innerHTML=cards.map(c=>`<div class="stat"><div class="n">${c[0]}</div><div class="l">${c[1]}</div></div>`).join("");
+  $("#m-root").textContent="root · "+REPO_ROOT;$("#m-gen").textContent="index · "+GEN_AT;
+}
+
+function memChips(role){return SUB.filter(s=>s.role===role).map(s=>`<span class="rolechip" style="color:${ROLES[role]?ROLES[role].color:'#ccc'}">${s.name}</span>`).join("");}
+
+function shape(){
+  const loop=["sense","sort","act","surface"];
+  $("#flow").innerHTML=loop.map((r,i)=>{const R=ROLES[r];
+    return `<div class="stage"><div class="ic">${R.icon}</div><h3 style="color:${R.color}">${R.label}</h3><div class="bl">${R.blurb}</div><div class="members">${memChips(r)}</div></div>`
+      +(i<loop.length-1?`<div class="arrow">→</div>`:"");
+  }).join("");
+  const support=["build","substrate","infra","anatomy","devtool","legacy"];
+  $("#layers").innerHTML=support.map(r=>{const R=ROLES[r];
+    return `<div class="layer"><h4 style="color:${R.color}">${R.icon} ${R.label}</h4><div class="bl">${R.blurb}</div>${memChips(r)}</div>`;
+  }).join("");
+}
+
+function govTag(g){if(!g)return"";const m={active:["gov-active","daemon active"],gated:["gov-gated","gated off"],dormant:["gov-dormant","dormant"],demand:["gov-demand","on-demand"]}[g];return `<span class="gov ${m[0]}">${m[1]}</span>`;}
+
+function rolefilters(){
+  const order=Object.keys(ROLES);
+  $("#rolefilters").innerHTML=`<span style="font-size:11px;color:var(--dim);margin-right:4px">role:</span>`+
+    order.map(r=>`<span class="btn ${state.role===r?'on':''}" onclick="setRole('${r}')">${ROLES[r].icon} ${ROLES[r].label}</span>`).join("")+
+    `<span class="btn ${state.role===null?'on':''}" onclick="setRole(null)">∗ any</span>`;
+}
+
+function rowMatch(s){
+  if(state.role&&s.role!==state.role)return false;
+  const f=state.f;
+  if(f==="live")return !s.retired&&!s.stub;
+  if(f==="autostart")return s.auto;
+  if(f==="retired")return s.retired;
+  if(f==="stub")return s.stub;
+  return true;
+}
+function render(){
+  state.q=$("#q").value.toLowerCase().trim();
+  let rows=SUB.filter(rowMatch).filter(s=>!state.q||(s.name+s.desc+s.role+s.fw).toLowerCase().includes(state.q));
+  // group by role, in canonical order
+  const order=["hub",...Object.keys(ROLES)];
+  rows.sort((a,b)=>order.indexOf(a.role)-order.indexOf(b.role)||b.loc-a.loc);
+  let html="",curRole=null;
+  rows.forEach(s=>{
+    const rl=(s.role==="hub")?{label:"The Hub",icon:"🧭",color:"#ffd24a"}:ROLES[s.role];
+    if(s.role!==curRole){curRole=s.role;html+=`<div style="grid-column:1/-1;margin:14px 0 2px;font-size:12px;letter-spacing:.05em;color:${rl.color};font-weight:600">${rl.icon} ${rl.label.toUpperCase()}</div>`;}
+    let flags="";
+    if(s.name==="delta-kernel")flags+='<span class="tag t-hub">HUB</span>';
+    if(s.auto)flags+='<span class="tag t-auto">autostart</span>';
+    if(s.retired)flags+='<span class="tag t-retired">retired</span>';
+    if(s.stale&&!s.retired)flags+='<span class="tag t-stale">stale</span>';
+    if(s.notest)flags+='<span class="tag t-notest">no-test</span>';
+    if(s.stub)flags+='<span class="tag t-orphan">stub</span>';
+    html+=`<div class="scard">
+      <div class="top"><span class="nm">${s.name}</span><span style="font-family:var(--mono);font-size:10px;color:${rl.color}">${s.group}</span></div>
+      <div class="desc">${s.desc}</div>
+      <div class="facts">
+        <span>${s.lang} · ${s.fw}</span>
+        ${s.port?'<span class="t-port">:'+s.port+'</span>':''}
+        <span>${s.files} files</span>
+        <span>${fmt(s.loc)} LOC</span>
+        ${s.depsIn?'<span>← '+s.depsIn+' deps</span>':''}
+      </div>
+      <div style="margin-top:7px">${govTag(s.gov)} ${flags}</div>
+    </div>`;
+  });
+  $("#cards").innerHTML=`<div class="cardlist">${html}</div>`;
+  $("#count-note").textContent=`Showing ${rows.length} of ${SUB.length} subsystems${state.role?' · role: '+ROLES[state.role].label:''}. Grouped by role.`;
+}
+function setF(el){document.querySelectorAll('.btn[data-f]').forEach(b=>b.classList.remove('on'));el.classList.add('on');state.f=el.dataset.f;render();}
+function setRole(r){state.role=r;rolefilters();render();}
+
+/* ---- spine figure (radial) ---- */
+function figure(){
+  const W=1080,H=620,cx=W/2,cy=H/2-10,hub="delta-kernel";
+  const ring1=["cognitive-sensor","droplist","lattice","inpact","cortex","optogon","canvas-engine","aegis-fabric","uasc-executor","ws-gateway"];
+  const ring2={"search-stack":"droplist","code-converter":"canvas-engine","crucix":"canvas-engine","mosaic-orchestrator":"optogon"};
+  const ring3={"mosaic-dashboard":"mosaic-orchestrator"};
+  const detached={"triangulation":[150,H-70],"perception":[320,H-70]};
+  const pos={};pos[hub]=[cx,cy];const r1=210,r2=320,r3=410;
+  ring1.forEach((n,i)=>{const a=(-90+i*36)*Math.PI/180;pos[n]=[cx+r1*Math.cos(a),cy+r1*Math.sin(a)];});
+  Object.keys(ring2).forEach(n=>{const p=pos[ring2[n]];const a=Math.atan2(p[1]-cy,p[0]-cx);pos[n]=[cx+r2*Math.cos(a+0.16),cy+r2*Math.sin(a+0.16)];});
+  Object.keys(ring3).forEach(n=>{const p=pos[ring3[n]]||pos["optogon"];const a=Math.atan2(p[1]-cy,p[0]-cx);pos[n]=[cx+r3*Math.cos(a+0.30),cy+r3*Math.sin(a+0.30)];});
+  Object.keys(detached).forEach(n=>pos[n]=detached[n]);
+  for(const k in pos){pos[k][0]=Math.max(70,Math.min(W-70,pos[k][0]));pos[k][1]=Math.max(40,Math.min(H-40,pos[k][1]));}
+  const edge=(a,b,c,d)=>{const p=pos[a],q=pos[b];if(!p||!q)return"";return `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${c}" stroke-width="${c==='var(--live)'?2.4:1.6}" ${d?'stroke-dasharray="6 5"':''} opacity="0.9"/>`;};
+  let lines="";EDGES.forEach(e=>{const st=EDGE_STATE[e[0]+">"+e[1]]||"infra";lines+=edge(e[0],e[1],EDGE_COLOR[st],st==="gate");});
+  BRIDGE_EDGES.forEach(e=>lines+=edge(e[0],e[1],EDGE_COLOR.bridge,true));
+  const node=n=>{const p=pos[n],isHub=n===hub,s=SUB.find(x=>x.name===n)||{};
+    const fill=isHub?"var(--hub)":s.group==="apps"?"#16331f":s.group==="tools"?"#332417":"#16273a";
+    const stroke=isHub?"var(--hub)":s.group==="apps"?"#2c6":s.group==="tools"?"#a73":"#48f";
+    const tx=isHub?"#04101f":"#e6edf3",w=Math.max(78,n.length*7.2+18),h=isHub?34:26;
+    return `<g><rect x="${p[0]-w/2}" y="${p[1]-h/2}" width="${w}" height="${h}" rx="${h/2}" fill="${fill}" stroke="${stroke}" stroke-width="${isHub?2.5:1.3}"/><text x="${p[0]}" y="${p[1]+4}" text-anchor="middle" font-size="${isHub?13:11}" font-weight="${isHub?700:500}" fill="${tx}">${n}</text></g>`;};
+  $("#figure").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${lines}${Object.keys(pos).map(node).join("")}</svg>`;
+  const tray=ORPHANS.filter(n=>!pos[n]);
+  $("#orphan-tray").innerHTML=`<b style="color:var(--dim)">Unconnected in the import graph</b> (read-time HTTP or standalone — not broken): `+tray.map(n=>`<span class="rolechip">${n}</span>`).join(" ");
+}
+
+/* ---- health ---- */
+function bars(obj,max,color){const m=max||Math.max(...Object.values(obj));return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>`<div style="display:flex;align-items:center;gap:8px;margin:5px 0"><div style="width:130px;font-size:12px">${k}</div><div style="flex:1;background:var(--chip);border-radius:5px;overflow:hidden"><div style="width:${Math.max(6,v/m*100)}%;height:14px;background:${color}"></div></div><div style="width:30px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--dim)">${v}</div></div>`).join("");}
+function health(){
+  $("#h-hot").innerHTML=bars(DEPS_IN,10,"var(--accent)");$("#h-churn").innerHTML=bars(CHURN,91,"var(--gate)");
+  const chip=(arr,c)=>arr.map(n=>`<span class="tag ${c}">${n}</span>`).join(" ");
+  $("#h-retired").innerHTML=chip(RETIRED,"t-retired");$("#h-stale").innerHTML=chip(STALE,"t-stale");$("#h-notest").innerHTML=chip(NOTEST,"t-notest");
+}
+
+/* ---- arsenal ---- */
+function arsenal(){
+  $("#arsenal").innerHTML=ARSENAL.map((a,i)=>`<details class="acc" ${i===0?'open':''}><summary>${a.title}<span class="c">${a.count}</span></summary><div class="body">${
+    a.cats.map(c=>`<div class="catrow"><div class="h">${c.h}</div>${c.cd?`<div class="cd">${c.cd}</div>`:''}${
+      c.items.map(it=>`<span class="item"><b>${it[0]}</b>${it[1]?` <span class="d">— ${it[1]}</span>`:''}</span>`).join("")
+    }</div>`).join("")
+  }</div></details>`).join("");
+}
+function ports(){const p=SUB.filter(s=>s.port).sort((a,b)=>a.port-b.port);
+  $("#port-rows").innerHTML=p.map(s=>`<tr><td class="num"><span class="t-port">${s.port}</span></td><td style="font-weight:600">${s.name}</td><td style="color:var(--dim);font-size:12px">${s.desc.split('.')[0]}.${s.auto?' <span class="tag t-auto">auto</span>':''}</td></tr>`).join("");}
+
+stats();shape();rolefilters();render();figure();health();arsenal();ports();
+</script>
+</body>
+</html>

@@ -1,0 +1,1612 @@
+{
+  "phase": "004_CHANNEL_FLOW_ANALYSIS",
+  "sequence": "01_ship_flow_per_item",
+  "generated_at": "2026-05-28T03:07:00.414735+00:00",
+  "method": "Per strong-band portfolio item, derive: idea_at = earliest ChatGPT convo first_date whose title contains item name (case-insensitive substring), fallback to cluster seed-term match; build_at = earliest CC session first_ts whose first_user_msg contains item name; ship_at = fs_temporal ctime joined by (name, surface); last_active_at = fs_temporal mtime. Lags in days. flow_pattern deterministic: parallel if |lag_idea_to_build| <= 7d, else talk_leads / build_leads by sign. no_talk if no ChatGPT hit at all, no_build if ChatGPT hit but no CC hit. Caveat 'substring_fp_risk' attached to cluster_fallback ideas in audio_music or productivity_skills.",
+  "input_strong_count": 60,
+  "output_record_count": 60,
+  "flow_pattern_counts": {
+    "no_build": 11,
+    "talk_leads": 32,
+    "no_talk": 11,
+    "parallel": 6
+  },
+  "caveat_substring_fp_risk_count": 4,
+  "fp_risk_clusters_carried_forward": [
+    "audio_music"
+  ],
+  "parallel_window_days": 7,
+  "items": [
+    {
+      "name": "airwindows",
+      "surface": "standalone_repo",
+      "clusters": [
+        "audio_music"
+      ],
+      "idea_at": "2025-03-11",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5158",
+        "title": "Audio analysis summary",
+        "matched_seed_term": "audio"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-05-16T21:36:24.935556",
+      "last_active_at": "2026-05-16T21:37:39.285663",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\airwindows"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 431.9,
+      "flow_pattern": "no_build",
+      "caveat": "substring_fp_risk",
+      "caveat_reason": "idea_at via cluster_fallback in 'audio_music', which has known substring false positives from Phase 2 (stem/system/ecosystem or fest/manifesting/lifestyle)"
+    },
+    {
+      "name": "atlas",
+      "surface": "standalone_repo",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-11-15",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "2333",
+        "title": "Behavioral research for Atlas OS"
+      },
+      "build_at": "2026-02-09T05:07:23.719Z",
+      "build_provenance": {
+        "session_id": "agent-a423012",
+        "first_user_msg_preview": "Thoroughly explore the codebase in C:\\Users\\bruke\\Pre Atlas. I need to understand:  1. The overall project structure (directories, key files) 2. What the project does (its purpose)"
+      },
+      "ship_at": "2026-04-11T07:44:32.335967",
+      "last_active_at": "2026-05-27T08:49:04.026216",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\atlas"
+      },
+      "lag_idea_to_build_days": 86.21,
+      "lag_build_to_ship_days": 61.11,
+      "lag_idea_to_ship_days": 147.32,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "binre",
+      "surface": "standalone_repo",
+      "clusters": [],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-15T22:12:11.201Z",
+      "build_provenance": {
+        "session_id": "854e5df3-a359-40a7-a194-03eb5aab7201",
+        "first_user_msg_preview": "what happens in we combine binre tool with es tool what can we do"
+      },
+      "ship_at": "2026-05-10T20:52:21.571460",
+      "last_active_at": "2026-05-16T22:02:28.488261",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\binre"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": -5.06,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "competitor-monitor",
+      "surface": "standalone_repo",
+      "clusters": [
+        "web_extract"
+      ],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-03T17:29:00.754Z",
+      "build_provenance": {
+        "session_id": "agent-a137cdfb5f6edfb72",
+        "first_user_msg_preview": "You are running WEAPON mode against a single, scoped task. No scope expansion. Binary completion. Report back terse.  CONTEXT (read once, don't ask questions): - Bruke just shipped"
+      },
+      "ship_at": "2026-05-04T01:32:00.874969",
+      "last_active_at": "2026-05-04T01:35:23.333676",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\competitor-monitor"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": 0.34,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "everything-claude-code",
+      "surface": "standalone_repo",
+      "clusters": [],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-05T23:26:19.076Z",
+      "build_provenance": {
+        "session_id": "agent-a9c389d4e24b886b7",
+        "first_user_msg_preview": "**TASK: Read these specific files end-to-end. Don't ask questions. Quote with file:line citations.**  **Pass 1 — All CLAUDE.md files at user repos. Read each fully.**  Files (verif"
+      },
+      "ship_at": "2026-03-31T22:13:37.645754",
+      "last_active_at": "2026-04-01T00:47:00.973993",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\everything-claude-code"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": -35.05,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "m3p-to-fract",
+      "surface": "standalone_repo",
+      "clusters": [
+        "mb3d_fractals"
+      ],
+      "idea_at": "2026-03-27",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "685",
+        "title": "Raymarched Mandelbulb Spec",
+        "matched_seed_term": "mandelbulb"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-05-12T10:00:08.908159",
+      "last_active_at": "2026-05-12T10:11:27.036333",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\m3p-to-fract"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 46.42,
+      "flow_pattern": "no_build"
+    },
+    {
+      "name": "mandelbulber2_install",
+      "surface": "standalone_repo",
+      "clusters": [
+        "mb3d_fractals"
+      ],
+      "idea_at": "2026-03-27",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "685",
+        "title": "Raymarched Mandelbulb Spec",
+        "matched_seed_term": "mandelbulb"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-05-11T22:24:20.404483",
+      "last_active_at": "2026-05-13T07:34:26.491248",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\mandelbulber2_install"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 45.93,
+      "flow_pattern": "no_build"
+    },
+    {
+      "name": "mb3d-blender",
+      "surface": "standalone_repo",
+      "clusters": [
+        "mb3d_fractals"
+      ],
+      "idea_at": "2026-03-27",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "685",
+        "title": "Raymarched Mandelbulb Spec",
+        "matched_seed_term": "mandelbulb"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-05-12T11:36:17.715992",
+      "last_active_at": "2026-05-12T11:40:30.201156",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\mb3d-blender"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 46.48,
+      "flow_pattern": "no_build"
+    },
+    {
+      "name": "mb3d_anim_demo",
+      "surface": "standalone_repo",
+      "clusters": [
+        "mb3d_fractals"
+      ],
+      "idea_at": "2026-03-27",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "685",
+        "title": "Raymarched Mandelbulb Spec",
+        "matched_seed_term": "mandelbulb"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-05-11T08:54:34.082679",
+      "last_active_at": "2026-05-12T15:16:42.514528",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\mb3d_anim_demo"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 45.37,
+      "flow_pattern": "no_build"
+    },
+    {
+      "name": "nih-plug",
+      "surface": "standalone_repo",
+      "clusters": [
+        "audio_music"
+      ],
+      "idea_at": "2025-03-11",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5158",
+        "title": "Audio analysis summary",
+        "matched_seed_term": "audio"
+      },
+      "build_at": "2026-05-17T01:50:30.034Z",
+      "build_provenance": {
+        "session_id": "c008a665-edac-4e8e-80e6-c354322cd739",
+        "first_user_msg_preview": "Concrete steps, in order. Do them on the machine you build on. 1. Install Rust. Go to rustup.rs, run the installer. Open a new terminal, run `rustc --version`. If a version prints,"
+      },
+      "ship_at": "2026-05-16T20:55:55.121507",
+      "last_active_at": "2026-05-16T21:53:21.852370",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\nih-plug"
+      },
+      "lag_idea_to_build_days": 432.08,
+      "lag_build_to_ship_days": -0.2,
+      "lag_idea_to_ship_days": 431.87,
+      "flow_pattern": "talk_leads",
+      "caveat": "substring_fp_risk",
+      "caveat_reason": "idea_at via cluster_fallback in 'audio_music', which has known substring false positives from Phase 2 (stem/system/ecosystem or fest/manifesting/lifestyle)"
+    },
+    {
+      "name": "operator-system",
+      "surface": "standalone_repo",
+      "clusters": [],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-05T21:23:21.948Z",
+      "build_provenance": {
+        "session_id": "414d306c-0436-418d-b925-5d9f35116de0",
+        "first_user_msg_preview": "\\Got it. Here's the complete handoff for Claude Code — the SOP, the repo setup, and the build plan in one document. Drop this into Claude Code and it'll have everything it needs to"
+      },
+      "ship_at": "2026-05-05T16:31:10.316124",
+      "last_active_at": "2026-05-06T17:33:09.882279",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\operator-system"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": -0.2,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "POLARIS",
+      "surface": "standalone_repo",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2026-02-23",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "1298",
+        "title": "Aegis Fabric and POLARIS"
+      },
+      "build_at": "2026-02-22T19:33:46.547Z",
+      "build_provenance": {
+        "session_id": "agent-a935687",
+        "first_user_msg_preview": "Explore the directory at C:\\Users\\bruke\\POLARIS to understand what currently exists there. Check: 1. Is there any existing code, configuration, or project files? 2. Any git initial"
+      },
+      "ship_at": "2026-02-22T13:32:01.334536",
+      "last_active_at": "2026-03-09T07:56:30.062666",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\POLARIS"
+      },
+      "lag_idea_to_build_days": -0.18,
+      "lag_build_to_ship_days": -0.25,
+      "lag_idea_to_ship_days": -0.44,
+      "flow_pattern": "parallel"
+    },
+    {
+      "name": "Pre Atlas",
+      "surface": "standalone_repo",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2026-01-08",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "1929",
+        "title": "Pre Atlas System Review"
+      },
+      "build_at": "2026-02-09T05:07:23.719Z",
+      "build_provenance": {
+        "session_id": "agent-a423012",
+        "first_user_msg_preview": "Thoroughly explore the codebase in C:\\Users\\bruke\\Pre Atlas. I need to understand:  1. The overall project structure (directories, key files) 2. What the project does (its purpose)"
+      },
+      "ship_at": "2026-01-08T08:17:39.390811",
+      "last_active_at": "2026-05-27T10:34:19.618242",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas"
+      },
+      "lag_idea_to_build_days": 32.21,
+      "lag_build_to_ship_days": -31.87,
+      "lag_idea_to_ship_days": 0.35,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "Scrapling",
+      "surface": "standalone_repo",
+      "clusters": [
+        "web_extract"
+      ],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-02T23:13:48.752Z",
+      "build_provenance": {
+        "session_id": "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a",
+        "first_user_msg_preview": "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prompt:**  ``` Fork D4Vinci/Scrapling on GitHub to my account, c"
+      },
+      "ship_at": "2026-05-02T18:14:46.314682",
+      "last_active_at": "2026-05-02T20:01:04.298724",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Scrapling"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": -0.21,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "scrapling-smoke",
+      "surface": "standalone_repo",
+      "clusters": [
+        "web_extract"
+      ],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-03T00:54:47.094Z",
+      "build_provenance": {
+        "session_id": "agent-a27072086b81bf4f9",
+        "first_user_msg_preview": "WEAPON MODE — single mission, no scope expansion.  TARGET: Close the \"Pattern 3 (adaptive selector heal) is claimed but not verified end-to-end\" loop in the scrapling integration. "
+      },
+      "ship_at": "2026-05-02T19:40:50.270212",
+      "last_active_at": "2026-05-02T19:58:51.900055",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\scrapling-smoke"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": -0.22,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "screenshot-to-code",
+      "surface": "standalone_repo",
+      "clusters": [
+        "canvas_render"
+      ],
+      "idea_at": "2026-02-15",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "1447",
+        "title": "VirtualStudio Landing Page",
+        "matched_seed_term": "virtualstudio"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-05-23T21:18:04.633659",
+      "last_active_at": "2026-05-23T21:19:12.562886",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\screenshot-to-code"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 97.89,
+      "flow_pattern": "no_build"
+    },
+    {
+      "name": "STEMai",
+      "surface": "standalone_repo",
+      "clusters": [
+        "audio_music"
+      ],
+      "idea_at": "2025-03-11",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5158",
+        "title": "Audio analysis summary",
+        "matched_seed_term": "audio"
+      },
+      "build_at": "2026-03-02T02:37:24.066Z",
+      "build_provenance": {
+        "session_id": "agent-aa87c509f8a801045",
+        "first_user_msg_preview": "Read the file C:\\Users\\bruke\\STEMai\\stem_player.html and provide a detailed summary of: 1. The full HTML/CSS/JS structure 2. How audio is loaded and played (Web Audio API usage) 3."
+      },
+      "ship_at": "2026-03-01T19:42:51.852156",
+      "last_active_at": "2026-03-11T16:48:17.879102",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\STEMai"
+      },
+      "lag_idea_to_build_days": 356.11,
+      "lag_build_to_ship_days": -0.29,
+      "lag_idea_to_ship_days": 355.82,
+      "flow_pattern": "talk_leads",
+      "caveat": "substring_fp_risk",
+      "caveat_reason": "idea_at via cluster_fallback in 'audio_music', which has known substring false positives from Phase 2 (stem/system/ecosystem or fest/manifesting/lifestyle)"
+    },
+    {
+      "name": "STRUDEL",
+      "surface": "standalone_repo",
+      "clusters": [
+        "audio_music"
+      ],
+      "idea_at": "2026-02-23",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "1286",
+        "title": "Strudel and TouchDesigner Merge"
+      },
+      "build_at": "2026-02-24T01:24:41.117Z",
+      "build_provenance": {
+        "session_id": "agent-a1f3d16",
+        "first_user_msg_preview": "Explore the Strudel codebase at C:\\Users\\bruke\\STRUDEL to understand its overall structure. I need to know:  1. The top-level directory structure (packages, apps, etc.) 2. What pac"
+      },
+      "ship_at": "2026-02-23T18:20:48.839844",
+      "last_active_at": "2026-04-26T13:14:40.088749",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\STRUDEL"
+      },
+      "lag_idea_to_build_days": 1.06,
+      "lag_build_to_ship_days": -0.29,
+      "lag_idea_to_ship_days": 0.76,
+      "flow_pattern": "parallel"
+    },
+    {
+      "name": "surge-xt",
+      "surface": "standalone_repo",
+      "clusters": [
+        "audio_music"
+      ],
+      "idea_at": "2025-03-11",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5158",
+        "title": "Audio analysis summary",
+        "matched_seed_term": "audio"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-05-16T21:37:44.019147",
+      "last_active_at": "2026-05-16T21:41:14.829104",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\surge-xt"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 431.9,
+      "flow_pattern": "no_build",
+      "caveat": "substring_fp_risk",
+      "caveat_reason": "idea_at via cluster_fallback in 'audio_music', which has known substring false positives from Phase 2 (stem/system/ecosystem or fest/manifesting/lifestyle)"
+    },
+    {
+      "name": "three-js",
+      "surface": "standalone_repo",
+      "clusters": [
+        "canvas_render"
+      ],
+      "idea_at": "2026-02-15",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "1447",
+        "title": "VirtualStudio Landing Page",
+        "matched_seed_term": "virtualstudio"
+      },
+      "build_at": "2026-05-10T12:50:26.182Z",
+      "build_provenance": {
+        "session_id": "5b5cecf0-ad9b-4534-a72f-6facf88f7357",
+        "first_user_msg_preview": "excecute the handoff below: Good call. Fresh session is right — context here is heavy and Path 1 is multi-hour with ~40 parallel agent runs. Cloud won't work because the audit need"
+      },
+      "ship_at": "2026-05-09T22:16:08.901341",
+      "last_active_at": "2026-05-09T22:27:54.204227",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\three-js"
+      },
+      "lag_idea_to_build_days": 84.54,
+      "lag_build_to_ship_days": -0.61,
+      "lag_idea_to_ship_days": 83.93,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "URBANNOMAD",
+      "surface": "standalone_repo",
+      "clusters": [],
+      "idea_at": "2026-03-08",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "1043",
+        "title": "URBANNOMAD Prototype Breakdown"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-03-08T15:25:57.050368",
+      "last_active_at": "2026-03-08T16:04:53.798776",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\URBANNOMAD"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 0.64,
+      "flow_pattern": "no_build"
+    },
+    {
+      "name": "wasp",
+      "surface": "standalone_repo",
+      "clusters": [],
+      "idea_at": "2025-07-31",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "3191",
+        "title": "Tarantula hawk wasp description"
+      },
+      "build_at": "2026-04-29T07:50:33.697Z",
+      "build_provenance": {
+        "session_id": "agent-a1f0e7bcc313eeeb2",
+        "first_user_msg_preview": "Explore the current Pre Atlas worktree at `C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\stoic-noether-96bea8` and report back a CONCISE familiarization summary (under 400 words).  Co"
+      },
+      "ship_at": "2026-04-01T12:45:15.326199",
+      "last_active_at": "2026-04-01T12:56:43.072841",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\wasp"
+      },
+      "lag_idea_to_build_days": 272.33,
+      "lag_build_to_ship_days": -27.8,
+      "lag_idea_to_ship_days": 244.53,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "web-audit",
+      "surface": "standalone_repo",
+      "clusters": [
+        "web_extract"
+      ],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-04-26T15:05:24.406Z",
+      "build_provenance": {
+        "session_id": "c9590916-4b42-4226-8289-ece8f5716855",
+        "first_user_msg_preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 is the only major dat"
+      },
+      "ship_at": "2026-04-17T18:19:00.581978",
+      "last_active_at": "2026-05-10T10:04:18.173115",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\web-audit"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": -8.87,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "pre-atlas",
+      "surface": "github_repo",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2026-01-08",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "1928",
+        "title": "Pre-Atlas Progress Stages"
+      },
+      "build_at": "2026-02-21T22:38:04.477Z",
+      "build_provenance": {
+        "session_id": "agent-a50c670",
+        "first_user_msg_preview": "Explore the top-level structure of this Pre Atlas project. I need to understand: 1. The root directory files - PRE_ATLAS_MAP.md, any config files, .gitignore, package.json if any 2"
+      },
+      "ship_at": null,
+      "last_active_at": null,
+      "ship_provenance": {
+        "path": null,
+        "fs_error": "no_path_in_portfolio"
+      },
+      "lag_idea_to_build_days": 44.94,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "atlas",
+      "surface": "github_repo",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-11-15",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "2333",
+        "title": "Behavioral research for Atlas OS"
+      },
+      "build_at": "2026-02-09T05:07:23.719Z",
+      "build_provenance": {
+        "session_id": "agent-a423012",
+        "first_user_msg_preview": "Thoroughly explore the codebase in C:\\Users\\bruke\\Pre Atlas. I need to understand:  1. The overall project structure (directories, key files) 2. What the project does (its purpose)"
+      },
+      "ship_at": null,
+      "last_active_at": null,
+      "ship_provenance": {
+        "path": null,
+        "fs_error": "no_path_in_portfolio"
+      },
+      "lag_idea_to_build_days": 86.21,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "competitor-monitor",
+      "surface": "github_repo",
+      "clusters": [
+        "web_extract"
+      ],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-03T17:29:00.754Z",
+      "build_provenance": {
+        "session_id": "agent-a137cdfb5f6edfb72",
+        "first_user_msg_preview": "You are running WEAPON mode against a single, scoped task. No scope expansion. Binary completion. Report back terse.  CONTEXT (read once, don't ask questions): - Bruke just shipped"
+      },
+      "ship_at": null,
+      "last_active_at": null,
+      "ship_provenance": {
+        "path": null,
+        "fs_error": "no_path_in_portfolio"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "Scrapling",
+      "surface": "github_repo",
+      "clusters": [
+        "web_extract"
+      ],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-02T23:13:48.752Z",
+      "build_provenance": {
+        "session_id": "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a",
+        "first_user_msg_preview": "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prompt:**  ``` Fork D4Vinci/Scrapling on GitHub to my account, c"
+      },
+      "ship_at": null,
+      "last_active_at": null,
+      "ship_provenance": {
+        "path": null,
+        "fs_error": "no_path_in_portfolio"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "inpact-site",
+      "surface": "github_repo",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-05-04T23:00:32.424Z",
+      "build_provenance": {
+        "session_id": "agent-a10ad8c736dd98957",
+        "first_user_msg_preview": "Audit the ACTUAL state of inPACT as a launchable paid product.  CONTEXT: User's MEMORY.md says \"Waitlist + Clarity Snapshot at OneDrive\\Desktop\\inPACT-site\" and \"Assessment Purpose"
+      },
+      "ship_at": null,
+      "last_active_at": null,
+      "ship_provenance": {
+        "path": null,
+        "fs_error": "no_path_in_portfolio"
+      },
+      "lag_idea_to_build_days": 484.96,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "anatomy-map",
+      "surface": "custom_skill",
+      "clusters": [
+        "anatomy"
+      ],
+      "idea_at": "2026-04-26",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "316",
+        "title": "Site Anatomy Engine",
+        "matched_seed_term": "anatomy"
+      },
+      "build_at": "2026-05-06T22:24:43.779Z",
+      "build_provenance": {
+        "session_id": "agent-a9fb6d7d0033f60bd",
+        "first_user_msg_preview": "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce facts.  ## Task  For each of the 26 skills below, read its SKI"
+      },
+      "ship_at": "2026-04-22T09:53:02.262479",
+      "last_active_at": "2026-04-22T15:43:41.423056",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\.claude\\skills\\anatomy-map"
+      },
+      "lag_idea_to_build_days": 10.93,
+      "lag_build_to_ship_days": -14.52,
+      "lag_idea_to_ship_days": -3.59,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "anime-js",
+      "surface": "custom_skill",
+      "clusters": [
+        "canvas_render"
+      ],
+      "idea_at": "2026-02-15",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "1447",
+        "title": "VirtualStudio Landing Page",
+        "matched_seed_term": "virtualstudio"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-05-09T16:30:39.653063",
+      "last_active_at": "2026-05-09T19:30:21.389846",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 83.69,
+      "flow_pattern": "no_build"
+    },
+    {
+      "name": "continuous-learning-v2",
+      "surface": "custom_skill",
+      "clusters": [
+        "productivity_skills"
+      ],
+      "idea_at": "2025-08-03",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "3119",
+        "title": "Autopilot and focus errors",
+        "matched_seed_term": "autopilot"
+      },
+      "build_at": "2026-05-06T22:24:43.779Z",
+      "build_provenance": {
+        "session_id": "agent-a9fb6d7d0033f60bd",
+        "first_user_msg_preview": "You are doing PURE DATA EXTRACTION. No recommendations, no proposals, no value judgments. Just read files and produce facts.  ## Task  For each of the 26 skills below, read its SKI"
+      },
+      "ship_at": "2026-04-01T01:01:38.134828",
+      "last_active_at": "2026-04-01T01:01:38.203394",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\.claude\\skills\\continuous-learning-v2"
+      },
+      "lag_idea_to_build_days": 276.93,
+      "lag_build_to_ship_days": -35.89,
+      "lag_idea_to_ship_days": 241.04,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "mandelbulb3d",
+      "surface": "custom_skill",
+      "clusters": [
+        "mb3d_fractals"
+      ],
+      "idea_at": "2026-05-10",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "119",
+        "title": "Mandelbulb3D as a Forge"
+      },
+      "build_at": "2026-05-10T21:32:42.892Z",
+      "build_provenance": {
+        "session_id": "45e337da-3400-4fb6-a65f-f7d72032e998",
+        "first_user_msg_preview": "Good. \"Use it like it's native\" is the ambitious framing — that means the skill needs to give Claude operational fluency, not just reference knowledge. Let me lay out the plan, the"
+      },
+      "ship_at": "2026-05-10T16:35:09.741361",
+      "last_active_at": "2026-05-12T11:16:57.433939",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulb3d"
+      },
+      "lag_idea_to_build_days": 0.9,
+      "lag_build_to_ship_days": -0.21,
+      "lag_idea_to_ship_days": 0.69,
+      "flow_pattern": "parallel"
+    },
+    {
+      "name": "mandelbulber2",
+      "surface": "custom_skill",
+      "clusters": [
+        "mb3d_fractals"
+      ],
+      "idea_at": "2026-03-27",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "685",
+        "title": "Raymarched Mandelbulb Spec",
+        "matched_seed_term": "mandelbulb"
+      },
+      "build_at": "2026-05-12T14:50:07.388Z",
+      "build_provenance": {
+        "session_id": "agent-a108874b4fef7d87a",
+        "first_user_msg_preview": "Assess how much Mandelbulb3D (MB3D) capability Mandelbulber 2 (Mb2) actually covers. The user is considering Mb2 as a substrate instead of reverse-engineering MB3D's 9 MB Delphi bi"
+      },
+      "ship_at": "2026-05-11T22:43:30.960265",
+      "last_active_at": "2026-05-14T06:04:25.788095",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulber2"
+      },
+      "lag_idea_to_build_days": 46.62,
+      "lag_build_to_ship_days": -0.67,
+      "lag_idea_to_ship_days": 45.95,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "react-three-fiber",
+      "surface": "custom_skill",
+      "clusters": [
+        "canvas_render"
+      ],
+      "idea_at": "2026-02-15",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "1447",
+        "title": "VirtualStudio Landing Page",
+        "matched_seed_term": "virtualstudio"
+      },
+      "build_at": "2026-05-10T11:45:45.920Z",
+      "build_provenance": {
+        "session_id": "agent-a9af9512493befbee",
+        "first_user_msg_preview": "You are verifying the pmndrs (Poimandres) React-three.js ecosystem packages. The list was compiled from a user's library-dump message + training-data knowledge. NOTE: @react-three/"
+      },
+      "ship_at": "2026-05-09T22:47:00.233871",
+      "last_active_at": "2026-05-09T23:03:49.418151",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\.claude\\skills\\react-three-fiber"
+      },
+      "lag_idea_to_build_days": 84.49,
+      "lag_build_to_ship_days": -0.54,
+      "lag_idea_to_ship_days": 83.95,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "scrapling-official",
+      "surface": "custom_skill",
+      "clusters": [
+        "web_extract"
+      ],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-02T23:13:48.752Z",
+      "build_provenance": {
+        "session_id": "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a",
+        "first_user_msg_preview": "Here's the prompt for Claude Code (or any agent with shell access) to clone the repo and install the skill:  ---  **Prompt:**  ``` Fork D4Vinci/Scrapling on GitHub to my account, c"
+      },
+      "ship_at": "2026-05-02T18:15:03.970235",
+      "last_active_at": "2026-05-02T18:15:04.524079",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\.claude\\skills\\scrapling-official"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": -0.21,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "three-js",
+      "surface": "custom_skill",
+      "clusters": [
+        "canvas_render"
+      ],
+      "idea_at": "2026-02-15",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "1447",
+        "title": "VirtualStudio Landing Page",
+        "matched_seed_term": "virtualstudio"
+      },
+      "build_at": "2026-05-10T12:50:26.182Z",
+      "build_provenance": {
+        "session_id": "5b5cecf0-ad9b-4534-a72f-6facf88f7357",
+        "first_user_msg_preview": "excecute the handoff below: Good call. Fresh session is right — context here is heavy and Path 1 is multi-hour with ~40 parallel agent runs. Cloud won't work because the audit need"
+      },
+      "ship_at": "2026-05-09T22:18:29.824380",
+      "last_active_at": "2026-05-09T22:28:40.007737",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\.claude\\skills\\three-js"
+      },
+      "lag_idea_to_build_days": 84.54,
+      "lag_build_to_ship_days": -0.61,
+      "lag_idea_to_ship_days": 83.93,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "web-extract-workflow",
+      "surface": "custom_skill",
+      "clusters": [
+        "web_extract"
+      ],
+      "idea_at": null,
+      "idea_via": null,
+      "idea_provenance": null,
+      "build_at": "2026-05-03T00:54:47.094Z",
+      "build_provenance": {
+        "session_id": "agent-a27072086b81bf4f9",
+        "first_user_msg_preview": "WEAPON MODE — single mission, no scope expansion.  TARGET: Close the \"Pattern 3 (adaptive selector heal) is claimed but not verified end-to-end\" loop in the scrapling integration. "
+      },
+      "ship_at": "2026-05-02T19:45:45.396290",
+      "last_active_at": "2026-05-02T19:46:08.936962",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\.claude\\skills\\web-extract-workflow"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": -0.21,
+      "lag_idea_to_ship_days": null,
+      "flow_pattern": "no_talk"
+    },
+    {
+      "name": "aegis-fabric",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-02-22T22:28:53.806Z",
+      "build_provenance": {
+        "session_id": "agent-a2a3fc4",
+        "first_user_msg_preview": "Design a detailed implementation plan for \"Aegis Enterprise Fabric (AEF)\" - a working single-node prototype that extends an existing delta-kernel system.  ## EXISTING ARCHITECTURE "
+      },
+      "ship_at": "2026-02-22T16:44:27.447682",
+      "last_active_at": "2026-04-27T14:28:51.534119",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\aegis-fabric"
+      },
+      "lag_idea_to_build_days": 413.94,
+      "lag_build_to_ship_days": -0.24,
+      "lag_idea_to_ship_days": 413.7,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "canvas-engine",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "canvas_render"
+      ],
+      "idea_at": "2026-02-15",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "1447",
+        "title": "VirtualStudio Landing Page",
+        "matched_seed_term": "virtualstudio"
+      },
+      "build_at": "2026-04-26T15:05:24.406Z",
+      "build_provenance": {
+        "session_id": "c9590916-4b42-4226-8289-ece8f5716855",
+        "first_user_msg_preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 is the only major dat"
+      },
+      "ship_at": "2026-04-26T09:37:37.630724",
+      "last_active_at": "2026-05-25T15:46:02.029982",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine"
+      },
+      "lag_idea_to_build_days": 70.63,
+      "lag_build_to_ship_days": -0.23,
+      "lag_idea_to_ship_days": 70.4,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "cognitive-sensor",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-02-09T05:23:00.324Z",
+      "build_provenance": {
+        "session_id": "agent-a008dc1",
+        "first_user_msg_preview": "Search the codebase at C:\\Users\\bruke\\Pre Atlas for anything related to \"vectorized conversations\". Look for:  1. Files that contain vector embeddings or vectorized data 2. Code th"
+      },
+      "ship_at": "2026-01-03T17:47:55.141462",
+      "last_active_at": "2026-05-27T19:01:04.475175",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor"
+      },
+      "lag_idea_to_build_days": 400.22,
+      "lag_build_to_ship_days": -36.48,
+      "lag_idea_to_ship_days": 363.74,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "cortex",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-04-26T15:05:24.406Z",
+      "build_provenance": {
+        "session_id": "c9590916-4b42-4226-8289-ece8f5716855",
+        "first_user_msg_preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 is the only major dat"
+      },
+      "ship_at": "2026-04-08T18:15:17.460554",
+      "last_active_at": "2026-04-19T05:03:30.006142",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\cortex"
+      },
+      "lag_idea_to_build_days": 476.63,
+      "lag_build_to_ship_days": -17.87,
+      "lag_idea_to_ship_days": 458.76,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "crucix",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-04-29T23:28:27.739Z",
+      "build_provenance": {
+        "session_id": "agent-a75fd7f9a68168fb0",
+        "first_user_msg_preview": "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  I need a HONEST inventory of the loose `.ts`, `.mjs`, `.js`, and `.py` code under `services/` and `apps/`. The"
+      },
+      "ship_at": "2026-04-06T23:10:34.237186",
+      "last_active_at": "2026-04-06T23:10:53.985041",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\crucix"
+      },
+      "lag_idea_to_build_days": 479.98,
+      "lag_build_to_ship_days": -23.01,
+      "lag_idea_to_ship_days": 456.97,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "delta-kernel",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-02-09T05:23:00.324Z",
+      "build_provenance": {
+        "session_id": "agent-a008dc1",
+        "first_user_msg_preview": "Search the codebase at C:\\Users\\bruke\\Pre Atlas for anything related to \"vectorized conversations\". Look for:  1. Files that contain vector embeddings or vectorized data 2. Code th"
+      },
+      "ship_at": "2026-01-06T15:58:39.428885",
+      "last_active_at": "2026-04-16T10:58:08.684314",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\delta-kernel"
+      },
+      "lag_idea_to_build_days": 400.22,
+      "lag_build_to_ship_days": -33.56,
+      "lag_idea_to_ship_days": 366.67,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "mirofish",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-04-29T23:28:27.739Z",
+      "build_provenance": {
+        "session_id": "agent-a75fd7f9a68168fb0",
+        "first_user_msg_preview": "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  I need a HONEST inventory of the loose `.ts`, `.mjs`, `.js`, and `.py` code under `services/` and `apps/`. The"
+      },
+      "ship_at": "2026-03-25T23:44:33.157850",
+      "last_active_at": "2026-04-14T16:12:04.472789",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\mirofish"
+      },
+      "lag_idea_to_build_days": 479.98,
+      "lag_build_to_ship_days": -34.99,
+      "lag_idea_to_ship_days": 444.99,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "mosaic-dashboard",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-04-29T23:32:05.900Z",
+      "build_provenance": {
+        "session_id": "agent-ae69dc817e7aec2f4",
+        "first_user_msg_preview": "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atlas — a personal behavioral governance system. He has just tol"
+      },
+      "ship_at": "2026-03-26T01:06:31.845822",
+      "last_active_at": "2026-04-14T16:13:04.902935",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\mosaic-dashboard"
+      },
+      "lag_idea_to_build_days": 479.98,
+      "lag_build_to_ship_days": -34.93,
+      "lag_idea_to_ship_days": 445.05,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "mosaic-orchestrator",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-04-29T23:28:27.739Z",
+      "build_provenance": {
+        "session_id": "agent-a75fd7f9a68168fb0",
+        "first_user_msg_preview": "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  I need a HONEST inventory of the loose `.ts`, `.mjs`, `.js`, and `.py` code under `services/` and `apps/`. The"
+      },
+      "ship_at": "2026-03-25T22:39:24.929574",
+      "last_active_at": "2026-04-16T10:52:05.662391",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\mosaic-orchestrator"
+      },
+      "lag_idea_to_build_days": 479.98,
+      "lag_build_to_ship_days": -35.03,
+      "lag_idea_to_ship_days": 444.94,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "openclaw",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2026-02-19",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "1377",
+        "title": "OpenClaw Uses and Applications"
+      },
+      "build_at": "2026-04-29T23:32:05.900Z",
+      "build_provenance": {
+        "session_id": "agent-ae69dc817e7aec2f4",
+        "first_user_msg_preview": "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atlas — a personal behavioral governance system. He has just tol"
+      },
+      "ship_at": "2026-03-26T00:41:53.139972",
+      "last_active_at": "2026-04-14T16:13:04.931933",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\openclaw"
+      },
+      "lag_idea_to_build_days": 69.98,
+      "lag_build_to_ship_days": -34.95,
+      "lag_idea_to_ship_days": 35.03,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "optogon",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2026-04-18",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "375",
+        "title": "Logo Concepts for OPTOGON"
+      },
+      "build_at": "2026-04-26T15:05:24.406Z",
+      "build_provenance": {
+        "session_id": "c9590916-4b42-4226-8289-ece8f5716855",
+        "first_user_msg_preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 is the only major dat"
+      },
+      "ship_at": "2026-04-19T04:15:48.733433",
+      "last_active_at": "2026-04-19T04:20:58.191542",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\optogon"
+      },
+      "lag_idea_to_build_days": 8.63,
+      "lag_build_to_ship_days": -7.45,
+      "lag_idea_to_ship_days": 1.18,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "perception",
+      "surface": "pre_atlas_services",
+      "clusters": [],
+      "idea_at": "2024-08-24",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "6521",
+        "title": "Voice Perception as Strength"
+      },
+      "build_at": "2026-02-20T19:26:39.546Z",
+      "build_provenance": {
+        "session_id": "agent-acompact-24bc34",
+        "first_user_msg_preview": "Good. I’m going to be surgical. You don’t need more features. You need to fix three layers: 1. Positioning clarity 2. Authority signaling 3. Experience friction Everything else is "
+      },
+      "ship_at": "2026-04-26T08:17:30.609285",
+      "last_active_at": "2026-04-26T09:15:09.472719",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\perception"
+      },
+      "lag_idea_to_build_days": 545.81,
+      "lag_build_to_ship_days": 64.54,
+      "lag_idea_to_ship_days": 610.35,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "triangulation",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-04-29T23:32:05.900Z",
+      "build_provenance": {
+        "session_id": "agent-ae69dc817e7aec2f4",
+        "first_user_msg_preview": "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atlas — a personal behavioral governance system. He has just tol"
+      },
+      "ship_at": "2026-04-26T09:17:44.825783",
+      "last_active_at": "2026-04-26T09:29:08.522664",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\triangulation"
+      },
+      "lag_idea_to_build_days": 479.98,
+      "lag_build_to_ship_days": -3.59,
+      "lag_idea_to_ship_days": 476.39,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "uasc-executor",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-04-29T23:32:05.900Z",
+      "build_provenance": {
+        "session_id": "agent-ae69dc817e7aec2f4",
+        "first_user_msg_preview": "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  The user (Bruke) is the sole developer of Pre Atlas — a personal behavioral governance system. He has just tol"
+      },
+      "ship_at": "2026-04-06T12:23:27.531076",
+      "last_active_at": "2026-04-14T16:12:35.512636",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\uasc-executor"
+      },
+      "lag_idea_to_build_days": 479.98,
+      "lag_build_to_ship_days": -23.46,
+      "lag_idea_to_ship_days": 456.52,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "ws-gateway",
+      "surface": "pre_atlas_services",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-04-29T23:28:27.739Z",
+      "build_provenance": {
+        "session_id": "agent-a75fd7f9a68168fb0",
+        "first_user_msg_preview": "Repo: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\busy-haslett-8265be  I need a HONEST inventory of the loose `.ts`, `.mjs`, `.js`, and `.py` code under `services/` and `apps/`. The"
+      },
+      "ship_at": "2026-04-06T06:55:07.961910",
+      "last_active_at": "2026-04-14T16:12:35.333871",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\services\\ws-gateway"
+      },
+      "lag_idea_to_build_days": 479.98,
+      "lag_build_to_ship_days": -23.69,
+      "lag_idea_to_ship_days": 456.29,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "ai-exec-pipeline",
+      "surface": "pre_atlas_apps",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-04-21T12:46:26.741599",
+      "last_active_at": "2026-04-21T13:05:42.283189",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\ai-exec-pipeline"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 471.53,
+      "flow_pattern": "no_build"
+    },
+    {
+      "name": "blueprint-generator",
+      "surface": "pre_atlas_apps",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": "2026-02-22T13:03:15.330Z",
+      "build_provenance": {
+        "session_id": "agent-a2d966d",
+        "first_user_msg_preview": "Explore the remaining directories in the Pre Atlas project at C:\\Users\\bruke\\Pre Atlas:  1. Check the apps/ directory - especially apps/blueprint-generator/ (read all files) 2. Che"
+      },
+      "ship_at": "2026-02-21T20:54:27.589884",
+      "last_active_at": "2026-04-14T16:13:04.551937",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\blueprint-generator"
+      },
+      "lag_idea_to_build_days": 413.54,
+      "lag_build_to_ship_days": -0.67,
+      "lag_idea_to_ship_days": 412.87,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "code-converter",
+      "surface": "pre_atlas_apps",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App",
+        "matched_seed_term": "inpact"
+      },
+      "build_at": null,
+      "build_provenance": null,
+      "ship_at": "2026-04-06T11:04:28.768788",
+      "last_active_at": "2026-04-14T16:13:04.556937",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\code-converter"
+      },
+      "lag_idea_to_build_days": null,
+      "lag_build_to_ship_days": null,
+      "lag_idea_to_ship_days": 456.46,
+      "flow_pattern": "no_build"
+    },
+    {
+      "name": "inpact",
+      "surface": "pre_atlas_apps",
+      "clusters": [
+        "atlas_core"
+      ],
+      "idea_at": "2025-01-05",
+      "idea_via": "name_match",
+      "idea_provenance": {
+        "convo_id": "5915",
+        "title": "inPACT Bullet Journal App"
+      },
+      "build_at": "2026-04-28T00:34:44.977Z",
+      "build_provenance": {
+        "session_id": "agent-a3876998f52a9a6fc",
+        "first_user_msg_preview": "I need a thorough audit of the Optogon service to answer the question \"is Optogon OP?\" — meaning has it grown overpowered, over-scoped, or absorbed responsibilities beyond its stat"
+      },
+      "ship_at": "2026-04-13T20:18:57.429386",
+      "last_active_at": "2026-05-25T20:17:35.397428",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\inpact"
+      },
+      "lag_idea_to_build_days": 478.02,
+      "lag_build_to_ship_days": -14.18,
+      "lag_idea_to_ship_days": 463.85,
+      "flow_pattern": "talk_leads"
+    },
+    {
+      "name": "anatomy-extension",
+      "surface": "pre_atlas_tools",
+      "clusters": [
+        "anatomy"
+      ],
+      "idea_at": "2026-04-26",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "316",
+        "title": "Site Anatomy Engine",
+        "matched_seed_term": "anatomy"
+      },
+      "build_at": "2026-04-26T15:05:24.406Z",
+      "build_provenance": {
+        "session_id": "c9590916-4b42-4226-8289-ece8f5716855",
+        "first_user_msg_preview": "The Pre Atlas repo has 47 formal draft-07 JSON Schema files at C:/Users/bruke/Pre Atlas/contracts/schemas/ (Aegis*, Cortex*, Mode*, Optogon*, etc). Anatomy v1 is the only major dat"
+      },
+      "ship_at": "2026-04-22T18:48:59.819211",
+      "last_active_at": "2026-04-26T22:00:34.654472",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\anatomy-extension"
+      },
+      "lag_idea_to_build_days": 0.63,
+      "lag_build_to_ship_days": -3.84,
+      "lag_idea_to_ship_days": -3.22,
+      "flow_pattern": "parallel"
+    },
+    {
+      "name": "anatomy-research",
+      "surface": "pre_atlas_tools",
+      "clusters": [
+        "anatomy"
+      ],
+      "idea_at": "2026-04-26",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "316",
+        "title": "Site Anatomy Engine",
+        "matched_seed_term": "anatomy"
+      },
+      "build_at": "2026-05-01T21:07:15.493Z",
+      "build_provenance": {
+        "session_id": "agent-a80ff93e7b4b8b4ea",
+        "first_user_msg_preview": "Inventory every \"anatomy\" implementation in the Pre Atlas repo. Report under 400 words.  Search the cwd (`C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pensive-sinoussi-eb4d9c`) and t"
+      },
+      "ship_at": "2026-04-22T19:45:33.965567",
+      "last_active_at": "2026-04-23T12:02:24.287346",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\anatomy-research"
+      },
+      "lag_idea_to_build_days": 5.88,
+      "lag_build_to_ship_days": -9.06,
+      "lag_idea_to_ship_days": -3.18,
+      "flow_pattern": "parallel"
+    },
+    {
+      "name": "anatomy-rewrite",
+      "surface": "pre_atlas_tools",
+      "clusters": [
+        "anatomy"
+      ],
+      "idea_at": "2026-04-26",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "316",
+        "title": "Site Anatomy Engine",
+        "matched_seed_term": "anatomy"
+      },
+      "build_at": "2026-05-01T21:07:15.493Z",
+      "build_provenance": {
+        "session_id": "agent-a80ff93e7b4b8b4ea",
+        "first_user_msg_preview": "Inventory every \"anatomy\" implementation in the Pre Atlas repo. Report under 400 words.  Search the cwd (`C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\pensive-sinoussi-eb4d9c`) and t"
+      },
+      "ship_at": "2026-04-23T14:47:56.107286",
+      "last_active_at": "2026-04-23T14:50:14.710398",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\anatomy-rewrite"
+      },
+      "lag_idea_to_build_days": 5.88,
+      "lag_build_to_ship_days": -8.26,
+      "lag_idea_to_ship_days": -2.38,
+      "flow_pattern": "parallel"
+    },
+    {
+      "name": "codex-partner",
+      "surface": "pre_atlas_tools",
+      "clusters": [
+        "productivity_skills"
+      ],
+      "idea_at": "2025-08-03",
+      "idea_via": "cluster_fallback",
+      "idea_provenance": {
+        "convo_id": "3119",
+        "title": "Autopilot and focus errors",
+        "matched_seed_term": "autopilot"
+      },
+      "build_at": "2026-04-28T07:57:29.015Z",
+      "build_provenance": {
+        "session_id": "agent-a9f714a9e4f616b58",
+        "first_user_msg_preview": "Working dir: C:\\Users\\bruke\\Pre Atlas\\.claude\\worktrees\\intelligent-payne-6fa7c6  Goal: Map the entire Codex-delegate surface so I stop reinventing it. The user has said multiple t"
+      },
+      "ship_at": "2026-04-25T16:45:48.453805",
+      "last_active_at": "2026-04-26T14:01:35.646046",
+      "ship_provenance": {
+        "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\codex-partner"
+      },
+      "lag_idea_to_build_days": 268.33,
+      "lag_build_to_ship_days": -2.63,
+      "lag_idea_to_ship_days": 265.7,
+      "flow_pattern": "talk_leads"
+    }
+  ]
+}

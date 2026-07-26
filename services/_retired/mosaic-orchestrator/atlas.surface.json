@@ -1,0 +1,7 @@
+{
+  "surface": "mosaic-orchestrator",
+  "headline": "RETIRED FastAPI orchestrator (legacy) — do not build on this; kept only for reference.",
+  "kind": "http",
+  "lifecycle": "retired",
+  "capabilities": []
+}

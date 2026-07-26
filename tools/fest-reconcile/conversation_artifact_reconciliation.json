@@ -1,0 +1,2016 @@
+{
+  "generated_at": "2026-05-27T19:07:52.562994",
+  "method": {
+    "match": "word-boundary regex on item name, plus dashes/underscores->spaces variant",
+    "corpus_window": "title + first 10 messages, 1000 chars each",
+    "discussed_threshold": ">= 1 conversation",
+    "generic_terms_skipped": [
+      "agent",
+      "agents",
+      "ai",
+      "api",
+      "app",
+      "apps",
+      "atlas",
+      "build",
+      "code",
+      "common",
+      "core",
+      "doc",
+      "docs",
+      "lib",
+      "libs",
+      "main",
+      "mcp",
+      "next",
+      "now",
+      "r3f",
+      "services",
+      "shared",
+      "ship",
+      "skill",
+      "skills",
+      "src",
+      "test",
+      "tests",
+      "tool",
+      "tools",
+      "web"
+    ]
+  },
+  "stats": {
+    "total_convos": 6534,
+    "total_items": 140,
+    "bucket_counts": {
+      "discussed_and_shipped": 34,
+      "discussed_but_not_shipped": 26,
+      "shipped_but_not_discussed": 52,
+      "neither": 23,
+      "skipped_generic_name": 5
+    }
+  },
+  "buckets": {
+    "discussed_and_shipped": [
+      {
+        "name": "Downloads",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 53,
+        "matched_terms_used": [
+          "downloads"
+        ],
+        "sample_titles": [
+          "PLR Explained",
+          "Parallax Radio Concept",
+          "Launching App with Server",
+          "Custom Instructions Refinement",
+          "Envato Overview",
+          "Business Success After Dropping Out",
+          "Using ast-grep in Claude",
+          "Claude prompt for spec"
+        ],
+        "path": "C:\\Users\\bruke\\Downloads"
+      },
+      {
+        "name": "fleet-launch",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "fleet launch"
+        ],
+        "sample_titles": [
+          "Fleet Launch System"
+        ],
+        "path": "C:\\Users\\bruke\\fleet-launch"
+      },
+      {
+        "name": "my-vite-app",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "my-vite-app"
+        ],
+        "sample_titles": [
+          "Run TSX in Vite"
+        ],
+        "path": "C:\\Users\\bruke\\my-vite-app"
+      },
+      {
+        "name": "POLARIS",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "polaris"
+        ],
+        "sample_titles": [
+          "What is Railway.com",
+          "Quality vs Market Demand",
+          "Aegis Fabric and POLARIS"
+        ],
+        "path": "C:\\Users\\bruke\\POLARIS"
+      },
+      {
+        "name": "Pre Atlas",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 21,
+        "matched_terms_used": [
+          "pre atlas"
+        ],
+        "sample_titles": [
+          "Cursor as a Tool",
+          "Backend Strategic Analysis",
+          "System Breakthrough Moment",
+          "System-Level Validation Analysis",
+          "n8n Atlas Integration",
+          "Branch \u00b7 n8n Use Cases Explained",
+          "n8n Use Cases Explained",
+          "AI Operating System Review"
+        ],
+        "path": "C:\\Users\\bruke\\Pre Atlas"
+      },
+      {
+        "name": "STEMai",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "stemai"
+        ],
+        "sample_titles": [
+          "Branch \u00b7 System Architecture Analysis",
+          "Multi-Model AI Relay",
+          "System Architecture Analysis",
+          "System Rebuild Strategy",
+          "Music Reverse Compiler"
+        ],
+        "path": "C:\\Users\\bruke\\STEMai"
+      },
+      {
+        "name": "STRUDEL",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 129,
+        "matched_terms_used": [
+          "strudel"
+        ],
+        "sample_titles": [
+          "AI Music Stack Breakdown",
+          "Pure Data vs Strudel",
+          "Music System Breakdown",
+          "Strudel music overview",
+          "System Structure Breakdown",
+          "Best Making Process Query",
+          "MIDI for non-musical data",
+          "Chord Progression Request"
+        ],
+        "path": "C:\\Users\\bruke\\STRUDEL"
+      },
+      {
+        "name": "task-manager",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 19,
+        "matched_terms_used": [
+          "task manager",
+          "task-manager"
+        ],
+        "sample_titles": [
+          "RPG Framework for Coding",
+          "RAM Issue Python Script",
+          "Claude session stuck fix",
+          "Strategic State Machine",
+          "Consulting as personal assistant",
+          "Stilts Speed Capabilities",
+          "Reminder Setup Instructions",
+          "Phase Breakdown Request"
+        ],
+        "path": "C:\\Users\\bruke\\task-manager"
+      },
+      {
+        "name": "URBANNOMAD",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "urbannomad"
+        ],
+        "sample_titles": [
+          "Front-End and Back-End Struggles",
+          "URBANNOMAD Prototype Breakdown",
+          "URBANNOMAD Platform Overview"
+        ],
+        "path": "C:\\Users\\bruke\\URBANNOMAD"
+      },
+      {
+        "name": "wasp",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "wasp"
+        ],
+        "sample_titles": [
+          "Fest.build Claude Wasp Combo",
+          "Wasp full-stack framework",
+          "Tarantula hawk wasp description"
+        ],
+        "path": "C:\\Users\\bruke\\wasp"
+      },
+      {
+        "name": "pre-atlas",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 14,
+        "matched_terms_used": [
+          "pre-atlas"
+        ],
+        "sample_titles": [
+          "System Dossier Breakdown",
+          "System Freeze Review",
+          "Claude Code System Audit",
+          "Agent Integration Framework",
+          "Communication Without Codebase",
+          "AI Cycleboard Architecture",
+          "Your System and Infrastructure",
+          "Review deployment link"
+        ],
+        "path": null
+      },
+      {
+        "name": "strudel",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 38,
+        "matched_terms_used": [
+          "strudel"
+        ],
+        "sample_titles": [
+          "Pure Data vs Strudel",
+          "Strudel music overview",
+          "Atlas Strudel Fusion",
+          "Strudel System Complexity",
+          "Strudel Music System",
+          "Strudel Node Evaluation",
+          "Strudel System Audit",
+          "MuseScore to Strudel Conversion"
+        ],
+        "path": null
+      },
+      {
+        "name": "ai-fashion-prompt-console",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "ai-fashion-prompt-console"
+        ],
+        "sample_titles": [
+          "AI Fashion Prompt Analysis"
+        ],
+        "path": null
+      },
+      {
+        "name": "SteerPOP",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 10,
+        "matched_terms_used": [
+          "steerpop"
+        ],
+        "sample_titles": [
+          "GitHub Gist Explained",
+          "Etch-A-System Concept",
+          "SteerPOP Android IME Port",
+          "System Analysis Breakdown",
+          "SteerPop Hurdles",
+          "Binary Capacity for Letters",
+          "Control Tuning Prompt",
+          "SteerPop Sound Analysis"
+        ],
+        "path": null
+      },
+      {
+        "name": "STEMai",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "stemai"
+        ],
+        "sample_titles": [
+          "Branch \u00b7 System Architecture Analysis",
+          "Multi-Model AI Relay",
+          "System Architecture Analysis",
+          "System Rebuild Strategy",
+          "Music Reverse Compiler"
+        ],
+        "path": null
+      },
+      {
+        "name": "POLARIS",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "polaris"
+        ],
+        "sample_titles": [
+          "What is Railway.com",
+          "Quality vs Market Demand",
+          "Aegis Fabric and POLARIS"
+        ],
+        "path": null
+      },
+      {
+        "name": "URBANNOMAD",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "urbannomad"
+        ],
+        "sample_titles": [
+          "Front-End and Back-End Struggles",
+          "URBANNOMAD Prototype Breakdown",
+          "URBANNOMAD Platform Overview"
+        ],
+        "path": null
+      },
+      {
+        "name": "virtualstudio",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "virtualstudio"
+        ],
+        "sample_titles": [
+          "VirtualStudio Landing Page"
+        ],
+        "path": null
+      },
+      {
+        "name": "THING",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 1340,
+        "matched_terms_used": [
+          "thing"
+        ],
+        "sample_titles": [
+          "Billionaire Wealth Explained",
+          "Brownfield vs Greenfield Paths",
+          "Social interaction dynamics",
+          "What It Means to Trust",
+          "Online Income System",
+          "Water Flow Dynamics Explained",
+          "BSFL Compost and Dirt",
+          "Injury Math and Fairness"
+        ],
+        "path": null
+      },
+      {
+        "name": "WallPaper",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 50,
+        "matched_terms_used": [
+          "wallpaper"
+        ],
+        "sample_titles": [
+          "Screen visibility check",
+          "Visual Language and Aesthetics",
+          "Thought Process Structuring",
+          "App Development Timelines",
+          "ChatGPT Calculator Idea",
+          "Standards for Building Products",
+          "100K in 6 Months",
+          "Lightweight Image Variations"
+        ],
+        "path": null
+      },
+      {
+        "name": "MB-Lab",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 12,
+        "matched_terms_used": [
+          "mb-lab"
+        ],
+        "sample_titles": [
+          "Virtual Casting System Design",
+          "Pose Engine Strategy",
+          "Digital Human Creation Goals",
+          "Skin Calibration in Blender",
+          "Blender Character Reconstruction Analysis",
+          "Skin Color Adjustment Guide",
+          "Coding 3D Models",
+          "What are STL files"
+        ],
+        "path": null
+      },
+      {
+        "name": "mandelbulb3d",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "mandelbulb3d"
+        ],
+        "sample_titles": [
+          "Audio Visual Tools",
+          "Mandelbulb3D as a Forge",
+          "Mandelbulb3D Overview"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulb3d"
+      },
+      {
+        "name": "react-three-fiber",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "react three fiber"
+        ],
+        "sample_titles": [
+          "Anime.js Three.js Integration",
+          "Blender Character Reconstruction Analysis"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\react-three-fiber"
+      },
+      {
+        "name": "aegis-fabric",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 12,
+        "matched_terms_used": [
+          "aegis fabric",
+          "aegis-fabric"
+        ],
+        "sample_titles": [
+          "Cursor as a Tool",
+          "Codex and ChatGPT Context",
+          "Claude Codex Workflow",
+          "Backend Strategic Analysis",
+          "System-Level Validation Analysis",
+          "Fest.build Execution Engine",
+          "Branch \u00b7 n8n Use Cases Explained",
+          "n8n Use Cases Explained"
+        ],
+        "path": "services\\aegis-fabric"
+      },
+      {
+        "name": "cognitive-sensor",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 18,
+        "matched_terms_used": [
+          "cognitive sensor",
+          "cognitive-sensor"
+        ],
+        "sample_titles": [
+          "Claude Codex Workflow",
+          "Backend Strategic Analysis",
+          "Ollama Capabilities",
+          "Live Polling Loop Explanation",
+          "System-Level Validation Analysis",
+          "Fest.build Execution Engine",
+          "Branch \u00b7 n8n Use Cases Explained",
+          "n8n Use Cases Explained"
+        ],
+        "path": "services\\cognitive-sensor"
+      },
+      {
+        "name": "delta-kernel",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 21,
+        "matched_terms_used": [
+          "delta kernel",
+          "delta-kernel"
+        ],
+        "sample_titles": [
+          "Codex and ChatGPT Context",
+          "Claude Codex Workflow",
+          "Backend Strategic Analysis",
+          "Ollama Capabilities",
+          "System-Level Validation Analysis",
+          "Fest.build Execution Engine",
+          "Branch \u00b7 n8n Use Cases Explained",
+          "n8n Use Cases Explained"
+        ],
+        "path": "services\\delta-kernel"
+      },
+      {
+        "name": "mosaic-dashboard",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "mosaic dashboard"
+        ],
+        "sample_titles": [
+          "Backend Strategic Analysis",
+          "AI Operating System Review"
+        ],
+        "path": "services\\mosaic-dashboard"
+      },
+      {
+        "name": "mosaic-orchestrator",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "mosaic-orchestrator"
+        ],
+        "sample_titles": [
+          "Backend Strategic Analysis"
+        ],
+        "path": "services\\mosaic-orchestrator"
+      },
+      {
+        "name": "openclaw",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "openclaw"
+        ],
+        "sample_titles": [
+          "OpenClaw Ecosystem Shift",
+          "OpenClaw vs n8n",
+          "OpenClaw Uses and Applications"
+        ],
+        "path": "services\\openclaw"
+      },
+      {
+        "name": "optogon",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "optogon"
+        ],
+        "sample_titles": [
+          "Logo Concepts for OPTOGON",
+          "Optogon System Analysis"
+        ],
+        "path": "services\\optogon"
+      },
+      {
+        "name": "perception",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 29,
+        "matched_terms_used": [
+          "perception"
+        ],
+        "sample_titles": [
+          "Black Hibachi Chef Perception",
+          "Power Dynamics and Perception",
+          "Perception and Clarity",
+          "Perception Analysis Breakdown",
+          "Perception-Adaptive Interface",
+          "Perception of Deficiency",
+          "People's perception of you",
+          "Recalibrating family perception"
+        ],
+        "path": "services\\perception"
+      },
+      {
+        "name": "blueprint-generator",
+        "surface": "pre_atlas_apps",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "blueprint generator"
+        ],
+        "sample_titles": [
+          "Backend Strategic Analysis"
+        ],
+        "path": "apps\\blueprint-generator"
+      },
+      {
+        "name": "code-converter",
+        "surface": "pre_atlas_apps",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "code converter",
+          "code-converter"
+        ],
+        "sample_titles": [
+          "Atlas Development Challenges",
+          "Proto-autonomy Milestone",
+          "Surprised It Works"
+        ],
+        "path": "apps\\code-converter"
+      },
+      {
+        "name": "inpact",
+        "surface": "pre_atlas_apps",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "inpact"
+        ],
+        "sample_titles": [
+          "inPACT organization structure",
+          "inPACT overview",
+          "inPACT System Overview",
+          "inPACT Journal Overview",
+          "inPACT Bullet Journal App"
+        ],
+        "path": "apps\\inpact"
+      }
+    ],
+    "discussed_but_not_shipped": [
+      {
+        "name": "my-app",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 4,
+        "matched_terms_used": [
+          "my-app"
+        ],
+        "sample_titles": [
+          "Using ast-grep in Claude",
+          "Tailwind CSS Setup",
+          "React Goal Tracker Analysis",
+          "Integrating React into App"
+        ],
+        "path": "C:\\Users\\bruke\\my-app"
+      },
+      {
+        "name": "my_project",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "my_project"
+        ],
+        "sample_titles": [
+          "Phase 1 Setup Guide"
+        ],
+        "path": "C:\\Users\\bruke\\my_project"
+      },
+      {
+        "name": "private-gpt",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "private-gpt"
+        ],
+        "sample_titles": [
+          "Private AI Setup Guide",
+          "PrivateGPT Installation Guide",
+          "Install Python 3.11"
+        ],
+        "path": "C:\\Users\\bruke\\private-gpt"
+      },
+      {
+        "name": "privateGPT",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 7,
+        "matched_terms_used": [
+          "privategpt"
+        ],
+        "sample_titles": [
+          "What is Docker",
+          "Ollama and Poetry Issues",
+          "Private AI Setup Guide",
+          "Environment Activation and Git Fix",
+          "Install PrivateGPT Windows Guide",
+          "PrivateGPT Installation Guide",
+          "PrivateGPT Overview"
+        ],
+        "path": "C:\\Users\\bruke\\privateGPT"
+      },
+      {
+        "name": "weather",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "weather"
+        ],
+        "sample_titles": [
+          "Cold weather tips"
+        ],
+        "path": "C:\\Users\\bruke\\weather"
+      },
+      {
+        "name": "saas-boilerplate",
+        "surface": "github_repo",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "saas boilerplate"
+        ],
+        "sample_titles": [
+          "Is Laravel free"
+        ],
+        "path": null
+      },
+      {
+        "name": "CreatorOS",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "creatoros"
+        ],
+        "sample_titles": [
+          "Custom GPT Count Summary",
+          "AI Tools for Web Dev"
+        ],
+        "path": null
+      },
+      {
+        "name": "python-sdk",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "python-sdk"
+        ],
+        "sample_titles": [
+          "MCP Python SDK Overview"
+        ],
+        "path": null
+      },
+      {
+        "name": "DAPO",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 5,
+        "matched_terms_used": [
+          "dapo"
+        ],
+        "sample_titles": [
+          "Colab vs Local PyTorch Install",
+          "DAPO AI Overview",
+          "Markdown conversion request",
+          "Summarize DAPO.pdf Request",
+          "PDF vs JPEG Processing"
+        ],
+        "path": null
+      },
+      {
+        "name": "servers",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "servers"
+        ],
+        "sample_titles": [
+          "MCP servers for Docker"
+        ],
+        "path": null
+      },
+      {
+        "name": "wasp",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "wasp"
+        ],
+        "sample_titles": [
+          "Fest.build Claude Wasp Combo",
+          "Wasp full-stack framework",
+          "Tarantula hawk wasp description"
+        ],
+        "path": null
+      },
+      {
+        "name": "js-dos",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "js-dos"
+        ],
+        "sample_titles": [
+          "Doom JS Projects"
+        ],
+        "path": null
+      },
+      {
+        "name": "SuperTool",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "supertool"
+        ],
+        "sample_titles": [
+          "Vite Project Setup Script"
+        ],
+        "path": null
+      },
+      {
+        "name": "lionestenzol",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "lionestenzol"
+        ],
+        "sample_titles": [
+          "Lionestenzol Wallpaper Analysis"
+        ],
+        "path": null
+      },
+      {
+        "name": "autopilot",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "autopilot"
+        ],
+        "sample_titles": [
+          "Autopilot and focus errors"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\autopilot"
+      },
+      {
+        "name": "coding-standards",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "coding standards"
+        ],
+        "sample_titles": [
+          "Training GPT with Screen Input"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\coding-standards"
+      },
+      {
+        "name": "cookbook",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "cookbook"
+        ],
+        "sample_titles": [
+          "Strudel Logic and Cookbook",
+          "Strudel Beat Cookbook Summary"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\cookbook"
+      },
+      {
+        "name": "eval-harness",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "eval harness"
+        ],
+        "sample_titles": [
+          "Building GPT Wrapper"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\eval-harness"
+      },
+      {
+        "name": "fest",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 3,
+        "matched_terms_used": [
+          "fest"
+        ],
+        "sample_titles": [
+          "Fest.build Claude Wasp Combo",
+          "Fest.build Execution Engine",
+          "Fest.build Explanation"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\fest"
+      },
+      {
+        "name": "mini-ship",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 15,
+        "matched_terms_used": [
+          "mini ship",
+          "mini-ship"
+        ],
+        "sample_titles": [
+          "Online Income System",
+          "Semantic Compression Explained",
+          "Fleet Launch System",
+          "Alexa Coding Capabilities",
+          "Text to Artifact Value",
+          "Top 0.6% Usage Explained",
+          "Web Intelligence Extraction",
+          "Mini ship concept request"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\mini-ship"
+      },
+      {
+        "name": "project-finisher",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "project finisher"
+        ],
+        "sample_titles": [
+          "AI Operating System Review"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\project-finisher"
+      },
+      {
+        "name": "search-first",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "search first"
+        ],
+        "sample_titles": [
+          "Stack Exchange Search Tips"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\search-first"
+      },
+      {
+        "name": "st3gg",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "st3gg"
+        ],
+        "sample_titles": [
+          "ST3GG GitHub Repo"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\st3gg"
+      },
+      {
+        "name": "verification-loop",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 1,
+        "matched_terms_used": [
+          "verification loop"
+        ],
+        "sample_titles": [
+          "MCP server for Docker"
+        ],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\verification-loop"
+      },
+      {
+        "name": "webos-333",
+        "surface": "pre_atlas_apps",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 2,
+        "matched_terms_used": [
+          "webos-333"
+        ],
+        "sample_titles": [
+          "Cybernetic OS Analysis",
+          "Pre-unification Pressure"
+        ],
+        "path": "apps\\webos-333"
+      },
+      {
+        "name": "mini-ship",
+        "surface": "pre_atlas_tools",
+        "signal_band": "none",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 15,
+        "matched_terms_used": [
+          "mini ship",
+          "mini-ship"
+        ],
+        "sample_titles": [
+          "Online Income System",
+          "Semantic Compression Explained",
+          "Fleet Launch System",
+          "Alexa Coding Capabilities",
+          "Text to Artifact Value",
+          "Top 0.6% Usage Explained",
+          "Web Intelligence Extraction",
+          "Mini ship concept request"
+        ],
+        "path": "tools\\mini-ship"
+      }
+    ],
+    "shipped_but_not_discussed": [
+      {
+        "name": "airwindows",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\airwindows"
+      },
+      {
+        "name": "anime-js",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\anime-js"
+      },
+      {
+        "name": "binre",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\binre"
+      },
+      {
+        "name": "competitor-monitor",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\competitor-monitor"
+      },
+      {
+        "name": "everything-claude-code",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\everything-claude-code"
+      },
+      {
+        "name": "m3p-to-fract",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\m3p-to-fract"
+      },
+      {
+        "name": "mandelbulber2_install",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\mandelbulber2_install"
+      },
+      {
+        "name": "mb3d-blender",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\mb3d-blender"
+      },
+      {
+        "name": "mb3d_anim_demo",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\mb3d_anim_demo"
+      },
+      {
+        "name": "my-project",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\my-project"
+      },
+      {
+        "name": "nih-plug",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\nih-plug"
+      },
+      {
+        "name": "operator-system",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\operator-system"
+      },
+      {
+        "name": "remotion-test",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\remotion-test"
+      },
+      {
+        "name": "Scrapling",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\Scrapling"
+      },
+      {
+        "name": "scrapling-smoke",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\scrapling-smoke"
+      },
+      {
+        "name": "screenshot-to-code",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\screenshot-to-code"
+      },
+      {
+        "name": "surge-xt",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\surge-xt"
+      },
+      {
+        "name": "three-js",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\three-js"
+      },
+      {
+        "name": "three-stack",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\three-stack"
+      },
+      {
+        "name": "web-audit",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\web-audit"
+      },
+      {
+        "name": "welcome-to-docker",
+        "surface": "standalone_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\welcome-to-docker"
+      },
+      {
+        "name": "competitor-monitor",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "Scrapling",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "inpact-site",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "strudel-skills",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "comfyui-controller",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "VirtualStudio-Cinematic-Hero",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "outpost",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "anatomy-map",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\anatomy-map"
+      },
+      {
+        "name": "anime-js",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js"
+      },
+      {
+        "name": "continuous-learning-v2",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\continuous-learning-v2"
+      },
+      {
+        "name": "mandelbulber2",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulber2"
+      },
+      {
+        "name": "remotion",
+        "surface": "custom_skill",
+        "signal_band": "partial",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\remotion"
+      },
+      {
+        "name": "scrapling-official",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\scrapling-official"
+      },
+      {
+        "name": "security-review",
+        "surface": "custom_skill",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\security-review"
+      },
+      {
+        "name": "strategic-compact",
+        "surface": "custom_skill",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\strategic-compact"
+      },
+      {
+        "name": "three-js",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\three-js"
+      },
+      {
+        "name": "web-audit",
+        "surface": "custom_skill",
+        "signal_band": "partial",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\web-audit"
+      },
+      {
+        "name": "web-extract-workflow",
+        "surface": "custom_skill",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\web-extract-workflow"
+      },
+      {
+        "name": "canvas-engine",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "services\\canvas-engine"
+      },
+      {
+        "name": "cortex",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "services\\cortex"
+      },
+      {
+        "name": "crucix",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "services\\crucix"
+      },
+      {
+        "name": "mirofish",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "services\\mirofish"
+      },
+      {
+        "name": "triangulation",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "services\\triangulation"
+      },
+      {
+        "name": "uasc-executor",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "services\\uasc-executor"
+      },
+      {
+        "name": "ws-gateway",
+        "surface": "pre_atlas_services",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "services\\ws-gateway"
+      },
+      {
+        "name": "ai-exec-pipeline",
+        "surface": "pre_atlas_apps",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "apps\\ai-exec-pipeline"
+      },
+      {
+        "name": "canvas-demo",
+        "surface": "pre_atlas_apps",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "apps\\canvas-demo"
+      },
+      {
+        "name": "anatomy-extension",
+        "surface": "pre_atlas_tools",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "tools\\anatomy-extension"
+      },
+      {
+        "name": "anatomy-research",
+        "surface": "pre_atlas_tools",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "tools\\anatomy-research"
+      },
+      {
+        "name": "anatomy-rewrite",
+        "surface": "pre_atlas_tools",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "tools\\anatomy-rewrite"
+      },
+      {
+        "name": "codex-partner",
+        "surface": "pre_atlas_tools",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "tools\\codex-partner"
+      }
+    ],
+    "neither": [
+      {
+        "name": "cpython",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\cpython"
+      },
+      {
+        "name": "fractal-machine",
+        "surface": "standalone_repo",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\fractal-machine"
+      },
+      {
+        "name": "musescore-mcp",
+        "surface": "standalone_repo",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\musescore-mcp"
+      },
+      {
+        "name": "my-habit-tracker",
+        "surface": "standalone_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\my-habit-tracker"
+      },
+      {
+        "name": "web-os-555",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "FragOS",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "nextjs-ai-chatbot",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "m-357249",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "joyful-analytics-symphony",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "cpython",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "meshmap.net",
+        "surface": "github_repo",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "anime-js-migrate",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js-migrate"
+      },
+      {
+        "name": "backend-patterns",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\backend-patterns"
+      },
+      {
+        "name": "codex-delegate",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\codex-delegate"
+      },
+      {
+        "name": "competitor-monitor",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\competitor-monitor"
+      },
+      {
+        "name": "frontend-patterns",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\frontend-patterns"
+      },
+      {
+        "name": "handoff-out",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\handoff-out"
+      },
+      {
+        "name": "learned",
+        "surface": "custom_skill",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\learned"
+      },
+      {
+        "name": "tdd-workflow",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\tdd-workflow"
+      },
+      {
+        "name": "three-js-migrate",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\three-js-migrate"
+      },
+      {
+        "name": "wasp-patterns",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\wasp-patterns"
+      },
+      {
+        "name": "weapon",
+        "surface": "custom_skill",
+        "signal_band": "stale",
+        "memory_index_mention": true,
+        "match_policy": "title_only",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\.claude\\skills\\weapon"
+      },
+      {
+        "name": "fest-reconcile",
+        "surface": "pre_atlas_tools",
+        "signal_band": "none",
+        "memory_index_mention": false,
+        "match_policy": "unambiguous",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "tools\\fest-reconcile"
+      }
+    ],
+    "skipped_generic_name": [
+      {
+        "name": "atlas",
+        "surface": "standalone_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\atlas"
+      },
+      {
+        "name": "mcp",
+        "surface": "standalone_repo",
+        "signal_band": "none",
+        "memory_index_mention": true,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\mcp"
+      },
+      {
+        "name": "r3f",
+        "surface": "standalone_repo",
+        "signal_band": "none",
+        "memory_index_mention": true,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": "C:\\Users\\bruke\\r3f"
+      },
+      {
+        "name": "atlas",
+        "surface": "github_repo",
+        "signal_band": "strong",
+        "memory_index_mention": true,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      },
+      {
+        "name": "mpc",
+        "surface": "github_repo",
+        "signal_band": "partial",
+        "memory_index_mention": false,
+        "match_policy": "skipped",
+        "discussion_count": 0,
+        "matched_terms_used": [],
+        "sample_titles": [],
+        "path": null
+      }
+    ]
+  }
+}

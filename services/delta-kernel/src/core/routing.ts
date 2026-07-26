@@ -42,8 +42,18 @@ export function bucketSleepHours(hours: number): Bucket {
 
 export function bucketOpenLoops(count: number): Bucket {
   // Note: For open_loops, LOW count is GOOD (HIGH bucket)
-  if (count <= 1) return 'HIGH';
-  if (count >= 4) return 'LOW';
+  //
+  // Thresholds mirror atlas_config.py's ROUTING (cognitive-sensor, the
+  // canonical governor): open_loops_caution=10, open_loops_critical=20.
+  // They used to be 4/1 here -- unrelated to anything Python ever used --
+  // so at 10 open loops (a governor-verified BUILD-healthy count) this
+  // engine's GLOBAL_OVERRIDE forced CLOSURE regardless of mode or any
+  // other signal, while atlas-ai state/next/directive (reading the Python
+  // chain) reported BUILD. Two mode engines, two thresholds, one signal --
+  // keep these numbers in lockstep with services/cognitive-sensor/
+  // atlas_config.py's ROUTING dict; a future recalibration must update both.
+  if (count <= 10) return 'HIGH';
+  if (count > 20) return 'LOW';
   return 'OK';
 }
 

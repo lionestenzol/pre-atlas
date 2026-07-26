@@ -1,0 +1,525 @@
+{
+  "phase": "003_CROSS_REFERENCE_MATRIX",
+  "sequence": "era_2_early_cc",
+  "generated_at": "2026-05-28T00:53:03.967409+00:00",
+  "era": {
+    "label": "era_2_early_cc",
+    "start": "2026-02-09",
+    "end": "2026-03-31"
+  },
+  "method": "Substring match of cluster seed_terms (case-insensitive) against ChatGPT title and CC first_user_msg. Items filtered to era window by first_date (ChatGPT) / first_ts (CC). Samples sorted by date ascending, capped at 5 per cell. HOTL: substring warnings from Phase 2 (clusters_final.json) still apply and are not auto-filtered here.",
+  "samples_per_cell": 5,
+  "totals": {
+    "chatgpt_in_era": 924,
+    "cc_in_era": 646,
+    "chatgpt_matched_sum_over_clusters": 120,
+    "cc_matched_sum_over_clusters": 450,
+    "note": "matched_sum_over_clusters can exceed in_era because one item may match multiple clusters (e.g. an 'anatomy canvas' chat hits both anatomy and canvas_render)."
+  },
+  "substring_warnings_carried_forward": [
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "stem",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "6321",
+            "title": "Bartering Dual Economy System"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "6281",
+            "title": "Business Ecosystem Integration"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "6098",
+            "title": "Document Processing System Design"
+          }
+        ]
+      }
+    },
+    {
+      "cluster": "productivity_skills",
+      "warning": {
+        "seed_term": "fest",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "6289",
+            "title": "Manifesting Through Desire"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "5988",
+            "title": "Manifestation and Facial Hair"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "5690",
+            "title": "OFP Lifestyle Explained"
+          }
+        ]
+      }
+    }
+  ],
+  "clusters": [
+    {
+      "name": "anatomy",
+      "seed_terms": [
+        "anatomy",
+        "anatomy-v1",
+        "anatomyv1",
+        "anatomy-extension",
+        "anatomy-research",
+        "anatomy-rewrite",
+        "anatomy-map",
+        "anatomy-frame",
+        "anatomy-sidecar"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "mb3d_fractals",
+      "seed_terms": [
+        "mb3d",
+        "mandelbulb",
+        "mandelbulber",
+        "m3p",
+        "m3f",
+        ".fract",
+        "mandelbox",
+        "fractal",
+        "raymarcher",
+        "fragmentarium"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 2,
+          "samples": [
+            {
+              "id": "682",
+              "date": "2026-03-27",
+              "preview": "Fractal Visual Verification"
+            },
+            {
+              "id": "685",
+              "date": "2026-03-27",
+              "preview": "Raymarched Mandelbulb Spec"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "audio_music",
+      "seed_terms": [
+        "strudel",
+        "stem",
+        "stemai",
+        "surge",
+        "surge-xt",
+        "nih-plug",
+        "airwindows",
+        "musescore",
+        "fl356",
+        "fl 3",
+        "fl3",
+        "vst3",
+        "vst",
+        "daw",
+        "midi",
+        "synth",
+        "sampler",
+        "audio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 89,
+          "samples": [
+            {
+              "id": "1533",
+              "date": "2026-02-09",
+              "preview": "Your System and Infrastructure"
+            },
+            {
+              "id": "1494",
+              "date": "2026-02-13",
+              "preview": "Unzip and Analyze System"
+            },
+            {
+              "id": "1471",
+              "date": "2026-02-14",
+              "preview": "Tattoo Surface Governance System"
+            },
+            {
+              "id": "1420",
+              "date": "2026-02-16",
+              "preview": "System Stress Test"
+            },
+            {
+              "id": "1422",
+              "date": "2026-02-16",
+              "preview": "Virtual Casting System Design"
+            }
+          ]
+        },
+        "cc": {
+          "count": 262,
+          "samples": [
+            {
+              "id": "agent-a3dfc3b",
+              "date": "2026-02-09",
+              "preview": "I need to understand the exact structure and content of the user's conversation data at C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor to design an agent sy"
+            },
+            {
+              "id": "agent-a583652",
+              "date": "2026-02-09",
+              "preview": "I need to perform a deep behavioral analysis of a user's 1,397 ChatGPT conversations stored in the Pre Atlas system at C:\\Users\\bruke\\Pre Atlas\\services\\cogniti"
+            },
+            {
+              "id": "agent-aeff131",
+              "date": "2026-02-09",
+              "preview": "I need to design an implementation plan for a 5-agent idea intelligence system that will be built as Python scripts in the existing cognitive-sensor directory a"
+            },
+            {
+              "id": "agent-a6c684c",
+              "date": "2026-02-13",
+              "preview": "I need to understand the current state of the loop triage system in C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor.  1. Read `loops_latest.json` \u2014 what loop"
+            },
+            {
+              "id": "agent-a1b63ec",
+              "date": "2026-02-16",
+              "preview": "I need to find the exact melanin absorption coefficients currently used in a Blender shader called \"SKIN_MASTER_STUDIO_V1\". The shader uses a Beer-Lambert chrom"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "atlas_core",
+      "seed_terms": [
+        "atlas",
+        "pre atlas",
+        "pre-atlas",
+        "delta-kernel",
+        "delta kernel",
+        "cognitive-sensor",
+        "cognitive sensor",
+        "cycleboard",
+        "cortex",
+        "optogon",
+        "aegis",
+        "aegis-fabric",
+        "openclaw",
+        "mirofish",
+        "perception",
+        "triangulation",
+        "mosaic",
+        "inpact",
+        "in-pact",
+        "blueprint-generator",
+        "code-converter",
+        "ai-exec-pipeline",
+        "uasc",
+        "ws-gateway",
+        "polaris",
+        "crucix",
+        "governance",
+        "RECOVER",
+        "CLOSURE",
+        "MAINTENANCE",
+        "COMPOUND",
+        "SCALE"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 17,
+          "samples": [
+            {
+              "id": "1510",
+              "date": "2026-02-11",
+              "preview": "Atlas Program Overview"
+            },
+            {
+              "id": "1503",
+              "date": "2026-02-12",
+              "preview": "Perception of Deficiency"
+            },
+            {
+              "id": "1471",
+              "date": "2026-02-14",
+              "preview": "Tattoo Surface Governance System"
+            },
+            {
+              "id": "1377",
+              "date": "2026-02-19",
+              "preview": "OpenClaw Uses and Applications"
+            },
+            {
+              "id": "1323",
+              "date": "2026-02-21",
+              "preview": "Atlas Rebuild Strategy"
+            }
+          ]
+        },
+        "cc": {
+          "count": 151,
+          "samples": [
+            {
+              "id": "agent-a008dc1",
+              "date": "2026-02-09",
+              "preview": "Search the codebase at C:\\Users\\bruke\\Pre Atlas for anything related to \"vectorized conversations\". Look for:  1. Files that contain vector embeddings or vector"
+            },
+            {
+              "id": "agent-a145acc",
+              "date": "2026-02-09",
+              "preview": "I need to examine the actual vectorized conversation data in C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor. Read the following files to understand what the"
+            },
+            {
+              "id": "agent-a1d3798",
+              "date": "2026-02-09",
+              "preview": "Explore C:\\Users\\bruke\\Pre Atlas\\services\\delta-kernel to understand how the TypeScript side integrates with the cognitive sensor, and what patterns exist for a"
+            },
+            {
+              "id": "agent-a1dea06",
+              "date": "2026-02-09",
+              "preview": "Read the first 100 lines of C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor\\dashboard.html to understand the UI pattern used for dashboards in this project. "
+            },
+            {
+              "id": "agent-a3dfc3b",
+              "date": "2026-02-09",
+              "preview": "I need to understand the exact structure and content of the user's conversation data at C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor to design an agent sy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "web_extract",
+      "seed_terms": [
+        "scrapling",
+        "scrape",
+        "scraping",
+        "sitepull",
+        "web-audit",
+        "web-extract",
+        "competitor-monitor",
+        "competitor monitor",
+        "brightdata",
+        "datadome",
+        "cloudflare",
+        "anti-bot",
+        "playwright",
+        "puppeteer",
+        "headless",
+        "humanize"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "productivity_skills",
+      "seed_terms": [
+        "weapon",
+        "fest",
+        "festival",
+        "mini-ship",
+        "miniship",
+        "autopilot",
+        "project-finisher",
+        "handoff",
+        "handoff-out",
+        "eval-harness",
+        "cookbook",
+        "search-first",
+        "security-review",
+        "strategic-compact",
+        "tdd-workflow",
+        "verification-loop",
+        "coding-standards",
+        "backend-patterns",
+        "frontend-patterns",
+        "wasp-patterns",
+        "codex-delegate",
+        "codex-partner",
+        "continuous-learning",
+        "slash command",
+        "/weapon",
+        "/fest",
+        "/mini-ship",
+        "/autopilot"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 4,
+          "samples": [
+            {
+              "id": "1260",
+              "date": "2026-02-24",
+              "preview": "Strudel Logic and Cookbook"
+            },
+            {
+              "id": "1262",
+              "date": "2026-02-24",
+              "preview": "Strudel Beat Cookbook Summary"
+            },
+            {
+              "id": "722",
+              "date": "2026-03-25",
+              "preview": "Fest.build Explanation"
+            },
+            {
+              "id": "696",
+              "date": "2026-03-26",
+              "preview": "Fest.build Execution Engine"
+            }
+          ]
+        },
+        "cc": {
+          "count": 10,
+          "samples": [
+            {
+              "id": "agent-a9754e290206d157a",
+              "date": "2026-02-25",
+              "preview": "I need to verify that Strudel code examples from a cookbook document actually parse and evaluate correctly.   Look at the Strudel project at C:\\Users\\bruke\\STRU"
+            },
+            {
+              "id": "agent-a68552af63657dbb4",
+              "date": "2026-03-03",
+              "preview": "Fix 7 audit issues in the WallPaper Android app build config and manifest. The project is at C:/Users/bruke/android/WallPaper. Package: com.focusblack.wallos.  "
+            },
+            {
+              "id": "agent-a6eeed689c5fafcd0",
+              "date": "2026-03-03",
+              "preview": "Audit the AndroidManifest.xml for the WallPaper project at C:/Users/bruke/android/WallPaper. Use the MCP tool `mcp__android-dev__project_manifest_info` to get m"
+            },
+            {
+              "id": "agent-a5cc2ccd623eeaa77",
+              "date": "2026-03-15",
+              "preview": "Design an implementation plan for fixing and enhancing the chord-pad autopilot system. Here's the full context:  ## Codebase Context  **Key files:** - `chord-pa"
+            },
+            {
+              "id": "agent-a629ea6c733f0f70c",
+              "date": "2026-03-15",
+              "preview": "Explore the chord-pad UI rendering, arpeggiator integration, and timing system to understand several issues:  1. **Arpeggiator + autopilot**: Read `chord-pad/sr"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "canvas_render",
+      "seed_terms": [
+        "canvas-engine",
+        "canvas-demo",
+        "screenshot-to-code",
+        "three-js",
+        "three.js",
+        "threejs",
+        "three-stack",
+        "three-js-migrate",
+        "react-three-fiber",
+        "r3f",
+        "drei",
+        "anime-js",
+        "anime.js",
+        "animejs",
+        "anime-js-migrate",
+        "remotion",
+        "webgl",
+        "webgpu",
+        "shader",
+        "raymarch",
+        "virtualstudio",
+        "comfyui"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 8,
+          "samples": [
+            {
+              "id": "1447",
+              "date": "2026-02-15",
+              "preview": "VirtualStudio Landing Page"
+            },
+            {
+              "id": "1452",
+              "date": "2026-02-15",
+              "preview": "ComfyUI Overview"
+            },
+            {
+              "id": "1404",
+              "date": "2026-02-16",
+              "preview": "ComfyUI Overview"
+            },
+            {
+              "id": "1435",
+              "date": "2026-02-16",
+              "preview": "Skin Shader Analysis"
+            },
+            {
+              "id": "1386",
+              "date": "2026-02-18",
+              "preview": "ComfyUI Extraction Workflow"
+            }
+          ]
+        },
+        "cc": {
+          "count": 27,
+          "samples": [
+            {
+              "id": "agent-a11cb6f",
+              "date": "2026-02-15",
+              "preview": "You need to rewrite 3 React component files in the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero\\app\\src\\sections\\  For ALL"
+            },
+            {
+              "id": "agent-a431fc5",
+              "date": "2026-02-15",
+              "preview": "You need to rewrite 3 React component files in the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero\\app\\src\\sections\\  For ALL"
+            },
+            {
+              "id": "agent-aa651b7",
+              "date": "2026-02-15",
+              "preview": "Perform a thorough code audit of the VirtualStudio Cinematic Hero project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero\\app\\src\\  R"
+            },
+            {
+              "id": "agent-ab98334",
+              "date": "2026-02-15",
+              "preview": "Explore the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero. I need a comprehensive understanding of:  1. The overall project"
+            },
+            {
+              "id": "agent-ad5b22a",
+              "date": "2026-02-15",
+              "preview": "Explore the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero. Focus on:  1. Dependencies and package management (package.json,"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

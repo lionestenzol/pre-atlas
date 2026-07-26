@@ -137,14 +137,18 @@ page = f"""<!doctype html>
 <html>
 <head>
   <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Cognitive Dashboard</title>
   <style>
-    body {{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }}
-    h1 {{ font-size: 20px; margin: 0 0 12px; }}
-    h2 {{ font-size: 14px; margin: 22px 0 8px; }}
-    .box {{ border: 1px solid #ddd; border-radius: 10px; padding: 12px; background: #fff; }}
-    pre {{ margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.35; }}
+    html, body {{ box-sizing: border-box; }}
+    *, *::before, *::after {{ box-sizing: inherit; }}
+    body {{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; color: #111; max-width: 100%; overflow-x: hidden; word-break: break-word; }}
+    h1 {{ font-size: clamp(15px, 2.4vw, 20px); margin: 0 0 10px; line-height: 1.2; }}
+    h2 {{ font-size: clamp(12px, 1.8vw, 14px); margin: 18px 0 6px; line-height: 1.2; }}
+    .box {{ border: 1px solid #ddd; border-radius: 10px; padding: 10px; background: #fff; max-width: 100%; overflow-x: auto; }}
+    pre {{ margin: 0; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: clamp(10px, 1.2vw, 12px); line-height: 1.35; }}
     .muted {{ color: #666; font-size: 12px; }}
+    @media (max-width: 360px) {{ body {{ margin: 10px; }} }}
   </style>
 </head>
 <body>

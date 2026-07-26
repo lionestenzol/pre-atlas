@@ -19,8 +19,8 @@ import {
   CameraTickData,
   LightRegion,
   RejectReason,
-} from './types';
-import { createEntity, now, generateUUID, computeHash } from './delta';
+} from '../src/core/types.js';
+import { createEntity, now, generateUUID, computeHash } from '../src/core/delta.js';
 
 // === SCHEMA VALIDATORS ===
 

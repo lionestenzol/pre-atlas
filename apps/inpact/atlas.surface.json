@@ -1,0 +1,107 @@
+{
+  "surface": "inpact",
+  "headline": "inPACT daily-flow / CycleBoard UI: local-state task & routine tracker with delta-kernel (3001) sync, signal banner, and 4-step onboarding",
+  "kind": "ui",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "complete_task",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Click complete on an A-Z task",
+      "evidence": "apps/inpact/js/functions.js:36",
+      "notes": "completeTask(id): sets status Completed, logs activity, persists via stateManager.update, re-renders"
+    },
+    {
+      "id": "create_task",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Add card / Create task",
+      "evidence": "apps/inpact/js/functions.js:634",
+      "notes": "createTask() reads modal inputs and appends a new A-Z task to state"
+    },
+    {
+      "id": "delete_task",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Click delete on a task (confirm prompt)",
+      "evidence": "apps/inpact/js/functions.js:51",
+      "notes": "deleteTask(id): confirm-gated filter out of state.AZTask"
+    },
+    {
+      "id": "toggle_time_block",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Check off a time block in the day plan",
+      "evidence": "apps/inpact/js/functions.js:498",
+      "notes": "toggleTimeBlockCompletion(id); day-plan schedule completion toggle"
+    },
+    {
+      "id": "complete_routine_step",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Toggle a routine step / mark routine complete",
+      "evidence": "apps/inpact/js/functions.js:1031",
+      "notes": "toggleRoutineStep / toggleRoutineComplete (1056); morning/evening routine flow"
+    },
+    {
+      "id": "onboarding_finish",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Click Start using in-PACT (onboarding step 4)",
+      "evidence": "apps/inpact/onboarding.html:186",
+      "notes": "4-step wizard goStep(0..3) -> finish(); quickStart()/prefillStarter() seed initial state"
+    },
+    {
+      "id": "import_state",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "Import JSON state file (Settings)",
+      "evidence": "apps/inpact/js/functions.js:771",
+      "notes": "handleFileImport(event): reads a file and replaces the full local state blob; bulk overwrite"
+    },
+    {
+      "id": "sync_cycleboard_state",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 2,
+      "invoke": "Background PUT /api/cycleboard to delta-kernel",
+      "evidence": "apps/inpact/js/api.js:70",
+      "notes": "AtlasAPI.putCycleBoardState() pushes the full inPACT state blob to delta-kernel:3001 (offline-first, fails silently)"
+    },
+    {
+      "id": "resolve_signal",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 2,
+      "invoke": "Click an action button on the signal banner",
+      "evidence": "apps/inpact/js/signals.js:168",
+      "notes": "resolveSignal() POSTs to delta-kernel /api/signals/:id/resolve with chosen action_id; bearer-token auth"
+    },
+    {
+      "id": "complete_prepared_task",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "Mark a Cortex prepared item done in Atlas AI panel",
+      "evidence": "apps/inpact/js/ai-actions.js:213",
+      "notes": "handlePreparedTask -> AtlasAPI.completeBackendTask() PUT /api/tasks/:id status DONE on delta-kernel"
+    },
+    {
+      "id": "atlas_health_status",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "Background GET /api/health to delta-kernel",
+      "evidence": "apps/inpact/js/api.js:95",
+      "notes": "AtlasAPI.getHealth() polls delta-kernel:3001 health to set online/offline; safe read"
+    }
+  ]
+}

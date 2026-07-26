@@ -6,17 +6,22 @@ Accepts command tokens from delta-kernel and executes profiles.
 Bridge between governance (what to do) and execution (how to do it).
 """
 
+from __future__ import annotations
+
+import argparse
 import json
-import sqlite3
 import os
+import sqlite3
 import uuid
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from socketserver import ThreadingMixIn
-from datetime import datetime
 from typing import Optional, Tuple
 
-from auth import Authenticator, AuthResult
-from executor import ProfileExecutor, ExecutionResult
+import uvicorn
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from auth import AuthResult, Authenticator
+from executor import ProfileExecutor
 
 
 # Configuration
@@ -197,81 +202,89 @@ class UASCServer:
             return {'run_id': run_id, 'error': str(e)}, 500
 
 
-# Global server instance
+# Global server instance — set by main() or by tests via monkeypatch.
 uasc_server: Optional[UASCServer] = None
 
 
-class RequestHandler(BaseHTTPRequestHandler):
-    """HTTP request handler for UASC API."""
+# FastAPI app + dispatch layer (swapped 2026-05-30 from raw BaseHTTPRequestHandler).
+# HMAC: per-route Dependency on /exec only — 3 GETs stay open. See ATLAS_LAWS.md #2.
+app = FastAPI(title="UASC Executor", version="1.0")
 
-    def do_POST(self) -> None:
-        if self.path == '/exec':
-            self._handle_exec()
-        else:
-            self._send_json({'error': 'Not found'}, 404)
 
-    def do_GET(self) -> None:
-        if self.path == '/commands':
-            self._handle_list_commands()
-        elif self.path == '/health':
-            self._send_json({'status': 'ok', 'service': 'uasc-executor', 'port': DEFAULT_PORT}, 200)
-        elif self.path == '/runs':
-            self._handle_list_runs()
-        else:
-            self._send_json({'error': 'Not found'}, 404)
+@app.middleware("http")
+async def add_cors_header(request: Request, call_next):
+    """Preserve `Access-Control-Allow-Origin: *` on every response (parity with prior handler)."""
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
-    def _handle_exec(self) -> None:
-        client_id = self.headers.get('X-UASC-Client', '')
-        timestamp = self.headers.get('X-UASC-Timestamp', '')
-        signature = self.headers.get('X-UASC-Signature', '')
 
-        content_length = int(self.headers.get('Content-Length', 0))
-        body = self.rfile.read(content_length).decode('utf-8') if content_length else ''
+@app.exception_handler(StarletteHTTPException)
+async def reshape_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    """Reshape FastAPI's default `{"detail": ...}` to the legacy `{"error": ...}` body."""
+    detail = exc.detail
+    # Legacy 404 body said "Not found" (lowercase f); Starlette default is "Not Found".
+    if isinstance(detail, str) and detail == "Not Found":
+        detail = "Not found"
+    return JSONResponse({"error": str(detail)}, status_code=exc.status_code)
 
-        auth = uasc_server.authenticator.authenticate(client_id, timestamp, signature, body)
-        if not auth.valid:
-            self._send_json({'error': auth.error}, 401)
-            return
 
-        try:
-            data = json.loads(body) if body else {}
-        except json.JSONDecodeError:
-            self._send_json({'error': 'Invalid JSON'}, 400)
-            return
+async def verify_hmac(
+    request: Request,
+    x_uasc_client: str = Header(default="", alias="X-UASC-Client"),
+    x_uasc_timestamp: str = Header(default="", alias="X-UASC-Timestamp"),
+    x_uasc_signature: str = Header(default="", alias="X-UASC-Signature"),
+) -> Tuple[AuthResult, str]:
+    """HMAC gate for /exec. Reads raw body once so signature verification sees the same bytes."""
+    body = (await request.body()).decode("utf-8")
+    auth = uasc_server.authenticator.authenticate(
+        x_uasc_client, x_uasc_timestamp, x_uasc_signature, body
+    )
+    if not auth.valid:
+        raise HTTPException(status_code=401, detail=auth.error or "Unauthorized")
+    return auth, body
 
-        cmd = data.get('cmd', '')
-        if not cmd:
-            self._send_json({'error': 'Missing cmd'}, 400)
-            return
 
-        inputs = {k: v for k, v in data.items() if k != 'cmd'}
+@app.post("/exec")
+async def exec_command(
+    auth_and_body: Tuple[AuthResult, str] = Depends(verify_hmac),
+) -> JSONResponse:
+    auth, body = auth_and_body
+    try:
+        data = json.loads(body) if body else {}
+    except json.JSONDecodeError:
+        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
 
-        response, status = uasc_server.execute_command(cmd, auth, inputs)
-        self._send_json(response, status)
+    cmd = data.get("cmd", "")
+    if not cmd:
+        return JSONResponse({"error": "Missing cmd"}, status_code=400)
 
-    def _handle_list_commands(self) -> None:
-        commands = uasc_server.db.list_commands()
-        self._send_json({'commands': commands}, 200)
+    inputs = {k: v for k, v in data.items() if k != "cmd"}
+    response, status = uasc_server.execute_command(cmd, auth, inputs)
+    return JSONResponse(response, status_code=status)
 
-    def _handle_list_runs(self) -> None:
-        runs = uasc_server.db.get_recent_runs()
-        self._send_json({'runs': runs}, 200)
 
-    def _send_json(self, data: dict, status: int) -> None:
-        self.send_response(status)
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        self.wfile.write(json.dumps(data, indent=2).encode())
+@app.get("/commands")
+def list_commands() -> JSONResponse:
+    return JSONResponse({"commands": uasc_server.db.list_commands()}, status_code=200)
 
-    def log_message(self, format: str, *args) -> None:
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] {args[0]}")
+
+@app.get("/health")
+def health() -> JSONResponse:
+    return JSONResponse(
+        {"status": "ok", "service": "uasc-executor", "port": DEFAULT_PORT},
+        status_code=200,
+    )
+
+
+@app.get("/runs")
+def list_runs() -> JSONResponse:
+    return JSONResponse({"runs": uasc_server.db.get_recent_runs()}, status_code=200)
 
 
 def main() -> None:
     global uasc_server
 
-    import argparse
     parser = argparse.ArgumentParser(description='UASC Executor Service')
     parser.add_argument('--port', type=int, default=DEFAULT_PORT)
     parser.add_argument('--host', default=DEFAULT_HOST)
@@ -296,15 +309,7 @@ def main() -> None:
         print(f"    {status} {cmd['cmd']} -> {cmd['profile_id']}")
     print()
 
-    class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-        daemon_threads = True
-
-    server = ThreadedHTTPServer((args.host, args.port), RequestHandler)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down...")
-        server.shutdown()
+    uvicorn.run(app, host=args.host, port=args.port, log_level='info')
 
 
 if __name__ == '__main__':

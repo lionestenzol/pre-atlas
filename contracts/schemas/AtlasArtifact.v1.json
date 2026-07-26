@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AtlasArtifact.v1",
+  "title": "Atlas Artifact",
+  "description": "Durable knowledge artifact produced by an agent. Sibling to Signal.v1: signals are behavioral state (ephemeral, ring-buffered); artifacts are derived knowledge (persistent, addressable, re-renderable by lattice). See Bible §17 for the seam doctrine and §16 for the parallel Signal seam.",
+  "type": "object",
+  "required": ["schema_version", "id", "created_at", "source_layer", "artifact_type", "payload"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "source_layer": {
+      "type": "string",
+      "enum": ["site_pull", "optogon", "atlas", "ghost_executor", "claude_code", "droplist"]
+    },
+    "artifact_type": {
+      "type": "string",
+      "enum": ["widget", "explanation", "recon", "anatomy_map"]
+    },
+    "topic": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "origin": { "type": "string", "enum": ["explicit_arg", "inferred_from_prior_turn"] },
+        "raw_command": { "type": ["string", "null"] }
+      }
+    },
+    "session": {
+      "type": "object",
+      "properties": {
+        "session_id": { "type": "string" },
+        "turn_index": { "type": "integer", "minimum": 0 },
+        "model": { "type": "string" }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "prose": { "type": "string" },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["mode", "source"],
+            "properties": {
+              "title": { "type": "string" },
+              "mode": { "type": "string", "enum": ["svg", "html"] },
+              "source": { "type": "string", "minLength": 1 },
+              "loading_messages": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "paired_turn": {
+          "type": "object",
+          "description": "When /show is invoked bare (no argument), it discards the prior assistant turn and re-answers. This captures both sides of that pair so lattice can show the back-reference. prior_assistant_message is the producer's discretion to send verbatim or summarized.",
+          "properties": {
+            "prior_user_message": { "type": ["string", "null"] },
+            "prior_assistant_message": { "type": ["string", "null"] },
+            "prior_turn_index": { "type": ["integer", "null"] }
+          }
+        },
+        "data": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "lattice_binding": {
+      "type": "object",
+      "required": ["node_id"],
+      "properties": {
+        "node_id": { "type": "string", "minLength": 1 },
+        "domain": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

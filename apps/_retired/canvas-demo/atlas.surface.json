@@ -1,0 +1,7 @@
+{
+  "surface": "canvas-demo",
+  "headline": "STUB demo (Remotion vs dummy-site) — not a service; do not build on it.",
+  "kind": "library",
+  "lifecycle": "stub",
+  "capabilities": []
+}

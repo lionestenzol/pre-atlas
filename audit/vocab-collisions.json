@@ -1,0 +1,689 @@
+{
+  "engine_used": "claude",
+  "method_note": "Codex CLI was installed but Grep-tool was used directly because the work is mechanical (12 terms x grep + classify) and Grep parallelizes via single message of tool calls. Each term grep'd across services/ apps/ contracts/ tools/ (skipping node_modules/.venv/.git/dist/build/__pycache__/target). Content samples taken from representative source files to disambiguate meaning per file. Per-term match samples capped (Grep head_limit) per spec.",
+  "scope": [
+    "services/**",
+    "apps/**",
+    "contracts/**",
+    "tools/**",
+    "doctrine/**",
+    "scripts/**",
+    "anatomy/**",
+    "research/**"
+  ],
+  "terms": [
+    {
+      "term": "session",
+      "distinct_meanings_count": 6,
+      "meanings": [
+        {
+          "meaning": "Optogon path-runtime session — SQLite-backed `OptogonSessionState` row identifying a particular traversal of a Path through nodes (session_id, path_id, state_json, node_states)",
+          "example_locations": [
+            "services/optogon/src/optogon/session_store.py:21",
+            "services/optogon/src/optogon/session_store.py:67",
+            "services/optogon/tests/test_session_start_sitepull.py",
+            "services/optogon/src/optogon/main.py"
+          ]
+        },
+        {
+          "meaning": "canvas-engine clone-session — Vite sandbox instance keyed by `sessionId`, holds an in-process Vite dev server per generated clone",
+          "example_locations": [
+            "services/canvas-engine/src/sandbox/vite-pool.ts:15",
+            "services/canvas-engine/src/sandbox/vite-pool.ts:30",
+            "services/canvas-engine/src/pipeline/edit-loop.ts:36",
+            "services/canvas-engine/src/pipeline/url-to-clone.ts"
+          ]
+        },
+        {
+          "meaning": "Claude Code conversation session — `session_id` of a Claude Code (CLI) conversation, indexed for triage / cross-session retrospectives",
+          "example_locations": [
+            "cc-session-index.py:22",
+            "cc-session-index.py:53",
+            "NEXT_SESSION_HANDOFF.md"
+          ]
+        },
+        {
+          "meaning": "Cognitive-sensor triage-server `session: live` marker — UI tag identifying a single live ingestion run of triage_server.py",
+          "example_locations": [
+            "services/cognitive-sensor/triage_server.py:65"
+          ]
+        },
+        {
+          "meaning": "Optogon Cortex-side triage session — a remote async reasoning session started by Cortex via POST /session/start; this is the Cortex-client view of #1",
+          "example_locations": [
+            "services/cognitive-sensor/triage_server.py:218",
+            "services/cognitive-sensor/triage_server.py:231",
+            "services/cortex/src/cortex/clients/optogon_client.py"
+          ]
+        },
+        {
+          "meaning": "AbortController.signal `signal` (DOM) — wired through `fetch({ signal: controller.signal })` for cancellable HTTP; also appears as `session`-shaped scope on canvas/inpact API helpers",
+          "example_locations": [
+            "apps/inpact/js/api.js:64",
+            "apps/inpact/js/api.js:94",
+            "apps/inpact/js/api.js:122"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "signal",
+      "distinct_meanings_count": 7,
+      "meanings": [
+        {
+          "meaning": "Atlas Signal.v1 (governance signal) — JSON-Schema-validated event ring buffer in delta-kernel; types: `status|completion|blocked|approval_required|error|insight`. Canonical Optogon -> Cortex -> InPACT plumbing.",
+          "example_locations": [
+            "services/delta-kernel/src/atlas/signals-store.ts:8",
+            "services/delta-kernel/src/atlas/signals-store.ts:21",
+            "services/optogon/src/optogon/signals.py:4",
+            "services/optogon/src/optogon/signals.py:35",
+            "services/cortex/src/cortex/inpact/signals.py",
+            "apps/inpact/js/signals.js:18"
+          ]
+        },
+        {
+          "meaning": "AbortController.signal (DOM/Node fetch cancellation token)",
+          "example_locations": [
+            "apps/inpact/js/api.js:64",
+            "apps/inpact/js/api.js:122"
+          ]
+        },
+        {
+          "meaning": "Triangulation consensus `signal` — a DOM/spatial/visual voter that returns a score that gets quorum-weighted",
+          "example_locations": [
+            "services/triangulation/src/triangulation/consensus.py:1",
+            "services/triangulation/src/triangulation/consensus.py:74",
+            "services/triangulation/src/triangulation/visual.py",
+            "services/triangulation/src/triangulation/verify.py"
+          ]
+        },
+        {
+          "meaning": "Auto-label heatmap prominence `signal` — visual-prominence ranking signal computed from fontSize x WCAG contrast, used as a ranking input for hotspot labels",
+          "example_locations": [
+            "tools/anatomy-extension/lib/text-grid.js:1",
+            "tools/anatomy-extension/lib/text-grid.js:19"
+          ]
+        },
+        {
+          "meaning": "Cognitive-sensor agent_classifier — `done|started|stalled` keyword indicators mined from text",
+          "example_locations": [
+            "services/cognitive-sensor/agent_classifier.py:74",
+            "services/cognitive-sensor/agent_classifier.py:124",
+            "services/cognitive-sensor/thread_scorer.py:2"
+          ]
+        },
+        {
+          "meaning": "Mosaic-orchestrator compound-loop `signal` — skill/finance/network health metric delta written into a metrics JSON",
+          "example_locations": [
+            "services/mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_skill_health.py:3",
+            "services/mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_skill_health.py:36",
+            "services/mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_finance_health.py",
+            "services/mosaic-orchestrator/src/mosaic/workflows/compound_loops/loop_network_health.py"
+          ]
+        },
+        {
+          "meaning": "Optogon-emitted feedback / profile preference signal — `signal_type` field in seed_preferences.py-style records consumed by the preference store",
+          "example_locations": [
+            "services/optogon/src/optogon/preferences_client.py",
+            "services/delta-kernel/src/atlas/preferences-store.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "context",
+      "distinct_meanings_count": 7,
+      "meanings": [
+        {
+          "meaning": "Optogon tier-tagged inference context — `dict[Tier, dict[str, Any]]` with tiers `confirmed|user|inferred|system`; resolved by precedence",
+          "example_locations": [
+            "services/optogon/src/optogon/context.py:8",
+            "services/optogon/src/optogon/context.py:16",
+            "services/optogon/src/optogon/context.py:29",
+            "services/optogon/tests/test_context.py"
+          ]
+        },
+        {
+          "meaning": "ContextPackage.v1 contract — JSON-schema'd `package` envelope built by sitepull_adapter (`build_context_package(anatomy_path) -> ContextPackage`)",
+          "example_locations": [
+            "contracts/validate.py:39",
+            "services/optogon/src/optogon/adapters/sitepull_adapter.py:128",
+            "services/optogon/src/optogon/adapters/sitepull_adapter.py:150",
+            "services/optogon/tests/test_sitepull_adapter.py:1"
+          ]
+        },
+        {
+          "meaning": "Directive `context_bundle` field — payload section inside a Directive.v1 that ghost_executor reads when composing a TaskPrompt",
+          "example_locations": [
+            "services/cortex/src/cortex/ghost_executor/consume.py:46",
+            "services/delta-kernel/src/atlas/directive.ts"
+          ]
+        },
+        {
+          "meaning": "CloseSignal `context_residue` — preferences gleaned from a closed loop, fed to delta-kernel preferences-store",
+          "example_locations": [
+            "services/delta-kernel/src/atlas/close-signal.ts",
+            "services/delta-kernel/src/atlas/preferences-store.ts:111"
+          ]
+        },
+        {
+          "meaning": "delta-kernel HTTP `/api/atlas/bridge` `context` body field — free-form `{action, context}` carrying task_title / draft_data for executor-bridge",
+          "example_locations": [
+            "services/delta-kernel/src/api/server.ts:880",
+            "services/delta-kernel/src/api/server.ts:2407",
+            "services/delta-kernel/src/api/server.ts:2426"
+          ]
+        },
+        {
+          "meaning": "AI assistant prompt `context` — InPACT's clipboard-pasted Claude-prompt snapshot (`ai-context.js` builds it from current screen state)",
+          "example_locations": [
+            "apps/inpact/js/ai-context.js:4",
+            "apps/inpact/js/ai-context.js:81"
+          ]
+        },
+        {
+          "meaning": "Lovable system-prompt 'context' (vendored) — the LLM-prompt conversation-history concept (`you have access to the full conversation context`)",
+          "example_locations": [
+            "services/canvas-engine/src/vendor/lovable/system-prompt.ts:24",
+            "services/canvas-engine/src/vendor/lovable/system-prompt.ts:166",
+            "services/canvas-engine/src/vendor/lovable/system-prompt.ts:171"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "trace",
+      "distinct_meanings_count": 5,
+      "meanings": [
+        {
+          "meaning": "UASC interpreter execution trace — list of state-machine node names visited during a UASC program run",
+          "example_locations": [
+            "research/uasc-m2m/reference-implementation/core/interpreter.py:32",
+            "research/uasc-m2m/reference-implementation/core/interpreter.py:221",
+            "research/uasc-m2m/reference-implementation/core/interpreter.py:232",
+            "services/uasc-executor/SPEC.md:287"
+          ]
+        },
+        {
+          "meaning": "Cortex task-history trace — log of last 20 executor runs with full step-by-step trace",
+          "example_locations": [
+            "services/cortex/src/cortex/loop.py:36"
+          ]
+        },
+        {
+          "meaning": "Atlas CLI lifecycle trace — `atl lifecycle <id>` state-machine trace for a thread",
+          "example_locations": [
+            "docs/CLI_REFERENCE.md:70"
+          ]
+        },
+        {
+          "meaning": "canvas-engine pattern-library 'trace logs' — debug log slug embedded in each Pattern (`Unique slug used in trace logs`)",
+          "example_locations": [
+            "services/canvas-engine/src/pattern-library/types.ts:14",
+            "services/canvas-engine/src/pipeline/image-to-envelope.ts:5"
+          ]
+        },
+        {
+          "meaning": "Plotly.js chart-data 'trace' (the visualization JS library's native object) — series rendered on Atlas Explorer maps",
+          "example_locations": [
+            "services/cognitive-sensor/build_cognitive_map.py:327",
+            "services/cognitive-sensor/build_cognitive_map.py:445",
+            "services/cognitive-sensor/build_cognitive_map.py:456"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "mode",
+      "distinct_meanings_count": 6,
+      "meanings": [
+        {
+          "meaning": "Atlas governance Mode — 6-state enum `RECOVER|CLOSURE|MAINTENANCE|BUILD|COMPOUND|SCALE` carried in delta-kernel state and rendered by every governance UI",
+          "example_locations": [
+            "services/delta-kernel/src/core/types-core.ts:144",
+            "services/delta-kernel/src/core/types-core.ts:255",
+            "services/delta-kernel/src/api/server.ts:206",
+            "services/delta-kernel/src/atlas/lattice-projection.ts",
+            "services/cognitive-sensor/governance_config.json:51"
+          ]
+        },
+        {
+          "meaning": "auth/runtime mode flag — 'running without auth (dev mode)' and similar `dev mode` / `production mode` runtime switches in delta-kernel server",
+          "example_locations": [
+            "services/delta-kernel/src/api/server.ts:97",
+            "services/delta-kernel/src/api/server.ts:105"
+          ]
+        },
+        {
+          "meaning": "Lattice frontend ctx-mode — UI view toggle (`tree|graph|timeline`) persisted in localStorage as `lattice.ctxMode`",
+          "example_locations": [
+            "apps/lattice/index.html:300",
+            "apps/lattice/index.html:2077",
+            "apps/lattice/index.html:2128"
+          ]
+        },
+        {
+          "meaning": "Atlas-galaxy template mode-toggle — `analytics | graph` panel switcher in the static atlas_template.html",
+          "example_locations": [
+            "services/cognitive-sensor/atlas_template.html:106",
+            "services/cognitive-sensor/atlas_template.html:136"
+          ]
+        },
+        {
+          "meaning": "Plotly scattergl trace `mode` — chart point/line drawing mode (`markers`); native library param, not Atlas-domain",
+          "example_locations": [
+            "services/cognitive-sensor/atlas_template.html:274",
+            "services/cognitive-sensor/atlas_template.html:279"
+          ]
+        },
+        {
+          "meaning": "image-edit canvas blend `mode` / shader mode — pixel-edit shader mode in canvas-engine image-edit",
+          "example_locations": [
+            "services/canvas-engine/src/pipeline/image-edit.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "directive",
+      "distinct_meanings_count": 5,
+      "meanings": [
+        {
+          "meaning": "Atlas Directive.v1 contract — schema-validated `{id, task, context_bundle, execution}` emitted by directive.ts and consumed by cortex ghost_executor",
+          "example_locations": [
+            "services/delta-kernel/src/atlas/directive.ts:164",
+            "services/delta-kernel/src/atlas/directive.ts:196",
+            "services/delta-kernel/src/atlas/directive.ts:220",
+            "services/cortex/src/cortex/ghost_executor/consume.py:1",
+            "services/cortex/src/cortex/ghost_executor/consume.py:26"
+          ]
+        },
+        {
+          "meaning": "Cognitive-sensor directive_engine output — confrontational hard-truth statement generated from cognitive_state.json (NOT the Directive.v1 contract; a human-facing 'directive' string)",
+          "example_locations": [
+            "services/cognitive-sensor/directive_engine.py:2",
+            "services/cognitive-sensor/directive_engine.py:85",
+            "services/cognitive-sensor/directive_engine.py:150"
+          ]
+        },
+        {
+          "meaning": "CycleBoard daily_directive — front-end struct `{daily_directive, mode_escalation, primary_order}` rendered as the strategic-directive banner in CycleBoard",
+          "example_locations": [
+            "services/cognitive-sensor/cycleboard/js/strategic.js:46",
+            "services/cognitive-sensor/cycleboard/js/strategic.js:90",
+            "services/cognitive-sensor/cycleboard/js/strategic.js:105"
+          ]
+        },
+        {
+          "meaning": "InPACT-side `primary_order` rendered as 'Atlas directive: ...' in AI-context markdown",
+          "example_locations": [
+            "apps/inpact/js/ai-context.js:25",
+            "apps/inpact/js/ai-context.js:119"
+          ]
+        },
+        {
+          "meaning": "Mosaic compound-loops risk/analyst engine 'directive' — recommendation string produced by the deterministic risk engines",
+          "example_locations": [
+            "services/mosaic-orchestrator/src/mosaic/workflows/compound_loops/risk_engine.py",
+            "services/mosaic-orchestrator/src/mosaic/workflows/compound_loops/analyst_engine.py"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "package",
+      "distinct_meanings_count": 5,
+      "meanings": [
+        {
+          "meaning": "ContextPackage.v1 — Optogon's anatomy-derived schema-bound 'package' envelope (the verb is `build_context_package`)",
+          "example_locations": [
+            "services/optogon/src/optogon/adapters/sitepull_adapter.py:128",
+            "services/optogon/src/optogon/adapters/sitepull_adapter.py:150",
+            "services/optogon/src/optogon/adapters/sitepull_adapter.py:170",
+            "contracts/validate.py:39"
+          ]
+        },
+        {
+          "meaning": "npm/Python package metadata — `package.json` / installed Python package (Perception 'Paths anchored to the installed package, not cwd')",
+          "example_locations": [
+            "services/perception/src/perception/config.py:26",
+            "inventory.md:135",
+            "audit/build_system_index.py"
+          ]
+        },
+        {
+          "meaning": "Project sentinel marker — `package.json` / `pyproject.toml` used as a project-root sentinel in cognitive-sensor cluster mapper",
+          "example_locations": [
+            "services/cognitive-sensor/cluster_leverage_map.py:232"
+          ]
+        },
+        {
+          "meaning": "Lovable system-prompt 'package' guidance — the LLM prompt mentions managing packages in the React project (vendored)",
+          "example_locations": [
+            "services/canvas-engine/src/vendor/lovable/system-prompt.ts"
+          ]
+        },
+        {
+          "meaning": "BEHAVIORAL_AUDIT and design narrative — 'package' used as a unit-of-shipping noun in human prose",
+          "example_locations": [
+            "services/cognitive-sensor/BEHAVIORAL_AUDIT.md",
+            "tools/codex-partner/runs/review-extension-2026-04-26-rerun.json"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "frame",
+      "distinct_meanings_count": 6,
+      "meanings": [
+        {
+          "meaning": "anatomy-frame-sidecar bundle.frame — PNG screenshot frame passed from anatomy-extension to the (now-removed) sidecar for carbo-shrink (concept survives in extension docs)",
+          "example_locations": [
+            "tools/anatomy-extension/content.js:268",
+            "tools/anatomy-extension/content.js:592",
+            "tools/anatomy-extension/content.js:598"
+          ]
+        },
+        {
+          "meaning": "HTML/CSS iframe element — `iframe` backdrop in the anatomy-map for live-vendored backdrops",
+          "example_locations": [
+            "tools/anatomy-extension/content.js:599",
+            "tools/anatomy-extension/content.js:617",
+            "tools/anatomy-extension/content.js:712"
+          ]
+        },
+        {
+          "meaning": "Remotion video animation frame — `useCurrentFrame()` per-frame interpolation in canvas-demo's Remotion compositions",
+          "example_locations": [
+            "apps/canvas-demo/src/Main.tsx:78",
+            "apps/canvas-demo/src/Main.tsx:115",
+            "apps/canvas-demo/src/Main.tsx:121"
+          ]
+        },
+        {
+          "meaning": "Optogon Codex delegate 'fresh-frame' framing — informal noun in agent guidance ('fresh-frame second opinion')",
+          "example_locations": [
+            "services/optogon/src/optogon/action_handlers.py:350",
+            "services/optogon/tests/test_path_delegate_to_codex.py:113"
+          ]
+        },
+        {
+          "meaning": "Triangulation spatial element type — `'frame'` as a generic spatial container in spatial tests",
+          "example_locations": [
+            "services/triangulation/tests/test_spatial.py:171",
+            "services/triangulation/tests/test_spatial.py:178"
+          ]
+        },
+        {
+          "meaning": "Camera stream simulated frame — `SimulatedFrame` type in delta-kernel deferred camera adapter (image-buffer per tick)",
+          "example_locations": [
+            "services/delta-kernel/_deferred/camera-stream-test.ts:41",
+            "services/delta-kernel/_deferred/camera-stream-test.ts:68",
+            "services/delta-kernel/_deferred/camera-stream-test.ts:75",
+            "services/delta-kernel/_deferred/camera-adapter.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "engine",
+      "distinct_meanings_count": 9,
+      "meanings": [
+        {
+          "meaning": "canvas-engine — the URL-to-clone TS/Express service on port 3050",
+          "example_locations": [
+            "services/canvas-engine/src/server.ts:78",
+            "services/canvas-engine/src/server.ts:289",
+            "services/canvas-engine/src/server.ts:290",
+            "services/canvas-engine/src/server.ts:291"
+          ]
+        },
+        {
+          "meaning": "delta-kernel — TypeScript deterministic state engine on port 3001 (referred to as 'delta-kernel' rather than '*-engine', but functions as the kernel engine; tracked separately under term 'kernel')",
+          "example_locations": [
+            "services/delta-kernel/src/api/server.ts"
+          ]
+        },
+        {
+          "meaning": "Aegis PolicyEngine — multi-tenant policy condition evaluator (`new PolicyEngine(...)`)",
+          "example_locations": [
+            "services/aegis-fabric/src/tests/test-policy.ts:10",
+            "services/aegis-fabric/src/tests/test-policy.ts:24",
+            "services/aegis-fabric/src/tests/test-policy.ts:37",
+            "services/delta-kernel/_deferred/actuation.ts:182"
+          ]
+        },
+        {
+          "meaning": "Optogon path-runtime engine — Cortex's optogon_client docstring calls Optogon '(path-runtime engine, :3010)'",
+          "example_locations": [
+            "services/cortex/src/cortex/clients/optogon_client.py:1"
+          ]
+        },
+        {
+          "meaning": "MiroFish prediction engine — package-level docstring, FastAPI service identity, insight_engine.py orchestrator",
+          "example_locations": [
+            "services/mirofish/src/mirofish/__init__.py:1",
+            "services/mirofish/src/mirofish/prediction/__init__.py:1",
+            "services/mirofish/src/mirofish/prediction/insight_engine.py:1",
+            "services/mirofish/src/mirofish/api.py:1",
+            "services/mirofish/src/mirofish/api.py:23",
+            "services/mirofish/src/mirofish/api.py:49"
+          ]
+        },
+        {
+          "meaning": "Cognitive-sensor directive_engine — Python module producing confrontational directives",
+          "example_locations": [
+            "services/cognitive-sensor/directive_engine.py:2"
+          ]
+        },
+        {
+          "meaning": "Mosaic compound-loops risk_engine / analyst_engine — pure-function risk-mitigation engines",
+          "example_locations": [
+            "services/mosaic-orchestrator/src/mosaic/workflows/compound_loops/risk_engine.py:1",
+            "services/mosaic-orchestrator/src/mosaic/workflows/compound_loops/analyst_engine.py"
+          ]
+        },
+        {
+          "meaning": "Cognitive-sensor ghost_executor / fabric-tests 'prep engine' — narrative term for the draft-generation pipeline (`Prep engine generated N drafts`)",
+          "example_locations": [
+            "services/delta-kernel/_deferred/fabric-tests.ts:159",
+            "services/delta-kernel/_deferred/fabric-tests.ts:169"
+          ]
+        },
+        {
+          "meaning": "Perception prediction engine — Step-6 anchor + prediction engine that emits inferred elements",
+          "example_locations": [
+            "services/perception/src/perception/priors.py:3"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "kernel",
+      "distinct_meanings_count": 2,
+      "meanings": [
+        {
+          "meaning": "delta-kernel — the deterministic state-fabric service (`services/delta-kernel/`, port 3001). Universal across the codebase; nearly all `kernel` matches are this path reference.",
+          "example_locations": [
+            "services/delta-kernel/src/api/server.ts:52",
+            "services/delta-kernel/src/api/server.ts:2120",
+            "services/delta-kernel/src/api/server.ts:2128",
+            "PRE_ATLAS_MAP.md:22",
+            "PRE_ATLAS_MAP.md:279",
+            "anatomy/_build_today.py:18"
+          ]
+        },
+        {
+          "meaning": "Original 'Delta-State Fabric v0' kernel concept — historical doctrine name preserved in PRE_ATLAS_MAP.md ('Delta-State Fabric v0')",
+          "example_locations": [
+            "PRE_ATLAS_MAP.md:8",
+            "PRE_ATLAS_MAP.md:279"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "state",
+      "distinct_meanings_count": 7,
+      "meanings": [
+        {
+          "meaning": "delta-kernel SystemState — authoritative `{ mode, risk, openLoops, ... }` system_state entity stored via storage.loadEntitiesByType / saveEntity",
+          "example_locations": [
+            "services/delta-kernel/src/api/server.ts:158",
+            "services/delta-kernel/src/api/server.ts:178",
+            "services/delta-kernel/src/atlas/lattice-projection.ts:182"
+          ]
+        },
+        {
+          "meaning": "cognitive_state.json — separately-stored cognitive-sensor snapshot merged into the unified state",
+          "example_locations": [
+            "services/delta-kernel/src/api/server.ts:178",
+            "services/delta-kernel/src/api/server.ts:183",
+            "services/cognitive-sensor/directive_engine.py:96",
+            "services/cognitive-sensor/directive_engine.py:172"
+          ]
+        },
+        {
+          "meaning": "OptogonSessionState — per-session JSON state (node_states, action_results) persisted in optogon SQLite",
+          "example_locations": [
+            "services/optogon/src/optogon/session_store.py:24",
+            "services/optogon/src/optogon/session_store.py:67",
+            "services/optogon/src/optogon/session_store.py:88"
+          ]
+        },
+        {
+          "meaning": "CycleBoard frontend state — JS state object with AZTask, DayPlans, undo/redo history",
+          "example_locations": [
+            "services/cognitive-sensor/cycleboard/js/state.js:2",
+            "services/cognitive-sensor/cycleboard/js/state.js:40",
+            "services/cognitive-sensor/cycleboard/js/state.js:163"
+          ]
+        },
+        {
+          "meaning": "lattice_status / draft state — generic 'state' field on entity records (cortex_metadata, draft state, project state)",
+          "example_locations": [
+            "services/delta-kernel/src/atlas/lattice-projection.ts:217",
+            "services/delta-kernel/src/atlas/lattice-projection.ts:222",
+            "services/delta-kernel/src/api/server.ts:2415",
+            "services/delta-kernel/src/api/server.ts:2426"
+          ]
+        },
+        {
+          "meaning": "UASC interpreter state — `node_trace`-bearing per-run state in research/uasc-m2m reference implementation",
+          "example_locations": [
+            "research/uasc-m2m/reference-implementation/core/interpreter.py:32",
+            "research/uasc-m2m/reference-implementation/core/interpreter.py:156"
+          ]
+        },
+        {
+          "meaning": "Festival reconciliation state — `state` field in fest-reconcile cluster matrices (ship_flow, era_matrix)",
+          "example_locations": [
+            "tools/fest-reconcile/festival_out/ship_flow_v2.json",
+            "tools/fest-reconcile/festival_out/era_cluster_matrix_v2.json"
+          ]
+        }
+      ]
+    },
+    {
+      "term": "anatomy",
+      "distinct_meanings_count": 9,
+      "meanings": [
+        {
+          "meaning": "anatomy-extension — Chrome MV3 extension v0.4.4 (alt+click labels, auto-scan, 'pull this page')",
+          "example_locations": [
+            "tools/anatomy-extension/content.js",
+            "tools/anatomy-extension/background.js",
+            "tools/anatomy-extension/page-world.js",
+            "tools/anatomy-extension/lib/detection-vocab.js",
+            "tools/anatomy-extension/lib/text-grid.js",
+            "tools/anatomy-extension/lib/canvas-precapture.js"
+          ]
+        },
+        {
+          "meaning": "anatomy-frame-sidecar — historical Node service (port 3051) that received PNGs from the extension and returned cell grids; no source files present in current tree, concept survives only in extension content.js docs and audit memory",
+          "example_locations": [
+            "tools/anatomy-extension/content.js:268"
+          ]
+        },
+        {
+          "meaning": "anatomy-rewrite (Plan D specs) — implementation migrated into anatomy-extension/lib/; folder is historical scaffolding (no source files in current tree; referenced in cognitive-sensor fuzz docs)",
+          "example_locations": [
+            "services/cognitive-sensor/fuzz/generator.py:132"
+          ]
+        },
+        {
+          "meaning": "anatomy-research — vendored OSS reference repos (gitignored). Not first-party; mentioned only in audit/build configs.",
+          "example_locations": [
+            ".gitignore",
+            "PRE_ATLAS_MAP.md"
+          ]
+        },
+        {
+          "meaning": "AnatomyV1 schema — `contracts/schemas/AnatomyV1.v1.json` (draft-07) + Zod twin at `services/canvas-engine/src/adapter/v1-schema.ts`",
+          "example_locations": [
+            "services/canvas-engine/src/adapter/v1-schema.ts:73",
+            "services/canvas-engine/src/adapter/v1-schema.ts:74",
+            "services/canvas-engine/src/adapter/v1-schema.ts:81",
+            "services/canvas-engine/src/adapter/v1-to-prompt.ts",
+            "services/canvas-engine/src/adapter/v1-to-edit-prompt.ts"
+          ]
+        },
+        {
+          "meaning": "anatomy-v1 envelope — runtime JSON shape built by `buildAnatomyV1()` in extension content.js; conforms to the schema (#5)",
+          "example_locations": [
+            "tools/anatomy-extension/content.js",
+            "services/canvas-engine/src/pipeline/image-to-envelope.ts",
+            "services/canvas-engine/src/pipeline/url-to-clone.ts",
+            "services/canvas-engine/src/pipeline/image-to-clone.ts",
+            "services/canvas-engine/src/pipeline/image-to-clone-guided.ts"
+          ]
+        },
+        {
+          "meaning": "anatomy-pull-v1 envelope — sibling envelope `{version: 'anatomy-pull-v1', html, stylesheets, assets, anatomy?}` from extension's 'pull this page'",
+          "example_locations": [
+            "tools/anatomy-extension/content.js"
+          ]
+        },
+        {
+          "meaning": "Perception scanner adapter to anatomy — drives anatomy-extension via Playwright and translates the envelope into Element schema",
+          "example_locations": [
+            "services/perception/src/perception/scanner_adapter.py:1",
+            "services/perception/src/perception/scanner_adapter.py:3",
+            "services/perception/src/perception/scanner_adapter.py:5"
+          ]
+        },
+        {
+          "meaning": "/anatomy-map skill / anatomy/today.html — slash command + skill-rendered today-anatomy-map HTML produced by `anatomy/_build_today.py`",
+          "example_locations": [
+            "anatomy/_build_today.py:1",
+            "anatomy/_build_today.py:7",
+            "anatomy/_build_today.py:23",
+            "anatomy/today.html"
+          ]
+        }
+      ]
+    }
+  ],
+  "collisions_high_severity": [
+    "session",
+    "signal",
+    "context",
+    "trace",
+    "mode",
+    "directive",
+    "package",
+    "frame",
+    "engine",
+    "state",
+    "anatomy"
+  ],
+  "collisions_low_severity": [
+    "kernel"
+  ],
+  "method_validation": {
+    "anatomy_target": 9,
+    "anatomy_found": 9,
+    "match": true,
+    "note": "anatomy produced exactly 9 distinct meanings matching reference_anatomy_disambiguation.md. The same 9 surfaces (extension, sidecar, rewrite, research, schema, v1 envelope, pull-v1 envelope, web-audit/perception scanner adapter, /anatomy-map skill) appear; the 'web-audit anatomy' surface from the reference lives outside Pre Atlas (in C:/Users/bruke/web-audit/), so its first-party Pre Atlas analogue (the perception/scanner_adapter.py that consumes anatomy-extension envelopes) was used in slot #8."
+  }
+}

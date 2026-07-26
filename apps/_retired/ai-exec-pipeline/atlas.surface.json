@@ -1,0 +1,7 @@
+{
+  "surface": "ai-exec-pipeline",
+  "headline": "Retired Flask AI execution pipeline — do not build on this (kind=http, lifecycle=retired).",
+  "kind": "http",
+  "lifecycle": "retired",
+  "capabilities": []
+}

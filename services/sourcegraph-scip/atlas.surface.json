@@ -1,0 +1,46 @@
+{
+  "surface": "sourcegraph-scip",
+  "headline": "Symbol xrefs / callers / defs - precise code-intel above zoekt",
+  "capabilities": [
+    {
+      "id": "defs",
+      "label": "Find every definition of a symbol across Atlas services",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "MCP sourcegraph-scip.sourcegraph_defs(symbol)"
+    },
+    {
+      "id": "refs",
+      "label": "Find every reference (call site, import) of a symbol",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "MCP sourcegraph-scip.sourcegraph_refs(symbol)"
+    },
+    {
+      "id": "callers",
+      "label": "Enclosing symbol at a file:line — inbound-callgraph primitive",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "MCP sourcegraph-scip.sourcegraph_callers(file, line)"
+    },
+    {
+      "id": "hover",
+      "label": "Signature + docstring for a symbol",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "MCP sourcegraph-scip.sourcegraph_hover(symbol)"
+    },
+    {
+      "id": "status",
+      "label": "Which services are indexed + shard sizes/counts",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "MCP sourcegraph-scip.sourcegraph_status()"
+    }
+  ]
+}

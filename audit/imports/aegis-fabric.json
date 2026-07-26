@@ -1,0 +1,225 @@
+{
+  "agents/action-processor.ts": [
+    "agents/agent-registry.ts",
+    "approval/approval-queue.ts",
+    "core/delta.ts",
+    "core/types.ts",
+    "policies/policy-engine.ts",
+    "storage/aegis-storage.ts",
+    "tenants/tenant-registry.ts"
+  ],
+  "agents/agent-adapter.ts": [
+    "core/delta.ts",
+    "core/types.ts"
+  ],
+  "agents/agent-registry.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "api/routes/agent-routes.ts": [
+    "agents/action-processor.ts",
+    "agents/agent-adapter.ts",
+    "agents/agent-registry.ts",
+    "events/audit-log.ts",
+    "gateway/rate-limiter.ts",
+    "observability/logger.ts",
+    "observability/metrics.ts"
+  ],
+  "api/routes/approval-routes.ts": [
+    "agents/action-processor.ts",
+    "approval/approval-queue.ts",
+    "core/types.ts",
+    "observability/logger.ts"
+  ],
+  "api/routes/delta-routes.ts": [
+    "core/delta.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "api/routes/metrics-routes.ts": [
+    "cost/usage-tracker.ts",
+    "observability/health.ts",
+    "observability/metrics.ts",
+    "storage/aegis-storage.ts",
+    "tenants/tenant-registry.ts"
+  ],
+  "api/routes/policy-routes.ts": [
+    "agents/agent-registry.ts",
+    "core/types.ts",
+    "observability/logger.ts",
+    "observability/metrics.ts",
+    "policies/policy-engine.ts",
+    "policies/policy-store.ts",
+    "tenants/tenant-registry.ts"
+  ],
+  "api/routes/state-routes.ts": [
+    "storage/aegis-storage.ts",
+    "storage/snapshot-manager.ts"
+  ],
+  "api/routes/tenant-routes.ts": [
+    "observability/logger.ts",
+    "tenants/tenant-registry.ts"
+  ],
+  "api/routes/webhook-routes.ts": [
+    "events/webhook-dispatcher.ts",
+    "observability/logger.ts"
+  ],
+  "api/server.ts": [
+    "agents/action-processor.ts",
+    "agents/agent-registry.ts",
+    "api/routes/agent-routes.ts",
+    "api/routes/approval-routes.ts",
+    "api/routes/delta-routes.ts",
+    "api/routes/metrics-routes.ts",
+    "api/routes/policy-routes.ts",
+    "api/routes/state-routes.ts",
+    "api/routes/tenant-routes.ts",
+    "api/routes/webhook-routes.ts",
+    "approval/approval-queue.ts",
+    "cost/usage-tracker.ts",
+    "events/audit-log.ts",
+    "events/event-bus.ts",
+    "events/webhook-dispatcher.ts",
+    "gateway/api-middleware.ts",
+    "gateway/rate-limiter.ts",
+    "gateway/request-logger.ts",
+    "observability/logger.ts",
+    "observability/metrics.ts",
+    "policies/decision-cache.ts",
+    "policies/policy-engine.ts",
+    "policies/policy-store.ts",
+    "storage/aegis-storage.ts",
+    "storage/snapshot-manager.ts",
+    "tenants/tenant-registry.ts"
+  ],
+  "approval/approval-queue.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "core/delta.ts": [
+    "core/types.ts"
+  ],
+  "core/entity-registry.ts": [
+    "core/types.ts"
+  ],
+  "core/types.ts": [],
+  "cost/usage-tracker.ts": [
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "events/audit-log.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "events/event-bus.ts": [
+    "core/types.ts"
+  ],
+  "events/webhook-dispatcher.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "events/event-bus.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "gateway/api-middleware.ts": [
+    "core/delta.ts",
+    "gateway/rate-limiter.ts",
+    "gateway/request-logger.ts",
+    "tenants/tenant-registry.ts"
+  ],
+  "gateway/rate-limiter.ts": [
+    "core/types.ts"
+  ],
+  "gateway/request-logger.ts": [
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "observability/health.ts": [
+    "core/types.ts",
+    "storage/aegis-storage.ts",
+    "tenants/tenant-registry.ts"
+  ],
+  "observability/logger.ts": [],
+  "observability/metrics.ts": [],
+  "policies/decision-cache.ts": [
+    "core/types.ts"
+  ],
+  "policies/policy-engine.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "policies/decision-cache.ts",
+    "policies/policy-store.ts"
+  ],
+  "policies/policy-store.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "storage/aegis-storage.ts": [
+    "core/types.ts"
+  ],
+  "storage/snapshot-manager.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "tenants/tenant-isolation.ts": [
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "tenants/tenant-registry.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "tests/run-tests.ts": [
+    "tests/test-agent-adapter.ts",
+    "tests/test-approval.ts",
+    "tests/test-delta.ts",
+    "tests/test-integration.ts",
+    "tests/test-policy.ts",
+    "tests/test-snapshot.ts"
+  ],
+  "tests/test-agent-adapter.ts": [
+    "agents/agent-adapter.ts"
+  ],
+  "tests/test-approval.ts": [
+    "approval/approval-queue.ts",
+    "core/delta.ts",
+    "core/types.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "tests/test-delta.ts": [
+    "core/delta.ts",
+    "core/types.ts"
+  ],
+  "tests/test-integration.ts": [
+    "agents/action-processor.ts",
+    "agents/agent-registry.ts",
+    "approval/approval-queue.ts",
+    "core/delta.ts",
+    "core/types.ts",
+    "cost/usage-tracker.ts",
+    "events/audit-log.ts",
+    "policies/decision-cache.ts",
+    "policies/policy-engine.ts",
+    "policies/policy-store.ts",
+    "storage/aegis-storage.ts",
+    "tenants/tenant-registry.ts"
+  ],
+  "tests/test-policy.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "policies/decision-cache.ts",
+    "policies/policy-engine.ts",
+    "policies/policy-store.ts",
+    "storage/aegis-storage.ts"
+  ],
+  "tests/test-snapshot.ts": [
+    "core/delta.ts",
+    "core/types.ts",
+    "storage/aegis-storage.ts",
+    "storage/snapshot-manager.ts"
+  ]
+}

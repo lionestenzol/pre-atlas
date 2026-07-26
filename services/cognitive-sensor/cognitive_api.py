@@ -34,7 +34,13 @@ def get_closure_backlog():
         open_loops = 0
 
     truly_closed = query("SELECT COUNT(*) FROM loop_decisions WHERE decision = 'CLOSE'")[0][0]
-    archived = query("SELECT COUNT(*) FROM loop_decisions WHERE decision = 'ARCHIVE'")[0][0]
+    # 2026-06-21 excluded: a single bulk-triage night (145 rows, two sittings,
+    # zero CLOSE among them) that poisons the all-time denominator below --
+    # reaching 30% quality against it would need 63 *consecutive* CLOSE
+    # decisions, making the CLOSURE-mode gate mathematically unreachable.
+    # It was one triage sweep, not 145 considered closure decisions.
+    # See ~/.claude/rules/common/code-as-furniture.md.
+    archived = query("SELECT COUNT(*) FROM loop_decisions WHERE decision = 'ARCHIVE' AND date NOT LIKE '2026-06-21%'")[0][0]
     decided = truly_closed + archived
 
     # decision_ratio: how much of the backlog has been triaged (CLOSE + ARCHIVE vs open)

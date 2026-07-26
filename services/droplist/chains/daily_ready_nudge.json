@@ -1,0 +1,26 @@
+{
+  "id": "daily_ready_nudge",
+  "title": "Daily nudge for stale ready nodes",
+  "description": "Every morning, find DAGs that still have a ready node and were created more than 2 days ago, draft a short nudge for each, and drop a follow-up so the backlog cannot rot silently. See ~/.claude/rules/common/code-as-furniture.md.",
+  "trigger": {
+    "on": "cron",
+    "expr": "0 8 * * *"
+  },
+  "steps": [
+    {
+      "prompt": "Draft a one-line nudge reminding me that this work has been sitting ready for over two days. Be specific about the goal and direct about the next move.",
+      "target_query": {
+        "status": "running",
+        "older_than_days": 2,
+        "has_ready_node": true
+      },
+      "expect": "non_empty"
+    }
+  ],
+  "on_report": {
+    "action": "drop",
+    "params": {
+      "title_prefix": "Nudge"
+    }
+  }
+}

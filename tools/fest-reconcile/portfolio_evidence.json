@@ -1,0 +1,1551 @@
+{
+  "generated_at": "2026-05-27T18:27:31.087923",
+  "summary": {
+    "total_items": 140,
+    "by_signal_band": {
+      "strong": 60,
+      "partial": 29,
+      "stale": 42,
+      "none": 9
+    },
+    "by_surface": {
+      "standalone_repo": 43,
+      "github_repo": 36,
+      "custom_skill": 34,
+      "pre_atlas_services": 15,
+      "pre_atlas_apps": 6,
+      "pre_atlas_tools": 6
+    },
+    "by_surface_and_band": {
+      "standalone_repo": {
+        "strong": 23,
+        "partial": 9,
+        "stale": 7,
+        "none": 4
+      },
+      "github_repo": {
+        "strong": 5,
+        "partial": 15,
+        "none": 1,
+        "stale": 15
+      },
+      "custom_skill": {
+        "strong": 9,
+        "stale": 20,
+        "none": 1,
+        "partial": 4
+      },
+      "pre_atlas_services": {
+        "strong": 15
+      },
+      "pre_atlas_apps": {
+        "strong": 4,
+        "partial": 1,
+        "none": 1
+      },
+      "pre_atlas_tools": {
+        "strong": 4,
+        "none": 2
+      }
+    }
+  },
+  "items": [
+    {
+      "surface": "standalone_repo",
+      "name": "airwindows",
+      "path": "C:\\Users\\bruke\\airwindows",
+      "markers": [
+        "git"
+      ],
+      "file_count": 505,
+      "days_since_modified": 10,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "anime-js",
+      "path": "C:\\Users\\bruke\\anime-js",
+      "markers": [
+        "readme"
+      ],
+      "file_count": 92,
+      "days_since_modified": 17,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "atlas",
+      "path": "C:\\Users\\bruke\\atlas",
+      "markers": [
+        "git",
+        "weapon",
+        "readme"
+      ],
+      "file_count": 52,
+      "days_since_modified": 0,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "binre",
+      "path": "C:\\Users\\bruke\\binre",
+      "markers": [
+        "weapon",
+        "readme"
+      ],
+      "file_count": 501,
+      "days_since_modified": 10,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "competitor-monitor",
+      "path": "C:\\Users\\bruke\\competitor-monitor",
+      "markers": [
+        "git",
+        "readme"
+      ],
+      "file_count": 20,
+      "days_since_modified": 23,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "cpython",
+      "path": "C:\\Users\\bruke\\cpython",
+      "markers": [
+        "git",
+        "readme"
+      ],
+      "file_count": 546,
+      "days_since_modified": 436,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "Downloads",
+      "path": "C:\\Users\\bruke\\Downloads",
+      "markers": [
+        "readme"
+      ],
+      "file_count": 623,
+      "days_since_modified": 1,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "everything-claude-code",
+      "path": "C:\\Users\\bruke\\everything-claude-code",
+      "markers": [
+        "git",
+        "npm",
+        "readme"
+      ],
+      "file_count": 543,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "fleet-launch",
+      "path": "C:\\Users\\bruke\\fleet-launch",
+      "markers": [
+        "readme"
+      ],
+      "file_count": 12,
+      "days_since_modified": 22,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "fractal-machine",
+      "path": "C:\\Users\\bruke\\fractal-machine",
+      "markers": [
+        "weapon"
+      ],
+      "file_count": 2,
+      "days_since_modified": 11,
+      "memory_mention": false,
+      "signal_band": "none"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "m3p-to-fract",
+      "path": "C:\\Users\\bruke\\m3p-to-fract",
+      "markers": [
+        "weapon",
+        "readme"
+      ],
+      "file_count": 13,
+      "days_since_modified": 15,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "mandelbulber2_install",
+      "path": "C:\\Users\\bruke\\mandelbulber2_install",
+      "markers": [
+        "weapon"
+      ],
+      "file_count": 327,
+      "days_since_modified": 14,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "mb3d-blender",
+      "path": "C:\\Users\\bruke\\mb3d-blender",
+      "markers": [
+        "weapon",
+        "readme"
+      ],
+      "file_count": 8,
+      "days_since_modified": 15,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "mb3d_anim_demo",
+      "path": "C:\\Users\\bruke\\mb3d_anim_demo",
+      "markers": [
+        "weapon"
+      ],
+      "file_count": 564,
+      "days_since_modified": 15,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "mcp",
+      "path": "C:\\Users\\bruke\\mcp",
+      "markers": [
+        "git"
+      ],
+      "file_count": 0,
+      "days_since_modified": 421,
+      "memory_mention": true,
+      "signal_band": "none"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "musescore-mcp",
+      "path": "C:\\Users\\bruke\\musescore-mcp",
+      "markers": [
+        "readme"
+      ],
+      "file_count": 3,
+      "days_since_modified": 54,
+      "memory_mention": false,
+      "signal_band": "none"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "my-app",
+      "path": "C:\\Users\\bruke\\my-app",
+      "markers": [
+        "git",
+        "npm",
+        "readme"
+      ],
+      "file_count": 52,
+      "days_since_modified": 511,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "my-habit-tracker",
+      "path": "C:\\Users\\bruke\\my-habit-tracker",
+      "markers": [
+        "git",
+        "npm",
+        "readme"
+      ],
+      "file_count": 20,
+      "days_since_modified": 472,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "my-project",
+      "path": "C:\\Users\\bruke\\my-project",
+      "markers": [
+        "npm",
+        "readme"
+      ],
+      "file_count": 461,
+      "days_since_modified": 478,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "my-vite-app",
+      "path": "C:\\Users\\bruke\\my-vite-app",
+      "markers": [
+        "npm",
+        "readme"
+      ],
+      "file_count": 17,
+      "days_since_modified": 510,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "my_project",
+      "path": "C:\\Users\\bruke\\my_project",
+      "markers": [
+        "git"
+      ],
+      "file_count": 440,
+      "days_since_modified": 478,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "nih-plug",
+      "path": "C:\\Users\\bruke\\nih-plug",
+      "markers": [
+        "git",
+        "rs",
+        "readme"
+      ],
+      "file_count": 195,
+      "days_since_modified": 10,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "operator-system",
+      "path": "C:\\Users\\bruke\\operator-system",
+      "markers": [
+        "git",
+        "readme"
+      ],
+      "file_count": 28,
+      "days_since_modified": 21,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "POLARIS",
+      "path": "C:\\Users\\bruke\\POLARIS",
+      "markers": [
+        "git",
+        "py"
+      ],
+      "file_count": 161,
+      "days_since_modified": 79,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "Pre Atlas",
+      "path": "C:\\Users\\bruke\\Pre Atlas",
+      "markers": [
+        "git",
+        "readme"
+      ],
+      "file_count": 502,
+      "days_since_modified": 0,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "private-gpt",
+      "path": "C:\\Users\\bruke\\private-gpt",
+      "markers": [
+        "git",
+        "py",
+        "readme"
+      ],
+      "file_count": 125,
+      "days_since_modified": 547,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "privateGPT",
+      "path": "C:\\Users\\bruke\\privateGPT",
+      "markers": [
+        "git",
+        "py",
+        "readme"
+      ],
+      "file_count": 203,
+      "days_since_modified": 546,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "r3f",
+      "path": "C:\\Users\\bruke\\r3f",
+      "markers": [
+        "npm"
+      ],
+      "file_count": 3,
+      "days_since_modified": 17,
+      "memory_mention": true,
+      "signal_band": "none"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "remotion-test",
+      "path": "C:\\Users\\bruke\\remotion-test",
+      "markers": [
+        "npm",
+        "readme"
+      ],
+      "file_count": 18,
+      "days_since_modified": 18,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "Scrapling",
+      "path": "C:\\Users\\bruke\\Scrapling",
+      "markers": [
+        "git",
+        "weapon",
+        "py",
+        "readme"
+      ],
+      "file_count": 203,
+      "days_since_modified": 24,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "scrapling-smoke",
+      "path": "C:\\Users\\bruke\\scrapling-smoke",
+      "markers": [
+        "weapon"
+      ],
+      "file_count": 5,
+      "days_since_modified": 24,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "screenshot-to-code",
+      "path": "C:\\Users\\bruke\\screenshot-to-code",
+      "markers": [
+        "git",
+        "npm",
+        "readme"
+      ],
+      "file_count": 170,
+      "days_since_modified": 3,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "STEMai",
+      "path": "C:\\Users\\bruke\\STEMai",
+      "markers": [
+        "git",
+        "npm",
+        "readme"
+      ],
+      "file_count": 158,
+      "days_since_modified": 77,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "STRUDEL",
+      "path": "C:\\Users\\bruke\\STRUDEL",
+      "markers": [
+        "git",
+        "npm",
+        "readme"
+      ],
+      "file_count": 501,
+      "days_since_modified": 31,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "surge-xt",
+      "path": "C:\\Users\\bruke\\surge-xt",
+      "markers": [
+        "git",
+        "readme"
+      ],
+      "file_count": 504,
+      "days_since_modified": 10,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "task-manager",
+      "path": "C:\\Users\\bruke\\task-manager",
+      "markers": [
+        "npm",
+        "readme"
+      ],
+      "file_count": 44,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "three-js",
+      "path": "C:\\Users\\bruke\\three-js",
+      "markers": [
+        "npm"
+      ],
+      "file_count": 691,
+      "days_since_modified": 17,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "three-stack",
+      "path": "C:\\Users\\bruke\\three-stack",
+      "markers": [
+        "npm",
+        "readme"
+      ],
+      "file_count": 12,
+      "days_since_modified": 17,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "URBANNOMAD",
+      "path": "C:\\Users\\bruke\\URBANNOMAD",
+      "markers": [
+        "git",
+        "npm"
+      ],
+      "file_count": 20,
+      "days_since_modified": 80,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "wasp",
+      "path": "C:\\Users\\bruke\\wasp",
+      "markers": [
+        "git",
+        "npm",
+        "readme"
+      ],
+      "file_count": 509,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "weather",
+      "path": "C:\\Users\\bruke\\weather",
+      "markers": [
+        "git",
+        "py",
+        "readme"
+      ],
+      "file_count": 9,
+      "days_since_modified": 422,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "web-audit",
+      "path": "C:\\Users\\bruke\\web-audit",
+      "markers": [
+        "git",
+        "weapon",
+        "npm",
+        "readme"
+      ],
+      "file_count": 37,
+      "days_since_modified": 17,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "standalone_repo",
+      "name": "welcome-to-docker",
+      "path": "C:\\Users\\bruke\\welcome-to-docker",
+      "markers": [
+        "git",
+        "npm",
+        "readme"
+      ],
+      "file_count": 15,
+      "days_since_modified": 425,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "pre-atlas",
+      "private": false,
+      "description": "",
+      "days_since_updated": 22,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "github_repo",
+      "name": "atlas",
+      "private": true,
+      "description": "",
+      "days_since_updated": 17,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "github_repo",
+      "name": "competitor-monitor",
+      "private": true,
+      "description": "",
+      "days_since_updated": 23,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "github_repo",
+      "name": "Scrapling",
+      "private": false,
+      "description": "\ud83d\udd77\ufe0f An adaptive Web Scraping framework that handles everything from a single requ",
+      "days_since_updated": 25,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "github_repo",
+      "name": "strudel",
+      "private": true,
+      "description": "",
+      "days_since_updated": 41,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "ai-fashion-prompt-console",
+      "private": true,
+      "description": "AI Fashion Prompt Console \u2014 standalone prompt assembly tool for AI image generat",
+      "days_since_updated": 35,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "mpc",
+      "private": true,
+      "description": "mpc",
+      "days_since_updated": 40,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "inpact-site",
+      "private": true,
+      "description": "in-PACT: personal version of the Impacts curriculum. Daily execution surface + 8",
+      "days_since_updated": 42,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "github_repo",
+      "name": "SteerPOP",
+      "private": false,
+      "description": "",
+      "days_since_updated": 65,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "strudel-skills",
+      "private": true,
+      "description": "Strudel music composition skill - eval suite, pattern library, continuous improv",
+      "days_since_updated": 76,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "STEMai",
+      "private": false,
+      "description": "Audio stem analysis pipeline: onset detection, pattern grids, MIDI export, and b",
+      "days_since_updated": 79,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "POLARIS",
+      "private": true,
+      "description": "POLARIS \u2014 General-purpose agent execution layer with policy-driven guardrails",
+      "days_since_updated": 79,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "URBANNOMAD",
+      "private": false,
+      "description": "",
+      "days_since_updated": 79,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "comfyui-controller",
+      "private": false,
+      "description": "Production controller for ComfyUI on Google Colab \u2014 validated image generation w",
+      "days_since_updated": 87,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "virtualstudio",
+      "private": false,
+      "description": "",
+      "days_since_updated": 100,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "VirtualStudio-Cinematic-Hero",
+      "private": false,
+      "description": "Premium cinematic portfolio website built with React 19, TypeScript, GSAP animat",
+      "days_since_updated": 101,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "THING",
+      "private": false,
+      "description": "",
+      "days_since_updated": 124,
+      "memory_mention": true,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "WallPaper",
+      "private": false,
+      "description": "",
+      "days_since_updated": 136,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "outpost",
+      "private": false,
+      "description": "Open Source Outbound Webhooks and Event Destinations Infrastructure",
+      "days_since_updated": 138,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "saas-boilerplate",
+      "private": false,
+      "description": "\ud83d\ude80\ud83c\udf89\ud83d\udcda SaaS Boilerplate built with Next.js + Tailwind CSS + Shadcn UI + TypeScript.",
+      "days_since_updated": 188,
+      "memory_mention": false,
+      "signal_band": "none"
+    },
+    {
+      "surface": "github_repo",
+      "name": "CreatorOS",
+      "private": true,
+      "description": "",
+      "days_since_updated": 417,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "web-os-555",
+      "private": true,
+      "description": "",
+      "days_since_updated": 424,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "FragOS",
+      "private": true,
+      "description": "",
+      "days_since_updated": 424,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "nextjs-ai-chatbot",
+      "private": true,
+      "description": "",
+      "days_since_updated": 424,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "python-sdk",
+      "private": false,
+      "description": "The official Python SDK for Model Context Protocol servers and clients",
+      "days_since_updated": 425,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "DAPO",
+      "private": false,
+      "description": "An Open-source RL System from ByteDance Seed and Tsinghua AIR",
+      "days_since_updated": 423,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "m-357249",
+      "private": true,
+      "description": "",
+      "days_since_updated": 427,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "joyful-analytics-symphony",
+      "private": true,
+      "description": "",
+      "days_since_updated": 427,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "servers",
+      "private": false,
+      "description": "Model Context Protocol Servers",
+      "days_since_updated": 426,
+      "memory_mention": true,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "wasp",
+      "private": false,
+      "description": "The fastest way to develop full-stack web apps with React & Node.js. ",
+      "days_since_updated": 427,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "cpython",
+      "private": false,
+      "description": "The Python programming language",
+      "days_since_updated": 435,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "meshmap.net",
+      "private": false,
+      "description": "a map of Meshtastic nodes",
+      "days_since_updated": 428,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "js-dos",
+      "private": false,
+      "description": "The best API for running dos programs in browser",
+      "days_since_updated": 442,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "SuperTool",
+      "private": true,
+      "description": "",
+      "days_since_updated": 485,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "github_repo",
+      "name": "MB-Lab",
+      "private": false,
+      "description": "MB-Lab is a character creation tool for Blender 4.0 and above, based off ManuelB",
+      "days_since_updated": 102,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "github_repo",
+      "name": "lionestenzol",
+      "private": false,
+      "description": "Config files for my GitHub profile.",
+      "days_since_updated": 1612,
+      "memory_mention": true,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "anatomy-map",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\anatomy-map",
+      "has_skill_md": true,
+      "file_count": 4,
+      "days_since_modified": 35,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "anime-js",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js",
+      "has_skill_md": true,
+      "file_count": 9,
+      "days_since_modified": 17,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "anime-js-migrate",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js-migrate",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 18,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "autopilot",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\autopilot",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 62,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "backend-patterns",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\backend-patterns",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "codex-delegate",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\codex-delegate",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 25,
+      "memory_mention": true,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "coding-standards",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\coding-standards",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "competitor-monitor",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\competitor-monitor",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 24,
+      "memory_mention": true,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "continuous-learning-v2",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\continuous-learning-v2",
+      "has_skill_md": true,
+      "file_count": 10,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "cookbook",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\cookbook",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 62,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "eval-harness",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\eval-harness",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "fest",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\fest",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 63,
+      "memory_mention": true,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "frontend-patterns",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\frontend-patterns",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "handoff-out",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\handoff-out",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 22,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "learned",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\learned",
+      "has_skill_md": false,
+      "file_count": 0,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "none"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "mandelbulb3d",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulb3d",
+      "has_skill_md": true,
+      "file_count": 18,
+      "days_since_modified": 15,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "mandelbulber2",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulber2",
+      "has_skill_md": true,
+      "file_count": 19,
+      "days_since_modified": 13,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "mini-ship",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\mini-ship",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 23,
+      "memory_mention": true,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "project-finisher",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\project-finisher",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 64,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "react-three-fiber",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\react-three-fiber",
+      "has_skill_md": true,
+      "file_count": 5,
+      "days_since_modified": 17,
+      "memory_mention": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "remotion",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\remotion",
+      "has_skill_md": true,
+      "file_count": 2,
+      "days_since_modified": 33,
+      "memory_mention": true,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "scrapling-official",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\scrapling-official",
+      "has_skill_md": true,
+      "file_count": 22,
+      "days_since_modified": 25,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "search-first",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\search-first",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "security-review",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\security-review",
+      "has_skill_md": true,
+      "file_count": 2,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "st3gg",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\st3gg",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 26,
+      "memory_mention": true,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "strategic-compact",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\strategic-compact",
+      "has_skill_md": true,
+      "file_count": 2,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "tdd-workflow",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\tdd-workflow",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "three-js",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\three-js",
+      "has_skill_md": true,
+      "file_count": 7,
+      "days_since_modified": 17,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "three-js-migrate",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\three-js-migrate",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 17,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "verification-loop",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\verification-loop",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "wasp-patterns",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\wasp-patterns",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 56,
+      "memory_mention": false,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "weapon",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\weapon",
+      "has_skill_md": true,
+      "file_count": 1,
+      "days_since_modified": 62,
+      "memory_mention": true,
+      "signal_band": "stale"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "web-audit",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\web-audit",
+      "has_skill_md": true,
+      "file_count": 2,
+      "days_since_modified": 39,
+      "memory_mention": true,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "custom_skill",
+      "name": "web-extract-workflow",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\web-extract-workflow",
+      "has_skill_md": true,
+      "file_count": 4,
+      "days_since_modified": 24,
+      "memory_mention": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "aegis-fabric",
+      "path": "services\\aegis-fabric",
+      "file_count": 115,
+      "days_since_modified": 30,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "canvas-engine",
+      "path": "services\\canvas-engine",
+      "file_count": 83,
+      "days_since_modified": 2,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "cognitive-sensor",
+      "path": "services\\cognitive-sensor",
+      "file_count": 501,
+      "days_since_modified": 0,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "cortex",
+      "path": "services\\cortex",
+      "file_count": 42,
+      "days_since_modified": 38,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "crucix",
+      "path": "services\\crucix",
+      "file_count": 91,
+      "days_since_modified": 50,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "delta-kernel",
+      "path": "services\\delta-kernel",
+      "file_count": 113,
+      "days_since_modified": 41,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "mirofish",
+      "path": "services\\mirofish",
+      "file_count": 35,
+      "days_since_modified": 43,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "mosaic-dashboard",
+      "path": "services\\mosaic-dashboard",
+      "file_count": 46,
+      "days_since_modified": 43,
+      "memory_mention": false,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "mosaic-orchestrator",
+      "path": "services\\mosaic-orchestrator",
+      "file_count": 35,
+      "days_since_modified": 41,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "openclaw",
+      "path": "services\\openclaw",
+      "file_count": 25,
+      "days_since_modified": 43,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "optogon",
+      "path": "services\\optogon",
+      "file_count": 41,
+      "days_since_modified": 38,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "perception",
+      "path": "services\\perception",
+      "file_count": 30,
+      "days_since_modified": 31,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "triangulation",
+      "path": "services\\triangulation",
+      "file_count": 24,
+      "days_since_modified": 31,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "uasc-executor",
+      "path": "services\\uasc-executor",
+      "file_count": 42,
+      "days_since_modified": 43,
+      "memory_mention": false,
+      "has_package_manifest": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_services",
+      "name": "ws-gateway",
+      "path": "services\\ws-gateway",
+      "file_count": 5,
+      "days_since_modified": 43,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_apps",
+      "name": "ai-exec-pipeline",
+      "path": "apps\\ai-exec-pipeline",
+      "file_count": 10,
+      "days_since_modified": 36,
+      "memory_mention": true,
+      "has_package_manifest": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_apps",
+      "name": "blueprint-generator",
+      "path": "apps\\blueprint-generator",
+      "file_count": 19,
+      "days_since_modified": 43,
+      "memory_mention": true,
+      "has_package_manifest": true,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_apps",
+      "name": "canvas-demo",
+      "path": "apps\\canvas-demo",
+      "file_count": 12,
+      "days_since_modified": 33,
+      "memory_mention": false,
+      "has_package_manifest": true,
+      "signal_band": "partial"
+    },
+    {
+      "surface": "pre_atlas_apps",
+      "name": "code-converter",
+      "path": "apps\\code-converter",
+      "file_count": 7,
+      "days_since_modified": 43,
+      "memory_mention": true,
+      "has_package_manifest": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_apps",
+      "name": "inpact",
+      "path": "apps\\inpact",
+      "file_count": 33,
+      "days_since_modified": 1,
+      "memory_mention": true,
+      "has_package_manifest": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_apps",
+      "name": "webos-333",
+      "path": "apps\\webos-333",
+      "file_count": 3,
+      "days_since_modified": 141,
+      "memory_mention": false,
+      "has_package_manifest": false,
+      "signal_band": "none"
+    },
+    {
+      "surface": "pre_atlas_tools",
+      "name": "anatomy-extension",
+      "path": "tools\\anatomy-extension",
+      "file_count": 26,
+      "days_since_modified": 30,
+      "memory_mention": true,
+      "has_package_manifest": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_tools",
+      "name": "anatomy-research",
+      "path": "tools\\anatomy-research",
+      "file_count": 503,
+      "days_since_modified": 34,
+      "memory_mention": true,
+      "has_package_manifest": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_tools",
+      "name": "anatomy-rewrite",
+      "path": "tools\\anatomy-rewrite",
+      "file_count": 7,
+      "days_since_modified": 34,
+      "memory_mention": true,
+      "has_package_manifest": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_tools",
+      "name": "codex-partner",
+      "path": "tools\\codex-partner",
+      "file_count": 32,
+      "days_since_modified": 31,
+      "memory_mention": true,
+      "has_package_manifest": false,
+      "signal_band": "strong"
+    },
+    {
+      "surface": "pre_atlas_tools",
+      "name": "fest-reconcile",
+      "path": "tools\\fest-reconcile",
+      "file_count": 3,
+      "days_since_modified": 0,
+      "memory_mention": false,
+      "has_package_manifest": false,
+      "signal_band": "none"
+    },
+    {
+      "surface": "pre_atlas_tools",
+      "name": "mini-ship",
+      "path": "tools\\mini-ship",
+      "file_count": 2,
+      "days_since_modified": 25,
+      "memory_mention": true,
+      "has_package_manifest": false,
+      "signal_band": "none"
+    }
+  ]
+}

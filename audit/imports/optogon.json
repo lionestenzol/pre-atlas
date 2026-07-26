@@ -1,0 +1,261 @@
+{
+  "src/optogon/__init__.py": [],
+  "src/optogon/action_handlers.py": [
+    ".config.REPO_ROOT",
+    "__future__.annotations",
+    "json",
+    "jsonschema.Draft7Validator",
+    "logging",
+    "os",
+    "pathlib.Path",
+    "re",
+    "shutil",
+    "subprocess",
+    "tempfile",
+    "typing.Any",
+    "typing.Callable"
+  ],
+  "src/optogon/adapters/__init__.py": [],
+  "src/optogon/adapters/sitepull_adapter.py": [
+    "..contract_validator.validate",
+    "__future__.annotations",
+    "dataclasses.dataclass",
+    "datetime.datetime",
+    "datetime.timezone",
+    "hashlib",
+    "json",
+    "pathlib.Path",
+    "re"
+  ],
+  "src/optogon/config.py": [
+    "__future__.annotations",
+    "os",
+    "pathlib.Path"
+  ],
+  "src/optogon/context.py": [
+    "__future__.annotations",
+    "typing.Any",
+    "typing.Literal"
+  ],
+  "src/optogon/contract_validator.py": [
+    ".config.SCHEMAS_DIR",
+    "__future__.annotations",
+    "functools.lru_cache",
+    "json",
+    "jsonschema.Draft7Validator",
+    "typing.Any"
+  ],
+  "src/optogon/inference.py": [
+    ".config.AUTO_CONFIRM_CONFIDENCE",
+    ".context.set_tier",
+    "__future__.annotations",
+    "typing.Any"
+  ],
+  "src/optogon/main.py": [
+    "..signals",
+    ".adapters.sitepull_adapter.build_context_package",
+    ".config.PATHS_DIR",
+    ".config.SCHEMAS_DIR",
+    ".contract_validator.ContractError",
+    ".contract_validator.validate",
+    ".node_processor.process_turn",
+    ".session_store.get_store",
+    "__future__.annotations",
+    "fastapi.FastAPI",
+    "fastapi.HTTPException",
+    "fastapi.Request",
+    "fastapi.middleware.cors.CORSMiddleware",
+    "fastapi.responses.JSONResponse",
+    "json",
+    "pathlib.Path",
+    "pydantic.BaseModel",
+    "time",
+    "typing.Any",
+    "typing.Optional"
+  ],
+  "src/optogon/node_processor.py": [
+    "..signals",
+    ".action_handlers.ActionError",
+    ".action_handlers.run_action",
+    ".context.empty_context",
+    ".context.missing_keys",
+    ".context.promote_to_confirmed",
+    ".context.resolve",
+    ".context.set_tier",
+    ".contract_validator.validate",
+    ".inference._safe_eval",
+    ".inference.apply_node_rules",
+    ".preferences_client.post_close_signal",
+    ".response_composer.compose",
+    ".response_composer.llm_parse",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any",
+    "typing.Optional",
+    "uuid"
+  ],
+  "src/optogon/preferences_client.py": [
+    ".config.AUTO_CONFIRM_CONFIDENCE",
+    "__future__.annotations",
+    "httpx",
+    "json",
+    "logging",
+    "os",
+    "typing.Any",
+    "typing.Optional"
+  ],
+  "src/optogon/response_composer.py": [
+    ".config.ANTHROPIC_API_KEY",
+    ".config.DEFAULT_TOKEN_BUDGET_PER_NODE",
+    ".config.LLM_ENABLED",
+    ".config.LLM_MODEL",
+    ".config.MAX_QUESTIONS_PER_TURN",
+    "__future__.annotations",
+    "anthropic.Anthropic",
+    "json",
+    "logging",
+    "re",
+    "typing.Any",
+    "typing.Optional"
+  ],
+  "src/optogon/session_store.py": [
+    ".config.DB_PATH",
+    ".config.ensure_dirs",
+    ".context.empty_context",
+    ".contract_validator.validate",
+    ".preferences_client.fetch_preferences",
+    ".preferences_client.inject_preferences_into_context",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "sqlite3",
+    "threading",
+    "typing.Any",
+    "typing.Optional",
+    "uuid"
+  ],
+  "src/optogon/signals.py": [
+    ".contract_validator.validate",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "threading",
+    "typing.Any",
+    "typing.Optional",
+    "uuid"
+  ],
+  "tests/__init__.py": [],
+  "tests/conftest.py": [
+    "__future__.annotations",
+    "optogon.config",
+    "optogon.session_store",
+    "optogon.signals",
+    "os",
+    "pathlib.Path",
+    "pytest",
+    "tempfile"
+  ],
+  "tests/test_action_handlers.py": [
+    "__future__.annotations",
+    "optogon.action_handlers",
+    "optogon.action_handlers.ActionError",
+    "optogon.action_handlers.get_handler",
+    "optogon.action_handlers.git_commit",
+    "optogon.action_handlers.read_content",
+    "optogon.action_handlers.scan_em_dashes",
+    "optogon.context.empty_context",
+    "pathlib.Path",
+    "pytest",
+    "subprocess"
+  ],
+  "tests/test_context.py": [
+    "__future__.annotations",
+    "optogon.context.empty_context",
+    "optogon.context.missing_keys",
+    "optogon.context.promote_to_confirmed",
+    "optogon.context.resolve",
+    "optogon.context.set_tier"
+  ],
+  "tests/test_contract_validator.py": [
+    "__future__.annotations",
+    "optogon.contract_validator.ContractError",
+    "optogon.contract_validator.is_valid",
+    "optogon.contract_validator.validate",
+    "pytest"
+  ],
+  "tests/test_llm_parse.py": [
+    "__future__.annotations",
+    "optogon.response_composer.llm_parse"
+  ],
+  "tests/test_pacing.py": [
+    "__future__.annotations",
+    "optogon.response_composer.compose",
+    "optogon.response_composer.enforce_pacing"
+  ],
+  "tests/test_pacing_strict.py": [
+    "__future__.annotations",
+    "optogon.node_processor.process_turn",
+    "optogon.response_composer._count_options",
+    "optogon.response_composer._count_questions",
+    "optogon.response_composer._scan_leaks",
+    "optogon.response_composer.compose",
+    "optogon.response_composer.enforce_pacing"
+  ],
+  "tests/test_path_commit_a_file.py": [
+    "__future__.annotations",
+    "fastapi.testclient.TestClient",
+    "optogon.action_handlers",
+    "optogon.main.app",
+    "pathlib.Path",
+    "pytest",
+    "subprocess"
+  ],
+  "tests/test_path_delegate_to_codex.py": [
+    "__future__.annotations",
+    "fastapi.testclient.TestClient",
+    "json",
+    "optogon.action_handlers",
+    "optogon.action_handlers.classify_codex_intent",
+    "optogon.main.app",
+    "pathlib.Path",
+    "pytest",
+    "typing.Any"
+  ],
+  "tests/test_path_ship_inpact_lesson.py": [
+    "__future__.annotations",
+    "fastapi.testclient.TestClient",
+    "optogon.main.app",
+    "pytest"
+  ],
+  "tests/test_preference_loop.py": [
+    "__future__.annotations",
+    "fastapi.testclient.TestClient",
+    "optogon.main.app",
+    "optogon.node_processor",
+    "optogon.preferences_client",
+    "optogon.session_store",
+    "pytest",
+    "typing.Any"
+  ],
+  "tests/test_session_start_sitepull.py": [
+    "__future__.annotations",
+    "fastapi.testclient.TestClient",
+    "json",
+    "optogon.context.resolve",
+    "optogon.main.app",
+    "pathlib.Path",
+    "pytest",
+    "typing.Any"
+  ],
+  "tests/test_sitepull_adapter.py": [
+    "__future__.annotations",
+    "json",
+    "optogon.adapters.sitepull_adapter.MANIFEST_NAME",
+    "optogon.adapters.sitepull_adapter.build_context_package",
+    "optogon.contract_validator.validate",
+    "pathlib.Path",
+    "pytest"
+  ]
+}

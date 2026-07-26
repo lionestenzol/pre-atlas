@@ -32,6 +32,13 @@
   var RESOLVE_ENDPOINT = function (id) {
     return DELTA_BASE + '/api/signals/' + encodeURIComponent(id) + '/resolve';
   };
+  var PENDING_ENDPOINT = DELTA_BASE + '/api/actions/pending';
+  var CONFIRM_ENDPOINT = function (id) {
+    return DELTA_BASE + '/api/actions/confirm/' + encodeURIComponent(id);
+  };
+  var CANCEL_ENDPOINT = function (id) {
+    return DELTA_BASE + '/api/actions/cancel/' + encodeURIComponent(id);
+  };
   var BANNER_ID = 'ip-signals-banner';
 
   // Plain-language source-layer labels (Rule 5). Never expose raw enum values.
@@ -225,6 +232,135 @@
     });
   }
 
+  // === Pending actions (notify/confirm-tier prepared work; separate producer
+  // and resolve path from signals above, but shares the same banner surface
+  // since both mean "something needs your tap"). ===
+
+  var PENDING_BASE_INTERVAL_MS = 5000;
+  var PENDING_MAX_INTERVAL_MS = 30000;
+  var pendingCurrentInterval = PENDING_BASE_INTERVAL_MS;
+  var pendingPollTimer = null;
+
+  function renderPendingCard(action) {
+    var card = document.createElement('div');
+    card.setAttribute('data-pending-id', action.id);
+    card.style.cssText = [
+      'background: #e0e7ff',
+      'border-left: 4px solid #6366f1',
+      'color: #312e81',
+      'padding: 0.75rem 1rem',
+      'border-radius: 0.375rem',
+      'box-shadow: 0 2px 8px rgba(0,0,0,0.08)',
+      'pointer-events: auto',
+      'font-family: ui-sans-serif, system-ui, sans-serif',
+      'font-size: 0.875rem',
+      'line-height: 1.4',
+    ].join(';');
+
+    var labelLine = document.createElement('div');
+    labelLine.style.cssText = 'font-weight: 700; margin-bottom: 0.5rem';
+    // textContent escapes HTML; action.label cannot smuggle markup.
+    labelLine.textContent = 'Confirm: ' + (action.label || 'pending action');
+    card.appendChild(labelLine);
+
+    var row = document.createElement('div');
+    row.style.cssText = 'display: flex; gap: 0.5rem; flex-wrap: wrap';
+
+    var confirmBtn = document.createElement('button');
+    confirmBtn.textContent = 'Confirm';
+    confirmBtn.style.cssText = [
+      'background: #10b981', 'color: white', 'padding: 0.375rem 0.75rem',
+      'border-radius: 0.25rem', 'border: none', 'cursor: pointer',
+      'font-size: 0.8125rem', 'font-weight: 600',
+    ].join(';');
+    confirmBtn.addEventListener('click', function () {
+      confirmPendingAction(action.id).then(function () {
+        card.remove();
+        pollPendingActions();
+      });
+    });
+    row.appendChild(confirmBtn);
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.style.cssText = [
+      'background: #6b7280', 'color: white', 'padding: 0.375rem 0.75rem',
+      'border-radius: 0.25rem', 'border: none', 'cursor: pointer',
+      'font-size: 0.8125rem', 'font-weight: 600',
+    ].join(';');
+    cancelBtn.addEventListener('click', function () {
+      cancelPendingAction(action.id).then(function () {
+        card.remove();
+        pollPendingActions();
+      });
+    });
+    row.appendChild(cancelBtn);
+
+    card.appendChild(row);
+    return card;
+  }
+
+  function renderPendingBanner(actions) {
+    var container = ensureBanner();
+    var existing = {};
+    Array.prototype.forEach.call(container.children, function (child) {
+      var id = child.getAttribute('data-pending-id');
+      if (id) existing[id] = child;
+    });
+
+    var seenNow = {};
+    actions.forEach(function (action) {
+      seenNow[action.id] = true;
+      if (existing[action.id]) return;
+      container.appendChild(renderPendingCard(action));
+    });
+
+    Array.prototype.slice.call(container.children).forEach(function (child) {
+      var id = child.getAttribute('data-pending-id');
+      if (id && !seenNow[id]) child.remove();
+    });
+  }
+
+  function confirmPendingAction(id) {
+    return fetchToken().then(function () {
+      return fetch(CONFIRM_ENDPOINT(id), { method: 'POST', headers: authHeaders() })
+        .catch(function () { /* silent */ });
+    });
+  }
+
+  function cancelPendingAction(id) {
+    return fetchToken().then(function () {
+      return fetch(CANCEL_ENDPOINT(id), { method: 'POST', headers: authHeaders() })
+        .catch(function () { /* silent */ });
+    });
+  }
+
+  function pollPendingActions() {
+    fetchToken()
+      .then(function () { return fetch(PENDING_ENDPOINT, { headers: authHeaders() }); })
+      .then(function (r) {
+        if (!r.ok) throw new Error('status ' + r.status);
+        return r.json();
+      })
+      .then(function (body) {
+        var actions = (body && body.pending_actions) || [];
+        renderPendingBanner(actions);
+        pendingCurrentInterval = PENDING_BASE_INTERVAL_MS;
+      })
+      .catch(function () {
+        pendingCurrentInterval = Math.min(pendingCurrentInterval * 2, PENDING_MAX_INTERVAL_MS);
+      })
+      .then(function () {
+        schedulePending();
+      });
+  }
+
+  function schedulePending() {
+    if (pendingPollTimer) clearTimeout(pendingPollTimer);
+    if (document.hidden) return;
+    pendingPollTimer = setTimeout(pollPendingActions, pendingCurrentInterval);
+  }
+
   function poll() {
     fetchToken()
       .then(function () { return fetch(ENDPOINT, { headers: authHeaders() }); })
@@ -256,9 +392,12 @@
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) {
       if (pollTimer) clearTimeout(pollTimer);
+      if (pendingPollTimer) clearTimeout(pendingPollTimer);
     } else {
       currentInterval = BASE_INTERVAL_MS;
+      pendingCurrentInterval = PENDING_BASE_INTERVAL_MS;
       poll();
+      pollPendingActions();
     }
   });
 
@@ -366,6 +505,7 @@
       if (!document.hidden) checkAndRenderStreamOnScreenChange();
     }, 1000);
     poll();
+    pollPendingActions();
   }
 
   if (document.readyState === 'loading') {
@@ -390,5 +530,8 @@
       };
     },
     resolve: resolveSignal,
+    pollPendingActions: pollPendingActions,
+    confirmPendingAction: confirmPendingAction,
+    cancelPendingAction: cancelPendingAction,
   };
 })();

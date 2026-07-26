@@ -16,8 +16,12 @@ closure = state["closure"]
 open_count = closure["open"]
 ratio = closure["ratio"]
 
-# Routing via single source of truth
-mode, risk, build_allowed = compute_mode(ratio, open_count)
+# Routing via single source of truth. closure_quality must ride along or the
+# "archiving is not closing" gate silently never applies on this path -- the
+# payload is what delta-kernel's unified state serves as the live mode.
+mode, risk, build_allowed = compute_mode(
+    ratio, open_count, closure.get("closure_quality", 100.0)
+)
 
 # Generate primary action based on mode
 if mode == "CLOSURE":

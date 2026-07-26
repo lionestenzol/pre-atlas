@@ -261,6 +261,79 @@ const Helpers = {
 
     const sum = validDays.reduce((acc, day) => acc + day.progress, 0);
     return Math.round(sum / validDays.length);
+  },
+
+  // ---------------------------------------------------------------------------
+  // Minimal Mode — Daily execution lens
+  // ---------------------------------------------------------------------------
+
+  // block.time is stored in two formats: seeded blocks use "6:00 AM", blocks
+  // edited through input[type=time] use "13:00". convertTo24Hour normalizes both.
+  _blockMinutes(block) {
+    const [h, m] = convertTo24Hour(block.time).split(':');
+    return parseInt(h, 10) * 60 + parseInt(m, 10);
+  },
+
+  _sortedBlocks(plan) {
+    if (!plan || !plan.time_blocks) return [];
+    return [...plan.time_blocks].sort((a, b) => this._blockMinutes(a) - this._blockMinutes(b));
+  },
+
+  _nowMinutes() {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  },
+
+  // The block you're inside right now: the last one whose start time has passed.
+  // Returns null before the day's first block starts.
+  getCurrentTimeBlock(plan) {
+    const nowMin = this._nowMinutes();
+    let current = null;
+    for (const block of this._sortedBlocks(plan)) {
+      if (this._blockMinutes(block) > nowMin) break;
+      current = block;
+    }
+    return current;
+  },
+
+  getNextTimeBlock(plan) {
+    const nowMin = this._nowMinutes();
+    return this._sortedBlocks(plan).find(block => this._blockMinutes(block) > nowMin) || null;
+  },
+
+  // Routine attached to the current block, with step progress. Null if the
+  // current block's title doesn't name a routine.
+  getActiveRoutine(plan) {
+    const block = this.getCurrentTimeBlock(plan);
+    if (!block) return null;
+
+    const name = _findRoutineMatch(block.title);
+    if (!name) return null;
+
+    const steps = this.computeRoutineStepTimes(block.time, state.Routine[name] || []);
+    const completion = plan.routines_completed?.[name] || { completed: false, steps: {} };
+    const done = steps.filter((_, idx) => completion.steps?.[idx]).length;
+
+    return { name, steps, completion, done, total: steps.length };
+  },
+
+  // Stamps each routine step with a real clock time by walking forward from
+  // the parent block's start, accumulating each step's duration in turn.
+  // Re-scheduling the block automatically re-times every step under it.
+  computeRoutineStepTimes(blockTime, steps) {
+    let minutes = this._blockMinutes({ time: blockTime });
+    return steps.map(step => {
+      const duration = step.duration || 5;
+      const h = Math.floor(minutes / 60) % 24;
+      const m = minutes % 60;
+      const time = convertTo12Hour(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+      minutes += duration;
+      return { ...step, time, duration };
+    });
+  },
+
+  isPlanReady(plan) {
+    return !!(plan && plan.time_blocks && plan.time_blocks.length > 0);
   }
 };
 

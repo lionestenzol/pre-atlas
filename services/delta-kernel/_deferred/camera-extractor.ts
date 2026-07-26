@@ -13,7 +13,7 @@ import {
   SceneObjectData,
   SceneLightData,
   CameraStreamMetrics,
-} from './types';
+} from '../src/core/types.js';
 import {
   CameraSceneStore,
   validateTilePatch,
@@ -21,8 +21,8 @@ import {
   validateLightPatch,
   computeTileHash,
   computeTileEnergy,
-} from './camera-surface';
-import { generateUUID, now, computeHash, applyPatch } from './delta';
+} from './camera-surface.js';
+import { generateUUID, now, computeHash, applyPatch } from '../src/core/delta.js';
 
 // === METRICS TRACKER ===
 

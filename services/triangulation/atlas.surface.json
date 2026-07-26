@@ -1,0 +1,12 @@
+{
+  "surface": "triangulation",
+  "headline": "DOM + spatial + visual verification sidecar for auto-labeled UI elements (revived 2026-06-24, port 3074)",
+  "kind": "http",
+  "lifecycle": "live",
+  "capabilities": [
+    { "id": "healthz",       "label": "Check the sidecar health",             "direction": "read",  "exposure": "public", "criticality": 0, "invoke": "GET /healthz" },
+    { "id": "verify",        "label": "Verify auto-labeled UI elements",      "direction": "read",  "exposure": "agent",  "criticality": 0, "invoke": "POST /verify", "needs": ["elements"] },
+    { "id": "library_stats", "label": "Inspect the visual reference library", "direction": "read",  "exposure": "agent",  "criticality": 0, "invoke": "GET /library/stats" },
+    { "id": "library_add",   "label": "Add a labeled reference screenshot",   "direction": "write", "exposure": "agent",  "criticality": 1, "invoke": "POST /library/add", "needs": ["label", "screenshot_path"] }
+  ]
+}

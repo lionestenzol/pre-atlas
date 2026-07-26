@@ -7,6 +7,8 @@ import logging
 import time
 from pathlib import Path
 
+from urllib.parse import urlparse
+
 import httpx
 
 from cortex.contracts import (
@@ -16,14 +18,29 @@ from cortex.contracts import (
 from cortex.config import config
 from cortex.clients.delta_client import DeltaClient
 from cortex.clients.uasc_client import UascClient
+from cortex.clients.optogon_client import OptogonClient
 
 log = logging.getLogger("cortex.executor")
 
 
+def _allowed_api_call_origins() -> set[str]:
+    """Origins _handle_api_call may target. Templates only ever build URLs against
+    these known internal services; the LLM-decomposition path (params attacker-
+    influenceable via POST /tasks/submit) could otherwise be steered at any host —
+    an SSRF primitive against the rest of the internal service mesh."""
+    urls = [config.DELTA_URL, config.AEGIS_URL, config.UASC_URL, config.MOSAIC_URL, config.OPTOGON_URL]
+    origins = {urlparse(u).scheme + "://" + urlparse(u).netloc for u in urls if u}
+    for port in (3001, 3002, 3003, 3005, 3008, 3009, 3010, 8100):
+        origins.add(f"http://localhost:{port}")
+        origins.add(f"http://127.0.0.1:{port}")
+    return origins
+
+
 class Executor:
-    def __init__(self, uasc: UascClient, delta: DeltaClient) -> None:
+    def __init__(self, uasc: UascClient, delta: DeltaClient, optogon: OptogonClient) -> None:
         self._uasc = uasc
         self._delta = delta
+        self._optogon = optogon
         self._http = httpx.AsyncClient(timeout=30.0)
 
     async def execute(self, spec: ExecutionSpec) -> ExecutionResult:
@@ -157,6 +174,11 @@ class Executor:
         body = params.get("body")
         headers = params.get("headers", {})
 
+        parsed = urlparse(url)
+        origin = f"{parsed.scheme}://{parsed.netloc}"
+        if origin not in _allowed_api_call_origins():
+            raise ValueError(f"api_call target not in allowlist: {origin}")
+
         if method == "GET":
             r = await self._http.get(url, headers=headers)
         elif method == "POST":
@@ -257,6 +279,15 @@ class Executor:
     async def _handle_noop(self, params: dict) -> tuple:
         return {"noop": True}, 0.0
 
+    async def _handle_optogon_session(self, params: dict) -> tuple:
+        result = await self._optogon.run_session(
+            path_id=params["path_id"],
+            initial_context=params.get("initial_context"),
+            context_package=params.get("context_package"),
+            sitepull_audit_dir=params.get("sitepull_audit_dir"),
+        )
+        return result, 0.0
+
     _DISPATCH = {
         ActionType.API_CALL: _handle_api_call,
         ActionType.UASC_COMMAND: _handle_uasc_command,
@@ -266,4 +297,5 @@ class Executor:
         ActionType.STATE_UPDATE: _handle_state_update,
         ActionType.SHELL_EXEC: _handle_shell_exec,
         ActionType.NOOP: _handle_noop,
+        ActionType.OPTOGON_SESSION: _handle_optogon_session,
     }

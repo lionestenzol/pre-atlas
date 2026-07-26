@@ -87,7 +87,7 @@ export function approvalRoutes(
           timestamp: Date.now(),
         };
 
-        const execResult = await actionProcessor.process(action);
+        const execResult = await actionProcessor.processApproved(action);
         res.json({ approval: result, execution: execResult });
         return;
       }

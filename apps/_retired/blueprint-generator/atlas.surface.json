@@ -1,0 +1,7 @@
+{
+  "surface": "blueprint-generator",
+  "headline": "Retired Next.js blueprint UI — do not build on this surface",
+  "kind": "ui",
+  "lifecycle": "retired",
+  "capabilities": []
+}

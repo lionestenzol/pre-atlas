@@ -112,16 +112,34 @@ class SessionStore:
     def update(self, state: dict[str, Any]) -> dict[str, Any]:
         validate(state, "OptogonSessionState")
         session_id = state["session_id"]
+        # Single write path: when a path reaches its close node, _handle_close
+        # sets state["closed_at"]; persist it to the column so list_active()
+        # (WHERE closed_at IS NULL) stops returning closed sessions. Idempotent —
+        # closed_at is stable once set. See code-as-furniture.md.
+        closed_at = state.get("closed_at")
         with self._lock:
-            self._conn.execute(
-                "UPDATE sessions SET state_json = ?, updated_at = ? WHERE session_id = ?",
-                (json.dumps(state), self._now(), session_id),
-            )
+            if closed_at:
+                self._conn.execute(
+                    "UPDATE sessions SET state_json = ?, updated_at = ?, closed_at = ? WHERE session_id = ?",
+                    (json.dumps(state), self._now(), closed_at, session_id),
+                )
+            else:
+                self._conn.execute(
+                    "UPDATE sessions SET state_json = ?, updated_at = ? WHERE session_id = ?",
+                    (json.dumps(state), self._now(), session_id),
+                )
             self._conn.commit()
             self._cache[session_id] = state
         return state
 
     def close(self, session_id: str) -> None:
+        """Explicit/manual force-close of a session's SQLite row.
+
+        The AUTOMATIC close path is update(): when a path reaches its close
+        node, _handle_close sets state["closed_at"] and update() persists the
+        column. This method remains as a direct admin/force-close API for
+        callers that need to retire a session without driving a turn.
+        """
         with self._lock:
             self._conn.execute(
                 "UPDATE sessions SET closed_at = ? WHERE session_id = ?",

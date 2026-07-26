@@ -1,0 +1,2839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lattice</title>
+<script src="cytoscape.min.js"></script>
+<script src="zod.umd.js"></script>
+<!-- Week 2 (assemble-first): official cytoscape layout extensions, vendored.
+     cose-bilkent dep chain must load in order: layout-base -> cose-base -> cose-bilkent.
+     cytoscape-dagre bundles dagre internally (no separate dagre.js needed). -->
+<script src="layout-base.js"></script>
+<script src="cose-base.js"></script>
+<script src="cytoscape-cose-bilkent.js"></script>
+<script src="cytoscape-dagre.js"></script>
+<script>
+  // Register layout extensions on the cytoscape singleton once, at load.
+  // Flags let buildLayoutCfg() degrade gracefully if a bundle failed to load.
+  window.__latticeLayouts = { coseBilkent: false, dagre: false };
+  if (typeof cytoscape === 'function') {
+    try { if (window.cytoscapeCoseBilkent) { cytoscape.use(window.cytoscapeCoseBilkent); window.__latticeLayouts.coseBilkent = true; } } catch (e) { console.warn('cose-bilkent register:', e); }
+    try { if (window.cytoscapeDagre) { cytoscape.use(window.cytoscapeDagre); window.__latticeLayouts.dagre = true; } } catch (e) { console.warn('dagre register:', e); }
+  }
+</script>
+<style>
+:root {
+  --bg: #FAFAF7;
+  --surface: #FFFFFF;
+  --surface-2: #F1EFE8;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.15);
+  --text: #1A1917;
+  --text-2: #5F5E5A;
+  --text-3: #888780;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --accent: #378ADD;
+  --accent-bg: #E6F1FB;
+  --danger: #E24B4A;
+  --danger-bg: #FCEBEB;
+  --success: #639922;
+  --success-bg: #EAF3DE;
+  --neutral: #B4B2A9;
+  --warn: #BA7517;
+  --warn-bg: #FAEEDA;
+  --p-lattice: #7F77DD;
+  --p-optogon: #1D9E75;
+  --p-atlas: #D85A30;
+  --p-inpact: #378ADD;
+  --p-property: #BA7517;
+  --p-music: #D4537E;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button { background: none; border: none; cursor: pointer; font: inherit; color: inherit; padding: 0; }
+ul, ol { list-style: none; }
+svg { display: block; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); border: 0;
+}
+
+/* ---------- App layout ---------- */
+.app {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+  padding: 20px 14px;
+  overflow-y: auto;
+}
+.brand {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: lowercase;
+  padding: 0 8px 16px;
+  color: var(--text);
+}
+.nav-section {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 14px 8px 6px;
+}
+.nav-list { display: flex; flex-direction: column; gap: 1px; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 13px;
+  text-transform: lowercase;
+}
+.nav-item:hover { background: rgba(0,0,0,0.04); }
+.nav-item.active { background: rgba(0,0,0,0.07); color: var(--text); font-weight: 500; }
+.nav-icon {
+  width: 14px; height: 14px;
+  display: inline-flex;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.nav-label { flex: 1; }
+.nav-count {
+  font-size: 11px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.proj-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.proj-dot.lattice  { background: var(--p-lattice); }
+.proj-dot.optogon  { background: var(--p-optogon); }
+.proj-dot.atlas    { background: var(--p-atlas); }
+.proj-dot.inpact   { background: var(--p-inpact); }
+.proj-dot.property { background: var(--p-property); }
+.proj-dot.music    { background: var(--p-music); }
+
+/* ---------- Main ---------- */
+.main { overflow-y: auto; display: flex; flex-direction: column; }
+.topbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  z-index: 2;
+}
+.breadcrumb {
+  font-size: 13px;
+  color: var(--text-2);
+  font-weight: 500;
+  flex: 1;
+  text-transform: lowercase;
+}
+.view-switch {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 2px;
+  gap: 1px;
+}
+.view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-2);
+  text-transform: lowercase;
+}
+.view-btn:hover { color: var(--text); }
+.view-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.view-btn svg { width: 14px; height: 14px; }
+.add-btn, .today-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--text);
+  text-transform: lowercase;
+}
+.add-btn:hover, .today-btn:hover { background: var(--surface-2); }
+.add-btn svg { width: 12px; height: 12px; }
+.today-btn svg { width: 13px; height: 13px; }
+
+@keyframes today-flash {
+  0%   { box-shadow: 0 0 0 0 var(--accent), inset 0 0 0 0 var(--accent-bg); background-color: var(--accent-bg); }
+  100% { box-shadow: 0 0 0 0 transparent, inset 0 0 0 0 transparent; }
+}
+.today-flash { animation: today-flash 1.2s ease-out; }
+
+.legend { display: none; }
+
+.content { flex: 1; padding: 28px 32px; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* ---------- TREE view ---------- */
+.tree-section + .tree-section { margin-top: 28px; }
+.tree-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.tree-header .proj-dot { width: 9px; height: 9px; }
+.proj-name {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: lowercase;
+  color: var(--text);
+}
+.proj-progress {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 4px;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+.item:hover { background: rgba(0,0,0,0.025); }
+.item.ctx-open { background: var(--accent-bg); }
+
+/* ---------- Inline + new item row ---------- */
+.new-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 4px;
+  font-size: 12px;
+  color: var(--text-3);
+  border: 1px dashed transparent;
+  border-radius: var(--radius);
+  margin-top: 4px;
+  cursor: text;
+  text-transform: lowercase;
+  user-select: none;
+}
+.new-item-row:hover {
+  color: var(--text-2);
+  border-color: var(--border);
+}
+.new-item-row.editing {
+  background: var(--surface);
+  border-color: var(--accent);
+  cursor: text;
+  user-select: auto;
+}
+.new-item-row .ni-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+.new-item-row .ni-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font: inherit;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+}
+.new-item-row .ni-hint {
+  font-size: 10px;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+/* ---------- Right-click context menu ---------- */
+.ctx-menu {
+  position: fixed;
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+  padding: 4px;
+  z-index: 100;
+  font-size: 12px;
+}
+.ctx-prov {
+  font-size: 10px;
+  color: var(--text-3);
+  font-style: italic;
+  padding: 6px 10px 4px;
+  border-bottom: 1px solid var(--surface-2);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ctx-mode-toggle {
+  font-size: 10px;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-style: normal;
+  font-family: monospace;
+}
+.ctx-mode-toggle:hover { background: var(--surface-2); color: var(--text); }
+.ctx-section {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 6px 10px 4px;
+}
+.ctx-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 4px;
+  text-align: left;
+  color: var(--text);
+  text-transform: lowercase;
+}
+.ctx-btn:hover { background: var(--surface-2); }
+.ctx-btn.danger { color: #791F1F; }
+.ctx-btn.danger:hover { background: var(--danger-bg); }
+.ctx-btn .ctx-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ctx-btn .ctx-dot.open    { background: var(--neutral); }
+.ctx-btn .ctx-dot.active  { background: var(--accent); }
+.ctx-btn .ctx-dot.blocked { background: var(--danger); }
+.ctx-btn .ctx-dot.done    { background: var(--success); }
+.ctx-btn .ctx-dot.dropped { background: var(--text-3); }
+.ctx-btn.checked { font-weight: 500; }
+.ctx-btn.checked::after { content: '✓'; margin-left: auto; color: var(--accent); }
+
+/* Compact pip / pill rows so the menu doesn't sprawl */
+.ctx-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 6px;
+}
+.ctx-row-label {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  min-width: 50px;
+}
+.ctx-pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.1s;
+  box-sizing: border-box;
+}
+.ctx-pip:hover { border-color: var(--text-3); }
+.ctx-pip.checked { border-color: var(--text); }
+.ctx-stat {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 9px;
+  cursor: pointer;
+  text-transform: lowercase;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-3);
+}
+.ctx-stat:hover { background: var(--surface-2); }
+.ctx-stat.checked {
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 500;
+  border-color: var(--text);
+}
+.ctx-current {
+  font-size: 11px;
+  color: var(--text);
+  padding: 0 10px 6px 60px;
+  margin-top: -4px;
+  min-height: 14px;
+  font-style: italic;
+}
+.ctx-current.preview { color: var(--text-2); }
+
+.settings-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 0 16px 12px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.settings-panel[hidden] { display: none; }
+.settings-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.settings-label {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  min-width: 90px;
+}
+.settings-row label {
+  display: flex; align-items: center; gap: 5px;
+  cursor: pointer; color: var(--text-2);
+}
+.settings-row input { cursor: pointer; }
+
+.search-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 0 16px 12px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.search-panel[hidden] { display: none; }
+.search-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-1);
+  font-size: 13px;
+}
+.search-results { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+.search-hit {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border);
+  cursor: default;
+}
+.search-hit.clickable { cursor: pointer; }
+.search-hit.clickable:hover { background: var(--bg); }
+.search-hit-top { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+.search-hit-snippet { color: var(--text-1); font-size: 12px; }
+.search-empty, .search-status { color: var(--text-3); font-size: 12px; }
+
+.ctx-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+.item-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.item-id {
+  font-size: 11px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  width: 40px;
+  flex-shrink: 0;
+  text-align: right;
+  flex-shrink: 0;
+}
+.item-title { flex: 1; min-width: 160px; }
+.link-overflow {
+  font-size: 11px;
+  color: var(--text-3);
+  padding: 2px 4px;
+  align-self: center;
+}
+.item.is-done .item-title { text-decoration: line-through; color: var(--text-3); }
+.item.is-dropped { opacity: 0.5; }
+.item-meta {
+  font-size: 11px;
+  color: var(--text-3);
+  flex-shrink: 0;
+  text-transform: lowercase;
+}
+.item-links {
+  display: inline-flex;
+  gap: 4px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  min-width: 70px;
+  justify-content: center;
+  text-transform: lowercase;
+  flex-shrink: 0;
+}
+.sp-dot { width: 5px; height: 5px; border-radius: 50%; }
+.status-pill.open    { background: var(--surface-2); color: var(--text-2); }
+.status-pill.open    .sp-dot { background: var(--neutral); }
+.status-pill.active  { background: var(--accent-bg); color: #0C447C; }
+.status-pill.active  .sp-dot { background: var(--accent); }
+.status-pill.blocked { background: var(--danger-bg); color: #791F1F; }
+.status-pill.blocked .sp-dot { background: var(--danger); }
+.status-pill.done    { background: var(--success-bg); color: #27500A; }
+.status-pill.done    .sp-dot { background: var(--success); }
+.status-pill.dropped { background: var(--surface-2); color: var(--text-3); }
+.status-pill.dropped .sp-dot { background: var(--neutral); }
+
+.link-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  text-transform: lowercase;
+}
+.link-badge.blocks  { background: var(--danger-bg); color: #791F1F; }
+.link-badge.spawned { background: var(--warn-bg);   color: #633806; }
+.link-badge.relates { background: var(--surface-2); color: var(--text-2); }
+
+/* ---------- GRAPH view ---------- */
+.graph-header {
+  margin: 0 16px 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.graph-legend-inline {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  font-size: 10px; color: var(--text-3);
+  margin-top: 8px;
+}
+.graph-legend-inline span { display: inline-flex; align-items: center; gap: 5px; }
+.graph-legend-inline .leg-line {
+  display: inline-block; width: 16px; height: 2px;
+}
+.graph-legend-inline .leg-line.blocks   { background: #E24B4A; }
+.graph-legend-inline .leg-line.spawned  { background: #BA7517; }
+.graph-legend-inline .leg-line.relates  { background: #888780; }
+.graph-legend-inline .leg-line.belongs  { background: #d9d6cb; border-top: 1px dashed #888; height: 0; }
+.graph-legend-inline .graph-hint { margin-left: auto; font-style: italic; }
+.graph-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.graph-sub {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.graph-wrap {
+  position: relative;
+  width: 100%;
+  /* Consume the remaining viewport so cy fits without page scroll. */
+  height: calc(100vh - 280px);
+  min-height: 520px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.graph-wrap svg { width: 100%; height: 100%; }
+
+.graph-edge { stroke-width: 1.4; fill: none; }
+.graph-edge.blocks  { stroke: var(--danger); }
+.graph-edge.spawned { stroke: var(--warn); }
+.graph-edge.relates { stroke: var(--text-3); stroke-dasharray: 3 3; }
+.graph-edge-label {
+  font-size: 9px;
+  fill: var(--text-3);
+  text-transform: lowercase;
+}
+.graph-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--text-3);
+  background: rgba(255,255,255,0.85);
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.leg-row { display: flex; align-items: center; gap: 6px; }
+.leg-line { width: 20px; height: 1.4px; display: inline-block; }
+.leg-line.blocks  { background: var(--danger); }
+.leg-line.spawned { background: var(--warn); }
+.leg-line.relates {
+  background-image: linear-gradient(90deg, var(--text-3) 50%, transparent 50%);
+  background-size: 6px 2px;
+  background-repeat: repeat-x;
+  height: 2px;
+}
+
+/* ---------- TIMELINE view ---------- */
+.day-section + .day-section { margin-top: 24px; }
+.day-header {
+  font-size: 12px;
+  color: var(--text-3);
+  text-transform: lowercase;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.event-row {
+  display: grid;
+  grid-template-columns: 60px 90px 110px 1fr;
+  gap: 12px;
+  padding: 7px 4px;
+  align-items: center;
+  font-size: 12px;
+}
+.event-row:hover { background: rgba(0,0,0,0.02); }
+.event-time {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.event-kind {
+  font-size: 11px;
+  text-transform: lowercase;
+  font-weight: 500;
+}
+.event-kind.add    { color: var(--accent); }
+.event-kind.status { color: var(--text-2); }
+.event-kind.link   { color: var(--warn); }
+.event-kind.done   { color: var(--success); }
+.event-project {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: lowercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.event-desc { color: var(--text); }
+
+/* ---------- Timeline sub-switch (list / 7-day / calendar) + zoom ---------- */
+.timeline-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.timeline-sub-switch {
+  display: inline-flex;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 2px;
+  gap: 1px;
+}
+.zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 3px 6px;
+}
+.zoom-controls .zoom-label {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: lowercase;
+  padding: 0 4px;
+  user-select: none;
+}
+.zoom-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+.zoom-btn:hover:not(:disabled) { background: var(--accent-bg); border-color: var(--accent); color: #0C447C; }
+.zoom-btn:disabled { opacity: 0.3; cursor: not-allowed; background: transparent; border-color: transparent; }
+.timeline-sub-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-2);
+  text-transform: lowercase;
+}
+.timeline-sub-btn:hover { color: var(--text); }
+.timeline-sub-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* ---------- TIMELINE: 7-day view ---------- */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+.week-col {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: var(--surface);
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.week-col.today { background: var(--accent-bg); border-color: var(--accent); }
+.week-col-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: lowercase;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.week-col-header .wd { font-weight: 500; }
+.week-col-header .dn {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.week-col.today .week-col-header .dn { color: var(--accent); }
+.week-event {
+  font-size: 11px;
+  padding: 6px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+.week-event:hover { background: rgba(0,0,0,0.05); }
+.week-event-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+}
+.week-event-top .we-time { color: var(--text-3); font-variant-numeric: tabular-nums; }
+.week-event-top .we-kind { font-weight: 500; text-transform: lowercase; }
+.week-event-top .we-kind.add    { color: var(--accent); }
+.week-event-top .we-kind.status { color: var(--text-2); }
+.week-event-top .we-kind.link   { color: var(--warn); }
+.week-event-top .we-kind.done   { color: var(--success); }
+.week-event-desc {
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.3;
+}
+.week-col-empty {
+  font-size: 10px;
+  color: var(--text-3);
+  text-align: center;
+  padding: 16px 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- TIMELINE: calendar view ---------- */
+.cal-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.cal-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: lowercase;
+  color: var(--text);
+}
+.cal-summary {
+  font-size: 11px;
+  color: var(--text-3);
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-weekday {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: lowercase;
+  text-align: center;
+  padding: 6px 0;
+  font-weight: 500;
+}
+.cal-day {
+  aspect-ratio: 1.1;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  background: rgba(0,0,0,0.012);
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: default;
+}
+.cal-day.other-month { opacity: 0.32; }
+.cal-day.today {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+.cal-day.has-events { background: var(--surface-2); cursor: pointer; }
+.cal-day.has-events:hover { background: rgba(0,0,0,0.05); }
+.cal-day .day-num {
+  font-size: 11px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.cal-day.today .day-num { color: var(--accent); font-weight: 700; }
+.cal-events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: auto;
+}
+.cal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.cal-dot.add    { background: var(--accent); }
+.cal-dot.status { background: var(--text-3); }
+.cal-dot.link   { background: var(--warn); }
+.cal-dot.done   { background: var(--success); }
+
+/* ---------- Responsive: mobile (single column, narrow-style) ---------- */
+@media (max-width: 599px) {
+  .app {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+  .sidebar { display: none; }
+
+  .main {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    overflow-y: visible;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    padding: 14px 16px 12px;
+    gap: 10px;
+  }
+  .breadcrumb {
+    width: 100%;
+    flex: none;
+    font-size: 11px;
+    color: var(--text-3);
+    order: 0;
+  }
+  .view-switch {
+    flex: 1;
+    order: 1;
+  }
+  .view-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 7px 4px;
+  }
+  .view-btn span { display: none; }
+  .today-btn {
+    order: 2;
+    padding: 7px 10px;
+  }
+  .today-btn span { display: none; }
+  .add-btn {
+    order: 3;
+    padding: 7px 10px;
+  }
+  .add-btn span { display: none; }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    padding: 10px 16px 12px;
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: lowercase;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .leg { display: inline-flex; align-items: center; gap: 4px; }
+  .leg-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .leg-dot.active  { background: var(--accent); }
+  .leg-dot.blocked { background: var(--danger); }
+  .leg-dot.open    { background: var(--neutral); }
+  .leg-dot.done    { background: var(--success); }
+
+  .content { padding: 16px; }
+
+  .item {
+    flex-wrap: wrap;
+    padding: 10px 4px;
+    gap: 8px;
+  }
+  .item-dot { order: 1; }
+  .item-id  { display: none; }
+  .item-title { order: 2; flex: 1 1 auto; min-width: 180px; }
+  .item-pill-wrap { display: none; }
+  .item-links { order: 3; flex-shrink: 0; }
+  .item-meta  { order: 4; flex-basis: 100%; padding-left: 16px; font-size: 10px; margin-top: 2px; }
+
+  .graph-wrap { height: 460px; }
+  .graph-edge-label { font-size: 10px; }
+  .graph-legend {
+    font-size: 9px;
+    padding: 6px 8px;
+    bottom: 8px;
+    left: 8px;
+  }
+
+  .event-row {
+    grid-template-columns: 50px 70px 1fr;
+    gap: 8px;
+  }
+  .event-project { display: none; }
+
+  .timeline-sub-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .timeline-sub-switch {
+    display: flex;
+    width: 100%;
+  }
+  .timeline-sub-btn { flex: 1; text-align: center; }
+  .zoom-controls { align-self: flex-end; }
+
+  .week-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .week-col { min-height: auto; padding: 12px; }
+  .week-col-header { font-size: 11px; }
+  .week-col-header .dn { font-size: 13px; }
+
+  .cal-wrap { padding: 12px; }
+  .cal-day { padding: 4px 5px; aspect-ratio: 1; }
+  .cal-day .day-num { font-size: 10px; }
+  .cal-dot { width: 4px; height: 4px; }
+  .cal-events { gap: 2px; }
+  .cal-weekday { font-size: 9px; padding: 4px 0; }
+}
+</style>
+</head>
+<body>
+<h2 class="sr-only">lattice: a tree, graph, and time view of work items across projects</h2>
+
+<div class="app">
+  <aside class="sidebar" aria-label="navigation">
+    <div class="brand">lattice</div>
+    <div class="nav-section">views</div>
+    <ul class="nav-list" id="view-nav"></ul>
+    <div class="nav-section">projects</div>
+    <ul class="nav-list" id="project-nav"></ul>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumb" id="breadcrumb">all projects</div>
+      <div class="view-switch" role="tablist">
+        <button class="view-btn active" data-view="tree" role="tab" aria-selected="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="6" height="4" rx="1"/>
+            <rect x="14" y="4" width="6" height="4" rx="1"/>
+            <rect x="14" y="16" width="6" height="4" rx="1"/>
+            <path d="M7 8v3h7M17 11v5"/>
+          </svg>
+          <span>tree</span>
+        </button>
+        <button class="view-btn" data-view="graph" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5" cy="6" r="2"/>
+            <circle cx="19" cy="6" r="2"/>
+            <circle cx="12" cy="18" r="2"/>
+            <path d="M7 7l4 9M17 7l-4 9M7 6h10"/>
+          </svg>
+          <span>graph</span>
+        </button>
+        <button class="view-btn" data-view="timeline" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 2"/>
+          </svg>
+          <span>timeline</span>
+        </button>
+      </div>
+      <button class="today-btn" id="memory-search-btn" aria-label="search memory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <span>search</span>
+      </button>
+      <button class="today-btn" id="today-btn" aria-label="jump to today">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="5" width="16" height="16" rx="2"/>
+          <path d="M16 3v4M8 3v4M4 11h16"/>
+          <circle cx="12" cy="16" r="1.5" fill="currentColor" stroke="none"/>
+        </svg>
+        <span>today</span>
+      </button>
+      <button class="add-btn" aria-label="add item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <span>add</span>
+      </button>
+      <button class="today-btn" id="settings-btn" aria-label="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>knobs</span>
+      </button>
+    </header>
+
+    <div class="search-panel" id="memory-search-panel" hidden>
+      <input type="text" id="memory-search-input" placeholder="search across droplist, ideas, cognitive-sensor..." autocomplete="off" />
+      <div class="search-results" id="memory-search-results"></div>
+    </div>
+
+    <div class="settings-panel" id="settings-panel" hidden>
+      <div class="settings-row">
+        <span class="settings-label" title="how many connection steps out from the focused node to show">graph reach</span>
+        <label><input type="radio" name="depth" value="1"> direct neighbors</label>
+        <label><input type="radio" name="depth" value="2"> 2 steps out</label>
+        <label><input type="radio" name="depth" value="all"> everything connected</label>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label" title="how nodes are arranged on the canvas">layout</span>
+        <label><input type="radio" name="layout" value="auto"> auto</label>
+        <label><input type="radio" name="layout" value="concentric"> rings</label>
+        <label><input type="radio" name="layout" value="force"> force</label>
+        <label><input type="radio" name="layout" value="hierarchy"> hierarchy</label>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">node types</span>
+        <label><input type="checkbox" data-knob="showItems"> items</label>
+        <label><input type="checkbox" data-knob="showProjects"> projects</label>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">tier</span>
+        <label><input type="checkbox" data-source="execute_now"> execute_now</label>
+        <label><input type="checkbox" data-source="next_up"> next_up</label>
+        <label><input type="checkbox" data-source="backlog"> backlog</label>
+      </div>
+    </div>
+
+    <div class="legend" aria-hidden="true">
+      <span class="leg"><span class="leg-dot active"></span>active</span>
+      <span class="leg"><span class="leg-dot blocked"></span>blocked</span>
+      <span class="leg"><span class="leg-dot open"></span>open</span>
+      <span class="leg"><span class="leg-dot done"></span>done</span>
+    </div>
+
+    <div class="content">
+      <div class="view active" id="view-tree" role="tabpanel"></div>
+      <div class="view" id="view-graph" role="tabpanel"></div>
+      <div class="view" id="view-timeline" role="tabpanel">
+        <div class="timeline-sub-row">
+          <div class="timeline-sub-switch" role="tablist" aria-label="timeline mode">
+            <button class="timeline-sub-btn active" data-sub="list"     role="tab" aria-selected="true">list view</button>
+            <button class="timeline-sub-btn"        data-sub="week"     role="tab" aria-selected="false">7-day view</button>
+            <button class="timeline-sub-btn"        data-sub="calendar" role="tab" aria-selected="false">calendar view</button>
+          </div>
+          <div class="zoom-controls" aria-label="zoom timeline">
+            <button class="zoom-btn" data-zoom="out" aria-label="zoom out (broader)" title="zoom out · ctrl+scroll">−</button>
+            <span class="zoom-label">zoom</span>
+            <button class="zoom-btn" data-zoom="in" aria-label="zoom in (finer)" title="zoom in · ctrl+scroll">+</button>
+          </div>
+        </div>
+        <div id="view-timeline-content"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="ctx-menu" id="ctx-menu" hidden role="menu" aria-label="item actions"></div>
+
+<script>
+/* ============================================================
+ * DATA: single source of truth
+ * Tree and graph render from the SAME `items` array.
+ * Tree shows each item with its outgoing links.
+ * Graph shows incoming + outgoing for the focus node.
+ * ============================================================ */
+
+// === SUBSTRATE-FED DATA ===
+// items / projects / events start empty and are populated by loadViewmodel()
+// which hits delta-kernel's /api/lattice/viewmodel. See lattice-projection.ts
+// for the Atlas -> lattice mapping.
+
+// Top-level `var` so these bindings are shared with the module-script
+// at the bottom (which writes through `window.items` etc. on every
+// Replicache subscription fire). With `let` the module's writes would
+// not be visible to the renderers below.
+var projects = [
+  { id: 'lattice',  name: 'lattice'  },
+  { id: 'optogon',  name: 'optogon'  },
+  { id: 'atlas',    name: 'atlas'    },
+  { id: 'inpact',   name: 'inpact'   },
+  { id: 'property', name: 'property' },
+  { id: 'music',    name: 'music'    },
+];
+
+var items = [];
+var events = [];
+var nodes = [];   // graph nodes: items + projects (type: 'item' | 'project')
+var edges = [];   // graph edges: belongs_to | blocks | spawned | relates
+
+// Settings: the knobs. Sticky via localStorage.
+let settings = (function() {
+  const defaults = {
+    showProjects: true,    // include project nodes in graph
+    showItems: true,       // include item nodes in graph
+    graphDepth: 1,         // 1 | 2 | Infinity (all). null in storage means Infinity (JSON round-trip).
+    graphLayout: 'auto',   // auto | concentric | force (cose-bilkent) | hierarchy (dagre)
+    sources: { execute_now: true, next_up: false, backlog: false },
+    visibleProjects: { lattice: true, optogon: true, atlas: true, inpact: true, property: true, music: true },
+  };
+  try {
+    const raw = localStorage.getItem('lattice.settings');
+    if (!raw) return defaults;
+    const stored = JSON.parse(raw);
+    // Deep-merge nested objects so missing keys fall back to defaults
+    // (shallow Object.assign would lose unset nested keys).
+    return {
+      showProjects: stored.showProjects ?? defaults.showProjects,
+      showItems: stored.showItems ?? defaults.showItems,
+      graphDepth: stored.graphDepth === null ? Infinity : (stored.graphDepth ?? defaults.graphDepth),
+      graphLayout: stored.graphLayout ?? defaults.graphLayout,
+      sources: Object.assign({}, defaults.sources, stored.sources || {}),
+      visibleProjects: Object.assign({}, defaults.visibleProjects, stored.visibleProjects || {}),
+    };
+  } catch (_) { return defaults; }
+})();
+function saveSettings() {
+  try { localStorage.setItem('lattice.settings', JSON.stringify(settings)); } catch (_) {}
+}
+
+// Ghost-stub contract for a link endpoint we lack full data for. ONE definition
+// shared by the two producers (deriveNodes fallback + the Replicache onData
+// handler) so they can't drift (they had, on the `project` field). `project` is
+// included only when the caller knows the owning item (derive path); the sync
+// path omits it — an edge endpoint has no single owning item.
+// See ~/.claude/rules/common/code-as-furniture.md — dedupe, don't let it rot.
+function makeGhostStub(id, opts) {
+  const stub = {
+    id, type: 'item',
+    label: String(id).replace(/^canon_/, '#'),
+    status: 'open',
+    provenance: { source: 'cognitive-sensor.idea_registry', ghost: true },
+  };
+  if (opts && opts.project != null) stub.project = opts.project;
+  return stub;
+}
+
+// Build the FULL graph from items[] + projects[]. This is the documented
+// fallback for when the server projection carries items but no nodes/edges
+// (wired in the Replicache onData handler). It emits the complete superset with
+// NO settings filters — nodeVisible() is the single masking gate at render time,
+// matching the server-projection path so both feed exactly one filter.
+function deriveNodes() {
+  const out = [];
+  const seen = new Set();
+  function add(n) { if (seen.has(n.id)) return; seen.add(n.id); out.push(n); }
+  for (const p of projects) {
+    add({ id: 'project:' + p.id, type: 'project', label: p.name, project: p.id });
+  }
+  for (const it of items) {
+    add({
+      id: it.id, type: 'item', label: it.title,
+      project: it.project, status: it.status, provenance: it.provenance,
+    });
+  }
+  // Ghost stubs for link targets we don't have full data for — keeps the graph
+  // from looking empty when canonical links point to items in unloaded tiers.
+  for (const it of items) {
+    for (const l of it.links) {
+      if (seen.has(l.to)) continue;
+      add(makeGhostStub(l.to, { project: it.project }));
+    }
+  }
+  return out;
+}
+function deriveEdges() {
+  const out = [];
+  for (const it of items) out.push({ from: it.id, to: 'project:' + it.project, kind: 'belongs_to' });
+  for (const it of items) {
+    for (const l of it.links) out.push({ from: it.id, to: l.to, kind: l.kind });
+  }
+  return out;
+}
+
+// Graph layout config. 'auto' keeps the original behavior (rings at depth 1,
+// force beyond); the other choices let the user pin a layout via the knobs.
+// 'force' prefers the vendored cose-bilkent extension, falling back to the
+// built-in cose if it didn't load; 'hierarchy' uses dagre (directional, good
+// for the blocks/spawned dependency edges) and falls back to breadthfirst.
+function buildLayoutCfg(depth) {
+  const choice = settings.graphLayout || 'auto';
+  const concentricCfg = {
+    name: 'concentric',
+    concentric: function(node) { return -node.data('depth'); },
+    levelWidth: function() { return 1; },
+    minNodeSpacing: 60, spacingFactor: 1.0, padding: 30, fit: false, animate: false,
+  };
+  const coseCfg = { name: 'cose', animate: false, idealEdgeLength: 110, nodeRepulsion: 10000, gravity: 0.15, padding: 40, fit: false };
+  const flags = window.__latticeLayouts || {};
+  if (choice === 'concentric') return concentricCfg;
+  if (choice === 'force') {
+    return flags.coseBilkent
+      ? { name: 'cose-bilkent', animate: false, idealEdgeLength: 110, nodeRepulsion: 8000, padding: 40, fit: false, randomize: false }
+      : coseCfg;
+  }
+  if (choice === 'hierarchy') {
+    return flags.dagre
+      ? { name: 'dagre', rankDir: 'TB', nodeSep: 28, rankSep: 60, padding: 30, fit: false, animate: false }
+      : { name: 'breadthfirst', directed: true, padding: 30, spacingFactor: 1.1, fit: false, animate: false };
+  }
+  // auto
+  return depth === 1 ? concentricCfg : coseCfg;
+}
+
+const TODAY_ISO = '2026-05-28';
+var FOCUS_ITEM_ID = null;  // var so module-script can mutate via window.FOCUS_ITEM_ID
+
+// === SUBSTRATE WIRING ===
+// Replicache (lattice/replicache.bundle.mjs) is the sync seam: optimistic
+// mutators apply locally and queue a push; puller adapts delta-kernel's
+// /api/lattice/viewmodel response into a Replicache PullResponse; pusher
+// forwards each queued mutation to /api/lattice/correct.
+//
+// Bootstrap order: the module <script> at the bottom of <body> resolves
+// the Replicache instance into `window.latticeSync`. This page-level
+// helper waits for it and then bridges into the existing render loop.
+
+async function syncReady() {
+  if (window.latticeSync && window.latticeSync.ready) {
+    await window.latticeSync.ready;
+    return window.latticeSync;
+  }
+  return new Promise(resolve => {
+    window.addEventListener('lattice:sync-ready', () => resolve(window.latticeSync), { once: true });
+  });
+}
+
+/* ============================================================
+ * STATE
+ * ============================================================ */
+
+let currentView = 'tree';
+let currentFilter = { type: 'all' };
+let graphCenter = FOCUS_ITEM_ID;
+let currentTimelineSub = 'list'; // 'list' | 'week' | 'calendar'
+
+/* ============================================================
+ * ICONS (Tabler-style minimal inline SVG, no CDN)
+ * ============================================================ */
+
+function svgIcon(kind) {
+  const paths = {
+    'stack-2':        '<path d="M12 4l-9 5 9 5 9-5-9-5z"/><path d="M3 14l9 5 9-5"/>',
+    'flame':          '<path d="M12 3c1 4 5 6 5 11a5 5 0 1 1-10 0c0-2 1-4 2-5 1 2 2 1 3-6z"/>',
+    'alert-triangle': '<path d="M12 3l10 17H2L12 3z"/><path d="M12 10v4M12 16v.01"/>',
+  };
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + (paths[kind] || '') + '</svg>';
+}
+
+/* ============================================================
+ * HELPERS
+ * ============================================================ */
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+// IDs are either substrate strings (canon_0250) or locally-added numbers.
+// idEq compares both safely; itemById normalizes.
+function idEq(a, b) { return String(a) === String(b); }
+function itemById(id) { return items.find(i => idEq(i.id, id)); }
+// Short display id: strip canonical prefix (canon_0250 -> 0250) so the id column
+// stays narrow. Numeric/short ids pass through unchanged.
+function displayId(id) {
+  if (typeof id !== 'string') return String(id);
+  const m = id.match(/^canon_(\d+)$/);
+  if (m) return m[1];
+  return id.length > 6 ? id.slice(-4) : id;
+}
+function statusPill(status) {
+  const safe = escapeHtml(String(status == null ? '' : status));
+  return '<span class="status-pill ' + safe + '"><span class="sp-dot"></span>' + safe + '</span>';
+}
+function linkBadge(kind, toId) {
+  return '<span class="link-badge ' + kind + '">' + kind + ' #' + displayId(toId) + '</span>';
+}
+function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+function projectProgress(pid) {
+  const its = items.filter(i => i.project === pid);
+  const counts = { active: 0, blocked: 0, done: 0, open: 0, dropped: 0 };
+  its.forEach(i => counts[i.status]++);
+  const order = ['done', 'active', 'blocked', 'open', 'dropped'];
+  const parts = order.filter(k => counts[k] > 0).map(k => counts[k] + ' ' + k);
+  return parts.join(' · ') || (its.length + ' items');
+}
+
+/* ============================================================
+ * SIDEBAR
+ * ============================================================ */
+
+function renderSidebar() {
+  const viewNav = document.getElementById('view-nav');
+  const activeCount  = items.filter(i => i.status === 'active').length;
+  const blockedCount = items.filter(i => i.status === 'blocked').length;
+
+  const navRow = (filter, label, count, icon) => {
+    const isActive =
+      (filter.type === 'all' && currentFilter.type === 'all') ||
+      (filter.type === 'status' && currentFilter.type === 'status' && filter.value === currentFilter.value) ||
+      (filter.type === 'project' && currentFilter.type === 'project' && filter.value === currentFilter.value);
+    return '<li class="nav-item ' + (isActive ? 'active' : '') + '" data-filter=\'' + JSON.stringify(filter) + '\'>' +
+      icon +
+      '<span class="nav-label">' + label + '</span>' +
+      '<span class="nav-count">' + count + '</span>' +
+    '</li>';
+  };
+
+  viewNav.innerHTML =
+    navRow({ type: 'all' }, 'all projects', items.length, '<span class="nav-icon">' + svgIcon('stack-2') + '</span>') +
+    navRow({ type: 'status', value: 'active'  }, 'active',  activeCount,  '<span class="nav-icon">' + svgIcon('flame') + '</span>') +
+    navRow({ type: 'status', value: 'blocked' }, 'blocked', blockedCount, '<span class="nav-icon">' + svgIcon('alert-triangle') + '</span>');
+
+  const projectNav = document.getElementById('project-nav');
+  projectNav.innerHTML = projects.map(p => {
+    const count = items.filter(i => i.project === p.id).length;
+    return navRow({ type: 'project', value: p.id }, escapeHtml(p.name), count, '<span class="proj-dot ' + p.id + '"></span>');
+  }).join('');
+
+  Array.from(document.querySelectorAll('.nav-item')).forEach(el => {
+    el.addEventListener('click', () => {
+      currentFilter = JSON.parse(el.dataset.filter);
+      updateBreadcrumb();
+      renderSidebar();
+      renderTree();
+      switchView('tree');
+    });
+  });
+}
+
+function updateBreadcrumb() {
+  const b = document.getElementById('breadcrumb');
+  if (currentFilter.type === 'all') b.textContent = 'all projects';
+  else if (currentFilter.type === 'status') b.textContent = currentFilter.value + ' items';
+  else if (currentFilter.type === 'project') b.textContent = currentFilter.value;
+}
+
+/* ============================================================
+ * TREE VIEW
+ * ============================================================ */
+
+function renderTree() {
+  const root = document.getElementById('view-tree');
+
+  let visible = items;
+  if (currentFilter.type === 'status')  visible = items.filter(i => i.status === currentFilter.value);
+  if (currentFilter.type === 'project') visible = items.filter(i => i.project === currentFilter.value);
+
+  const grouped = projects.map(p => ({
+    project: p,
+    items: visible.filter(i => i.project === p.id),
+  })).filter(g => g.items.length > 0);
+
+  if (grouped.length === 0) {
+    root.innerHTML = '<p style="color:var(--text-3);font-size:12px;">no items in this view.</p>';
+    return;
+  }
+
+  root.innerHTML = grouped.map(g => {
+    const itemsHtml = g.items.map(item => {
+      const LINK_CAP = 3;
+      const visibleLinks = item.links.slice(0, LINK_CAP);
+      const overflow = item.links.length - visibleLinks.length;
+      const linksHtml = item.links.length
+        ? '<span class="item-links">' +
+            visibleLinks.map(l => linkBadge(l.kind, l.to)).join('') +
+            (overflow > 0 ? '<span class="link-overflow">+' + overflow + '</span>' : '') +
+          '</span>'
+        : '';
+      const cls = 'item' + (item.status === 'done' ? ' is-done' : '') + (item.status === 'dropped' ? ' is-dropped' : '');
+      return '<div class="' + cls + '" data-item-id="' + item.id + '">' +
+        '<span class="item-dot proj-dot ' + item.project + '"></span>' +
+        '<span class="item-id">#' + displayId(item.id) + '</span>' +
+        '<span class="item-title">' + escapeHtml(item.title) + '</span>' +
+        '<span class="item-pill-wrap">' + statusPill(item.status) + '</span>' +
+        '<span class="item-meta">' + escapeHtml(item.time) + '</span>' +
+        linksHtml +
+      '</div>';
+    }).join('');
+
+    const newRowHtml = '<div class="new-item-row" data-project="' + g.project.id + '">' +
+      '<span class="ni-dot proj-dot ' + g.project.id + '"></span>' +
+      '<span class="ni-label">+ new item</span>' +
+    '</div>';
+
+    return '<section class="tree-section">' +
+      '<header class="tree-header">' +
+        '<span class="proj-dot ' + g.project.id + '"></span>' +
+        '<span class="proj-name">' + escapeHtml(g.project.name) + '</span>' +
+        '<span class="proj-progress">' + projectProgress(g.project.id) + '</span>' +
+      '</header>' +
+      itemsHtml +
+      newRowHtml +
+    '</section>';
+  }).join('');
+
+  Array.from(root.querySelectorAll('.item')).forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (el.classList.contains('ctx-open')) return; // ignore ghost clicks while menu showing
+      const id = el.dataset.itemId;
+      graphCenter = id;
+      renderGraph(id);
+      switchView('graph');
+    });
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      openCtxMenu(el.dataset.itemId, e.clientX, e.clientY, el);
+    });
+  });
+
+  Array.from(root.querySelectorAll('.new-item-row')).forEach(el => {
+    el.addEventListener('click', () => startNewItem(el));
+  });
+}
+
+/* ============================================================
+ * GRAPH VIEW
+ *
+ * Layout is hand-tuned per focus item for the demo.
+ * In production this would be a force-directed layout
+ * (d3-force, dagre, or similar).
+ * ============================================================ */
+
+const graphSlots = {
+  4: {
+    4:  { x: 350, y: 170, w: 200, h: 60 },
+    5:  { x: 700, y: 170, w: 180, h: 60 },
+    7:  { x: 190, y: 350, w: 180, h: 60 },
+    9:  { x:  20, y: 170, w: 160, h: 60 },
+    10: { x: 530, y: 350, w: 220, h: 60 },
+  },
+};
+// Mobile uses a tighter, more vertical layout (matches narrow's denser graph)
+const graphSlotsMobile = {
+  4: {
+    4:  { x: 110, y: 200, w: 240, h: 60 },
+    5:  { x: 270, y:  40, w: 170, h: 50 },
+    7:  { x:  20, y: 360, w: 200, h: 50 },
+    9:  { x:  20, y:  40, w: 170, h: 50 },
+    10: { x: 240, y: 360, w: 200, h: 50 },
+  },
+};
+const fallbackCenter = { x: 350, y: 200, w: 200, h: 60 };
+const fallbackRing = [
+  { x: 700, y: 200 },
+  { x: 530, y: 380 },
+  { x: 190, y: 380 },
+  { x:  40, y: 200 },
+  { x: 530, y:  40 },
+  { x: 190, y:  40 },
+];
+
+function isMobile() {
+  return window.matchMedia('(max-width: 599px)').matches;
+}
+
+function nodeVisible(node) {
+  if (!node) return false;
+  if (node.type === 'project' && !settings.showProjects) return false;
+  if (node.type === 'item' && !settings.showItems) return false;
+  const proj = node.project || (node.type === 'project' ? String(node.id).replace('project:', '') : null);
+  if (proj && settings.visibleProjects && settings.visibleProjects[proj] === false) return false;
+  return true;
+}
+
+function nodeAnchorPoint(pos, fromPos) {
+  const cx = pos.x + pos.w / 2;
+  const cy = pos.y + pos.h / 2;
+  const fcx = fromPos.x + fromPos.w / 2;
+  const fcy = fromPos.y + fromPos.h / 2;
+  const dx = fcx - cx;
+  const dy = fcy - cy;
+  if (dx === 0 && dy === 0) return { x: cx, y: cy };
+  const hx = pos.w / 2;
+  const hy = pos.h / 2;
+  const sx = dx === 0 ? Infinity : hx / Math.abs(dx);
+  const sy = dy === 0 ? Infinity : hy / Math.abs(dy);
+  const s = Math.min(sx, sy);
+  return { x: cx + dx * s, y: cy + dy * s };
+}
+
+let cy = null;  // single Cytoscape instance, lazily initialized
+
+function ensureCyMount(root) {
+  // Replace any prior svg-style content with a header + cytoscape mount div.
+  if (root.querySelector('#cy-container')) return root.querySelector('#cy-container');
+  root.innerHTML =
+    '<div class="graph-header" id="graph-header"></div>' +
+    '<div id="cy-container" class="graph-wrap"></div>';
+  return root.querySelector('#cy-container');
+}
+
+function cyStylesheet() {
+  return [
+    { selector: 'node',                style: {
+      'background-color': '#FFFFFF', 'border-width': 1.5, 'border-color': '#999992',
+      'label': 'data(label)', 'color': '#1f1f1c',
+      'text-valign': 'center', 'text-halign': 'center', 'text-wrap': 'wrap', 'text-max-width': '140px',
+      'font-size': '13px', 'font-family': '-apple-system, Segoe UI, sans-serif',
+      'line-height': 1.3,
+      'min-zoomed-font-size': 4,  // very low so labels stay visible at any zoom
+      'width': '170px', 'height': '52px', 'shape': 'round-rectangle', 'padding': '8px',
+    }},
+    { selector: 'node[type = "project"]', style: {
+      'background-color': '#F1EFE8', 'border-style': 'dashed',
+      'font-weight': 500, 'shape': 'round-tag',
+    }},
+    { selector: 'node[?ghost]',        style: {
+      'opacity': 0.55, 'border-style': 'dotted',
+      'width': '110px', 'height': '32px',
+      'font-size': '11px',
+      'background-color': 'transparent',
+    }},
+    { selector: 'node.selected',       style: { 'border-color': '#1f1f1c', 'border-width': 2.5 }},
+    { selector: 'node[status = "active"]',  style: { 'border-color': '#3b75d6' }},
+    { selector: 'node[status = "blocked"]', style: { 'border-color': '#E24B4A' }},
+    { selector: 'node[status = "done"]',    style: { 'border-color': '#5C8C5A', 'color': '#888780', 'text-decoration': 'line-through' }},
+    { selector: 'node[status = "dropped"]', style: { 'opacity': 0.5 }},
+    { selector: 'edge',                style: {
+      'width': 1.2, 'line-color': '#bcbab2', 'curve-style': 'bezier',
+      'target-arrow-color': '#bcbab2', 'target-arrow-shape': 'triangle', 'arrow-scale': 0.8,
+    }},
+    { selector: 'edge[kind = "blocks"]',  style: { 'line-color': '#E24B4A', 'target-arrow-color': '#E24B4A', 'width': 1.5 }},
+    { selector: 'edge[kind = "spawned"]', style: { 'line-color': '#BA7517', 'target-arrow-color': '#BA7517' }},
+    { selector: 'edge[kind = "belongs_to"]', style: { 'line-color': '#d9d6cb', 'target-arrow-color': '#d9d6cb', 'line-style': 'dashed' }},
+  ];
+}
+
+// The neighborhood walk below is a hand-rolled BFS on purpose. It's a depth-N
+// graph traversal (bounded by settings.graphDepth); relational stores can't
+// express it — TinyBase/TinyQL has no recursive/transitive operator (verified
+// against tinybase.org). This is the deliberate hand-roll the graph view is
+// built around, so don't re-propose swapping it for a query store. Full
+// rationale (the rejected Week-3 TinyBase plan): apps/lattice/NEXT_SESSION_HANDOFF.md.
+function renderGraph(centerId) {
+  centerId = centerId || graphCenter || (items[0] && items[0].id);
+  graphCenter = centerId;
+  const root = document.getElementById('view-graph');
+  if (!root) return;
+  const nodeById = new Map(nodes.map(n => [n.id, n]));
+  const centerNode = nodeById.get(centerId);
+  if (!centerNode) {
+    root.innerHTML = '<p style="padding:24px;color:var(--text-3);">no node to focus on</p>';
+    return;
+  }
+  // Adjacency over visible nodes
+  const adj = new Map();
+  for (const e of edges) {
+    const a = nodeById.get(e.from);
+    const b = nodeById.get(e.to);
+    if (!a || !b) continue;
+    if (!nodeVisible(a) || !nodeVisible(b)) continue;
+    if (!adj.has(e.from)) adj.set(e.from, []);
+    if (!adj.has(e.to)) adj.set(e.to, []);
+    adj.get(e.from).push(e.to);
+    adj.get(e.to).push(e.from);
+  }
+  const depth = settings.graphDepth === Infinity ? 99 : (settings.graphDepth || 1);
+  const dist = new Map([[centerId, 0]]);
+  const queue = [centerId];
+  while (queue.length) {
+    const cur = queue.shift();
+    if (dist.get(cur) >= depth) continue;
+    for (const nb of (adj.get(cur) || [])) {
+      if (dist.has(nb)) continue;
+      dist.set(nb, dist.get(cur) + 1);
+      queue.push(nb);
+    }
+  }
+  if (dist.size === 1) {
+    ensureCyMount(root);
+    document.getElementById('graph-header').innerHTML =
+      '<div class="graph-title">' + escapeHtml(centerNode.label) + '</div>' +
+      '<div class="graph-sub">no neighbors at depth ' + depth + ' · open ⚙ knobs to increase</div>';
+    document.getElementById('cy-container').innerHTML = '';
+    if (cy) { cy.destroy(); cy = null; }
+    return;
+  }
+  // Build Cytoscape element collection
+  const elements = [];
+  for (const [id, d] of dist) {
+    const n = nodeById.get(id);
+    if (!n) continue;
+    const isGhost = !!(n.provenance && n.provenance.ghost);
+    // Two-line label: title on top, project · status beneath (real items only).
+    // Ghosts and project hubs show just one line.
+    const titleLine = truncate(n.label || n.id, 24);
+    let label;
+    if (isGhost || n.type === 'project') {
+      label = titleLine;
+    } else {
+      label = titleLine + '\n' + (n.project || '') + ' · ' + (n.status || '');
+    }
+    elements.push({
+      group: 'nodes',
+      data: {
+        id: n.id,
+        label: label,
+        type: n.type,
+        status: n.status || null,
+        project: n.project || null,
+        ghost: isGhost,
+        depth: d,
+      },
+      classes: idEq(id, centerId) ? 'selected' : '',
+    });
+  }
+  const drawnEdges = edges.filter(e => dist.has(e.from) && dist.has(e.to));
+  drawnEdges.forEach((e, i) => {
+    elements.push({
+      group: 'edges',
+      data: { id: 'e' + i, source: e.from, target: e.to, kind: e.kind },
+    });
+  });
+  // Header
+  ensureCyMount(root);
+  const idPrefix = centerNode.type === 'project' ? '◆ ' : '#' + displayId(centerNode.id) + ' ';
+  const reachLabel = depth === 1 ? 'direct neighbors' : (depth >= 99 ? 'everything connected' : depth + ' steps out');
+  document.getElementById('graph-header').innerHTML =
+    '<div class="graph-title">' + idPrefix + escapeHtml(centerNode.label) + '</div>' +
+    '<div class="graph-sub">' + reachLabel + ' · ' + (dist.size - 1) + ' node' + (dist.size - 1 === 1 ? '' : 's') + ' · ' + drawnEdges.length + ' link' + (drawnEdges.length === 1 ? '' : 's') + '</div>' +
+    '<div class="graph-legend-inline">' +
+      '<span><span class="leg-line blocks"></span>blocks</span>' +
+      '<span><span class="leg-line spawned"></span>spawned</span>' +
+      '<span><span class="leg-line relates"></span>relates</span>' +
+      '<span><span class="leg-line belongs"></span>belongs to</span>' +
+      '<span class="graph-hint">scroll to zoom · drag to pan · click a node to recenter</span>' +
+    '</div>';
+  // Init or update Cytoscape
+  const layoutCfg = buildLayoutCfg(depth);
+  if (!cy) {
+    cy = cytoscape({
+      container: document.getElementById('cy-container'),
+      elements: elements,
+      style: cyStylesheet(),
+      layout: layoutCfg,
+      wheelSensitivity: 0.2,
+    });
+    cy.on('tap', 'node', function(evt) {
+      const id = evt.target.id();
+      if (!idEq(id, graphCenter)) renderGraph(id);
+    });
+    cy.on('cxttap', 'node', function(evt) {
+      const id = evt.target.id();
+      // Only items get the substrate ctx menu; projects do not (no provenance to correct).
+      const node = nodeById.get(id);
+      if (node && node.type !== 'item') return;
+      const orig = evt.originalEvent || {};
+      openCtxMenu(id, orig.clientX || 200, orig.clientY || 200, evt.target);
+    });
+    // Auto-resize when the container changes size (panel toggle, window resize, etc.)
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => {
+        if (cy) {
+          cy.resize();
+          const focus = cy.getElementById(graphCenter);
+          if (focus && focus.length) cy.center(focus); else cy.center();
+        }
+      });
+      ro.observe(document.getElementById('cy-container'));
+    }
+  } else {
+    cy.elements().remove();
+    cy.add(elements);
+    cy.layout(layoutCfg).run();
+  }
+}
+
+/* ============================================================
+ * TIMELINE VIEW
+ * ============================================================ */
+
+// ---------- date helpers ----------
+const WEEKDAYS_SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const MONTHS_SHORT   = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+function isoToParts(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return { y, m, d, dt: new Date(y, m - 1, d) };
+}
+function isoFor(y, m, d) {
+  return y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+}
+function getWeekDays(endIso) {
+  const { dt } = isoToParts(endIso);
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(dt);
+    d.setDate(dt.getDate() - i);
+    days.push(isoFor(d.getFullYear(), d.getMonth() + 1, d.getDate()));
+  }
+  return days;
+}
+function getMonthCells(year, month1) {
+  const first = new Date(year, month1 - 1, 1);
+  const lastDay = new Date(year, month1, 0).getDate();
+  const startWd = first.getDay();
+  const cells = [];
+  // leading days from previous month
+  const prevLast = new Date(year, month1 - 1, 0).getDate();
+  for (let i = startWd - 1; i >= 0; i--) {
+    const d = prevLast - i;
+    const dt = new Date(year, month1 - 2, d);
+    cells.push({ iso: isoFor(dt.getFullYear(), dt.getMonth() + 1, d), day: d, inMonth: false });
+  }
+  // current month
+  for (let d = 1; d <= lastDay; d++) {
+    cells.push({ iso: isoFor(year, month1, d), day: d, inMonth: true });
+  }
+  // trailing to complete 6 rows (42 cells) for stable height
+  let trail = 1;
+  while (cells.length < 42) {
+    const dt = new Date(year, month1, trail);
+    cells.push({ iso: isoFor(dt.getFullYear(), dt.getMonth() + 1, trail), day: trail, inMonth: false });
+    trail++;
+  }
+  return cells;
+}
+function eventsForDate(iso) {
+  return events.filter(e => e.date === iso);
+}
+function formatWeekLabel(iso) {
+  const { y, m, d, dt } = isoToParts(iso);
+  return {
+    wd: WEEKDAYS_SHORT[dt.getDay()],
+    monthDay: MONTHS_SHORT[m - 1] + ' ' + d,
+    dayNum: d,
+  };
+}
+
+// ---------- timeline dispatcher ----------
+function renderTimeline() {
+  const root = document.getElementById('view-timeline-content');
+  if (currentTimelineSub === 'list')     return renderTimelineList(root);
+  if (currentTimelineSub === 'week')     return renderTimelineWeek(root);
+  if (currentTimelineSub === 'calendar') return renderTimelineCalendar(root);
+}
+
+function renderTimelineList(root) {
+  const grouped = [];
+  for (const e of events) {
+    let g = grouped.find(x => x.day === e.day);
+    if (!g) { g = { day: e.day, date: e.date, events: [] }; grouped.push(g); }
+    g.events.push(e);
+  }
+  root.innerHTML = grouped.map(g =>
+    '<section class="day-section" data-date="' + g.date + '">' +
+      '<header class="day-header">' + escapeHtml(g.day) + '</header>' +
+      g.events.map(ev =>
+        '<div class="event-row" data-item-id="' + ev.itemId + '">' +
+          '<span class="event-time">' + escapeHtml(ev.time) + '</span>' +
+          '<span class="event-kind ' + ev.kind + '">' + ev.kind + '</span>' +
+          '<span class="event-project"><span class="proj-dot ' + ev.project + '"></span>' + ev.project + '</span>' +
+          '<span class="event-desc">' + escapeHtml(ev.desc) + '</span>' +
+        '</div>'
+      ).join('') +
+    '</section>'
+  ).join('');
+  Array.from(root.querySelectorAll('.event-row')).forEach(el => {
+    el.addEventListener('click', () => focusItemAsGraph(el));
+  });
+}
+
+function renderTimelineWeek(root) {
+  const days = getWeekDays(TODAY_ISO);
+  root.innerHTML = '<div class="week-grid">' + days.map(iso => {
+    const label = formatWeekLabel(iso);
+    const dayEvents = eventsForDate(iso);
+    const isToday = iso === TODAY_ISO;
+    const cellEvents = dayEvents.length
+      ? dayEvents.map(ev =>
+          '<div class="week-event" data-item-id="' + ev.itemId + '" title="' + escapeHtml(ev.desc) + '">' +
+            '<div class="week-event-top">' +
+              '<span class="we-time">' + escapeHtml(ev.time) + '</span>' +
+              '<span class="we-kind ' + ev.kind + '">' + ev.kind + '</span>' +
+              '<span class="proj-dot ' + ev.project + '" style="width:5px;height:5px;"></span>' +
+            '</div>' +
+            '<div class="week-event-desc">' + escapeHtml(ev.desc) + '</div>' +
+          '</div>'
+        ).join('')
+      : '<div class="week-col-empty">no events</div>';
+    return '<div class="week-col' + (isToday ? ' today' : '') + '">' +
+      '<header class="week-col-header">' +
+        '<span class="wd">' + label.wd + '</span>' +
+        '<span class="dn">' + label.dayNum + '</span>' +
+      '</header>' +
+      cellEvents +
+    '</div>';
+  }).join('') + '</div>';
+  Array.from(root.querySelectorAll('.week-event')).forEach(el => {
+    el.addEventListener('click', () => focusItemAsGraph(el));
+  });
+}
+
+function renderTimelineCalendar(root) {
+  const { y, m } = isoToParts(TODAY_ISO);
+  const cells = getMonthCells(y, m);
+  const dayCount = events.filter(e => e.date.startsWith(y + '-' + String(m).padStart(2, '0'))).length;
+  const monthLabel = MONTHS_SHORT[m - 1] + ' ' + y;
+  const wdHeaders = WEEKDAYS_SHORT.map(w => '<div class="cal-weekday">' + w + '</div>').join('');
+  const cellHtml = cells.map(c => {
+    const evs = eventsForDate(c.iso);
+    const isToday = c.iso === TODAY_ISO;
+    const dots = evs.slice(0, 6).map(e => '<span class="cal-dot ' + e.kind + '" title="' + escapeHtml(e.time + ' ' + e.kind + ' · ' + e.desc) + '"></span>').join('');
+    const cls = 'cal-day' + (c.inMonth ? '' : ' other-month') + (isToday ? ' today' : '') + (evs.length ? ' has-events' : '');
+    return '<div class="' + cls + '" data-date="' + c.iso + '">' +
+      '<span class="day-num">' + c.day + '</span>' +
+      (evs.length ? '<div class="cal-events">' + dots + '</div>' : '') +
+    '</div>';
+  }).join('');
+  root.innerHTML =
+    '<div class="cal-wrap">' +
+      '<header class="cal-header">' +
+        '<span class="cal-title">' + monthLabel + '</span>' +
+        '<span class="cal-summary">' + dayCount + ' event' + (dayCount === 1 ? '' : 's') + ' this month</span>' +
+      '</header>' +
+      '<div class="cal-grid">' + wdHeaders + cellHtml + '</div>' +
+    '</div>';
+  Array.from(root.querySelectorAll('.cal-day.has-events')).forEach(el => {
+    el.addEventListener('click', () => {
+      const iso = el.dataset.date;
+      // drop user into list view scrolled to that day
+      switchTimelineSub('list');
+    });
+  });
+}
+
+function focusItemAsGraph(el) {
+  const id = el.dataset.itemId;
+  if (!id) return;
+  graphCenter = id;
+  renderGraph(id);
+  switchView('graph');
+}
+
+function switchTimelineSub(name) {
+  currentTimelineSub = name;
+  Array.from(document.querySelectorAll('.timeline-sub-btn')).forEach(b => {
+    const on = b.dataset.sub === name;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  renderTimeline();
+  updateZoomButtons();
+}
+
+// Zoom: list (most detail) ←→ week ←→ calendar (broadest)
+const ZOOM_MODES = ['list', 'week', 'calendar'];
+let zoomCooldown = false;
+
+function zoom(direction) {
+  const idx = ZOOM_MODES.indexOf(currentTimelineSub);
+  const next = direction === 'in'
+    ? Math.max(0, idx - 1)
+    : Math.min(ZOOM_MODES.length - 1, idx + 1);
+  if (next === idx) return;
+  if (currentView !== 'timeline') switchView('timeline');
+  switchTimelineSub(ZOOM_MODES[next]);
+}
+
+function updateZoomButtons() {
+  const idx = ZOOM_MODES.indexOf(currentTimelineSub);
+  const inBtn  = document.querySelector('.zoom-btn[data-zoom="in"]');
+  const outBtn = document.querySelector('.zoom-btn[data-zoom="out"]');
+  if (inBtn)  inBtn.disabled  = idx === 0;
+  if (outBtn) outBtn.disabled = idx === ZOOM_MODES.length - 1;
+}
+
+function onWheelZoom(e) {
+  if (currentView !== 'timeline') return;
+  if (!(e.ctrlKey || e.metaKey)) return;
+  e.preventDefault();
+  if (zoomCooldown) return;
+  if (e.deltaY === 0) return;
+  zoom(e.deltaY > 0 ? 'out' : 'in');
+  zoomCooldown = true;
+  setTimeout(() => { zoomCooldown = false; }, 320);
+}
+
+function onKeyZoom(e) {
+  if (currentView !== 'timeline') return;
+  // ignore when typing in a real input
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  if (e.key === '+' || e.key === '=') { e.preventDefault(); zoom('in'); }
+  else if (e.key === '-' || e.key === '_') { e.preventDefault(); zoom('out'); }
+}
+
+/* ============================================================
+ * MUTATIONS (in-memory; refresh resets demo state)
+ * ============================================================ */
+
+function nextItemId() {
+  // items may have substrate string ids (e.g. canon_0250) alongside locally-added numeric ids.
+  // Only count numeric ids; new locally-added items keep numeric naming.
+  const numericIds = items.map(i => i.id).filter(id => typeof id === 'number');
+  return (numericIds.length ? Math.max.apply(null, numericIds) : 0) + 1;
+}
+
+function rerenderAll() {
+  renderSidebar();
+  renderTree();
+  if (currentView === 'graph') renderGraph(graphCenter);
+  if (currentView === 'timeline') renderTimeline();
+}
+
+function addItem(projectId, title) {
+  const t = (title || '').trim();
+  if (!t) return null;
+  const item = {
+    id: nextItemId(),
+    title: t,
+    project: projectId,
+    status: 'open',
+    time: 'today',
+    links: [],
+  };
+  items.push(item);
+  rerenderAll();
+  return item;
+}
+
+// Cache the write token (shared secret guarding all POSTs). Fetched once from
+// the CORS-trusted handout endpoint; a foreign (DNS-rebind) origin can't read it.
+let _atlasTokenPromise = null;
+async function atlasWriteToken() {
+  if (!_atlasTokenPromise) {
+    _atlasTokenPromise = (async () => {
+      try {
+        const r = await fetch(ATLAS_MAP_API + '/admin/write-token?scope=items');
+        if (!r.ok) return null;
+        return (await r.json()).token || null;
+      } catch (_) { return null; }
+    })();
+  }
+  return _atlasTokenPromise;
+}
+
+async function setBackboneStatus(it, status) {
+  // brick 3: write-through to the source store via atlas-map-api. Only droplist
+  // packets are writable today; other sources return 422 → leave the item as-is.
+  try {
+    const tok = await atlasWriteToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (tok) headers['X-Atlas-Token'] = tok;
+    const r = await fetch(ATLAS_MAP_API + '/items/' + encodeURIComponent(it.id) + '/status', {
+      method: 'POST', headers,
+      body: JSON.stringify({ status }),
+    });
+    if (!r.ok) {
+      const msg = (await r.json().catch(() => ({}))).detail || ('HTTP ' + r.status);
+      if (typeof setDetails === 'function') setDetails(escapeHtml(it.title) + ' — write not applied: ' + escapeHtml(String(msg)));
+      return;
+    }
+    it.status = status;        // optimistic
+    rerenderAll();
+    await loadBackbone();      // re-pull so the view reflects the SOURCE store
+  } catch (e) { /* API down → leave item unchanged */ }
+}
+
+async function setItemStatus(id, status) {
+  const it = itemById(id);
+  if (!it) return;
+  if (it.status === status) return;
+  // Backbone items (bb:source:id) write through to their source store.
+  if (typeof it.id === 'string' && it.id.startsWith('bb:')) { await setBackboneStatus(it, status); return; }
+  // Substrate-tracked items go through Replicache (optimistic + rollback handled by lib).
+  // Locally-added items mutate the in-memory array directly.
+  if (typeof it.id === 'string' && /^canon_/.test(it.id) && window.latticeSync) {
+    await window.latticeSync.correctStatus({
+      id: it.id, status,
+      originalStatus: it.status,
+      originalProject: (it.provenance && it.provenance.correctedFrom) || it.project,
+      originalTitle: it.title,
+    });
+    return;
+  }
+  it.status = status;
+  rerenderAll();
+}
+
+function deleteItem(id) {
+  const idx = items.findIndex(i => idEq(i.id, id));
+  if (idx < 0) return;
+  items.splice(idx, 1);
+  // drop any links pointing at it
+  items.forEach(it => { it.links = it.links.filter(l => !idEq(l.to, id)); });
+  if (idEq(graphCenter, id)) graphCenter = FOCUS_ITEM_ID;
+  rerenderAll();
+}
+
+/* ============================================================
+ * INLINE NEW-ITEM
+ * ============================================================ */
+
+function startNewItem(rowEl) {
+  if (rowEl.classList.contains('editing')) return;
+  const project = rowEl.dataset.project;
+  rowEl.classList.add('editing');
+  rowEl.innerHTML =
+    '<span class="ni-dot proj-dot ' + project + '"></span>' +
+    '<input class="ni-input" placeholder="describe the item, press enter to add" />' +
+    '<span class="ni-hint">enter to save · esc to cancel</span>';
+  const input = rowEl.querySelector('.ni-input');
+  input.focus();
+  const commit = () => {
+    const title = input.value;
+    if (title.trim()) addItem(project, title);
+    else cancelNewItem(rowEl);
+  };
+  const cancel = () => cancelNewItem(rowEl);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', () => {
+    // small delay so click on hint doesn't race
+    setTimeout(() => { if (rowEl.isConnected && rowEl.classList.contains('editing')) commit(); }, 80);
+  });
+}
+
+function cancelNewItem(rowEl) {
+  rowEl.classList.remove('editing');
+  const project = rowEl.dataset.project;
+  rowEl.innerHTML =
+    '<span class="ni-dot proj-dot ' + project + '"></span>' +
+    '<span class="ni-label">+ new item</span>';
+}
+
+/* ============================================================
+ * CONTEXT MENU
+ * ============================================================ */
+
+let ctxOpenItemId = null;
+let ctxOpenSourceEl = null;
+let ctxLeaveTimer = null;
+// Compact = pip+pill rows · Expanded = stacked labeled buttons. Sticky via localStorage.
+let ctxMode = (function() {
+  try { return localStorage.getItem('lattice.ctxMode') || 'compact'; }
+  catch (_) { return 'compact'; }
+})();
+function setCtxMode(mode) {
+  ctxMode = mode;
+  try { localStorage.setItem('lattice.ctxMode', mode); } catch (_) {}
+}
+
+function openCtxMenu(itemId, x, y, sourceEl) {
+  const item = itemById(itemId);
+  if (!item) return;
+  closeCtxMenu();
+  ctxOpenItemId = itemId;
+  ctxOpenSourceEl = sourceEl;
+  if (sourceEl) sourceEl.classList.add('ctx-open');
+
+  const menu = document.getElementById('ctx-menu');
+  renderCtxMenuBody(menu, item);
+
+  // place, then clamp to viewport
+  menu.hidden = false;
+  menu.style.left = x + 'px';
+  menu.style.top  = y + 'px';
+  const rect = menu.getBoundingClientRect();
+  if (rect.right > window.innerWidth - 8)  menu.style.left = (window.innerWidth - rect.width - 8) + 'px';
+  if (rect.bottom > window.innerHeight - 8) menu.style.top  = (window.innerHeight - rect.height - 8) + 'px';
+
+  bindCtxMenuActions(menu);
+
+  // Mouse-leave auto-close (500ms grace; reset on re-entry)
+  menu.addEventListener('mouseenter', () => {
+    if (ctxLeaveTimer) { clearTimeout(ctxLeaveTimer); ctxLeaveTimer = null; }
+  });
+  menu.addEventListener('mouseleave', () => {
+    if (ctxLeaveTimer) clearTimeout(ctxLeaveTimer);
+    ctxLeaveTimer = setTimeout(() => { closeCtxMenu(); }, 500);
+  });
+}
+
+function renderCtxMenuBody(menu, item) {
+  const statusOptions = ['open', 'active', 'blocked', 'done', 'dropped'];
+  // Provenance header line
+  const prov = item.provenance || { source: 'local' };
+  let provLabel;
+  if (prov.source === 'cognitive-sensor.idea_registry') provLabel = 'from cognitive-sensor';
+  else if (prov.source === 'user') provLabel = prov.correctedFrom ? ('corrected · was ' + prov.correctedFrom) : 'your edit';
+  else if (prov.source === 'optogon') provLabel = 'from optogon';
+  else if (prov.source === 'ghost_executor') provLabel = 'from ghost executor';
+  else provLabel = 'local';
+  const toggleGlyph = ctxMode === 'compact' ? '⤢' : '⤡';
+  const toggleTitle = ctxMode === 'compact' ? 'expand · show full labels' : 'collapse · compact view';
+  const provHeader =
+    '<div class="ctx-prov">' +
+      '<span>' + provLabel + '</span>' +
+      '<span class="ctx-mode-toggle" data-action="toggle-mode" title="' + toggleTitle + '">' + toggleGlyph + '</span>' +
+    '</div>';
+
+  let body;
+  if (ctxMode === 'expanded') {
+    const statusBtns = statusOptions.map(s =>
+      '<button class="ctx-btn' + (item.status === s ? ' checked' : '') + '" data-action="status" data-value="' + s + '">' +
+        '<span class="ctx-dot ' + s + '"></span>' + s +
+      '</button>'
+    ).join('');
+    const projectBtns = projects.map(p =>
+      '<button class="ctx-btn' + (item.project === p.id ? ' checked' : '') + '" data-action="project" data-value="' + p.id + '">' +
+        '<span class="ctx-dot proj-dot ' + p.id + '"></span>' + p.name +
+      '</button>'
+    ).join('');
+    body =
+      '<div class="ctx-section">project</div>' + projectBtns +
+      '<div class="ctx-divider"></div>' +
+      '<div class="ctx-section">status</div>' + statusBtns;
+  } else {
+    const statusRow = statusOptions.map(s =>
+      '<span class="ctx-stat' + (item.status === s ? ' checked' : '') + '" data-action="status" data-value="' + s + '" title="' + s + '">' + s + '</span>'
+    ).join('');
+    const projectRow = projects.map(p =>
+      '<span class="ctx-pip proj-dot ' + p.id + (item.project === p.id ? ' checked' : '') + '" data-action="project" data-value="' + p.id + '" data-name="' + p.name + '" title="' + p.name + '"></span>'
+    ).join('');
+    const currentProjectName = (projects.find(p => p.id === item.project) || {}).name || item.project;
+    body =
+      '<div class="ctx-row"><span class="ctx-row-label">project</span>' + projectRow + '</div>' +
+      '<div class="ctx-current" id="ctx-current-project" data-default="' + currentProjectName + '">' + currentProjectName + '</div>' +
+      '<div class="ctx-row"><span class="ctx-row-label">status</span>' + statusRow + '</div>';
+  }
+
+  // Cross-surface navigation: backbone items open their source surface; any
+  // item can jump to the system-map (lattice's richer sibling viewer).
+  const isBackbone = typeof item.id === 'string' && item.id.startsWith('bb:');
+  const bbSource = isBackbone ? item.id.split(':')[1] : null;
+  const crossNav =
+    (isBackbone && bbSource === 'droplist' ? '<button class="ctx-btn" data-action="workflow">show workflow ↳</button>' : '') +
+    (isBackbone ? '<button class="ctx-btn" data-action="open-source">open in ' + escapeHtml(bbSource) + ' ↗</button>' : '') +
+    '<button class="ctx-btn" data-action="open-map">open system map ↗</button>';
+
+  menu.innerHTML =
+    provHeader +
+    body +
+    '<div class="ctx-divider"></div>' +
+    '<button class="ctx-btn" data-action="graph">show in graph</button>' +
+    crossNav +
+    '<button class="ctx-btn danger" data-action="delete">delete item</button>';
+}
+
+// Render a droplist packet's DAG as an actual workflow graph — the steps, the
+// dependency flow, and the state of each — instead of a flat list row. This is
+// what makes lattice a workflow viewer, not just a task list.
+async function openWorkflow(id) {
+  const it = itemById(id);
+  if (!it) return;
+  let wf;
+  try {
+    const r = await fetch(ATLAS_MAP_API + '/items/' + encodeURIComponent(it.id) + '/workflow');
+    if (!r.ok) return;
+    wf = await r.json();
+  } catch (e) { return; }
+  if (!wf || !wf.nodes || !wf.nodes.length) return;
+
+  var prev = document.getElementById('wf-overlay');
+  if (prev) prev.remove();
+  var ov = document.createElement('div');
+  ov.id = 'wf-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(20,20,20,0.55);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML =
+    '<div style="background:#fff;border-radius:14px;width:min(900px,92vw);height:min(640px,86vh);display:flex;flex-direction:column;overflow:hidden;font-family:var(--font,system-ui);">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #eee;">'
+    + '<div><strong style="font-size:15px;color:#1d1d1b;">' + escapeHtml(wf.goal || it.title) + '</strong>'
+    + ' <span style="color:#888780;font-size:12px;">· ' + escapeHtml(String(wf.status || '')) + ' · ' + wf.nodes.length + ' steps · ' + wf.edges.length + ' deps</span></div>'
+    + '<button id="wf-close" style="border:none;background:#f0efe9;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;">close</button></div>'
+    + '<div id="wf-graph" style="flex:1;min-height:0;"></div></div>';
+  document.body.appendChild(ov);
+  document.getElementById('wf-close').onclick = function () { ov.remove(); };
+  ov.onclick = function (e) { if (e.target === ov) ov.remove(); };
+
+  if (typeof cytoscape !== 'function') return;
+  var COL = { done: '#1D9E75', blocked: '#D85A30', active: '#378ADD', open: '#888780' };
+  var els = wf.nodes.map(function (n) {
+    return { data: { id: n.id, label: n.title, color: COL[n.status] || '#888780', st: n.status } };
+  }).concat(wf.edges.map(function (e) {
+    return { data: { source: e.from, target: e.to } };
+  }));
+  cytoscape({
+    container: document.getElementById('wf-graph'),
+    elements: els,
+    layout: { name: 'breadthfirst', directed: true, padding: 24, spacingFactor: 1.15 },
+    style: [
+      { selector: 'node', style: { 'background-color': 'data(color)', 'label': 'data(label)', 'font-size': '9px',
+        'text-wrap': 'wrap', 'text-max-width': '130px', 'color': '#1d1d1b', 'text-valign': 'bottom', 'text-margin-y': 5,
+        'width': 18, 'height': 18, 'border-width': 1, 'border-color': '#fff' } },
+      { selector: 'edge', style: { 'width': 1.5, 'line-color': '#c9c7be', 'target-arrow-color': '#c9c7be',
+        'target-arrow-shape': 'triangle', 'curve-style': 'bezier' } },
+    ],
+  });
+}
+
+// Open the surface that owns a backbone item, deep-linked where supported.
+function openItemSurface(id) {
+  const it = itemById(id);
+  if (!it) return;
+  const m = String(it.id).match(/^bb:([^:]+):(.+)$/);
+  if (!m) return;
+  const src = m[1], native = m[2];
+  const urls = {
+    cycleboard: 'http://localhost:8889/#convo=' + encodeURIComponent(native),
+    inpact: 'http://localhost:3006/',
+    droplist: 'http://localhost:3073/',
+  };
+  if (urls[src]) window.open(urls[src], '_blank', 'noopener');
+}
+
+function bindCtxMenuActions(menu) {
+  Array.from(menu.querySelectorAll('[data-action]')).forEach(b => {
+    b.addEventListener('click', (ev) => {
+      if (b.dataset.action === 'toggle-mode') {
+        ev.stopPropagation();
+        setCtxMode(ctxMode === 'compact' ? 'expanded' : 'compact');
+        const item = itemById(ctxOpenItemId);
+        if (!item) return;
+        renderCtxMenuBody(menu, item);
+        bindCtxMenuActions(menu);
+        return;
+      }
+      handleCtxAction(b.dataset.action, b.dataset.value);
+    });
+  });
+  // Project pip hover -> show that project's name in the .ctx-current row;
+  // leave -> revert to the currently-set project's name.
+  const currentEl = menu.querySelector('#ctx-current-project');
+  if (currentEl) {
+    Array.from(menu.querySelectorAll('.ctx-pip[data-action="project"]')).forEach(pip => {
+      pip.addEventListener('mouseenter', () => {
+        currentEl.textContent = pip.dataset.name || '';
+        currentEl.classList.add('preview');
+      });
+      pip.addEventListener('mouseleave', () => {
+        currentEl.textContent = currentEl.dataset.default || '';
+        currentEl.classList.remove('preview');
+      });
+    });
+  }
+}
+
+function closeCtxMenu() {
+  if (ctxLeaveTimer) { clearTimeout(ctxLeaveTimer); ctxLeaveTimer = null; }
+  const menu = document.getElementById('ctx-menu');
+  menu.hidden = true;
+  menu.innerHTML = '';
+  if (ctxOpenSourceEl) ctxOpenSourceEl.classList.remove('ctx-open');
+  ctxOpenItemId = null;
+  ctxOpenSourceEl = null;
+}
+
+function handleCtxAction(action, value) {
+  const id = ctxOpenItemId;
+  closeCtxMenu();
+  if (id == null) return;
+  if (action === 'status') setItemStatus(id, value);
+  else if (action === 'project') setItemProject(id, value);
+  else if (action === 'graph') {
+    graphCenter = id;
+    renderGraph(id);
+    switchView('graph');
+  }
+  else if (action === 'open-source') openItemSurface(id);
+  else if (action === 'open-map') window.open('system-map.html', '_blank', 'noopener');
+  else if (action === 'workflow') openWorkflow(id);
+  else if (action === 'delete') deleteItem(id);
+}
+
+async function setItemProject(id, newProject) {
+  const item = itemById(id);
+  if (!item) return;
+  if (item.project === newProject) return;
+  if (typeof item.id === 'string' && /^canon_/.test(item.id) && window.latticeSync) {
+    await window.latticeSync.correctProject({
+      id: item.id, project: newProject,
+      originalProject: (item.provenance && item.provenance.correctedFrom) || item.project,
+      originalStatus: item.status,
+      originalTitle: item.title,
+    });
+    return;
+  }
+  item.project = newProject;
+  rerenderAll();
+}
+
+function setupSettingsPanel() {
+  const panel = document.getElementById('settings-panel');
+  const btn = document.getElementById('settings-btn');
+  if (!panel || !btn) return;
+  // Apply view-specific visibility on init too (not just on switchView clicks)
+  btn.hidden = (currentView !== 'graph');
+  panel.hidden = (currentView !== 'graph');
+  // Initialize controls from current settings
+  const depthVal = settings.graphDepth === Infinity ? 'all' : String(settings.graphDepth || 1);
+  Array.from(panel.querySelectorAll('input[name="depth"]')).forEach(r => { r.checked = r.value === depthVal; });
+  const layoutVal = settings.graphLayout || 'auto';
+  Array.from(panel.querySelectorAll('input[name="layout"]')).forEach(r => { r.checked = r.value === layoutVal; });
+  Array.from(panel.querySelectorAll('input[data-knob]')).forEach(c => { c.checked = !!settings[c.dataset.knob]; });
+  Array.from(panel.querySelectorAll('input[data-source]')).forEach(c => { c.checked = !!(settings.sources && settings.sources[c.dataset.source]); });
+  // Toggle visibility
+  btn.addEventListener('click', () => { panel.hidden = !panel.hidden; });
+  // Wire changes
+  panel.addEventListener('change', async (e) => {
+    const t = e.target;
+    if (t.name === 'depth') {
+      settings.graphDepth = t.value === 'all' ? Infinity : parseInt(t.value, 10);
+    } else if (t.name === 'layout') {
+      settings.graphLayout = t.value;
+    } else if (t.dataset.knob) {
+      settings[t.dataset.knob] = t.checked;
+    } else if (t.dataset.source) {
+      settings.sources = Object.assign({}, settings.sources, { [t.dataset.source]: t.checked });
+    }
+    saveSettings();
+    // Re-render only — do NOT re-derive nodes/edges here. The server projection
+    // (Replicache onData) is the single source of truth; re-deriving raced it
+    // (last-writer-wins until the next pull). Filters are applied at render by
+    // nodeVisible(), so a toggle just needs a re-render. See onData for the
+    // derive-only-as-fallback policy.
+    // ~/.claude/rules/common/code-as-furniture.md — fixed the seam, not documented around it.
+    rerenderAll();
+  });
+}
+
+/* ============================================================
+ * MEMORY SEARCH — wires the memory-hub aggregator (droplist +
+ * idea_registry + cognitive-sensor, port 3071) into a real search box.
+ * Graceful if memory-hub isn't running: shows a status line, not an error.
+ * ============================================================ */
+let memorySearchDebounce = null;
+
+function setupMemorySearchPanel() {
+  const btn = document.getElementById('memory-search-btn');
+  const panel = document.getElementById('memory-search-panel');
+  const input = document.getElementById('memory-search-input');
+  const results = document.getElementById('memory-search-results');
+  if (!btn || !panel || !input || !results) return;
+
+  btn.addEventListener('click', () => {
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) input.focus();
+  });
+
+  input.addEventListener('input', () => {
+    clearTimeout(memorySearchDebounce);
+    const q = input.value.trim();
+    if (!q) {
+      results.innerHTML = '';
+      return;
+    }
+    memorySearchDebounce = setTimeout(() => runMemorySearch(q), 300);
+  });
+}
+
+async function runMemorySearch(q) {
+  const results = document.getElementById('memory-search-results');
+  results.innerHTML = '<div class="search-status">searching memory-hub...</div>';
+  try {
+    const r = await fetch(MEMORY_HUB_URL + '/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q, k: 8 }),
+    });
+    if (!r.ok) throw new Error('memory-hub returned ' + r.status);
+    const data = await r.json();
+    renderMemorySearchResults(data);
+  } catch (err) {
+    results.innerHTML = '<div class="search-status">memory-hub not reachable at ' + MEMORY_HUB_URL + ' (' + escapeHtml(String(err.message || err)) + ')</div>';
+  }
+}
+
+function renderMemorySearchResults(data) {
+  const results = document.getElementById('memory-search-results');
+  const hits = (data && data.results) || [];
+  if (!hits.length) {
+    results.innerHTML = '<div class="search-empty">no matches across ' + ((data && data.sources_used) || []).join(', ') + '</div>';
+    return;
+  }
+  results.innerHTML = hits.map(h => {
+    const localItem = h.canonical_id ? itemById(h.canonical_id) : null;
+    const cls = localItem ? 'search-hit clickable' : 'search-hit';
+    return '<div class="' + cls + '" data-item-id="' + escapeHtml(h.canonical_id || '') + '">' +
+      '<div class="search-hit-top"><span>' + escapeHtml(h.source || '') + '</span><span>' + (h.relevance != null ? h.relevance.toFixed(2) : '') + '</span></div>' +
+      '<div class="search-hit-snippet">' + escapeHtml(h.snippet || '') + '</div>' +
+      '</div>';
+  }).join('');
+  Array.from(results.querySelectorAll('.search-hit.clickable')).forEach(el => {
+    el.addEventListener('click', () => focusItemAsGraph(el));
+  });
+}
+
+function jumpToToday() {
+  if (currentView !== 'timeline') switchView('timeline');
+  // Anchor selectors per sub-mode
+  const anchorSelectors = {
+    list:     '.day-section[data-date="' + TODAY_ISO + '"]',
+    week:     '.week-col.today',
+    calendar: '.cal-day.today',
+  };
+  // Defer to next frame so DOM is settled
+  requestAnimationFrame(() => {
+    const el = document.querySelector(anchorSelectors[currentTimelineSub]);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: currentTimelineSub === 'list' ? 'start' : 'center' });
+    el.classList.remove('today-flash');
+    void el.offsetWidth; // force reflow so the animation re-triggers
+    el.classList.add('today-flash');
+  });
+}
+
+/* ============================================================
+ * VIEW SWITCHING
+ * ============================================================ */
+
+function switchView(name) {
+  currentView = name;
+  Array.from(document.querySelectorAll('.view-btn')).forEach(b => {
+    const on = b.dataset.view === name;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  Array.from(document.querySelectorAll('.view')).forEach(v => {
+    v.classList.toggle('active', v.id === 'view-' + name);
+  });
+  // Knobs are graph-specific. On graph view, the panel auto-shows so the
+  // knobs are visible without a click. On tree/timeline, both button + panel hide.
+  const knobsBtn = document.getElementById('settings-btn');
+  const panel = document.getElementById('settings-panel');
+  if (knobsBtn) knobsBtn.hidden = (name !== 'graph');
+  if (panel) panel.hidden = (name !== 'graph');
+  // Cytoscape needs a viewport recalc when its container becomes visible.
+  // First entry into graph (cy not yet built) triggers a full renderGraph so
+  // the substrate-fed data hits the canvas; subsequent entries just resize.
+  if (name === 'graph') {
+    if (!cy) {
+      renderGraph(graphCenter || FOCUS_ITEM_ID || (items[0] && items[0].id));
+    } else {
+      setTimeout(() => {
+        cy.resize();
+        const focus = cy.getElementById(graphCenter);
+        if (focus && focus.length) cy.center(focus); else cy.center();
+      }, 80);
+    }
+  }
+}
+
+/* ============================================================
+ * ITEM BACKBONE (brick 2) — surface the unified /items feed
+ * atlas-map-api :3072 aggregates droplist/cycleboard/inpact into one
+ * feed; merge it into items[]/projects[] so all surfaces' items render
+ * in one pane, grouped by source. Additive + idempotent so it coexists
+ * with the Replicache/delta-kernel viewmodel sync. Graceful if :3072 down.
+ * ============================================================ */
+const ATLAS_MAP_API = 'http://127.0.0.1:3072';
+const MEMORY_HUB_URL = 'http://127.0.0.1:3071';
+var backboneItems = [];
+var backboneSources = [];
+function mapBackboneItem(it) {
+  return {
+    id: 'bb:' + it.source + ':' + it.id,
+    title: it.title || it.id,
+    project: it.source,
+    status: it.status || 'open',
+    time: it.updated || '',
+    provenance: { source: 'backbone:' + it.source, kind: it.kind, ref: it.ref },
+    links: [],
+  };
+}
+// Union the backbone feed into any base array. The Replicache onData handler
+// REPLACES window.items/projects on every pull, so the merge must be re-applied
+// there (not just at boot) or a delta-kernel recovery silently wipes the feed.
+// Dedup by id; backbone ids are 'bb:'-prefixed so they never collide.
+window.mergeBackboneItems = function (base) {
+  if (!backboneItems.length) return base;
+  const out = (base || []).slice();
+  const ids = new Set(out.map(i => i.id));
+  for (const bi of backboneItems) if (!ids.has(bi.id)) { out.push(bi); ids.add(bi.id); }
+  return out;
+};
+window.mergeBackboneProjects = function (base) {
+  if (!backboneSources.length) return base;
+  const out = (base || []).slice();
+  const have = new Set(out.map(p => p.id));
+  for (const src of backboneSources) if (!have.has(src)) { out.push({ id: src, name: src }); have.add(src); }
+  return out;
+};
+async function loadBackbone() {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 1500);
+    const r = await fetch(ATLAS_MAP_API + '/items', { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) return;
+    const data = await r.json();
+    backboneItems = (data.items || []).map(mapBackboneItem);
+    backboneSources = Object.keys(data.by_source || {});
+    window.items = window.mergeBackboneItems(window.items || items);
+    window.projects = window.mergeBackboneProjects(window.projects || projects);
+    if (typeof window.rerenderAll === 'function') window.rerenderAll();
+    else { renderSidebar(); renderTree(); renderGraph(typeof FOCUS_ITEM_ID !== 'undefined' ? FOCUS_ITEM_ID : null); renderTimeline(); }
+  } catch (_) { /* graceful: :3072 unreachable → lattice unchanged */ }
+}
+
+/* ============================================================
+ * INIT
+ * ============================================================ */
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Wait for the Replicache module-script to finish boot + first pull.
+  // It exposes window.latticeSync.{items,projects,events,nodes,edges,ready,...}.
+  const sync = await syncReady();
+  // sync subscriptions write through to the in-page arrays on every change
+  // and call rerenderAll() automatically; the initial render below is the
+  // first pass with whatever was already on disk (IDB cache) + first pull.
+
+  renderSidebar();
+  renderTree();
+  renderGraph(FOCUS_ITEM_ID);
+  renderTimeline();
+
+  loadBackbone();  // brick 2: merge the unified /items feed into the views
+
+  Array.from(document.querySelectorAll('.view-btn')).forEach(b => {
+    b.addEventListener('click', () => switchView(b.dataset.view));
+  });
+  Array.from(document.querySelectorAll('.timeline-sub-btn')).forEach(b => {
+    b.addEventListener('click', () => switchTimelineSub(b.dataset.sub));
+  });
+  document.getElementById('today-btn').addEventListener('click', jumpToToday);
+  setupSettingsPanel();
+  setupMemorySearchPanel();
+  Array.from(document.querySelectorAll('.zoom-btn')).forEach(b => {
+    b.addEventListener('click', () => zoom(b.dataset.zoom));
+  });
+  window.addEventListener('wheel', onWheelZoom, { passive: false });
+  window.addEventListener('keydown', onKeyZoom);
+  updateZoomButtons();
+
+  // context menu: close on outside click or escape
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('ctx-menu');
+    if (!menu.hidden && !menu.contains(e.target)) closeCtxMenu();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeCtxMenu();
+  });
+  window.addEventListener('scroll', closeCtxMenu, true);
+  window.addEventListener('resize', closeCtxMenu);
+
+  // Re-render graph + timeline when crossing the mobile breakpoint so layouts swap
+  const mq = window.matchMedia('(max-width: 599px)');
+  const onMqChange = () => {
+    renderGraph(graphCenter);
+    renderTimeline();
+  };
+  if (mq.addEventListener) mq.addEventListener('change', onMqChange);
+  else mq.addListener(onMqChange);
+});
+</script>
+
+<script type="module">
+// Replicache sync seam (Week 1 of NEXT_SESSION_HANDOFF.md).
+// Pull: GET /api/lattice/viewmodel → PullResponse patch keyed by entity type.
+// Push: POST /api/lattice/correct, one per queued mutation.
+// Mutators (correctProject, correctStatus) run optimistically locally, then
+// replay on top of every pull until lastMutationIDChanges acks them.
+import { Replicache, TEST_LICENSE_KEY } from './replicache.bundle.mjs';
+const z = window.Zod;
+
+const ATLAS_BASE = 'http://127.0.0.1:3001';
+const ViewmodelZ = z.object({
+  items: z.array(z.object({
+    id: z.string(), title: z.string(), project: z.string(),
+    status: z.enum(['open','active','blocked','done','dropped']),
+    time: z.string(), links: z.array(z.any()), provenance: z.any(),
+  })),
+  events: z.array(z.any()), projects: z.array(z.any()),
+  nodes: z.array(z.any()), edges: z.array(z.any()),
+});
+
+let atlasToken = null;
+async function refreshToken() {
+  try {
+    const r = await fetch(ATLAS_BASE + '/api/auth/token');
+    return r.ok ? (await r.json()).token : null;
+  } catch { return null; }
+}
+function authHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (atlasToken) h.Authorization = 'Bearer ' + atlasToken;
+  return h;
+}
+atlasToken = await refreshToken();
+
+// Per-client mutation ack — fed back via lastMutationIDChanges so
+// Replicache drops processed mutations from its optimistic queue.
+const acked = {};
+let repHandle = null;
+function ack(m) {
+  if (!m || !m.clientID || typeof m.id !== 'number') return;
+  if ((acked[m.clientID] || 0) < m.id) acked[m.clientID] = m.id;
+}
+
+async function customPuller() {
+  // Date.now cookie is monotonic across reloads (an in-memory counter
+  // would reset to 0 while IDB still holds the prior session's high cookie).
+  const cookie = Date.now();
+  try {
+    const r = await fetch(ATLAS_BASE + '/api/lattice/viewmodel', { headers: authHeaders() });
+    if (!r.ok) {
+      if (r.status === 401) atlasToken = await refreshToken();
+      return { httpRequestInfo: { httpStatusCode: r.status, errorMessage: 'viewmodel' } };
+    }
+    const body = await r.json();
+    if (!body?.ok || !body.viewmodel) return { httpRequestInfo: { httpStatusCode: 200, errorMessage: 'empty' } };
+    const vm = ViewmodelZ.parse(body.viewmodel);
+    const patch = [{ op: 'clear' }];
+    for (const it of vm.items)    patch.push({ op: 'put', key: 'item/'    + it.id, value: it });
+    for (const p  of vm.projects) patch.push({ op: 'put', key: 'project/' + p.id,  value: p  });
+    vm.events.forEach((ev, i) => patch.push({ op: 'put', key: 'event/' + i, value: ev }));
+    vm.nodes.forEach((n, i)   => patch.push({ op: 'put', key: 'node/'  + i, value: n  }));
+    vm.edges.forEach((e, i)   => patch.push({ op: 'put', key: 'edge/'  + i, value: e  }));
+    return {
+      response: { cookie, lastMutationIDChanges: { ...acked }, patch },
+      httpRequestInfo: { httpStatusCode: 200, errorMessage: '' },
+    };
+  } catch (e) {
+    return { httpRequestInfo: { httpStatusCode: 0, errorMessage: String(e?.message || e) } };
+  }
+}
+
+// Pusher receives the already-parsed PushRequest body in Replicache 15+
+// (not a Fetch Request). 2xx/4xx → ack; 5xx/network error → no ack, retried.
+async function customPusher(reqBody) {
+  const muts = reqBody?.mutations || [];
+  for (const m of muts) {
+    if (m.name !== 'correctProject' && m.name !== 'correctStatus') { ack(m); continue; }
+    const a = m.args || {};
+    const body = {
+      id: a.id, originalProject: a.originalProject,
+      originalStatus: a.originalStatus, originalTitle: a.originalTitle,
+    };
+    if (m.name === 'correctProject') body.project = a.project; else body.status = a.status;
+    try {
+      const r = await fetch(ATLAS_BASE + '/api/lattice/correct', {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify(body),
+      });
+      if (r.status >= 500) return { httpRequestInfo: { httpStatusCode: r.status, errorMessage: 'correct 5xx' } };
+      if (r.status === 401) atlasToken = await refreshToken();
+      ack(m);
+    } catch (e) {
+      return { httpRequestInfo: { httpStatusCode: 0, errorMessage: String(e?.message || e) } };
+    }
+  }
+  // Auto-pull after push so the ack lands fast — otherwise the optimistic
+  // mutation re-applies on every pull until the 30s pullInterval fires.
+  if (muts.length && repHandle) setTimeout(() => repHandle.pull().catch(() => {}), 50);
+  return { httpRequestInfo: { httpStatusCode: 200, errorMessage: '' } };
+}
+
+const nowIso = () => new Date().toISOString();
+const mutators = {
+  correctProject: async (tx, args) => {
+    const it = await tx.get('item/' + args.id);
+    if (!it) return;
+    await tx.set('item/' + args.id, { ...it, project: args.project,
+      provenance: { source: 'user', correctedFrom: it.project, correctedAt: nowIso() }});
+  },
+  correctStatus: async (tx, args) => {
+    const it = await tx.get('item/' + args.id);
+    if (!it) return;
+    await tx.set('item/' + args.id, { ...it, status: args.status,
+      provenance: { source: 'user', correctedFrom: 'status=' + it.status, correctedAt: nowIso() }});
+  },
+};
+
+const rep = new Replicache({
+  name: 'lattice-bruke-v1', licenseKey: TEST_LICENSE_KEY,
+  // pull/pushURL must be non-empty for Replicache 15 to wire the custom hooks
+  // (it builds an internal Request even when puller/pusher are overridden).
+  pullURL: ATLAS_BASE + '/api/lattice/viewmodel',
+  pushURL: ATLAS_BASE + '/api/lattice/correct',
+  puller: customPuller, pusher: customPusher,
+  pullInterval: 30000, mutators,
+});
+repHandle = rep;
+
+const DEFAULT_PROJECTS = [
+  { id: 'lattice', name: 'lattice' }, { id: 'optogon', name: 'optogon' },
+  { id: 'atlas', name: 'atlas' }, { id: 'inpact', name: 'inpact' },
+  { id: 'property', name: 'property' }, { id: 'music', name: 'music' },
+];
+async function snapshotAll(tx) {
+  const out = { items: [], projects: [], events: [], nodes: [], edges: [] };
+  for await (const [key, val] of tx.scan().entries()) {
+    if      (key.startsWith('item/'))    out.items.push(val);
+    else if (key.startsWith('project/')) out.projects.push(val);
+    else if (key.startsWith('event/'))   out.events.push(val);
+    else if (key.startsWith('node/'))    out.nodes.push(val);
+    else if (key.startsWith('edge/'))    out.edges.push(val);
+  }
+  return out;
+}
+
+let resolveReady;
+const ready = new Promise(r => { resolveReady = r; });
+let readyFired = false;
+// Time-bound the cold-start wait so the page renders its shell even if
+// the server is offline (otherwise syncReady() hangs forever).
+const readyTimer = setTimeout(() => {
+  if (!readyFired) { readyFired = true; resolveReady(); window.dispatchEvent(new CustomEvent('lattice:sync-ready')); }
+}, 4000);
+
+rep.subscribe(snapshotAll, { onData: (snap) => {
+  // Ghost-stub nodes for link endpoints not present in the projection.
+  // Shared makeGhostStub() so this can't drift from the deriveNodes fallback;
+  // no owning item here (just an edge endpoint), so project is omitted.
+  const have = new Set(snap.nodes.map(n => n.id));
+  for (const e of snap.edges) for (const id of [e.from, e.to]) {
+    if (have.has(id)) continue;
+    have.add(id);
+    snap.nodes.push(makeGhostStub(id));
+  }
+  window.events = snap.events; window.nodes = snap.nodes; window.edges = snap.edges;
+  const baseProjects = snap.projects.length ? snap.projects : DEFAULT_PROJECTS;
+  // Brick 2: re-union the backbone feed on every pull so a delta-kernel
+  // recovery (which replaces these arrays) never drops it.
+  window.items = (typeof window.mergeBackboneItems === 'function') ? window.mergeBackboneItems(snap.items) : snap.items;
+  window.projects = (typeof window.mergeBackboneProjects === 'function') ? window.mergeBackboneProjects(baseProjects) : baseProjects;
+  // Single source of truth: the server projection feeds the graph. ONLY when it
+  // carried items but no nodes/edges do we fall back to client derivation — the
+  // one remaining reason deriveNodes/deriveEdges exist. The settings panel no
+  // longer re-derives (that raced this path, last-writer-wins until the next
+  // pull); filters are applied once at render by nodeVisible().
+  if (!window.nodes.length && !window.edges.length && window.items.length) {
+    window.nodes = deriveNodes();
+    window.edges = deriveEdges();
+  }
+  if (snap.items.length && window.FOCUS_ITEM_ID == null) window.FOCUS_ITEM_ID = snap.items[0].id;
+  if (typeof window.rerenderAll === 'function') { try { window.rerenderAll(); } catch (e) { console.warn('rerender:', e); } }
+  // First subscribe fire happens with empty IDB on cold start; only resolve
+  // ready once real data has actually landed.
+  if (!readyFired && snap.items.length > 0) {
+    readyFired = true; clearTimeout(readyTimer); resolveReady();
+    window.dispatchEvent(new CustomEvent('lattice:sync-ready'));
+  }
+}});
+
+window.latticeSync = {
+  ready, rep,
+  correctProject: (args) => rep.mutate.correctProject(args),
+  correctStatus:  (args) => rep.mutate.correctStatus(args),
+  pull: () => rep.pull(), push: () => rep.push(),
+};
+
+rep.pull().catch(() => {});
+</script>
+</body>
+</html>

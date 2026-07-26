@@ -1,0 +1,53 @@
+{
+  "surface": "autopilot",
+  "kind": "cli",
+  "lifecycle": "live",
+  "headline": "Deterministic fest orchestrator: Python decision-tree picks the next festival task, runs lightweight agents for free, escalates heavyweight/ambiguous work to Claude. No LLM in the loop.",
+  "capabilities": [
+    {
+      "id": "status",
+      "label": "Festival status: phase completion + remaining work (read-only)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python C:/Users/bruke/festival-project/festivals/active/agent-cookbook-AC0001/orchestrator.py --status",
+      "needs": ["festival"],
+      "evidence": "C:/Users/bruke/festival-project/festivals/active/agent-cookbook-AC0001/orchestrator.py, per ~/.claude/skills/autopilot/SKILL.md",
+      "notes": "orchestrator.py lives OUTSIDE this repo (festival-project, not Pre Atlas) -- invoke is an absolute cross-repo path, same pattern as any other trusted cli overlay command. Optional `festival` overrides the default festival dir (--festival <path>); omit to use the orchestrator's own default.",
+      "triggers": ["autopilot status", "festival status", "fest status", "what's next"]
+    },
+    {
+      "id": "plan",
+      "label": "Full plan: agent assignments for every remaining task (read-only)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python C:/Users/bruke/festival-project/festivals/active/agent-cookbook-AC0001/orchestrator.py --plan",
+      "needs": ["festival"],
+      "notes": "Same cross-repo invoke pattern as `status`.",
+      "triggers": ["autopilot plan", "plan the festival", "full autopilot plan"]
+    },
+    {
+      "id": "dry_run",
+      "label": "Preview the next task's agent assignment without executing it (read-only)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python C:/Users/bruke/festival-project/festivals/active/agent-cookbook-AC0001/orchestrator.py --dry-run",
+      "needs": ["festival"],
+      "notes": "Same cross-repo invoke pattern as `status`.",
+      "triggers": ["autopilot dry run", "preview next task", "dry run autopilot"]
+    },
+    {
+      "id": "run",
+      "label": "Execute the next festival task via the decision tree (runs a lightweight agent, or escalates)",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "python C:/Users/bruke/festival-project/festivals/active/agent-cookbook-AC0001/orchestrator.py",
+      "needs": ["festival"],
+      "notes": "Runs ONE task then stops (never loops -- that's /autopilot go, a Claude-side loop over repeated calls to this capability, not a single CLI invocation, so it isn't declared as its own capability here). Never auto-marks a task done -- the caller (Claude) verifies results and updates the task file. Returns structured JSON: {action, reason, agent, task}; action='escalate' means the caller must do the work itself.",
+      "triggers": ["run autopilot", "autopilot next", "autopilot run", "drive the festival forward", "execute next task"]
+    }
+  ]
+}

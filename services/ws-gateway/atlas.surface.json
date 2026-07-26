@@ -1,0 +1,64 @@
+{
+  "surface": "ws-gateway",
+  "headline": "NATS-to-Socket.IO push gateway: forwards 5 Pre Atlas event-bus topics to connected browser clients in real time (port 3006).",
+  "kind": "websocket",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "connection",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "event:connection",
+      "evidence": "services/ws-gateway/index.ts:89"
+    },
+    {
+      "id": "topics",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "event:topics",
+      "evidence": "services/ws-gateway/index.ts:94"
+    },
+    {
+      "id": "mode.changed",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "event:mode.changed",
+      "evidence": "services/ws-gateway/index.ts:18"
+    },
+    {
+      "id": "loop.closed",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "event:loop.closed",
+      "evidence": "services/ws-gateway/index.ts:19"
+    },
+    {
+      "id": "task.completed",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "event:task.completed",
+      "evidence": "services/ws-gateway/index.ts:20"
+    },
+    {
+      "id": "approval.pending",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "event:approval.pending",
+      "evidence": "services/ws-gateway/index.ts:21"
+    },
+    {
+      "id": "approval.resolved",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "event:approval.resolved",
+      "evidence": "services/ws-gateway/index.ts:22"
+    }
+  ]
+}

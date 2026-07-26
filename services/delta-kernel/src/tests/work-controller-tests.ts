@@ -90,7 +90,7 @@ function runTests(): void {
     withController(controller => {
       requestExecutableWork(controller, 10_000);
       const beforeClaim = Date.now();
-      const claim = controller.claimNextExecutable('executor-a');
+      const claim = controller.claimNextExecutable('executor-a', SYSTEM_STATE);
 
       assert.strictEqual(claim.claimed, true);
       const execution = (claim.job?.metadata as any).execution;
@@ -105,7 +105,7 @@ function runTests(): void {
   test('claim enforces minimum TTL for very short jobs', () => {
     withController(controller => {
       requestExecutableWork(controller, 1);
-      const claim = controller.claimNextExecutable('executor-short');
+      const claim = controller.claimNextExecutable('executor-short', SYSTEM_STATE);
 
       assert.strictEqual(claim.claimed, true);
       const execution = (claim.job?.metadata as any).execution;
@@ -114,10 +114,23 @@ function runTests(): void {
     });
   });
 
+  test('claim re-checks mode: an ai job approved under BUILD is not claimable after mode drops', () => {
+    withController(controller => {
+      requestExecutableWork(controller, 10_000);
+
+      const droppedMode = { mode: 'CLOSURE', build_allowed: false, open_loops: 4, closure_ratio: 0 } as const;
+      const blocked = controller.claimNextExecutable('executor-a', droppedMode);
+      assert.strictEqual(blocked.claimed, false, 'Job approved under BUILD should not be claimable once mode drops');
+
+      const claimed = controller.claimNextExecutable('executor-a', SYSTEM_STATE);
+      assert.strictEqual(claimed.claimed, true, 'Same job should still be claimable once mode allows it again');
+    });
+  });
+
   test('extendClaim requires the claiming executor and applies TTL floor', () => {
     withController(controller => {
       const jobId = requestExecutableWork(controller, 20_000);
-      controller.claimNextExecutable('executor-owner');
+      controller.claimNextExecutable('executor-owner', SYSTEM_STATE);
 
       const denied = controller.extendClaim(jobId, 'executor-other', 1_000);
       assert.strictEqual(denied.extended, false);
@@ -132,16 +145,16 @@ function runTests(): void {
   test('claim metrics track successes, misses, extensions, and observed expirations', () => {
     withController(controller => {
       const jobId = requestExecutableWork(controller, 8_000);
-      const firstClaim = controller.claimNextExecutable('executor-1');
+      const firstClaim = controller.claimNextExecutable('executor-1', SYSTEM_STATE);
       assert.strictEqual(firstClaim.claimed, true);
 
-      const secondClaim = controller.claimNextExecutable('executor-2');
+      const secondClaim = controller.claimNextExecutable('executor-2', SYSTEM_STATE);
       assert.strictEqual(secondClaim.claimed, false);
 
       const activeJob = getActiveJob(controller, jobId);
       activeJob.metadata.execution.claim_expires_at = Date.now() - 1_000;
 
-      const reclaimed = controller.claimNextExecutable('executor-2');
+      const reclaimed = controller.claimNextExecutable('executor-2', SYSTEM_STATE);
       assert.strictEqual(reclaimed.claimed, true);
 
       const extended = controller.extendClaim(jobId, 'executor-2', 9_000);

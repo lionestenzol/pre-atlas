@@ -27,5 +27,6 @@ SIGLIP_MODEL_NAME: str = "google/siglip2-base-patch16-256"
 _PKG_ROOT: Path = Path(__file__).resolve().parent
 LIBRARY_PERSIST_PATH: Path = _PKG_ROOT / "library.pkl"
 
-# API
-API_DEFAULT_PORT: int = 3010
+# API — 3074. NOT 3010: that collides with optogon (runtime owner) and the
+# aegis-fabric gateway default. See audit/retired-services-autopsy.md.
+API_DEFAULT_PORT: int = 3074

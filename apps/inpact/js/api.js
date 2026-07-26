@@ -97,4 +97,18 @@ const AtlasAPI = {
     this.online = !!(res && res.ok !== false);
     return this.online;
   },
+
+  // Cortex preparation engine: prepared "handle next" items (thread/task triage + leverage moves)
+  async getPreparation() {
+    const r = await this._fetch('/api/preparation');
+    return r ? (r.data || r) : null;
+  },
+
+  async completeBackendTask(taskId) {
+    const r = await this._fetch('/api/tasks/' + encodeURIComponent(taskId), {
+      method: 'PUT',
+      body: JSON.stringify({ status: 'DONE' }),
+    });
+    return !!(r && r.ok !== false);
+  },
 };

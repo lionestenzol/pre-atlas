@@ -1,23 +1,24 @@
 /**
- * Aegis Enterprise Fabric — Decision Cache
+ * Aegis Enterprise Fabric — Decision Cache (lru-cache-backed).
  *
  * TTL-based in-memory cache for policy decisions.
- * Key: tenant_id:agent_id:action:mode
+ * Key: tenant_id:agent_id:action:mode.
+ *
+ * Public API preserved so policy-engine and tests do not move.
+ * See ~/.claude/rules/common/assemble-first.md.
  */
 
+import { LRUCache } from 'lru-cache';
 import { PolicyDecision, UUID, AgentActionName, Mode } from '../core/types.js';
 
-interface CacheEntry {
-  decision: PolicyDecision;
-  expiresAt: number;
-}
-
 export class DecisionCache {
-  private cache: Map<string, CacheEntry> = new Map();
-  private defaultTtlMs: number;
+  private cache: LRUCache<string, PolicyDecision>;
 
   constructor(defaultTtlMs: number = 60_000) {
-    this.defaultTtlMs = defaultTtlMs;
+    this.cache = new LRUCache<string, PolicyDecision>({
+      ttl: defaultTtlMs,
+      ttlAutopurge: true,
+    });
   }
 
   private key(tenantId: UUID, agentId: UUID, action: AgentActionName, mode: Mode): string {
@@ -25,29 +26,26 @@ export class DecisionCache {
   }
 
   get(tenantId: UUID, agentId: UUID, action: AgentActionName, mode: Mode): PolicyDecision | null {
-    const k = this.key(tenantId, agentId, action, mode);
-    const entry = this.cache.get(k);
-    if (!entry) return null;
-
-    if (Date.now() > entry.expiresAt) {
-      this.cache.delete(k);
-      return null;
-    }
-
-    return { ...entry.decision, cached: true };
+    const decision = this.cache.get(this.key(tenantId, agentId, action, mode));
+    return decision ? { ...decision, cached: true } : null;
   }
 
-  set(tenantId: UUID, agentId: UUID, action: AgentActionName, mode: Mode, decision: PolicyDecision, ttlMs?: number): void {
-    const k = this.key(tenantId, agentId, action, mode);
-    this.cache.set(k, {
-      decision,
-      expiresAt: Date.now() + (ttlMs || this.defaultTtlMs),
-    });
+  set(
+    tenantId: UUID,
+    agentId: UUID,
+    action: AgentActionName,
+    mode: Mode,
+    decision: PolicyDecision,
+    ttlMs?: number,
+  ): void {
+    const opts = ttlMs !== undefined ? { ttl: ttlMs } : undefined;
+    this.cache.set(this.key(tenantId, agentId, action, mode), decision, opts);
   }
 
   invalidateTenant(tenantId: UUID): void {
-    for (const [key] of this.cache) {
-      if (key.startsWith(tenantId + ':')) {
+    const prefix = tenantId + ':';
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
         this.cache.delete(key);
       }
     }

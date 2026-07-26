@@ -52,7 +52,18 @@
     <!-- Step 0: Your Why -->
     <div class="ob-step active" id="step-0">
       <div class="ob-title">Welcome. Let's set you up.</div>
-      <div class="ob-sub">in-PACT is a planning system built from a real sales training binder. It connects what you do today to what you're trying to accomplish this month. This setup takes about 5 minutes.</div>
+      <div class="ob-sub">in-PACT is a planning system built from a real sales training binder. It connects what you do today to what you're trying to accomplish this month.</div>
+
+      <div id="ob-quickstart" style="border:1px solid var(--ip-gray-200);background:var(--ip-gray-50);border-radius:0.875rem;padding:1.25rem;margin-bottom:2rem;">
+        <div style="font-weight:700;font-size:1.0625rem;margin-bottom:0.25rem;">No mind to fill this out? Start in one click.</div>
+        <div style="font-size:0.8125rem;color:var(--ip-gray-600);line-height:1.55;margin-bottom:1rem;">Loads a starter plan built from your real work (GitHub, the Atlas stack, inPACT itself) and drops you straight on Home. You can edit any of it later from the <strong>Setup</strong> button in the sidebar.</div>
+        <button class="td-btn" type="button" onclick="quickStart()" style="width:100%;justify-content:center;padding:0.8125rem;margin-bottom:0.5rem;">
+          <i class="fas fa-bolt" style="margin-right:0.5rem;"></i>Use the starter and start now
+        </button>
+        <button class="td-btn-ghost" type="button" onclick="prefillStarter()" style="width:100%;justify-content:center;">
+          <i class="fas fa-pen" style="margin-right:0.5rem;font-size:0.75rem;"></i>Fill the fields, let me review first
+        </button>
+      </div>
 
       <div class="td-chapter" style="margin-top:1.5rem;">
         <span class="td-chapter-title">Step 1 of 4: Your Why</span>
@@ -232,16 +243,31 @@
     // -- Render primary letter dropdown --
     function renderPrimaryDropdown() {
       var tasks = getEnteredTasks();
+      var el = document.getElementById('ob-primary');
+      var prev = el ? el.value : '';
       var html = '<option value="">None selected</option>';
       tasks.forEach(function(t) {
         html += '<option value="' + t.letter + '">' + t.letter + ': ' + t.task.substring(0, 40) + '</option>';
       });
-      document.getElementById('ob-primary').innerHTML = html;
+      el.innerHTML = html;
+      el.value = prev; // preserve selection across re-render
     }
 
     // -- Render priority rows with link dropdowns --
     function renderPriorities() {
       var tasks = getEnteredTasks();
+      // Preserve anything already typed/selected so navigation doesn't wipe it.
+      var prev = [];
+      for (var k = 1; k <= 3; k++) {
+        var pPrev = document.getElementById('ob-p' + k);
+        var azPrev = document.getElementById('ob-p' + k + 'az');
+        var arPrev = document.getElementById('ob-p' + k + 'area');
+        prev.push({
+          text: pPrev ? pPrev.value : '',
+          az: azPrev ? azPrev.value : '',
+          area: arPrev ? arPrev.value : ''
+        });
+      }
       var html = '';
       for (var i = 1; i <= 3; i++) {
         var azOptions = '<option value="">--</option>';
@@ -264,6 +290,15 @@
           '</div></div></div>';
       }
       document.getElementById('ob-priorities').innerHTML = html;
+      // Restore preserved values after rebuilding the rows.
+      for (var j = 1; j <= 3; j++) {
+        var pEl = document.getElementById('ob-p' + j);
+        var azEl = document.getElementById('ob-p' + j + 'az');
+        var arEl = document.getElementById('ob-p' + j + 'area');
+        if (pEl) pEl.value = prev[j - 1].text;
+        if (azEl) azEl.value = prev[j - 1].az;
+        if (arEl) arEl.value = prev[j - 1].area;
+      }
     }
 
     // -- Get entered tasks from step 1 --
@@ -387,10 +422,164 @@
       window.location.href = 'index.html';
     }
 
+    // -- Starter draft (opt-in). Grounded in real active work; nothing saves until Finish. --
+    var STARTER = {
+      mission: "Build the system that removes friction between idea and execution, so I can run many things at once without any of them collapsing, and break the start-stall-stop cycle for good.",
+      motto: "Focused time, not structured time. Multiple shots at the same target.",
+      tasks: [
+        "Organize GitHub: triage all 36 lionestenzol repos into keep / archive / private",
+        "Make the Atlas stack ambient: daemonize so everything runs at login, nothing started by hand",
+        "Run in-PACT every day for one full week: plan in the morning, close at night",
+        "Ship the canvas-engine vision path: one real clone end to end",
+        "Close one open Optogon PR (#12 or #15): merge it or kill it"
+      ],
+      primaryLetter: "A",
+      weekCountsIf: "All 36 repos triaged, and the top 5 have a clean README.",
+      pigpen: {
+        Production: "GitHub org + Atlas daemonization",
+        Image: "Top-5 repo READMEs presentable",
+        Growth: "Use in-PACT daily, build the habit",
+        Personal: "",
+        Errands: "",
+        Network: ""
+      },
+      win: "Initialize in-PACT with my real data and use it to plan the rest of today.",
+      priorities: [
+        { text: "Onboard in-PACT (this)", az: "C", area: "Growth" },
+        { text: "Triage 10 GitHub repos", az: "A", area: "Production" },
+        { text: "Confirm Atlas autostart fires after a reboot", az: "B", area: "Production" }
+      ],
+      lever: "One sitting, no tab-switching until in-PACT is initialized and today is planned."
+    };
+
+    function prefillStarter() {
+      // Step 0
+      document.getElementById('ob-mission').value = STARTER.mission;
+      document.getElementById('ob-motto').value = STARTER.motto;
+      // Step 1: A-Z tasks (grow rows if needed, then fill)
+      taskRows = Math.max(taskRows, STARTER.tasks.length);
+      renderTaskRows();
+      STARTER.tasks.forEach(function(t, i) {
+        var el = document.getElementById('ob-task-' + i);
+        if (el) el.value = t;
+      });
+      // Step 2: week (dropdowns derive from entered tasks, so rebuild first)
+      renderPrimaryDropdown();
+      renderPriorities();
+      var prim = document.getElementById('ob-primary');
+      if (prim) prim.value = STARTER.primaryLetter;
+      var ci = document.getElementById('ob-counts-if');
+      if (ci) ci.value = STARTER.weekCountsIf;
+      Object.keys(STARTER.pigpen).forEach(function(name) {
+        var el = document.getElementById('ob-pigpen-' + name);
+        if (el) el.value = STARTER.pigpen[name];
+      });
+      // Step 3: today
+      var win = document.getElementById('ob-win');
+      if (win) win.value = STARTER.win;
+      var lev = document.getElementById('ob-lever');
+      if (lev) lev.value = STARTER.lever;
+      STARTER.priorities.forEach(function(p, idx) {
+        var n = idx + 1;
+        var pe = document.getElementById('ob-p' + n);
+        var az = document.getElementById('ob-p' + n + 'az');
+        var ar = document.getElementById('ob-p' + n + 'area');
+        if (pe) pe.value = p.text;
+        if (az) az.value = p.az;
+        if (ar) ar.value = p.area;
+      });
+      var btn = document.querySelector('[onclick="prefillStarter()"]');
+      if (btn) btn.innerHTML = '<i class="fas fa-check" style="margin-right:0.5rem;"></i>Draft loaded. Step through and edit, then Finish.';
+    }
+
+    // -- One click: load the starter draft and finish immediately --
+    function quickStart() {
+      prefillStarter();
+      finish();
+    }
+
+    // -- Re-open Setup later: load CURRENT saved values so editing never wipes data --
+    function prefillFromState() {
+      var hasData = (st.AZTask && st.AZTask.length) ||
+        (st.Today && (st.Today.mission || st.Today.motto));
+      if (!hasData) return false;
+
+      var idToLetter = {};
+      (st.AZTask || []).forEach(function(t) { idToLetter[t.id] = t.letter; });
+      var idToArea = {};
+      (st.FocusArea || []).forEach(function(a) { idToArea[a.id] = a.name; });
+
+      // Step 0
+      if (st.Today) {
+        document.getElementById('ob-mission').value = st.Today.mission || '';
+        document.getElementById('ob-motto').value = st.Today.motto || '';
+      }
+
+      // Step 1: place each saved task at its letter row
+      if (st.AZTask && st.AZTask.length) {
+        var maxIdx = 0;
+        st.AZTask.forEach(function(t) {
+          var ix = letters.indexOf(t.letter);
+          if (ix > maxIdx) maxIdx = ix;
+        });
+        taskRows = Math.max(taskRows, maxIdx + 1);
+        renderTaskRows();
+        st.AZTask.forEach(function(t) {
+          var ix = letters.indexOf(t.letter);
+          if (ix >= 0) {
+            var el = document.getElementById('ob-task-' + ix);
+            if (el) el.value = t.task || '';
+          }
+        });
+      }
+
+      // Step 2: rebuild dropdowns from tasks, then restore selections
+      renderPrimaryDropdown();
+      renderPriorities();
+      if (st.WeeklyPlan) {
+        var prim = document.getElementById('ob-primary');
+        if (prim) prim.value = idToLetter[st.WeeklyPlan.primaryLetter] || '';
+        var ci = document.getElementById('ob-counts-if');
+        if (ci) ci.value = st.WeeklyPlan.weekCountsIf || '';
+        var pf = st.WeeklyPlan.pigpenFocus || {};
+        Object.keys(pf).forEach(function(name) {
+          var el = document.getElementById('ob-pigpen-' + name);
+          if (el) el.value = pf[name] || '';
+        });
+      }
+
+      // Step 3: today's plan
+      var todayISO = new Date().toISOString().slice(0, 10);
+      var tp = (st.Today && st.Today.daily && st.Today.daily[todayISO]) || null;
+      if (tp) {
+        var win = document.getElementById('ob-win');
+        if (win) win.value = tp.winTarget || '';
+        var lev = document.getElementById('ob-lever');
+        if (lev) lev.value = tp.lever || '';
+        for (var i = 1; i <= 3; i++) {
+          var pe = document.getElementById('ob-p' + i);
+          var az = document.getElementById('ob-p' + i + 'az');
+          var ar = document.getElementById('ob-p' + i + 'area');
+          if (pe) pe.value = tp['p' + i] || '';
+          if (az) az.value = idToLetter[tp['p' + i + 'az']] || '';
+          if (ar) ar.value = idToArea[tp['p' + i + 'area']] || '';
+        }
+      }
+      return true;
+    }
+
     // -- Init --
     renderTaskRows();
     renderPigpen();
     renderPriorities();
+
+    // If a setup already exists, load it for editing and hide the quick-start banner.
+    if (prefillFromState()) {
+      var qs = document.getElementById('ob-quickstart');
+      if (qs) qs.style.display = 'none';
+      var titleEl = document.querySelector('#step-0 .ob-title');
+      if (titleEl) titleEl.textContent = 'Edit your setup.';
+    }
   </script>
 </body>
 </html>

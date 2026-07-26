@@ -44,8 +44,8 @@ import {
   DraftData,
   PendingActionData,
   SystemStateData,
-} from './types';
-import { generateUUID, now } from './delta';
+} from '../src/core/types.js';
+import { generateUUID, now } from '../src/core/delta.js';
 import {
   createNode,
   createHelloPacket,
@@ -56,8 +56,8 @@ import {
   computeHeadsDiff,
   generateWantEntries,
   prioritizeDeltas,
-} from './delta-sync';
-import { LeverageMove } from './preparation';
+} from './delta-sync.js';
+import { LeverageMove } from '../src/core/preparation.js';
 
 // === CONSTANTS ===
 

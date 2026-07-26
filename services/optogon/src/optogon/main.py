@@ -270,11 +270,11 @@ def session_run(req: StartRequest) -> dict[str, Any]:
     state, text, emitted_all = process_turn(state, path, None)
     state = store.update(state)
 
-    # Walk forward until closed, asking for user-input, awaiting approval, or hit max turns
-    # NOTE: _handle_close sets state["_close_signal"] but does NOT set state["closed_at"]
-    # (latent core bug). We detect close via the signal instead.
+    # Walk forward until closed, asking for user-input, awaiting approval, or hit max turns.
+    # _handle_close now sets the canonical session-level state["closed_at"]; the node-status
+    # check below remains as a belt-and-suspenders fallback for any close path that doesn't.
     def _is_closed(s: dict[str, Any]) -> bool:
-        if s.get("_close_signal") or s.get("closed_at"):
+        if s.get("closed_at"):
             return True
         cur = s.get("current_node")
         ns = (s.get("node_states") or {}).get(cur, {}) if cur else {}

@@ -1,0 +1,7 @@
+{
+  "surface": "openclaw",
+  "headline": "RETIRED — openclaw FastAPI service is decommissioned; do not build on it.",
+  "kind": "http",
+  "lifecycle": "retired",
+  "capabilities": []
+}

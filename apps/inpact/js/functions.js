@@ -661,6 +661,32 @@ function createTask() {
   UI.showToast('Task Created', `${letter} – ${task}`, 'success');
 }
 
+function addProjectTask(name) {
+  if (!name) return;
+  const used = new Set((state.AZTask || []).map(t => t.letter));
+  let letter = 'Z';
+  for (let i = 0; i < 26; i++) {
+    const L = String.fromCharCode(65 + i);
+    if (!used.has(L)) { letter = L; break; }
+  }
+  const newTask = {
+    id: stateManager.generateId(),
+    letter,
+    task: `Work on ${name}`,
+    notes: 'Added from Projects',
+    status: 'Not Started',
+    createdAt: new Date().toISOString()
+  };
+  state.AZTask.push(newTask);
+  state.AZTask.sort((a, b) => a.letter.localeCompare(b.letter));
+  if (typeof Helpers !== 'undefined' && Helpers.logActivity) {
+    Helpers.logActivity('task_created', `Created A-Z Task from project: ${name}`, { taskId: newTask.id });
+  }
+  stateManager.update({ AZTask: state.AZTask });
+  render();
+  UI.showToast('Task Created', `${letter} - Work on ${name}`, 'success');
+}
+
 function updateTask(id) {
   const task = state.AZTask.find(t => t.id === id);
   if (!task) return;
@@ -944,7 +970,7 @@ function deleteRoutineType(routineName) {
 function addRoutineStep(routineName) {
   if (!state.Routine[routineName]) return;
 
-  state.Routine[routineName].push('New step');
+  state.Routine[routineName].push({ text: 'New step', duration: 5 });
   stateManager.update({ Routine: state.Routine });
   render();
 
@@ -972,9 +998,18 @@ function updateRoutineStep(routineName, index, value) {
     return;
   }
 
-  state.Routine[routineName][index] = trimmedValue;
+  state.Routine[routineName][index].text = trimmedValue;
   stateManager.update({ Routine: state.Routine });
   Helpers.logActivity('routine_step_updated', `Updated step in ${routineName} routine`);
+}
+
+function updateRoutineStepDuration(routineName, index, minutes) {
+  if (!state.Routine[routineName]?.[index]) return;
+
+  const parsed = Math.min(240, Math.max(1, parseInt(minutes, 10) || 5));
+  state.Routine[routineName][index].duration = parsed;
+  stateManager.update({ Routine: state.Routine });
+  Helpers.logActivity('routine_step_updated', `Updated duration in ${routineName} routine`);
 }
 
 function deleteRoutineStep(routineName, index) {
@@ -1915,7 +1950,16 @@ async function init() {
     document.body.classList.add('bg-gray-900', 'text-white');
     document.body.classList.remove('bg-slate-50');
   }
-  
+
+  // Deep-link support: ?screen=Tasks lets other surfaces (e.g. the Projects tab) open inPACT on a specific screen
+  try {
+    const want = new URLSearchParams(location.search).get('screen');
+    if (want && screens.some(s => s.id === want)) {
+      state.screen = want;
+      stateManager.update({ screen: want });
+    }
+  } catch (e) { /* deep-link is best-effort */ }
+
   render();
 
   // Periodic backup save every 5 minutes (in case debounce fails)
@@ -2804,6 +2848,49 @@ function saveTodayField(field, value) {
   stateManager.update({ Today: state.Today });
 }
 
+// Which lens the Daily screen shows: 'minimal' | 'medium' | 'full'.
+function setDailyView(view) {
+  if (view !== 'minimal' && view !== 'medium' && view !== 'full') return;
+  if (!state.UI) state.UI = { dailyView: 'minimal' };
+  state.UI.dailyView = view;
+  stateManager.update({ UI: state.UI });
+  render();
+}
+
+// The reset move is the play you run when the day cracks. Logging it makes the
+// crack visible in the timeline instead of it just being a line you never used.
+function activateResetMove() {
+  var plan = getTodayFields();
+  if (!plan.resetMove) return;
+  Helpers.logActivity('reset_move_used', `Used reset move: ${plan.resetMove}`, { resetMove: plan.resetMove });
+  UI.showToast('Reset move logged', plan.resetMove, 'success');
+  render();
+}
+
+// Complete a priority that the daemon seeded from a real backend task entity
+// (governance_daemon.ts's seedTodayPlan stores p{n}TaskId). Marking it done here
+// calls the same completeBackendTask path as the "Ask Atlas" > Handle next panel,
+// so it flows worker (inPACT) -> manager (Atlas) instead of being a local-only edit.
+async function completeSeededPriority(i) {
+  var plan = getTodayFields();
+  var taskId = plan['p' + i + 'TaskId'];
+  if (!taskId) return;
+
+  var ok = false;
+  try { ok = await AtlasAPI.completeBackendTask(taskId); } catch (e) { ok = false; }
+
+  if (ok) {
+    plan['p' + i + 'TaskId'] = '';
+    plan['p' + i] = (plan['p' + i] || '') + ' (done)';
+    plan.updated_at = new Date().toISOString();
+    stateManager.update({ Today: state.Today });
+    if (typeof UI !== 'undefined') UI.showToast('Done', 'Marked complete in Atlas', 'success');
+    if (typeof render === 'function') render();
+  } else {
+    if (typeof UI !== 'undefined') UI.showToast('Could not complete', 'The backend rejected it', 'error');
+  }
+}
+
 function buildLinkSelect(type, prioNum) {
   var plan = getTodayFields();
   var field = type === 'az' ? 'p' + prioNum + 'az' : 'p' + prioNum + 'area';
@@ -2933,7 +3020,7 @@ if (typeof module !== 'undefined' && module.exports) {
     removeTimeBlock, saveGoals, toggleGoalCompletion, openCreateModal, openEditModal,
     sortTasks, filterTasks, searchTasks, exportState, showImportModal, handleFileImport,
     clearData, resetToDefaults, toggleDarkMode, toggleSetting, updateSetting,
-    addRoutineStep, updateRoutineStep, deleteRoutineStep, moveRoutineStep,
+    addRoutineStep, updateRoutineStep, updateRoutineStepDuration, deleteRoutineStep, moveRoutineStep,
     addNewRoutineType, deleteRoutineType, toggleRoutineStep, toggleRoutineComplete,
     openJournalModal, saveJournalEntry, editJournalEntry, deleteJournalEntry,
     addFocusTask, toggleFocusTask, removeFocusTask, toggleEightStep,
@@ -2945,6 +3032,7 @@ if (typeof module !== 'undefined' && module.exports) {
     toggleGoalCompletionForDate, addTimeBlockForDate, showCreatePlanModal, showNewEventModal,
     submitEnergySignals, submitFinanceSignals, submitSkillsSignals, submitNetworkSignals,
     getTodayFields, saveTodayField, buildLinkSelect, getRhythmAction, quickReflect, saveQuickReflect,
+    setDailyView, activateResetMove,
     _closeStep, _renderCloseStep, _closeStepNext
   };
 }

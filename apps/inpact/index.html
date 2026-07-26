@@ -50,6 +50,14 @@
 
       <div id="atlas-status" style="padding:0 0.75rem;margin-bottom:0.25rem;"></div>
       <div class="flex flex-col gap-0.5">
+        <button onclick="openAtlasAI()" class="sb-link" aria-label="Ask Atlas">
+          <i class="fas fa-satellite-dish"></i>
+          <span>Ask Atlas</span>
+        </button>
+        <button onclick="window.location.href='onboarding.html'" class="sb-link" aria-label="Open setup">
+          <i class="fas fa-wand-magic-sparkles"></i>
+          <span>Setup</span>
+        </button>
         <button onclick="navigate('Settings')" class="sb-link">
           <i class="fas fa-cog"></i>
           <span>Settings</span>
@@ -86,6 +94,13 @@
     </nav>
   </div>
 
+  <!-- Always-on Ask Atlas entry: floating button, present on every screen -->
+  <button onclick="openAtlasAI()" aria-label="Ask Atlas" title="Ask Atlas: what should I do right now?"
+    style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:40;display:flex;align-items:center;gap:0.5rem;background:var(--ip-black);color:#fff;border:none;border-radius:9999px;padding:0.75rem 1.125rem;box-shadow:0 6px 18px rgba(17,24,39,0.28);cursor:pointer;font-family:var(--ip-font);font-weight:600;font-size:0.875rem;">
+    <i class="fas fa-satellite-dish"></i>
+    <span>Ask Atlas</span>
+  </button>
+
   <div id="modal-container"></div>
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
@@ -96,14 +111,24 @@
   <script src="js/ui.js"></script>
   <script src="js/helpers.js"></script>
 
+  <!-- AI read + act: context export (AIContext) + action API (AIActions) -->
+  <script src="js/ai-context.js"></script>
+  <script src="js/ai-actions.js"></script>
+
   <!-- Application modules -->
   <script src="js/screens.js"></script>
   <script src="js/functions.js"></script>
+
+  <!-- Google Calendar sync -->
+  <script src="js/calendar.js"></script>
 
   <!-- Initialize app -->
   <script src="js/app.js"></script>
 
   <!-- Optogon stack: consume Signal.v1 from delta-kernel /api/signals -->
   <script src="js/signals.js"></script>
+
+  <!-- Atlas item backbone: unified /items feed (droplist + cycleboard + inpact) -->
+  <script src="js/backbone.js"></script>
 </body>
 </html>

@@ -23,9 +23,9 @@ import {
   ActuationOutcome,
   ControlMetrics,
   ControlWidgetData,
-} from './types';
-import { createEntity, now, generateUUID, computeHash, applyPatch } from './delta';
-import { ControlSurfaceStore } from './control-surface';
+} from '../src/core/types.js';
+import { createEntity, now, generateUUID, computeHash, applyPatch } from '../src/core/delta.js';
+import { ControlSurfaceStore } from './control-surface.js';
 
 // === METRICS TRACKER ===
 

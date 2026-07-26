@@ -14,6 +14,7 @@ from cortex.contracts import (
 from cortex.clients.delta_client import DeltaClient
 from cortex.clients.aegis_client import AegisClient
 from cortex.clients.uasc_client import UascClient
+from cortex.clients.optogon_client import OptogonClient
 from cortex.recovery import CircuitBreaker, CircuitOpenError
 
 log = logging.getLogger("cortex.loop")
@@ -97,6 +98,7 @@ async def execution_loop(
     aegis: AegisClient,
     uasc: UascClient,
     breakers: dict[str, CircuitBreaker],
+    optogon: OptogonClient | None = None,
 ) -> None:
     """Main loop: poll → lock → gate → plan → execute → review → complete."""
     from cortex.agents.planner import Planner
@@ -104,7 +106,7 @@ async def execution_loop(
     from cortex.agents.reviewer import Reviewer
 
     planner = Planner()
-    executor = Executor(uasc=uasc, delta=delta)
+    executor = Executor(uasc=uasc, delta=delta, optogon=optogon or OptogonClient())
     reviewer = Reviewer()
 
     _metrics["loop_running"] = True

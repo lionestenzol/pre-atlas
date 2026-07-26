@@ -19,8 +19,8 @@
  *   Frame size: 160 samples (20ms at 8kHz)
  */
 
-import { UUID, Timestamp, Delta, JsonPatch } from './types';
-import { generateUUID, now, computeHash } from './delta';
+import { UUID, Timestamp, Delta, JsonPatch } from '../src/core/types.js';
+import { generateUUID, now, computeHash } from '../src/core/delta.js';
 
 // === TYPES ===
 

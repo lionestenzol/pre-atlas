@@ -1,30 +1,30 @@
-"""Skill: /status — returns current mode, lanes, and festival progress."""
+"""Skill: /status — returns current mode, risk, and open-loop state."""
 import structlog
-import httpx
 
-from openclaw.config import config
+from openclaw.delta import fetch_delta_derived
 from openclaw.channels.base import Message
 
 log = structlog.get_logger()
 
 
 async def handle_status(message: Message) -> str:
-    """Fetch system status from orchestrator and format for messaging."""
+    """Fetch governance state from delta-kernel and format for messaging."""
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(f"{config.orchestrator_url}/api/v1/status")
-            resp.raise_for_status()
-            data = resp.json()
+        derived = await fetch_delta_derived()
 
-        mode = data.get("mode", "UNKNOWN")
-        lanes = data.get("active_lanes", [])
-        lanes_str = ", ".join(lanes) if lanes else "none"
+        mode = derived.get("mode", "UNKNOWN")
+        risk = derived.get("risk", "UNKNOWN")
+        build = "allowed" if derived.get("build_allowed") else "blocked"
+        open_loops = derived.get("open_loops", 0)
+        streak = derived.get("streak_days", 0)
 
         return (
             f"*System Status*\n"
             f"Mode: `{mode}`\n"
-            f"Active lanes: {lanes_str}\n"
-            f"Uptime: {data.get('uptime', 'N/A')}"
+            f"Risk: `{risk}`\n"
+            f"Build: {build}\n"
+            f"Open loops: {open_loops}\n"
+            f"Streak: {streak}d"
         )
     except Exception as e:
         log.warning("skill.status_failed", error=str(e))

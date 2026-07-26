@@ -1,0 +1,340 @@
+{
+  "phase": "003_CROSS_REFERENCE_MATRIX",
+  "sequence": "era_1_pre_cc",
+  "generated_at": "2026-05-28T03:06:54.810846+00:00",
+  "era": {
+    "label": "era_1_pre_cc",
+    "start": "2024-08-21",
+    "end": "2026-02-08"
+  },
+  "method": "Substring match of cluster seed_terms (case-insensitive) against ChatGPT title and CC first_user_msg. Items filtered to era window by first_date (ChatGPT) / first_ts (CC). Samples sorted by date ascending, capped at 5 per cell. HOTL: substring warnings from Phase 2 (clusters_final.json) still apply and are not auto-filtered here.",
+  "samples_per_cell": 5,
+  "totals": {
+    "chatgpt_in_era": 4989,
+    "cc_in_era": 0,
+    "chatgpt_matched_sum_over_clusters": 27,
+    "cc_matched_sum_over_clusters": 0,
+    "note": "matched_sum_over_clusters can exceed in_era because one item may match multiple clusters (e.g. an 'anatomy canvas' chat hits both anatomy and canvas_render)."
+  },
+  "substring_warnings_carried_forward": [
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "daw",
+        "length": 3,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "821",
+            "title": "Building Custom DAWs"
+          }
+        ],
+        "note": "v1-substring-rule FP detector. v2 uses word-boundary so these examples no longer match in production."
+      }
+    },
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "midi",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "889",
+            "title": "Dehumidifier vs AWG"
+          }
+        ],
+        "note": "v1-substring-rule FP detector. v2 uses word-boundary so these examples no longer match in production."
+      }
+    }
+  ],
+  "clusters": [
+    {
+      "name": "anatomy",
+      "seed_terms": [
+        "anatomy",
+        "anatomy-v1",
+        "anatomyv1",
+        "anatomy-extension",
+        "anatomy-research",
+        "anatomy-rewrite",
+        "anatomy-map",
+        "anatomy-frame",
+        "anatomy-sidecar"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "mb3d_fractals",
+      "seed_terms": [
+        "mb3d",
+        "mb3d_anim_demo",
+        "mb3d-blender",
+        "mandelbulb",
+        "mandelbulb3d",
+        "mandelbulber",
+        "mandelbulber2",
+        "mandelbulber2_install",
+        "m3p",
+        "m3p-to-fract",
+        "m3f",
+        ".fract",
+        "fractal-machine",
+        "mandelbox",
+        "raymarcher",
+        "fragmentarium"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "audio_music",
+      "seed_terms": [
+        "strudel",
+        "stemai",
+        "surge",
+        "surge-xt",
+        "nih-plug",
+        "airwindows",
+        "musescore",
+        "fl356",
+        "fl 3",
+        "fl3",
+        "vst3",
+        "vst",
+        "daw",
+        "midi",
+        "synth",
+        "sampler",
+        "audio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 3,
+          "samples": [
+            {
+              "id": "5158",
+              "date": "2025-03-11",
+              "preview": "Audio analysis summary"
+            },
+            {
+              "id": "2840",
+              "date": "2025-09-01",
+              "preview": "MIDI file creation options"
+            },
+            {
+              "id": "1934",
+              "date": "2026-01-07",
+              "preview": "Audio Representation Explained"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "atlas_core",
+      "seed_terms": [
+        "atlas",
+        "pre atlas",
+        "pre-atlas",
+        "delta-kernel",
+        "delta kernel",
+        "cognitive-sensor",
+        "cognitive sensor",
+        "cycleboard",
+        "cortex",
+        "optogon",
+        "aegis",
+        "aegis-fabric",
+        "openclaw",
+        "mirofish",
+        "perception service",
+        "perception layer",
+        "perception module",
+        "triangulation",
+        "mosaic",
+        "inpact",
+        "in-pact",
+        "blueprint-generator",
+        "code-converter",
+        "ai-exec-pipeline",
+        "uasc",
+        "ws-gateway",
+        "polaris",
+        "crucix",
+        "governance"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 23,
+          "samples": [
+            {
+              "id": "5915",
+              "date": "2025-01-05",
+              "preview": "inPACT Bullet Journal App"
+            },
+            {
+              "id": "5910",
+              "date": "2025-01-06",
+              "preview": "inPACT Journal Overview"
+            },
+            {
+              "id": "5840",
+              "date": "2025-01-19",
+              "preview": "inPACT System Overview"
+            },
+            {
+              "id": "5066",
+              "date": "2025-03-16",
+              "preview": "UASC-M2M Project Guidance"
+            },
+            {
+              "id": "3964",
+              "date": "2025-05-31",
+              "preview": "in-PACT UI Conversion"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "web_extract",
+      "seed_terms": [
+        "scrapling",
+        "scraping",
+        "sitepull",
+        "web-audit",
+        "web-extract",
+        "competitor-monitor",
+        "competitor monitor",
+        "brightdata",
+        "datadome",
+        "cloudflare",
+        "anti-bot",
+        "playwright",
+        "puppeteer",
+        "headless",
+        "humanize"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "productivity_skills",
+      "seed_terms": [
+        "weapon",
+        "festival",
+        "mini-ship",
+        "miniship",
+        "autopilot",
+        "project-finisher",
+        "handoff",
+        "handoff-out",
+        "eval-harness",
+        "cookbook",
+        "search-first",
+        "security-review",
+        "strategic-compact",
+        "tdd-workflow",
+        "verification-loop",
+        "coding-standards",
+        "backend-patterns",
+        "frontend-patterns",
+        "wasp-patterns",
+        "codex-delegate",
+        "codex-partner",
+        "continuous-learning",
+        "slash command",
+        "/weapon",
+        "/fest",
+        "/mini-ship",
+        "/autopilot"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 1,
+          "samples": [
+            {
+              "id": "3119",
+              "date": "2025-08-03",
+              "preview": "Autopilot and focus errors"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "canvas_render",
+      "seed_terms": [
+        "canvas-engine",
+        "canvas-demo",
+        "screenshot-to-code",
+        "three-js",
+        "three.js",
+        "threejs",
+        "three-stack",
+        "three-js-migrate",
+        "react-three-fiber",
+        "r3f",
+        "drei",
+        "anime-js",
+        "anime.js",
+        "animejs",
+        "anime-js-migrate",
+        "remotion",
+        "webgl",
+        "webgpu",
+        "shader",
+        "raymarch",
+        "virtualstudio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    }
+  ]
+}

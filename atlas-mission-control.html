@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas Mission Control</title>
+<link rel="icon" href="data:," />
+<meta name="robots" content="noindex" />
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #1c2330; --line: #2a3343;
+    --ink: #e6edf3; --dim: #8b98a9; --accent: #4cc2ff; --accent2: #7ee787;
+    --green: #3fb950; --red: #f85149; --amber: #d29922; --radius: 10px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  h1 { font-size: 22px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+  h1 .sub { color: var(--dim); font-weight: 400; font-size: 14px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; background: var(--panel2); border: 1px solid var(--line); font-family: var(--mono); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); flex: 0 0 auto; }
+  .dot.up { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot.down { background: var(--red); }
+  .dot.unknown { background: var(--amber); }
+  .dot.stale { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 18px; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin: 0 0 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .panel h2 .count { font-family: var(--mono); text-transform: none; letter-spacing: 0; color: var(--ink); font-size: 12px; padding: 2px 8px; background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; }
+  .muted { color: var(--dim); font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .svc { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: border-color .15s; }
+  .svc:hover { border-color: var(--accent); }
+  .svc .top { display: flex; align-items: center; gap: 8px; }
+  .svc .nm { font-weight: 600; font-family: var(--mono); font-size: 13px; }
+  .svc .port { color: var(--dim); font-size: 12px; margin-left: auto; font-family: var(--mono); }
+  .svc .pids { color: var(--dim); font-family: var(--mono); font-size: 11px; }
+  .svc.down { opacity: 0.62; }
+  .task { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 8px 10px; border-radius: 6px; align-items: center; font-family: var(--mono); font-size: 12px; }
+  .task:nth-child(odd) { background: var(--panel2); }
+  .task .name { font-weight: 600; }
+  .task .state { color: var(--dim); }
+  .task .state.ready { color: var(--accent2); }
+  .task .state.disabled { color: var(--amber); }
+  .task .trigs { color: var(--dim); text-align: right; font-size: 11px; }
+  .empty { color: var(--dim); font-style: italic; padding: 8px 2px; }
+  .heartbeat { display: flex; gap: 20px; align-items: center; font-family: var(--mono); font-size: 12px; }
+  .heartbeat .kv { display: flex; flex-direction: column; gap: 2px; }
+  .heartbeat .k { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .heartbeat .v { color: var(--ink); font-size: 13px; }
+  .err { color: var(--red); font-family: var(--mono); font-size: 12px; padding: 10px; background: var(--panel2); border: 1px solid var(--red); border-radius: 6px; }
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* Setting-toggle panel */
+  .setting { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 10px 0; }
+  .setting + .setting { border-top: 1px dashed var(--line); }
+  .setting .label { }
+  .setting .label .name { font-weight: 600; font-family: var(--mono); font-size: 13px; }
+  .setting .label .desc { color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .setting .value { color: var(--dim); font-family: var(--mono); font-size: 12px; text-align: right; }
+  .setting .value .state.on  { color: var(--accent2); }
+  .setting .value .state.off { color: var(--amber); }
+  /* iOS-style toggle switch */
+  .switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex: 0 0 auto; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; transition: .18s; }
+  .slider::before { content: ""; position: absolute; height: 18px; width: 18px; left: 2px; top: 2px; background: var(--dim); border-radius: 50%; transition: .18s; }
+  .switch input:checked + .slider { background: rgba(63,185,80,0.2); border-color: var(--green); }
+  .switch input:checked + .slider::before { transform: translateX(20px); background: var(--green); }
+  .switch input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
+  /* Code link buttons */
+  .codelinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .codelink { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; background: var(--panel2); border: 1px solid var(--line); font-family: var(--mono); font-size: 11px; color: var(--accent); text-decoration: none; transition: border-color .15s, background .15s; }
+  .codelink:hover { border-color: var(--accent); background: rgba(76,194,255,0.08); }
+  .codelink .arrow { color: var(--dim); }
+  .codelink.copy { color: var(--ink); cursor: pointer; border: 1px solid var(--line); }
+  .codelink.copy.done { color: var(--accent2); border-color: var(--accent2); }
+  .oneliner { margin-top: 10px; padding: 8px 10px; background: #0b0f14; border: 1px solid var(--line); border-radius: 6px; font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: pre-wrap; word-break: break-all; display: none; }
+  .oneliner.show { display: block; color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Atlas Mission Control <span class="sub">· backend at a glance</span></h1>
+    <span class="pill"><span id="connDot" class="dot unknown"></span><span id="connText">connecting</span></span>
+    <span class="pill" id="upPill"><span class="dot up"></span><span id="upText">? up</span></span>
+    <span class="pill" id="agePill" title="seconds since last successful fetch">age <span id="ageText">?</span>s</span>
+    <a class="pill" href="atlas-setup.html" style="text-decoration:none">boot ui</a>
+    <a class="pill" href="http://localhost:3072/status" target="_blank" rel="noopener" style="text-decoration:none">raw json</a>
+  </header>
+  <p class="muted">Polls <span class="pill">:3072/status</span> every 2s. Every ported service, the governance daemon heartbeat, the Atlas scheduled tasks, and any orphaned listeners.</p>
+
+  <div class="panel">
+    <h2>Autostart <span class="count" id="autostartCount">settings</span></h2>
+    <div class="setting">
+      <label class="switch" title="Open dashboards when Atlas-Autostart cron fires (every 15 min)">
+        <input type="checkbox" id="tglOpenDash" disabled />
+        <span class="slider"></span>
+      </label>
+      <div class="label">
+        <div class="name">openDashboardsOnCron</div>
+        <div class="desc">If ON, the Atlas-Autostart scheduled task opens Chrome tabs (<span class="mono" id="dashUrlsPreview">…</span>) every 15 min. If OFF, tabs only open when you run <span style="font-family:var(--mono)">start_atlas.ps1 -OpenDashboards</span> manually.</div>
+      </div>
+      <div class="value">
+        <span class="state" id="tglState">?</span>
+      </div>
+    </div>
+    <div class="codelinks">
+      <a class="codelink" id="linkScript" href="#">edit start_atlas.ps1:104 <span class="arrow">→</span></a>
+      <a class="codelink" id="linkSettings" href="#">edit .atlas-settings.json <span class="arrow">→</span></a>
+      <a class="codelink" id="linkTask" href="#" title="Open Task Scheduler to Atlas-Autostart">edit Atlas-Autostart task <span class="arrow">→</span></a>
+      <span class="codelink copy" id="btnCopy">copy toggle one-liner</span>
+    </div>
+    <div class="oneliner" id="oneliner"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Services <span class="count" id="svcCount">?</span></h2>
+    <div class="grid" id="svcGrid"><div class="muted"><span class="spin"></span> loading</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Governance daemon <span class="count" id="daemonCount">delta-kernel :3001</span></h2>
+    <div id="daemonBox" class="muted">loading</div>
+  </div>
+
+  <div class="panel">
+    <h2>Scheduled tasks <span class="count" id="taskCount">?</span></h2>
+    <div id="taskList"><div class="muted">loading</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Orphan listeners <span class="count" id="orphanCount">?</span></h2>
+    <div id="orphanBox" class="muted">loading</div>
+  </div>
+</div>
+
+<script>
+const HUB = "http://localhost:3072";
+const POLL_MS = 2000;
+let lastOk = 0;
+let ageTimer = null;
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+function setConn(state, text) {
+  const dot = $("connDot");
+  dot.className = "dot " + state;
+  $("connText").textContent = text;
+}
+
+function fmtAge(sec) {
+  if (sec == null) return "?";
+  if (sec < 60) return sec + "s";
+  if (sec < 3600) return Math.floor(sec/60) + "m";
+  return Math.floor(sec/3600) + "h";
+}
+
+function renderServices(services) {
+  const grid = $("svcGrid");
+  grid.innerHTML = "";
+  const up = services.filter(s => s.up).length;
+  $("svcCount").textContent = `${up}/${services.length} up`;
+  $("upText").textContent = `${up}/${services.length} up`;
+  $("upPill").querySelector(".dot").className = "dot " + (up === services.length ? "up" : up === 0 ? "down" : "stale");
+  for (const s of services) {
+    const card = el("div", "svc" + (s.up ? "" : " down"));
+    const top = el("div", "top");
+    top.appendChild(el("span", "dot " + (s.up ? "up" : "down")));
+    top.appendChild(el("span", "nm", s.name));
+    top.appendChild(el("span", "port", ":" + s.port));
+    card.appendChild(top);
+    const pids = s.up && s.pids && s.pids.length
+      ? "pid " + s.pids.join(", ")
+      : (s.up ? "up" : "down");
+    card.appendChild(el("div", "pids", pids));
+    grid.appendChild(card);
+  }
+}
+
+function renderDaemon(d) {
+  const box = $("daemonBox");
+  box.innerHTML = "";
+  if (!d || !d.reachable) {
+    box.className = "err";
+    box.textContent = d && d.error ? d.error : "delta-kernel :3001 unreachable";
+    return;
+  }
+  box.className = "heartbeat";
+  const running = el("div", "kv");
+  running.appendChild(el("div", "k", "running"));
+  const rv = el("div", "v", d.running ? "yes" : "no");
+  rv.style.color = d.running ? "var(--accent2)" : "var(--red)";
+  running.appendChild(rv);
+  box.appendChild(running);
+
+  if (d.last_heartbeat) {
+    const beat = el("div", "kv");
+    beat.appendChild(el("div", "k", "last heartbeat"));
+    const ageSec = Math.max(0, Math.floor((Date.now() - d.last_heartbeat) / 1000));
+    const bv = el("div", "v", fmtAge(ageSec) + " ago");
+    if (ageSec > 60) bv.style.color = "var(--amber)";
+    if (ageSec > 300) bv.style.color = "var(--red)";
+    beat.appendChild(bv);
+    box.appendChild(beat);
+  }
+
+  const job = el("div", "kv");
+  job.appendChild(el("div", "k", "current job"));
+  job.appendChild(el("div", "v", d.current_job ? String(d.current_job) : "idle"));
+  box.appendChild(job);
+}
+
+function renderTasks(payload) {
+  const list = $("taskList");
+  list.innerHTML = "";
+  if (payload && payload.error) {
+    const e = el("div", "err", payload.error);
+    list.appendChild(e);
+    $("taskCount").textContent = "error";
+    return;
+  }
+  const tasks = (payload && payload.tasks) || [];
+  $("taskCount").textContent = tasks.length + " tasks";
+  if (!tasks.length) { list.appendChild(el("div", "empty", "no Atlas tasks registered")); return; }
+  for (const t of tasks) {
+    const row = el("div", "task");
+    row.appendChild(el("div", "name", t.name || "?"));
+    const state = String(t.state || "?").toLowerCase();
+    const stateEl = el("div", "state " + state, t.state || "?");
+    row.appendChild(stateEl);
+    const trigs = Array.isArray(t.triggers) ? t.triggers.join(" · ") : "";
+    row.appendChild(el("div", "trigs", trigs));
+    list.appendChild(row);
+  }
+}
+
+function renderOrphans(o) {
+  const box = $("orphanBox");
+  box.innerHTML = "";
+  if (o && o.error) { box.className = "err"; box.textContent = o.error; $("orphanCount").textContent = "error"; return; }
+  const count = (o && o.count) || 0;
+  $("orphanCount").textContent = count;
+  box.className = "muted";
+  if (!count) { box.textContent = "no orphaned listeners on Atlas ports"; return; }
+  const list = el("div");
+  for (const c of (o.candidates || [])) {
+    const line = el("div", "task");
+    line.appendChild(el("div", "name", c.name || ("pid " + c.pid)));
+    line.appendChild(el("div", "state", ":" + c.port));
+    line.appendChild(el("div", "trigs", c.cmd ? String(c.cmd).slice(0, 120) : ""));
+    list.appendChild(line);
+  }
+  box.appendChild(list);
+}
+
+function renderPanelsOffline(reason) {
+  /* When the hub is unreachable, propagate the offline state into every panel
+     so users don't stare at "loading" spinners forever. Each panel gets the
+     same one-line reason; the top pill still owns the machine-parseable
+     hub-status signal. See fest atlas-doors-AD0001/003_TRUST TODO. */
+  const msg = reason || "atlas-map-api :3072 offline";
+  const svcGrid = $("svcGrid");
+  svcGrid.innerHTML = "";
+  svcGrid.appendChild(el("div", "empty", msg + " — start with scripts/start_atlas.ps1"));
+  $("svcCount").textContent = "offline";
+  $("upText").textContent = "?/? up";
+  $("upPill").querySelector(".dot").className = "dot down";
+  const daemonBox = $("daemonBox");
+  daemonBox.className = "err";
+  daemonBox.textContent = msg;
+  $("daemonCount").textContent = "unreachable";
+  const taskList = $("taskList");
+  taskList.innerHTML = "";
+  taskList.appendChild(el("div", "empty", msg));
+  $("taskCount").textContent = "offline";
+  const orphanBox = $("orphanBox");
+  orphanBox.className = "muted";
+  orphanBox.textContent = msg;
+  $("orphanCount").textContent = "offline";
+}
+
+async function poll() {
+  try {
+    const r = await fetch(HUB + "/status", { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+    lastOk = Date.now();
+    setConn("up", "hub online");
+    renderServices(data.services || []);
+    renderDaemon(data.daemon);
+    renderTasks(data.scheduled_tasks);
+    renderOrphans(data.orphans);
+  } catch (e) {
+    setConn("down", "hub unreachable · " + e.message);
+    renderPanelsOffline("hub unreachable · " + e.message);
+  }
+}
+
+function tickAge() {
+  if (!lastOk) { $("ageText").textContent = "?"; return; }
+  const s = Math.floor((Date.now() - lastOk) / 1000);
+  $("ageText").textContent = s;
+  const pill = $("agePill");
+  pill.querySelector(".dot") || pill.prepend(el("span", "dot"));
+  const dot = pill.querySelector(".dot");
+  dot.className = "dot " + (s < 5 ? "up" : s < 30 ? "stale" : "down");
+}
+
+poll();
+setInterval(poll, POLL_MS);
+ageTimer = setInterval(tickAge, 1000);
+
+/* ---------------- Autostart panel ---------------- */
+/* Repo lives here on this box; used for vscode:// deep links. */
+const REPO_ROOT_URI = "C:/Users/bruke/Pre%20Atlas";
+const REPO_ROOT_WIN = "C:\\Users\\bruke\\Pre Atlas";
+const SETTINGS_PATH_URI = REPO_ROOT_URI + "/.atlas-settings.json";
+const SCRIPT_PATH_URI   = REPO_ROOT_URI + "/scripts/start_atlas.ps1";
+const SETTINGS_PATH_WIN = REPO_ROOT_WIN + "\\.atlas-settings.json";
+
+/* vscode:// URIs open in VSCode. `:LINE` puts the cursor there. */
+$("linkScript").href   = `vscode://file/${SCRIPT_PATH_URI}:104`;
+$("linkSettings").href = `vscode://file/${SETTINGS_PATH_URI}`;
+$("linkTask").href     = "javascript:void(0)";
+$("linkTask").addEventListener("click", (e) => {
+  e.preventDefault();
+  copyOneLiner('taskschd.msc /s   # then find Atlas-Autostart in the top-level list');
+});
+
+function toggleOneLiner(nextState) {
+  /* Exact PowerShell one-liner that persists the flip. */
+  return `powershell -NoProfile -Command "$p='${SETTINGS_PATH_WIN}'; $s=Get-Content $p -Raw | ConvertFrom-Json; $s.openDashboardsOnCron=$${nextState ? 'true' : 'false'}; ($s | ConvertTo-Json -Depth 5) | Set-Content $p; Write-Host 'openDashboardsOnCron -> ' $s.openDashboardsOnCron"`;
+}
+
+async function loadSettings() {
+  /* Best-effort: works when the page is served from any origin that can reach
+     .atlas-settings.json. If opened as a local file:// or served from a host
+     that can't see the JSON, we fall back to disabled + a hint. */
+  const candidates = [
+    "./.atlas-settings.json",              // same-directory serve
+    "/.atlas-settings.json",               // root serve
+    "file:///" + SETTINGS_PATH_URI,        // file:// direct (may be blocked)
+  ];
+  for (const url of candidates) {
+    try {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) continue;
+      const data = await r.json();
+      return { data, source: url };
+    } catch (_) { /* try next */ }
+  }
+  return { data: null, source: null };
+}
+
+function renderAutostart(settings) {
+  const tgl = $("tglOpenDash");
+  const state = $("tglState");
+  const urlsEl = $("dashUrlsPreview");
+  const countEl = $("autostartCount");
+
+  if (!settings) {
+    tgl.disabled = true;
+    tgl.checked = false;
+    state.textContent = "unreadable";
+    state.className = "state off";
+    urlsEl.textContent = "(settings file not reachable from this origin)";
+    countEl.textContent = "read-only";
+    return;
+  }
+  tgl.disabled = false;
+  tgl.checked = !!settings.openDashboardsOnCron;
+  state.textContent = tgl.checked ? "ON — cron opens tabs" : "OFF — quiet";
+  state.className = "state " + (tgl.checked ? "on" : "off");
+  urlsEl.textContent = (settings.dashboardUrls || []).join("  ");
+  countEl.textContent = "loaded";
+}
+
+function copyOneLiner(text) {
+  const box = $("oneliner");
+  box.textContent = text;
+  box.classList.add("show");
+  try {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $("btnCopy");
+      btn.textContent = "copied ✓";
+      btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy toggle one-liner"; btn.classList.remove("done"); }, 1600);
+    });
+  } catch (_) { /* older browsers: user selects manually */ }
+}
+
+let currentSettings = null;
+loadSettings().then(({ data }) => {
+  currentSettings = data;
+  renderAutostart(data);
+});
+
+$("tglOpenDash").addEventListener("change", (e) => {
+  /* We can READ the JSON but can't WRITE it from a static page.
+     So the toggle is a "propose" — we display + copy the exact one-liner
+     that persists the flip. Refresh the page to confirm. */
+  const nextState = e.target.checked;
+  copyOneLiner(toggleOneLiner(nextState));
+  const state = $("tglState");
+  state.textContent = nextState ? "ON — run pasted command to persist" : "OFF — run pasted command to persist";
+  state.className = "state " + (nextState ? "on" : "off");
+});
+
+$("btnCopy").addEventListener("click", () => {
+  const nextState = !(currentSettings && currentSettings.openDashboardsOnCron);
+  copyOneLiner(toggleOneLiner(nextState));
+});
+</script>
+</body>
+</html>

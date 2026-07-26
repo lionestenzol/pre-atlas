@@ -1,0 +1,39 @@
+{
+  "surface": "uasc-executor",
+  "headline": "HMAC-authenticated UASC command executor that runs governance-issued command profiles (port 3008)",
+  "capabilities": [
+    {
+      "id": "health",
+      "label": "Check the executor health",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /health"
+    },
+    {
+      "id": "list_commands",
+      "label": "List available commands and their profiles",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /commands"
+    },
+    {
+      "id": "list_runs",
+      "label": "View recent execution history",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /runs"
+    },
+    {
+      "id": "exec_command",
+      "label": "Execute a command profile (HMAC-signed)",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 3,
+      "invoke": "POST /exec",
+      "needs": ["cmd"]
+    }
+  ]
+}

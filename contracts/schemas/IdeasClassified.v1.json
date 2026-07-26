@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "IdeasClassified.v1",
+  "title": "Ideas Classified",
+  "description": "Classified, hierarchically structured ideas produced by agent_classifier.py from IdeasDeduplicated.v1 input. Adds vision clusters, parent-child relationships, dependencies, alignment scores, status detection, and skill extraction on top of the deduplicated canonical ideas.",
+  "type": "object",
+  "required": ["metadata", "vision_clusters", "ideas", "hierarchy_tree"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["generated_at", "total_ideas", "vision_clusters_count"],
+      "properties": {
+        "generated_at": { "type": "string" },
+        "total_ideas": { "type": "integer" },
+        "vision_clusters_count": { "type": "integer" },
+        "status_breakdown": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "parent_child_relationships": { "type": "integer" },
+        "ideas_with_dependencies": { "type": "integer" }
+      }
+    },
+    "vision_clusters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["cluster_id", "name", "size", "idea_ids"],
+        "properties": {
+          "cluster_id": { "type": "string" },
+          "name": { "type": "string" },
+          "size": { "type": "integer" },
+          "idea_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "ideas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "canonical_id",
+          "canonical_title",
+          "category",
+          "mention_count",
+          "status"
+        ],
+        "properties": {
+          "canonical_id": { "type": "string" },
+          "canonical_title": { "type": "string" },
+          "canonical_text": { "type": "string" },
+          "category": { "type": "string" },
+          "mention_count": { "type": "integer", "minimum": 1 },
+          "status": { "type": "string" },
+          "skills_required": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "alignment_score": { "type": "number" },
+          "alignment_breakdown": { "type": "object" },
+          "vision_cluster": { "type": ["string", "null"] },
+          "parent_idea": { "type": ["string", "null"] },
+          "child_ideas": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "related_ideas": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "version_timeline": { "type": "array" },
+          "all_key_quotes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "combined_signals": { "type": "object" },
+          "embedding": { "type": "string" }
+        }
+      }
+    },
+    "hierarchy_tree": {
+      "type": "object",
+      "required": ["roots", "children"],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "children": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

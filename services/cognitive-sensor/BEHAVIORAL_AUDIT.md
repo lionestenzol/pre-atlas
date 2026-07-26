@@ -1,6 +1,6 @@
 # BEHAVIORAL AUDIT: Full System Analysis
 
-**Generated:** 2026-04-05 08:01
+**Generated:** 2026-05-27 09:46
 **Data Sources:** 93,898 messages across 1,397 conversations
 **Analysis Files:** 8 behavioral profiles + idea registry + conversation classifications
 **Questions Answered:** 30 across 6 layers
@@ -43,12 +43,12 @@ AI (5,331), Code (3,138), Life (1,774), Money (1,500), School (1,273), Business 
 **Conversation domain distribution (classified by AI):**
 | Domain | Count | % |
 |--------|-------|---|
-| technical | 427 | 34.2% |
-| personal | 285 | 22.8% |
-| processing | 191 | 15.3% |
-| learning | 179 | 14.3% |
-| business | 110 | 8.8% |
-| execution | 58 | 4.6% |
+| technical | 1660 | 27.4% |
+| personal | 1266 | 20.9% |
+| processing | 1231 | 20.3% |
+| learning | 875 | 14.5% |
+| business | 677 | 11.2% |
+| execution | 341 | 5.6% |
 
 ### Q2. Actual Values vs Stated Values
 
@@ -161,10 +161,10 @@ AI (5,331), Code (3,138), Life (1,774), Money (1,500), School (1,273), Business 
 **Conversation outcome distribution (what your conversations actually produce):**
 | Outcome | Count | % |
 |---------|-------|---|
-| looped | 643 | 51.4% |
-| produced | 233 | 18.6% |
-| resolved | 219 | 17.5% |
-| abandoned | 155 | 12.4% |
+| looped | 3048 | 50.4% |
+| produced | 1491 | 24.6% |
+| abandoned | 781 | 12.9% |
+| resolved | 730 | 12.1% |
 
 ### Q9. Over-functioning vs Under-functioning
 
@@ -205,21 +205,21 @@ AI (5,331), Code (3,138), Life (1,774), Money (1,500), School (1,273), Business 
 
 | Project | Mentions | Status | Category | Latest Activity | What Moved It | What Stalled It |
 |---------|----------|--------|----------|-----------------|--------------|----------------|
-| Code to Numeric Logic | 31 | idea | ai_automation | 2025-03-07 | Curiosity + obsession | New idea emerged |
+| GPT-5 features overview | 65 | stalled | ai_automation | 2025-08-08 | Curiosity + obsession | Execution resistance |
+| Study Mode Launcher Analysis | 25 | stalled | ai_automation | 2025-06-28 | Curiosity + obsession | Execution resistance |
 | SaaS Market Growth Trends | 22 | idea | saas_product | 2025-02-08 | Curiosity + obsession | New idea emerged |
-| Compensation Strategy Overview | 11 | idea | career_job | 2024-09-06 | Curiosity + obsession | New idea emerged |
-| Bigo Banter Comeback | 9 | idea | ai_automation | 2025-03-12 | Curiosity + obsession | New idea emerged |
-| Power Dynamics Mastery Guide | 4 | idea | ai_automation | 2025-02-12 | Single exploration | New idea emerged |
-| ChatGPT o1 Overview | 4 | idea | ai_automation | 2025-02-27 | Single exploration | New idea emerged |
-| Quiz Conversion Workflow | 4 | idea | ecommerce | 2025-02-21 | Single exploration | New idea emerged |
-| Custom GPT JSON Setup | 3 | idea | content_media | 2025-02-22 | Single exploration | New idea emerged |
-| Python Docs API Access | 3 | stalled | ai_automation | 2025-03-09 | Single exploration | Execution resistance |
-| HTML to Markdown Conversion | 3 | idea | technical_project | 2025-01-27 | Single exploration | New idea emerged |
-| Lyrics Analysis Help | 3 | idea | ai_automation | 2024-08-27 | Single exploration | New idea emerged |
-| Bigo Banter Comeback | 3 | stalled | technical_project | 2025-03-12 | Single exploration | Execution resistance |
-| ChatGPT o1 Overview | 3 | stalled | ai_automation | 2025-02-27 | Single exploration | Execution resistance |
-| Sales Approach Review | 3 | idea | consulting_service | 2024-12-13 | Single exploration | New idea emerged |
-| Document Processing with AI | 2 | idea | ai_automation | 2024-11-28 | Single exploration | New idea emerged |
+| AI HTML Processing Idea | 14 | idea | ai_automation | 2025-03-13 | Curiosity + obsession | New idea emerged |
+| Premium tool recommendations | 13 | stalled | ai_automation | 2025-10-28 | Curiosity + obsession | Execution resistance |
+| Compensation Strategy Overview | 10 | idea | career_job | 2024-09-06 | Curiosity + obsession | New idea emerged |
+| Premium tool recommendations | 7 | idea | ai_automation | 2025-10-28 | Curiosity + obsession | New idea emerged |
+| D099 study guide | 6 | idea | framework_system | 2025-11-30 | Curiosity + obsession | New idea emerged |
+| Fixing Bad JSONs | 6 | stalled | ai_automation | 2025-06-05 | Curiosity + obsession | Execution resistance |
+| D099 Course Completion Strategy | 6 | idea | consulting_service | 2025-06-08 | Curiosity + obsession | New idea emerged |
+| Venture Portfolio Architecture | 5 | started | ai_automation | 2026-01-04 | Single exploration | — |
+| Custom GPT Adaptation Plan | 5 | idea | ai_automation | 2025-04-21 | Single exploration | New idea emerged |
+| Vectorized Semantic Memory | 5 | started | ai_automation | 2026-01-04 | Single exploration | — |
+| Create download version | 5 | idea | ai_automation | 2025-11-14 | Single exploration | New idea emerged |
+| Branch · Branch · Branch · Screen visibility  | 4 | started | ai_automation | 2025-12-31 | Single exploration | — |
 
 ### Q12. Default Stall Point
 
@@ -262,18 +262,18 @@ IDEA  →  PLAN  →  [STALL]  →  BUILD  →  SHIP
 **Where execution actually happens (domain × outcome cross-tab):**
 | Domain × Outcome | Count |
 |-----------------|-------|
-| personal → looped | 226 |
-| technical → looped | 142 |
-| processing → looped | 132 |
-| technical → produced | 116 |
-| technical → resolved | 108 |
-| learning → looped | 74 |
-| technical → abandoned | 61 |
-| learning → resolved | 56 |
-| business → looped | 40 |
-| learning → produced | 35 |
-| processing → abandoned | 33 |
-| business → produced | 33 |
+| personal → looped | 901 |
+| processing → looped | 809 |
+| technical → looped | 619 |
+| technical → produced | 612 |
+| learning → looped | 386 |
+| business → produced | 267 |
+| technical → resolved | 247 |
+| processing → abandoned | 221 |
+| business → looped | 217 |
+| learning → produced | 208 |
+| learning → resolved | 194 |
+| technical → abandoned | 182 |
 
 ### Q14. Avoidance & Delay Patterns
 
@@ -407,11 +407,11 @@ IDEA  →  PLAN  →  [STALL]  →  BUILD  →  SHIP
 **Conversation emotional trajectory distribution:**
 | Trajectory | Count | % |
 |-----------|-------|---|
-| neutral | 600 | 48.0% |
-| negative_arc | 278 | 22.2% |
-| positive_arc | 246 | 19.7% |
-| mixed | 120 | 9.6% |
-| spiral | 6 | 0.5% |
+| neutral | 3323 | 54.9% |
+| positive_arc | 1197 | 19.8% |
+| negative_arc | 1084 | 17.9% |
+| mixed | 417 | 6.9% |
+| spiral | 29 | 0.5% |
 
 **Signature phrase:** "I feel some type of way" (34x) — emotional awareness without specific labeling.
 

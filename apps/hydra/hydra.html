@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HYDRA — crawl GitHub, eat capability</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg0: #0a0d12;
+      --bg1: #05070a;
+      --panel: rgba(10, 14, 20, 0.82);
+      --line: rgba(255,255,255,0.10);
+      --text: #e8eef5;
+      --dim: rgba(232,238,245,0.55);
+      /* stone-type colors */
+      --t-technique: #3ba7ff;
+      --t-component: #3bff7a;
+      --t-doctrine:  #ffde3b;
+      --t-tool:      #ff8c3b;
+      --t-lead:      #9d3bff;
+    }
+
+    body {
+      overflow: hidden;
+      background: radial-gradient(circle at 40% 35%, #11161f 0%, var(--bg1) 100%);
+      font-family: "Segoe UI", system-ui, Arial, sans-serif;
+      color: var(--text);
+      touch-action: none;
+    }
+
+    canvas { display: block; background: transparent; }
+
+    /* ---------- HUD top-left ---------- */
+    #hud {
+      position: fixed; top: 14px; left: 14px; z-index: 10;
+      width: 340px; max-width: calc(100vw - 28px);
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 16px; padding: 14px 16px; backdrop-filter: blur(10px);
+    }
+    #hud h1 {
+      font-size: 18px; letter-spacing: 3px; font-weight: 800;
+      display: flex; align-items: center; gap: 8px;
+    }
+    #hud h1 .v { font-size: 10px; letter-spacing: 1px; color: var(--dim); font-weight: 600; }
+    .row { display: flex; gap: 6px; margin-top: 10px; }
+    .row input {
+      flex: 1; min-width: 0; background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line); color: var(--text);
+      border-radius: 9px; padding: 8px 10px; font-size: 13px; outline: none;
+    }
+    .row input::placeholder { color: rgba(232,238,245,0.35); }
+    .btn {
+      background: #fff; color: #000; border: none; border-radius: 9px;
+      padding: 8px 14px; font-weight: 700; font-size: 13px; cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn.ghost { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid var(--line); }
+    .btn:active { transform: translateY(1px); }
+    .btn.on { background: rgba(59,255,122,0.20); color: #bfffd4; border: 1px solid var(--t-component); }
+    .chk { font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; }
+    .chk input { accent-color: var(--t-component); }
+
+    .label { font-size: 10px; letter-spacing: 1.5px; color: var(--dim); margin: 12px 0 6px; text-transform: uppercase; }
+
+    /* direction selector */
+    #dirs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .dir {
+      border: 1px solid var(--line); border-radius: 9px; background: rgba(255,255,255,0.04);
+      padding: 7px 6px; font-size: 11px; cursor: pointer; text-align: center; position: relative;
+      transition: background .12s, border-color .12s;
+    }
+    .dir small { display: block; font-size: 9px; color: var(--dim); margin-top: 2px; }
+    .dir.active { background: rgba(59,167,255,0.18); border-color: var(--t-technique); }
+    .dir.disabled { opacity: 0.4; cursor: not-allowed; }
+    .dir.disabled::after {
+      content: "v2"; position: absolute; top: 3px; right: 5px; font-size: 8px;
+      color: var(--t-lead); font-weight: 800;
+    }
+
+    #status { font-size: 11.5px; color: var(--dim); margin-top: 10px; min-height: 15px; line-height: 1.4; }
+    #status .err { color: #ff6b6b; }
+    #status .ok { color: var(--t-component); }
+    #rate { font-size: 10px; color: var(--dim); margin-top: 4px; }
+
+    /* ---------- current head card ---------- */
+    #head {
+      position: fixed; bottom: 14px; left: 14px; z-index: 10; width: 340px;
+      max-width: calc(100vw - 28px);
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 16px; padding: 12px 16px; backdrop-filter: blur(10px);
+    }
+    #head .who { font-size: 14px; font-weight: 700; word-break: break-all; }
+    #head .desc { font-size: 12px; color: var(--dim); margin-top: 4px; line-height: 1.4; }
+    #head .meta { font-size: 11px; color: var(--dim); margin-top: 6px; display: flex; gap: 12px; flex-wrap: wrap; }
+    #head .meta b { color: var(--text); font-weight: 600; }
+    #aimHint { font-size: 11px; color: var(--t-technique); margin-top: 8px; min-height: 14px; }
+
+    /* ---------- treasury (tail) right ---------- */
+    #treasury {
+      position: fixed; top: 14px; right: 14px; bottom: 14px; z-index: 10; width: 320px;
+      max-width: calc(100vw - 28px);
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 16px; backdrop-filter: blur(10px);
+      display: flex; flex-direction: column;
+    }
+    #treasury .thead {
+      padding: 14px 16px 10px; border-bottom: 1px solid var(--line);
+      display: flex; align-items: baseline; justify-content: space-between;
+    }
+    #treasury .thead .t { font-size: 13px; letter-spacing: 2px; font-weight: 800; }
+    #treasury .thead .n { font-size: 11px; color: var(--dim); }
+    #stones { flex: 1; overflow-y: auto; padding: 8px 10px; }
+    #stones::-webkit-scrollbar { width: 8px; }
+    #stones::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 8px; }
+    .stone {
+      border: 1px solid var(--line); border-left-width: 3px; border-radius: 10px;
+      padding: 9px 11px; margin-bottom: 8px; background: rgba(255,255,255,0.03);
+    }
+    .stone .top { display: flex; align-items: center; gap: 6px; }
+    .stone .type {
+      font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+      padding: 2px 6px; border-radius: 5px; cursor: pointer; user-select: none;
+    }
+    .stone .name { font-size: 12.5px; font-weight: 700; word-break: break-all; flex: 1; }
+    .stone .sig { font-size: 10px; color: var(--dim); }
+    .stone .send { font-size: 13px; cursor: pointer; opacity: 0.65; user-select: none; padding: 0 2px; }
+    .stone .send:hover { opacity: 1; }
+    .stone .badge { font-size: 9px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; padding: 1px 5px; border-radius: 4px; }
+    .badge.secured { background: rgba(59,255,122,0.18); color: var(--t-component); }
+    .badge.dropped { background: rgba(255,255,255,0.10); color: var(--dim); }
+    .badge.err, .badge.offline { background: rgba(255,107,107,0.18); color: #ff8c8c; }
+    .stone .digest { margin-top: 7px; padding: 7px 9px; border-radius: 8px; background: rgba(59,255,122,0.07); border: 1px solid rgba(59,255,122,0.22); font-size: 11px; }
+    .stone .digest .hd { color: var(--t-component); font-weight: 700; letter-spacing: .3px; }
+    .stone .digest .langs { color: var(--dim); margin-top: 2px; }
+    .stone .digest .file { color: var(--text); margin-top: 3px; }
+    .stone .digest .file b { color: var(--t-component); font-weight: 700; }
+    .stone .digest .sym { color: var(--dim); }
+    .stone .digesting { margin-top: 7px; font-size: 11px; color: var(--t-component); }
+    .stone .digesting::before { content: "🧬 "; }
+    .stone .digestErr { margin-top: 7px; font-size: 11px; color: #ff8c8c; }
+    .stone .what { font-size: 11px; color: var(--dim); margin-top: 4px; line-height: 1.4; }
+    .stone .pairs {
+      font-size: 11px; margin-top: 6px; width: 100%;
+      background: rgba(255,255,255,0.05); border: 1px dashed var(--line);
+      border-radius: 6px; color: var(--text); padding: 5px 7px; outline: none; resize: vertical;
+      min-height: 28px; font-family: inherit;
+    }
+    .stone .pairs::placeholder { color: rgba(232,238,245,0.3); }
+    #tfoot { padding: 10px 14px; border-top: 1px solid var(--line); display: flex; gap: 8px; }
+    #empty { color: var(--dim); font-size: 12px; text-align: center; padding: 24px 12px; line-height: 1.5; }
+
+    @media (max-width: 880px) {
+      #treasury { position: fixed; top: auto; bottom: 14px; right: 14px; left: 14px; width: auto; height: 40vh; }
+      #head { bottom: calc(40vh + 22px); }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- TOP-LEFT control -->
+  <div id="hud">
+    <h1>🐍 HYDRA <span class="v">crawl · eat · grow</span></h1>
+    <div class="row">
+      <input id="seed" placeholder="owner/repo  (e.g. tursodatabase/turso)" value="tursodatabase/turso" />
+      <button class="btn" id="go">Drop</button>
+    </div>
+
+    <div class="label">Direction · edge rule (switch anytime to turn)</div>
+    <div id="dirs">
+      <div class="dir active" data-dir="tour">Tour a mind<small>same owner</small></div>
+      <div class="dir" data-dir="wander">Wander<small>shared topic</small></div>
+      <div class="dir" data-dir="bloodline">Bloodline<small>forks / parent</small></div>
+      <div class="dir disabled" data-dir="drill" title="Drill (parse manifest deps) — coming in v2">Drill<small>depends on</small></div>
+      <div class="dir disabled" data-dir="climb" title="Climb (dependents) — no clean GitHub JSON API; v2 via scrape">Climb<small>depended on by</small></div>
+      <div class="dir" data-dir="self"  title="Tour your own GitHub account">Tour me<small>lionestenzol</small></div>
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <input id="token" placeholder="optional GitHub token → 5000 req/hr" type="password" />
+    </div>
+
+    <div class="row" style="margin-top:8px; align-items:center;">
+      <button class="btn ghost" id="auto" style="flex:1">▶ Auto-explore</button>
+      <label class="chk"><input type="checkbox" id="autoDrop" /> auto&rarr;DropList</label>
+    </div>
+    <div class="row" style="margin-top:8px; align-items:center;">
+      <input id="engineUrl" placeholder="HYDRA engine URL" value="http://127.0.0.1:8899" />
+      <label class="chk" title="On each eat, digest the repo through delta-scp"><input type="checkbox" id="digestOnEat" checked /> 🧬 digest</label>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <input id="dropUrl" placeholder="DropList /api/drop URL" value="http://127.0.0.1:3073/api/drop" />
+    </div>
+
+    <div id="status">Drop the head on a seed repo to begin.</div>
+    <div id="rate"></div>
+  </div>
+
+  <!-- BOTTOM-LEFT current repo -->
+  <div id="head">
+    <div class="who" id="headWho">—</div>
+    <div class="desc" id="headDesc"></div>
+    <div class="meta" id="headMeta"></div>
+    <div id="aimHint"></div>
+  </div>
+
+  <!-- RIGHT treasury -->
+  <div id="treasury">
+    <div class="thead">
+      <span class="t">THE TAIL</span>
+      <span class="n" id="tailCount">0 stones</span>
+    </div>
+    <div id="stones"><div id="empty">No stones yet.<br>Aim at a glowing dot and hop (click / Space) to eat your first capability.</div></div>
+    <div id="tfoot">
+      <button class="btn ghost" id="dropAll" style="flex:1.4" title="Send every un-sent stone to DropList">&rarr; DropList</button>
+      <button class="btn ghost" id="export" style="flex:1">Export</button>
+      <button class="btn ghost" id="clear" title="Clear the tail">Reset</button>
+    </div>
+  </div>
+
+  <script>
+  // ====================================================================
+  // HYDRA v1 — a snake that crawls GitHub. Each repo is a dot; you aim the
+  // head at the next dot, it hops, eats a STONE (one capability), and the
+  // stone joins the tail. Catalog depth: stones are recorded, not extracted.
+  // Self-contained. Hits api.github.com directly (CORS-enabled).
+  // ====================================================================
+
+  "use strict";
+
+  // ---------- DOM ----------
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const $ = (id) => document.getElementById(id);
+
+  let W, H;
+  function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+  addEventListener("resize", resize); resize();
+
+  // ---------- state ----------
+  const STONE_TYPES = ["technique", "component", "doctrine", "tool", "lead"];
+  const TYPE_COLOR = {
+    technique: getCSS("--t-technique"), component: getCSS("--t-component"),
+    doctrine: getCSS("--t-doctrine"), tool: getCSS("--t-tool"), lead: getCSS("--t-lead"),
+  };
+  function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  let direction = "tour";
+  let current = null;          // current repo node {repo, x, y}
+  let neighbors = [];          // [{repo, x, y, vx, ...}]
+  let trail = [];              // visited repo nodes (world positions) — the snake's spine
+  let stones = [];             // eaten capabilities (the tail data)
+  let camera = { x: 0, y: 0 };
+  let mouse = { x: 0, y: 0 };
+  let busy = false;
+  let hopAnim = null;          // {from, to, t} while head slithers to a dot
+
+  let visited = new Set();     // repos already crawled (auto-explore avoids them)
+  let auto = false, autoTimer = null;   // autopilot
+  let lastRem = null;          // last seen GitHub rate-limit remaining
+
+  const RING = 290;            // radius neighbors sit at, in world units
+  const AUTO_DIRS = ["tour", "wander", "bloodline"];  // rotation order for auto-explore
+  const LS_KEY = "hydra_v1";
+
+  // ---------- persistence ----------
+  function save() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        direction, stones,
+        trail: trail.map(n => ({ repo: n.repo, x: n.x, y: n.y })),
+        current: current ? { repo: current.repo, x: current.x, y: current.y } : null,
+        visited: [...visited],
+        dropUrl: $("dropUrl").value,
+        autoDrop: $("autoDrop").checked,
+        engineUrl: $("engineUrl").value,
+        digestOnEat: $("digestOnEat").checked,
+      }));
+    } catch (e) {}
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return false;
+      const d = JSON.parse(raw);
+      stones = d.stones || [];
+      direction = d.direction || "tour";
+      trail = (d.trail || []).map(n => ({ repo: n.repo, x: n.x, y: n.y }));
+      current = d.current ? { repo: d.current.repo, x: d.current.x, y: d.current.y } : null;
+      visited = new Set(d.visited || []);
+      if (d.dropUrl) $("dropUrl").value = d.dropUrl;
+      if (d.autoDrop) $("autoDrop").checked = true;
+      if (d.engineUrl) $("engineUrl").value = d.engineUrl;
+      if (d.digestOnEat === false) $("digestOnEat").checked = false;
+      return !!current;
+    } catch (e) { return false; }
+  }
+
+  // ---------- GitHub API ----------
+  function ghHeaders() {
+    const h = { "Accept": "application/vnd.github+json" };
+    const tok = $("token").value.trim();
+    if (tok) h["Authorization"] = "Bearer " + tok;
+    return h;
+  }
+  async function gh(path) {
+    const res = await fetch("https://api.github.com/" + path, { headers: ghHeaders() });
+    const rem = res.headers.get("x-ratelimit-remaining");
+    const lim = res.headers.get("x-ratelimit-limit");
+    if (rem !== null) { lastRem = +rem; $("rate").textContent = `GitHub API: ${rem}/${lim} requests left this hour`; }
+    if (res.status === 403 && rem === "0") throw new Error("Rate limit hit. Add a token (top-left) for 5000/hr.");
+    if (res.status === 404) throw new Error("Not found: " + path);
+    if (!res.ok) throw new Error("GitHub " + res.status + " on " + path);
+    return res.json();
+  }
+
+  // normalize any repo object into the shape HYDRA uses
+  function norm(r) {
+    return {
+      full_name: r.full_name,
+      owner: r.owner ? r.owner.login : r.full_name.split("/")[0],
+      owner_type: r.owner ? r.owner.type : "User",
+      description: r.description || "",
+      language: r.language || "",
+      stars: r.stargazers_count ?? 0,
+      topics: r.topics || [],
+      fork: !!r.fork,
+      parent: r.parent ? r.parent.full_name : (r.source ? r.source.full_name : null),
+      html_url: r.html_url || ("https://github.com/" + r.full_name),
+    };
+  }
+
+  // get the reachable dots for a repo under the active edge rule
+  async function getNeighbors(repo, dir) {
+    let raw = [];
+    if (dir === "tour" || dir === "self") {
+      const owner = dir === "self" ? "lionestenzol" : repo.owner;
+      // try org listing first, fall back to user listing
+      try { raw = await gh(`orgs/${owner}/repos?per_page=30&sort=updated`); }
+      catch (e) { raw = await gh(`users/${owner}/repos?per_page=30&sort=updated`); }
+    } else if (dir === "wander") {
+      const topic = (repo.topics && repo.topics[0]) || null;
+      const q = topic ? `topic:${topic}` : (repo.language ? `language:${repo.language}` : repo.full_name.split("/")[1]);
+      const j = await gh(`search/repositories?q=${encodeURIComponent(q)}&sort=stars&per_page=30`);
+      raw = j.items || [];
+    } else if (dir === "bloodline") {
+      // children (forks) + the upward parent/source if any
+      const single = await gh(`repos/${repo.full_name}`);
+      const forks = await gh(`repos/${repo.full_name}/forks?sort=stargazers&per_page=30`);
+      raw = forks || [];
+      if (single.parent) raw = [single.parent, ...(single.source && single.source.full_name !== single.parent.full_name ? [single.source] : []), ...raw];
+    }
+    // normalize, drop self, drop dupes, sort by signal, cap
+    const seen = new Set([repo.full_name]);
+    const out = [];
+    for (const r of raw) {
+      const n = norm(r);
+      if (!n.full_name || seen.has(n.full_name)) continue;
+      seen.add(n.full_name);
+      out.push(n);
+    }
+    out.sort((a, b) => b.stars - a.stars);
+    return out.slice(0, 11);
+  }
+
+  // ---------- stone derivation (catalog depth, deterministic) ----------
+  function signalFromStars(s) {
+    if (s >= 10000) return 5; if (s >= 1000) return 4;
+    if (s >= 100) return 3;   if (s >= 10) return 2; return 1;
+  }
+  function guessType(repo) {
+    const blob = (repo.full_name + " " + repo.topics.join(" ") + " " + repo.description).toLowerCase();
+    if (/\bcli\b|command-line|\-cli|terminal/.test(blob)) return "tool";
+    if (/library|sdk|framework|package|\bapi\b|wrapper|client/.test(blob)) return "component";
+    if (/architecture|pattern|principle|spec|protocol|design/.test(blob)) return "doctrine";
+    if (/algorithm|technique|engine|method|approach/.test(blob)) return "technique";
+    return "tool";
+  }
+  function makeStone(repo) {
+    return {
+      id: repo.full_name.replace(/[^a-z0-9]+/gi, "-").toLowerCase(),
+      from_repo: repo.full_name,
+      type: guessType(repo),
+      name: repo.full_name.split("/")[1] || repo.full_name,
+      what: repo.description || "(no description)",
+      pairs_with: "",
+      signal: signalFromStars(repo.stars),
+      language: repo.language,
+      stars: repo.stars,
+      url: repo.html_url,
+      caught_at: new Date().toISOString().slice(0, 10),
+    };
+  }
+
+  // ---------- world layout ----------
+  function layoutNeighbors(centerNode, list) {
+    const n = list.length || 1;
+    return list.map((repo, i) => {
+      const a = (i / n) * Math.PI * 2 - Math.PI / 2 + (Math.random() - 0.5) * 0.18;
+      const r = RING + (Math.random() - 0.5) * 50;
+      return {
+        repo,
+        x: centerNode.x + Math.cos(a) * r,
+        y: centerNode.y + Math.sin(a) * r,
+        born: performance.now() + i * 40,
+      };
+    });
+  }
+
+  // ---------- core actions ----------
+  async function drop(seedStr) {
+    seedStr = seedStr.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/$/, "");
+    if (!seedStr.includes("/")) { setStatus("Enter owner/repo (e.g. tursodatabase/turso).", "err"); return; }
+    busy = true; setStatus("Dropping head on " + seedStr + " …");
+    try {
+      const repo = norm(await gh("repos/" + seedStr));
+      current = { x: 0, y: 0, repo };
+      trail = [current];
+      visited = new Set([repo.full_name]);
+      camera = { x: 0, y: 0 };
+      await refreshField();
+      setStatus("Head landed. Aim at a glowing dot and hop.", "ok");
+      save();
+    } catch (e) {
+      setStatus(e.message, "err");
+    } finally { busy = false; }
+  }
+
+  async function refreshField() {
+    setStatus("Surfacing neighbors (" + dirLabel(direction) + ") …");
+    try {
+      const list = await getNeighbors(current.repo, direction);
+      neighbors = layoutNeighbors(current, list);
+      if (!list.length) setStatus("No reachable dots under " + dirLabel(direction) + ". Try another direction.", "err");
+      else setStatus(list.length + " dots reachable. Aim & hop.", "ok");
+      renderHead();
+    } catch (e) { setStatus(e.message, "err"); neighbors = []; }
+  }
+
+  async function hop(target) {
+    if (busy || !target) return;
+    busy = true;
+    // eat the stone — but never drop a duplicate capability into the tail.
+    // Manual hops can re-surface an already-eaten repo (bloodline parent,
+    // wander/tour overlaps); auto-explore can't (pickAuto filters visited).
+    // Dedupe by id; the head still hops either way. (web review 2026-06-25)
+    const stone = makeStone(target.repo);
+    if (!stones.some(s => s.id === stone.id)) {
+      stones.push(stone); renderStones();
+      if ($("digestOnEat").checked) digestRepo(stone);  // real bite: digest through delta-scp (non-blocking)
+    }
+    // animate head slithering to the dot (time-based, not rAF-gated)
+    hopAnim = { from: { x: current.x, y: current.y }, to: { x: target.x, y: target.y }, start: performance.now(), dur: 520 };
+    await waitAnim();
+    // promote target to current, extend the spine
+    current = { x: target.x, y: target.y, repo: target.repo };
+    trail.push(current);
+    visited.add(target.repo.full_name);
+    neighbors = [];
+    save();
+    await refreshField();
+    busy = false;
+  }
+
+  // Resolve on a real timer (NOT requestAnimationFrame): rAF is paused in
+  // background/headless tabs, which would hang the hop and wedge busy=true.
+  // setTimeout still fires (throttled) when backgrounded, so auto-explore
+  // keeps progressing even when nothing is being rendered. The visual
+  // interpolation in loop() reads hopAnim.start/dur for smoothness when visible.
+  function waitAnim() {
+    const dur = hopAnim ? hopAnim.dur : 520;
+    return new Promise((resolve) => setTimeout(() => { hopAnim = null; resolve(); }, dur + 40));
+  }
+
+  // ---------- aiming ----------
+  function aimedNeighbor() {
+    if (!neighbors.length || hopAnim) return null;
+    // direction from head (screen center) toward mouse
+    const aimAng = Math.atan2(mouse.y - H / 2, mouse.x - W / 2);
+    let best = null, bestScore = -Infinity;
+    for (const n of neighbors) {
+      const sx = n.x - camera.x + W / 2, sy = n.y - camera.y + H / 2;
+      const ang = Math.atan2(sy - H / 2, sx - W / 2);
+      let d = Math.abs(angDiff(ang, aimAng));
+      const score = -d;             // smallest angular gap to the aim wins
+      if (score > bestScore) { bestScore = score; best = n; }
+    }
+    // require the mouse to actually point that way-ish
+    return bestScore > -0.6 ? best : null;
+  }
+  function angDiff(a, b){ let d = a - b; while (d > Math.PI) d -= 2*Math.PI; while (d < -Math.PI) d += 2*Math.PI; return d; }
+
+  // ---------- render ----------
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    // camera eases onto head (or the slithering head during a hop)
+    const aT = hopAnim ? Math.min(1, (performance.now() - hopAnim.start) / hopAnim.dur) : 0;
+    const hx = hopAnim ? lerp(hopAnim.from.x, hopAnim.to.x, ease(aT)) : (current ? current.x : 0);
+    const hy = hopAnim ? lerp(hopAnim.from.y, hopAnim.to.y, ease(aT)) : (current ? current.y : 0);
+    camera.x += (hx - camera.x) * 0.14;
+    camera.y += (hy - camera.y) * 0.14;
+
+    drawGrid();
+    if (current) {
+      const aimed = aimedNeighbor();   // compute once per frame; both passes share it (web review 2026-06-25)
+      drawEdges(hx, hy, aimed);
+      drawNeighbors(aimed);
+      drawSnake(hx, hy);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function drawGrid() {
+    const g = 110;
+    const sx = Math.floor((camera.x - W/2)/g)*g, sy = Math.floor((camera.y - H/2)/g)*g;
+    ctx.strokeStyle = "rgba(255,255,255,0.035)"; ctx.lineWidth = 1;
+    for (let x = sx; x < camera.x + W/2 + g; x += g){ ctx.beginPath(); ctx.moveTo(x-camera.x+W/2,0); ctx.lineTo(x-camera.x+W/2,H); ctx.stroke(); }
+    for (let y = sy; y < camera.y + H/2 + g; y += g){ ctx.beginPath(); ctx.moveTo(0,y-camera.y+H/2); ctx.lineTo(W,y-camera.y+H/2); ctx.stroke(); }
+  }
+
+  function drawEdges(hx, hy, aimed) {
+    const headSX = hx - camera.x + W/2, headSY = hy - camera.y + H/2;
+    for (const n of neighbors) {
+      const sx = n.x - camera.x + W/2, sy = n.y - camera.y + H/2;
+      const on = n === aimed;
+      ctx.strokeStyle = on ? "rgba(59,167,255,0.55)" : "rgba(255,255,255,0.10)";
+      ctx.lineWidth = on ? 2.5 : 1;
+      ctx.beginPath(); ctx.moveTo(headSX, headSY); ctx.lineTo(sx, sy); ctx.stroke();
+    }
+  }
+
+  function drawNeighbors(aimed) {
+    for (const n of neighbors) {
+      const sx = n.x - camera.x + W/2, sy = n.y - camera.y + H/2;
+      if (sx < -160 || sx > W+160 || sy < -120 || sy > H+120) continue;
+      const sig = signalFromStars(n.repo.stars);
+      const r = 9 + sig * 3;
+      const col = TYPE_COLOR[guessType(n.repo)];
+      const on = n === aimed;
+      const pop = Math.min(1, Math.max(0, (performance.now() - n.born) / 260));
+      const eaten = visited.has(n.repo.full_name);   // already in the tail — dim it (web review 2026-06-25)
+
+      ctx.save();
+      ctx.globalAlpha = pop * (eaten && !on ? 0.32 : 1);
+      ctx.beginPath(); ctx.arc(sx, sy, r * (on ? 1.18 : 1), 0, Math.PI*2);
+      ctx.fillStyle = col; ctx.shadowBlur = on ? 26 : 12; ctx.shadowColor = col; ctx.fill();
+      ctx.shadowBlur = 0;
+      if (on) { ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke(); }
+      ctx.restore();
+
+      // label
+      ctx.globalAlpha = pop * (eaten && !on ? 0.4 : 1);
+      ctx.fillStyle = on ? "#fff" : "rgba(232,238,245,0.82)";
+      ctx.font = (on ? "700 " : "600 ") + "13px Segoe UI, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(n.repo.full_name.split("/")[1] || n.repo.full_name, sx, sy + r + 16);
+      // one-line + signal pips on the aimed dot
+      if (on) {
+        ctx.fillStyle = "rgba(232,238,245,0.6)"; ctx.font = "12px Segoe UI, sans-serif";
+        const line = trunc(n.repo.description || "—", 52);
+        ctx.fillText(line, sx, sy + r + 33);
+        ctx.fillText("★ " + fmt(n.repo.stars) + "   signal " + "●".repeat(sig) + "○".repeat(5-sig), sx, sy + r + 49);
+      }
+      ctx.globalAlpha = 1; ctx.textAlign = "left";
+    }
+  }
+
+  function drawSnake(hx, hy) {
+    // spine = trail node positions + the live (possibly animating) head
+    const pts = trail.map(n => ({ x: n.x, y: n.y }));
+    // During a hop the head slithers BEYOND the last trail node, so keep every
+    // trail point (incl. the node we're leaving) and append the moving head once.
+    // When settled, the head simply IS the last trail node.
+    // Bug fix (web review 2026-06-25): the old code overwrote the last trail node
+    // AND pushed the head, dropping the leaving-node→head segment and duplicating
+    // the head point — the body visibly popped loose mid-slither.
+    if (hopAnim) pts.push({ x: hx, y: hy });
+    else pts[pts.length-1] = { x: hx, y: hy };
+
+    // densify into a smooth body
+    const body = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i+1];
+      const segs = 14;
+      for (let s = 0; s < segs; s++) body.push({ x: lerp(a.x,b.x,s/segs), y: lerp(a.y,b.y,s/segs) });
+    }
+    body.push(pts[pts.length-1]);
+
+    const headColor = "#eef3f8";
+    for (let i = 0; i < body.length; i++) {
+      const p = body[i];
+      const t = i / body.length;              // 0 tail … 1 head
+      const sx = p.x - camera.x + W/2, sy = p.y - camera.y + H/2;
+      const r = 5 + 9 * t;                     // taper to head
+      // tint the body by the stone eaten at each trail node (subtle bands)
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2);
+      ctx.fillStyle = i === body.length-1 ? headColor : `rgba(150,170,190,${0.25 + 0.55*t})`;
+      ctx.fill();
+    }
+    // eyes on head
+    const head = body[body.length-1];
+    const prev = body[body.length-2] || head;
+    const ang = Math.atan2(head.y - prev.y, head.x - prev.x);
+    const hX = head.x - camera.x + W/2, hY = head.y - camera.y + H/2;
+    const ox = Math.cos(ang + Math.PI/2)*5, oy = Math.sin(ang + Math.PI/2)*5;
+    const fx = Math.cos(ang)*7, fy = Math.sin(ang)*7;
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(hX+ox+fx,hY+oy+fy,4,0,7); ctx.arc(hX-ox+fx,hY-oy+fy,4,0,7); ctx.fill();
+    ctx.fillStyle = "#000";
+    ctx.beginPath(); ctx.arc(hX+ox+fx*1.2,hY+oy+fy*1.2,2,0,7); ctx.arc(hX-ox+fx*1.2,hY-oy+fy*1.2,2,0,7); ctx.fill();
+  }
+
+  // ---------- HUD render ----------
+  function renderHead() {
+    if (!current) return;
+    const r = current.repo;
+    $("headWho").textContent = "🜲 " + r.full_name;
+    $("headDesc").textContent = r.description || "(no description)";
+    $("headMeta").innerHTML =
+      (r.language ? `<span><b>${r.language}</b></span>` : "") +
+      `<span>★ <b>${fmt(r.stars)}</b></span>` +
+      (r.topics.length ? `<span>${r.topics.slice(0,3).map(t=>"#"+t).join(" ")}</span>` : "") +
+      `<span><a href="${r.html_url}" target="_blank" style="color:var(--t-technique)">open ↗</a></span>`;
+  }
+
+  // The real bite: send the eaten repo to the HYDRA engine → delta-scp digests
+  // it (clone + symbol-extract) and a structural map lands on the stone. This is
+  // the throughput — bytes actually move, GitHub repo → digested map on disk.
+  async function digestRepo(stone) {
+    if (!stone || stone.digest || stone.digesting) return;
+    const url = ($("engineUrl").value.trim() || "http://127.0.0.1:8899") + "/eat";
+    stone.digesting = true; stone.digestErr = null; renderStones();
+    try {
+      const res = await fetch(url, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo_url: stone.from_repo }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.ok) { stone.digest = j.digest; }
+      else { stone.digestErr = j.error || ("engine " + res.status); }
+    } catch (e) {
+      stone.digestErr = "engine offline (" + (($("engineUrl").value || "").replace(/^https?:\/\//, "")) + ")";
+    }
+    stone.digesting = false; renderStones(); save();
+  }
+
+  function renderDigest(s) {
+    if (s.digesting) return `<div class="digesting">digesting through delta-scp…</div>`;
+    if (s.digestErr) return `<div class="digestErr">⚠ ${escapeHtml(s.digestErr)}</div>`;
+    const d = s.digest; if (!d) return "";
+    const langs = Object.entries(d.languages || {}).sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => `${k} ${v}`).join(" · ");
+    const files = (d.top_files || []).filter(f => f.symbols > 0).slice(0, 4).map(f =>
+      `<div class="file"><b>${escapeHtml((f.path || "").split("/").pop())}</b> <span class="sym">${f.symbols} sym${f.names && f.names.length ? " · " + f.names.slice(0,4).map(escapeHtml).join(", ") : ""}</span></div>`
+    ).join("");
+    return `<div class="digest">
+      <div class="hd">🧬 digested · ${d.file_count} files · ${d.symbol_count} symbols${d.graph && d.graph.nodes ? " · graph " + d.graph.nodes + "/" + d.graph.edges : ""}</div>
+      <div class="langs">${langs}</div>${files}</div>`;
+  }
+
+  function renderStones() {
+    $("tailCount").textContent = stones.length + (stones.length === 1 ? " stone" : " stones");
+    const box = $("stones");
+    if (!stones.length) { box.innerHTML = `<div id="empty">No stones yet.<br>Aim at a glowing dot and hop (click / Space) to eat your first capability.</div>`; return; }
+    box.innerHTML = "";
+    // newest at the top (head end of the tail)
+    for (let i = stones.length - 1; i >= 0; i--) {
+      const s = stones[i];
+      const col = TYPE_COLOR[s.type];
+      const el = document.createElement("div");
+      el.className = "stone"; el.style.borderLeftColor = col;
+      const badge = s.dropped ? `<span class="badge ${s.dropped}">${s.dropped}</span>` : "";
+      el.innerHTML = `
+        <div class="top">
+          <span class="type" style="background:${col}22;color:${col}" data-i="${i}" title="click to cycle type">${s.type}</span>
+          <span class="name"><a href="${s.url}" target="_blank" style="color:inherit;text-decoration:none">${s.from_repo}</a></span>
+          ${badge}
+          <span class="sig">${"●".repeat(s.signal)}</span>
+          <span class="send" data-i="${i}" title="send this stone to DropList">⇪</span>
+        </div>
+        <div class="what">${escapeHtml(s.what)}</div>
+        ${renderDigest(s)}
+        <textarea class="pairs" data-i="${i}" placeholder="pairs with… (what in your stack does this slot into?)">${escapeHtml(s.pairs_with)}</textarea>`;
+      box.appendChild(el);
+    }
+    // wire type-cycle + pairs editing + send-to-droplist
+    box.querySelectorAll(".type").forEach(t => t.addEventListener("click", () => {
+      const i = +t.dataset.i; const cur = STONE_TYPES.indexOf(stones[i].type);
+      stones[i].type = STONE_TYPES[(cur+1) % STONE_TYPES.length]; renderStones(); save();
+    }));
+    box.querySelectorAll(".pairs").forEach(p => p.addEventListener("input", () => {
+      stones[+p.dataset.i].pairs_with = p.value; save();
+    }));
+    box.querySelectorAll(".send").forEach(b => b.addEventListener("click", () => sendToDropList(stones[+b.dataset.i])));
+  }
+
+  // ---------- helpers ----------
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function ease(t){ return t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+  function trunc(s,n){ return s.length>n ? s.slice(0,n-1)+"…" : s; }
+  function fmt(n){ return n>=1000 ? (n/1000).toFixed(n>=10000?0:1)+"k" : ""+n; }
+  function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  function dirLabel(d){ return {tour:"Tour a mind",self:"Tour me",wander:"Wander",bloodline:"Bloodline",drill:"Drill",climb:"Climb"}[d]; }
+  function setStatus(msg, cls){ $("status").innerHTML = cls ? `<span class="${cls}">${msg}</span>` : msg; }
+
+  // ---------- auto-explore (the snake pilots itself) ----------
+  function autoSpeed() { return $("token").value.trim() ? 2600 : 6200; }  // pace to GitHub rate limit
+  function pickAuto() {
+    if (!neighbors.length) return null;
+    const fresh = neighbors
+      .filter(n => !visited.has(n.repo.full_name))
+      .sort((a, b) => b.repo.stars - a.repo.stars);
+    return fresh.length ? fresh[0] : null;   // null → region exhausted, caller rotates direction
+  }
+  async function rotateDir() {
+    // walk the rotation order until a direction surfaces a fresh (unvisited) dot
+    for (let i = 0; i < AUTO_DIRS.length; i++) {
+      const idx = (AUTO_DIRS.indexOf(direction) + 1 + i) % AUTO_DIRS.length;
+      direction = AUTO_DIRS[idx];
+      document.querySelectorAll(".dir").forEach(x => x.classList.toggle("active", x.dataset.dir === direction));
+      await refreshField();
+      if (neighbors.some(n => !visited.has(n.repo.full_name))) return true;
+    }
+    return false;
+  }
+  async function autoTick() {
+    if (!auto) return;
+    if (busy || hopAnim) { scheduleAuto(); return; }
+    if (lastRem !== null && lastRem <= 2) { setStatus("Auto paused — GitHub rate low. Add a token for 5000/hr.", "err"); stopAuto(); return; }
+    let t = pickAuto();
+    if (!t) {
+      setStatus("Region crawled — turning to find fresh ground …");
+      const ok = await rotateDir();
+      if (!ok) { setStatus("Auto stopped: nowhere fresh to crawl from here.", "err"); stopAuto(); return; }
+      t = pickAuto();
+      if (!t) { scheduleAuto(); return; }
+    }
+    await hop(t);
+    if ($("autoDrop").checked) await sendToDropList(stones[stones.length - 1]);
+    scheduleAuto();
+  }
+  function scheduleAuto() { if (auto) autoTimer = setTimeout(autoTick, autoSpeed()); }
+  function startAuto() {
+    if (auto) return;   // guard: never stack two auto-loops
+    if (!current) { setStatus("Drop a seed first, then auto-explore.", "err"); return; }
+    clearTimeout(autoTimer);
+    auto = true; $("auto").classList.add("on"); $("auto").textContent = "⏸ Stop auto";
+    setStatus("Auto-explore on — HYDRA is crawling on its own.", "ok"); scheduleAuto();
+  }
+  function stopAuto() {
+    auto = false; clearTimeout(autoTimer);
+    $("auto").classList.remove("on"); $("auto").textContent = "▶ Auto-explore";
+  }
+
+  // ---------- DropList pairing (each stone → a drop) ----------
+  function stoneToRaw(s) {
+    return `HYDRA stone · ${s.from_repo} [${s.type}, signal ${s.signal}/5] — ${s.what}`
+      + (s.pairs_with ? ` · pairs with: ${s.pairs_with}` : "")
+      + ` · ${s.url}`;
+  }
+  async function sendToDropList(stone) {
+    if (!stone) return;
+    const url = $("dropUrl").value.trim() || "http://127.0.0.1:3073/api/drop";
+    try {
+      const res = await fetch(url, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ raw: stoneToRaw(stone), source: "hydra" }),
+      });
+      const j = await res.json().catch(() => ({}));
+      stone.dropped = res.ok ? (j.status || "sent") : "err";   // "secured" | "dropped" | "err"
+    } catch (e) {
+      stone.dropped = "offline";   // DropList not running / unreachable
+    }
+    renderStones(); save();
+  }
+  async function sendAllToDropList() {
+    const pending = stones.filter(s => !s.dropped || s.dropped === "offline" || s.dropped === "err");
+    if (!pending.length) { setStatus("All stones already sent to DropList.", "ok"); return; }
+    setStatus(`Sending ${pending.length} stone(s) to DropList …`);
+    let secured = 0, dropped = 0, fail = 0;
+    for (const s of pending) { await sendToDropList(s); if (s.dropped === "secured") secured++; else if (s.dropped === "dropped") dropped++; else fail++; }
+    setStatus(fail ? `DropList unreachable for ${fail} (is :3073 up?).` : `DropList: ${secured} secured, ${dropped} filtered as noise/dup.`, fail ? "err" : "ok");
+  }
+
+  // ---------- input ----------
+  addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  addEventListener("touchmove", e => { if (e.touches[0]) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; } }, { passive: true });
+
+  function tryHop() { const a = aimedNeighbor(); if (a) hop(a); }
+  canvas.addEventListener("click", tryHop);
+  addEventListener("keydown", e => {
+    if (e.code === "Space") { e.preventDefault(); tryHop(); }
+  });
+
+  // aim hint in head card
+  setInterval(() => {
+    if (!current || hopAnim) { $("aimHint").textContent = ""; return; }
+    const a = aimedNeighbor();
+    $("aimHint").textContent = a ? "▸ aim locked: " + a.repo.full_name + "  —  click / Space to hop & eat" : "move mouse toward a dot to aim";
+  }, 120);
+
+  // direction buttons
+  document.querySelectorAll(".dir").forEach(d => d.addEventListener("click", async () => {
+    if (d.classList.contains("disabled") || busy) return;
+    document.querySelectorAll(".dir").forEach(x => x.classList.remove("active"));
+    d.classList.add("active");
+    direction = d.dataset.dir;
+    if (current) await refreshField();  // the snake turns: re-surface neighbors under the new rule
+    save();
+  }));
+
+  $("go").addEventListener("click", () => { stopAuto(); drop($("seed").value); });
+  $("seed").addEventListener("keydown", e => { if (e.key === "Enter") { stopAuto(); drop($("seed").value); } });
+
+  $("auto").addEventListener("click", () => auto ? stopAuto() : startAuto());
+  $("autoDrop").addEventListener("change", save);
+  $("dropUrl").addEventListener("change", save);
+  $("engineUrl").addEventListener("change", save);
+  $("digestOnEat").addEventListener("change", save);
+  $("dropAll").addEventListener("click", sendAllToDropList);
+
+  $("export").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(stones, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "hydra-stones-" + new Date().toISOString().slice(0,10) + ".json";
+    a.click();
+  });
+  $("clear").addEventListener("click", () => {
+    if (!confirm("Clear the tail (all stones) and the trail?")) return;
+    stones = []; trail = current ? [current] : []; renderStones(); save();
+  });
+
+  // ---------- boot ----------
+  (function boot() {
+    const resumed = load();
+    // reflect saved direction in the UI
+    document.querySelectorAll(".dir").forEach(x => x.classList.toggle("active", x.dataset.dir === direction));
+    renderStones();
+    if (resumed && current) {
+      trail = trail.length ? trail : [current];
+      renderHead();
+      refreshField();
+      setStatus("Resumed your crawl. " + stones.length + " stones in the tail.", "ok");
+    }
+    loop();
+  })();
+  </script>
+</body>
+</html>

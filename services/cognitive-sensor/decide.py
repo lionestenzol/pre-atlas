@@ -4,6 +4,13 @@ import urllib.request
 import json
 import os
 from datetime import datetime
+from pathlib import Path
+
+# Bearer auth for delta-kernel — see ~/.claude/rules/common/code-as-furniture.md.
+_DELTA_API_KEY = ""
+_key_path = Path(__file__).resolve().parent.parent.parent / ".aegis-tenant-key"
+if _key_path.exists():
+    _DELTA_API_KEY = _key_path.read_text(encoding="utf-8").strip()
 
 con = sqlite3.connect("results.db")
 cur = con.cursor()
@@ -67,11 +74,14 @@ else:
     print("Warning: refresh.py not found, skipping auto-refresh.")
 
 # Notify delta-kernel API (if running)
+headers = {"Content-Type": "application/json"}
+if _DELTA_API_KEY:
+    headers["Authorization"] = f"Bearer {_DELTA_API_KEY}"
 try:
     req = urllib.request.Request(
         "http://localhost:3001/api/law/refresh",
         data=json.dumps({}).encode(),
-        headers={"Content-Type": "application/json"},
+        headers=headers,
         method="POST"
     )
     urllib.request.urlopen(req, timeout=5)

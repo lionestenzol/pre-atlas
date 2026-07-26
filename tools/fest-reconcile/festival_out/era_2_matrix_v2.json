@@ -1,0 +1,513 @@
+{
+  "phase": "003_CROSS_REFERENCE_MATRIX",
+  "sequence": "era_2_early_cc",
+  "generated_at": "2026-05-28T03:06:56.047405+00:00",
+  "era": {
+    "label": "era_2_early_cc",
+    "start": "2026-02-09",
+    "end": "2026-03-31"
+  },
+  "method": "Substring match of cluster seed_terms (case-insensitive) against ChatGPT title and CC first_user_msg. Items filtered to era window by first_date (ChatGPT) / first_ts (CC). Samples sorted by date ascending, capped at 5 per cell. HOTL: substring warnings from Phase 2 (clusters_final.json) still apply and are not auto-filtered here.",
+  "samples_per_cell": 5,
+  "totals": {
+    "chatgpt_in_era": 924,
+    "cc_in_era": 646,
+    "chatgpt_matched_sum_over_clusters": 57,
+    "cc_matched_sum_over_clusters": 464,
+    "note": "matched_sum_over_clusters can exceed in_era because one item may match multiple clusters (e.g. an 'anatomy canvas' chat hits both anatomy and canvas_render)."
+  },
+  "substring_warnings_carried_forward": [
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "daw",
+        "length": 3,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "821",
+            "title": "Building Custom DAWs"
+          }
+        ],
+        "note": "v1-substring-rule FP detector. v2 uses word-boundary so these examples no longer match in production."
+      }
+    },
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "midi",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "889",
+            "title": "Dehumidifier vs AWG"
+          }
+        ],
+        "note": "v1-substring-rule FP detector. v2 uses word-boundary so these examples no longer match in production."
+      }
+    }
+  ],
+  "clusters": [
+    {
+      "name": "anatomy",
+      "seed_terms": [
+        "anatomy",
+        "anatomy-v1",
+        "anatomyv1",
+        "anatomy-extension",
+        "anatomy-research",
+        "anatomy-rewrite",
+        "anatomy-map",
+        "anatomy-frame",
+        "anatomy-sidecar"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 2,
+          "samples": [
+            {
+              "id": "agent-a63013f",
+              "date": "2026-02-13",
+              "preview": "I need to read the book outline and understand the raw material structure for the Pre Atlas Power Dynamics Book project.  1. Read `C:\\Users\\bruke\\Pre Atlas\\serv"
+            },
+            {
+              "id": "agent-ab1ec1a",
+              "date": "2026-02-13",
+              "preview": "I need to verify the existence and content of book-related files in the Pre Atlas project at C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor.  1. Read `BOOK_"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "mb3d_fractals",
+      "seed_terms": [
+        "mb3d",
+        "mb3d_anim_demo",
+        "mb3d-blender",
+        "mandelbulb",
+        "mandelbulb3d",
+        "mandelbulber",
+        "mandelbulber2",
+        "mandelbulber2_install",
+        "m3p",
+        "m3p-to-fract",
+        "m3f",
+        ".fract",
+        "fractal-machine",
+        "mandelbox",
+        "raymarcher",
+        "fragmentarium"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 1,
+          "samples": [
+            {
+              "id": "685",
+              "date": "2026-03-27",
+              "preview": "Raymarched Mandelbulb Spec"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "audio_music",
+      "seed_terms": [
+        "strudel",
+        "stemai",
+        "surge",
+        "surge-xt",
+        "nih-plug",
+        "airwindows",
+        "musescore",
+        "fl356",
+        "fl 3",
+        "fl3",
+        "vst3",
+        "vst",
+        "daw",
+        "midi",
+        "synth",
+        "sampler",
+        "audio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 41,
+          "samples": [
+            {
+              "id": "1286",
+              "date": "2026-02-23",
+              "preview": "Strudel and TouchDesigner Merge"
+            },
+            {
+              "id": "1288",
+              "date": "2026-02-23",
+              "preview": "Strudel Agent Reference"
+            },
+            {
+              "id": "1290",
+              "date": "2026-02-23",
+              "preview": "Sonic Pi vs Strudel"
+            },
+            {
+              "id": "1291",
+              "date": "2026-02-23",
+              "preview": "Strudel music in JS"
+            },
+            {
+              "id": "1253",
+              "date": "2026-02-24",
+              "preview": "Strudel UI Expansion"
+            }
+          ]
+        },
+        "cc": {
+          "count": 276,
+          "samples": [
+            {
+              "id": "agent-a4b447e",
+              "date": "2026-02-22",
+              "preview": "I need an EXTREMELY THOROUGH deep dive into the delta-kernel service in the Pre Atlas project. This is located at `C:\\Users\\bruke\\Pre Atlas\\services\\delta-kerne"
+            },
+            {
+              "id": "agent-abdb4a2",
+              "date": "2026-02-22",
+              "preview": "I need you to analyze cross-dependencies and relationships between all HTML files in the Pre Atlas project at C:\\Users\\bruke\\Pre Atlas.  For each of the 21 HTML"
+            },
+            {
+              "id": "agent-a084f12",
+              "date": "2026-02-24",
+              "preview": "Explore the Strudel codebase at C:\\Users\\bruke\\STRUDEL focusing on:  1. Any existing MIDI import/export functionality (search for \"midi\" in filenames and code) "
+            },
+            {
+              "id": "agent-a1a0c5b",
+              "date": "2026-02-24",
+              "preview": "I need a detailed implementation plan for enterprise-hardening the @strudel/symbolic-ir and @strudel/symbolic packages. This is a music composition system with "
+            },
+            {
+              "id": "agent-a1f3d16",
+              "date": "2026-02-24",
+              "preview": "Explore the Strudel codebase at C:\\Users\\bruke\\STRUDEL to understand its overall structure. I need to know:  1. The top-level directory structure (packages, app"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "atlas_core",
+      "seed_terms": [
+        "atlas",
+        "pre atlas",
+        "pre-atlas",
+        "delta-kernel",
+        "delta kernel",
+        "cognitive-sensor",
+        "cognitive sensor",
+        "cycleboard",
+        "cortex",
+        "optogon",
+        "aegis",
+        "aegis-fabric",
+        "openclaw",
+        "mirofish",
+        "perception service",
+        "perception layer",
+        "perception module",
+        "triangulation",
+        "mosaic",
+        "inpact",
+        "in-pact",
+        "blueprint-generator",
+        "code-converter",
+        "ai-exec-pipeline",
+        "uasc",
+        "ws-gateway",
+        "polaris",
+        "crucix",
+        "governance"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 11,
+          "samples": [
+            {
+              "id": "1510",
+              "date": "2026-02-11",
+              "preview": "Atlas Program Overview"
+            },
+            {
+              "id": "1471",
+              "date": "2026-02-14",
+              "preview": "Tattoo Surface Governance System"
+            },
+            {
+              "id": "1377",
+              "date": "2026-02-19",
+              "preview": "OpenClaw Uses and Applications"
+            },
+            {
+              "id": "1323",
+              "date": "2026-02-21",
+              "preview": "Atlas Rebuild Strategy"
+            },
+            {
+              "id": "1328",
+              "date": "2026-02-21",
+              "preview": "AI Cycleboard Architecture"
+            }
+          ]
+        },
+        "cc": {
+          "count": 147,
+          "samples": [
+            {
+              "id": "agent-a008dc1",
+              "date": "2026-02-09",
+              "preview": "Search the codebase at C:\\Users\\bruke\\Pre Atlas for anything related to \"vectorized conversations\". Look for:  1. Files that contain vector embeddings or vector"
+            },
+            {
+              "id": "agent-a145acc",
+              "date": "2026-02-09",
+              "preview": "I need to examine the actual vectorized conversation data in C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor. Read the following files to understand what the"
+            },
+            {
+              "id": "agent-a1d3798",
+              "date": "2026-02-09",
+              "preview": "Explore C:\\Users\\bruke\\Pre Atlas\\services\\delta-kernel to understand how the TypeScript side integrates with the cognitive sensor, and what patterns exist for a"
+            },
+            {
+              "id": "agent-a1dea06",
+              "date": "2026-02-09",
+              "preview": "Read the first 100 lines of C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor\\dashboard.html to understand the UI pattern used for dashboards in this project. "
+            },
+            {
+              "id": "agent-a3dfc3b",
+              "date": "2026-02-09",
+              "preview": "I need to understand the exact structure and content of the user's conversation data at C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor to design an agent sy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "web_extract",
+      "seed_terms": [
+        "scrapling",
+        "scraping",
+        "sitepull",
+        "web-audit",
+        "web-extract",
+        "competitor-monitor",
+        "competitor monitor",
+        "brightdata",
+        "datadome",
+        "cloudflare",
+        "anti-bot",
+        "playwright",
+        "puppeteer",
+        "headless",
+        "humanize"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 11,
+          "samples": [
+            {
+              "id": "agent-ae001c9",
+              "date": "2026-02-18",
+              "preview": "I need a detailed implementation plan for a ComfyUI Colab notebook comparison, testing, and bug-fix project. Here's the full context:  ## Background The user ha"
+            },
+            {
+              "id": "agent-a629b59",
+              "date": "2026-02-19",
+              "preview": "Explore the ComfyUI project to understand the current state of the merged notebook and supporting files. I need:  1. Read C:\\Users\\bruke\\Downloads\\ComfyUI\\Comfy"
+            },
+            {
+              "id": "agent-a1a0c5b",
+              "date": "2026-02-24",
+              "preview": "I need a detailed implementation plan for enterprise-hardening the @strudel/symbolic-ir and @strudel/symbolic packages. This is a music composition system with "
+            },
+            {
+              "id": "agent-a42b900",
+              "date": "2026-02-24",
+              "preview": "I need to design an implementation plan for building two new components on top of an existing symbolic music composition system in the Strudel monorepo (`C:\\Use"
+            },
+            {
+              "id": "agent-a72872f",
+              "date": "2026-02-24",
+              "preview": "Thoroughly explore the `packages/symbolic-ir/` directory in `C:\\Users\\bruke\\STRUDEL`. I need to understand:  1. The full package structure (all files, their pur"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "productivity_skills",
+      "seed_terms": [
+        "weapon",
+        "festival",
+        "mini-ship",
+        "miniship",
+        "autopilot",
+        "project-finisher",
+        "handoff",
+        "handoff-out",
+        "eval-harness",
+        "cookbook",
+        "search-first",
+        "security-review",
+        "strategic-compact",
+        "tdd-workflow",
+        "verification-loop",
+        "coding-standards",
+        "backend-patterns",
+        "frontend-patterns",
+        "wasp-patterns",
+        "codex-delegate",
+        "codex-partner",
+        "continuous-learning",
+        "slash command",
+        "/weapon",
+        "/fest",
+        "/mini-ship",
+        "/autopilot"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 2,
+          "samples": [
+            {
+              "id": "1260",
+              "date": "2026-02-24",
+              "preview": "Strudel Logic and Cookbook"
+            },
+            {
+              "id": "1262",
+              "date": "2026-02-24",
+              "preview": "Strudel Beat Cookbook Summary"
+            }
+          ]
+        },
+        "cc": {
+          "count": 17,
+          "samples": [
+            {
+              "id": "agent-a9754e290206d157a",
+              "date": "2026-02-25",
+              "preview": "I need to verify that Strudel code examples from a cookbook document actually parse and evaluate correctly.   Look at the Strudel project at C:\\Users\\bruke\\STRU"
+            },
+            {
+              "id": "agent-ad298bb4f9fb97813",
+              "date": "2026-02-25",
+              "preview": "Explore the `scripts/` directory and the AI reference docs at the repo root. I need to understand:  1. What's in `scripts/` - list all files, read key ones 2. W"
+            },
+            {
+              "id": "agent-aff51c96bd4ec23e5",
+              "date": "2026-02-25",
+              "preview": "Explore the Strudel codebase at C:\\Users\\bruke\\STRUDEL to understand what valid Strudel code looks like and how existing bridge patterns work. Specifically:  1."
+            },
+            {
+              "id": "agent-ab3599eb6f077c0c3",
+              "date": "2026-03-11",
+              "preview": "I need a detailed implementation plan for fixing a drum transcription pipeline that has regressed \u2014 particularly missing hi-hat events and producing inconsisten"
+            },
+            {
+              "id": "agent-a5cc2ccd623eeaa77",
+              "date": "2026-03-15",
+              "preview": "Design an implementation plan for fixing and enhancing the chord-pad autopilot system. Here's the full context:  ## Codebase Context  **Key files:** - `chord-pa"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "canvas_render",
+      "seed_terms": [
+        "canvas-engine",
+        "canvas-demo",
+        "screenshot-to-code",
+        "three-js",
+        "three.js",
+        "threejs",
+        "three-stack",
+        "three-js-migrate",
+        "react-three-fiber",
+        "r3f",
+        "drei",
+        "anime-js",
+        "anime.js",
+        "animejs",
+        "anime-js-migrate",
+        "remotion",
+        "webgl",
+        "webgpu",
+        "shader",
+        "raymarch",
+        "virtualstudio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 2,
+          "samples": [
+            {
+              "id": "1447",
+              "date": "2026-02-15",
+              "preview": "VirtualStudio Landing Page"
+            },
+            {
+              "id": "1435",
+              "date": "2026-02-16",
+              "preview": "Skin Shader Analysis"
+            }
+          ]
+        },
+        "cc": {
+          "count": 11,
+          "samples": [
+            {
+              "id": "agent-a431fc5",
+              "date": "2026-02-15",
+              "preview": "You need to rewrite 3 React component files in the project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero\\app\\src\\sections\\  For ALL"
+            },
+            {
+              "id": "agent-aa651b7",
+              "date": "2026-02-15",
+              "preview": "Perform a thorough code audit of the VirtualStudio Cinematic Hero project at C:\\Users\\bruke\\OneDrive\\Desktop\\Kimi_Agent_VirtualStudio Cinematic Hero\\app\\src\\  R"
+            },
+            {
+              "id": "agent-a1b63ec",
+              "date": "2026-02-16",
+              "preview": "I need to find the exact melanin absorption coefficients currently used in a Blender shader called \"SKIN_MASTER_STUDIO_V1\". The shader uses a Beer-Lambert chrom"
+            },
+            {
+              "id": "agent-a5f76fb",
+              "date": "2026-02-16",
+              "preview": "I need to design a detailed implementation plan for upgrading an existing Blender 4.x Cycles skin shader to a physically-based melanin + hemoglobin dual-layer m"
+            },
+            {
+              "id": "agent-a77d747",
+              "date": "2026-02-16",
+              "preview": "I need to understand the current state of the Blender scene and material for planning a dual-layer melanin+hemoglobin skin shader upgrade.   The current materia"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

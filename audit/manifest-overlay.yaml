@@ -1,0 +1,211 @@
+# =============================================================================
+# manifest-overlay.yaml — curated knowledge for build_atlas_manifest.py
+# =============================================================================
+# The generator derives the MECHANICAL facts (ports, routes, loc, deps, edges,
+# contract list) from canonical sources every run. THIS file holds the things a
+# sweep cannot derive: role labels, what each UI asks, data-store shapes,
+# security flags, contract ownership, cross-repo nodes. Keep it small + stable.
+# When you add a system/contract/seam that the sweep can't infer, add it here.
+# =============================================================================
+
+meta:
+  name: Atlas (Pre Atlas)
+  one_liner: "Personal behavioral-governance system — a federated monorepo."
+  architecture: "hub-and-spoke over SQLite + one-way HTTP seams; JSON-Schema contracts are the wire format. NOT an event bus."
+  hub: delta-kernel
+  fsm_modes: [RECOVER, CLOSURE, MAINTENANCE, BUILD, COMPOUND, SCALE]
+  repo_root: "C:/Users/bruke/Pre Atlas"
+  sibling_repo: "C:/Users/bruke/pre-atlas (hyphen) — hosts delta-scp; folded in as a node"
+
+spine_loop:
+  flow: "cognitive-sensor (analyze) → optogon/cortex (propose/execute, GATED) → droplist (packetize) → delta-kernel (commit state) → lattice/inpact (project)"
+  note: "Seams are reads or signal-writes. cortex/optogon act only behind default-off env flags."
+
+# role label per system (the sweep can't infer intent)
+roles:
+  delta-kernel: hub
+  aegis-fabric: spoke
+  atlas-map-api: spoke (substrate)
+  canvas-engine: spoke
+  cognitive-sensor: spoke (sensor)
+  droplist: spoke (executor)
+  cortex: spoke (executor)
+  optogon: spoke (executor)
+  search-stack: spoke (router)
+  uasc-executor: spoke (executor)
+  memory-hub: spoke
+  crucix: spoke (dashboard)
+  ws-gateway: spoke (bridge)
+  mirofish: spoke
+  mosaic-orchestrator: spoke
+  mosaic-dashboard: ui
+  openclaw: spoke
+  perception: spoke
+  triangulation: spoke
+
+# lifecycle where derivation from governance/retired is insufficient (stub nuance)
+lifecycle_overrides:
+  perception: stub
+  triangulation: stub
+  ws-gateway: dormant (not autostarted)
+  crucix: active (submodule, habitually -dirty)
+
+# richer purpose than atlas-map.json where it helps an agent
+purposes_override:
+  delta-kernel: "Deterministic 6-mode state engine — THE API hub. All durable state lives here."
+  aegis-fabric: "Admin gateway · API middleware · policy/approval/metering (multi-package: gateway + kernel)."
+  atlas-map-api: "GPS substrate API — the live map behind this manifest. Self-describing surfaces + /call gateway + item backbone."
+  cognitive-sensor: "Conversation-analysis pipeline · idea registry · behavioral state store. Feeds delta-kernel."
+  droplist: "Capture → packet → DAG execution engine."
+  search-stack: "Router over 28 search providers across 14 intent kinds (20 enabled, 8 await keys)."
+  uasc-executor: "UASC command executor · HMAC auth."
+
+modules:
+  delta-kernel: ["core (6-mode FSM + types)", "api (Express routes)", "cli (atlas.ts)", "governance (cron/daemon)", "web (delta-web React UI :5173)"]
+  aegis-fabric: ["packages/gateway", "packages/kernel", "src/api"]
+  atlas-map-api: ["server", "loader (reads system-index+atlas-map)", "describe (capability registry)", "gateway (/call)", "items (item backbone)", "launcher", "surfaces", "auth", "mcp_server"]
+
+stores:
+  delta-kernel:
+    - { kind: sqlite, engine: better-sqlite3, holds: "state · cycleboard blob · dayplans · journal · history · tasks · signals · timeline · work-ledger" }
+  cognitive-sensor:
+    - { kind: sqlite, access: "sqlite3.connect via DB_PATH (atlas_data.py, behavioral_memory.py, directive_engine.py)", holds: "ideas · loops · decisions · metrics" }
+    - { kind: json_dumps, files: "conversations.json · memory_db.json(+bak) · idea_registry.json · ideas_classified.json · ideas_deduplicated.json · excavated_ideas_raw.json · timeline_events.json (2.2MB)", note: "the conversation corpus + registries (gitignored, large)" }
+  droplist:
+    - { kind: storage_layer, access: "storage.save_dag / recompute_states", holds: "DAGs · packets · entities" }
+  atlas-map-api:
+    - { kind: snapshot, reads: "audit/system-index.json + atlas-map.json (no own DB)" }
+
+requires:
+  delta-kernel: ["Bearer key on /api/* writes (obtain via exempt GET /api/auth/token)"]
+  atlas-map-api: ["X-Atlas-Token on POST/writes (gitignored .atlas-write-token)"]
+  uasc-executor: ["HMAC signature"]
+
+# extra outbound consumers the service_edges graph doesn't capture
+consumes_extra:
+  droplist: ["delta-kernel (writes signals → POST /api/signals/ingest, via DROPLIST_ATLAS_SIGNALS_URL)", "search-stack (external retrieval, gated by DROPLIST_EXTERNAL_SEARCH=1)"]
+  search-stack: ["28 external providers (web/code/github/academic/social/legal/data/...)"]
+  memory-hub: ["aggregates upstream memory stores (urlopen in stores.py)"]
+  atlas-map-api: ["all systems (introspective — reads system-index, probes ports, proxies via /call)"]
+
+# free-text note per system
+notes:
+  crucix: "git SUBMODULE — never bulk `git add -A`; commit inside submodule first."
+  cognitive-sensor: "loc is data-inflated: ~half is JSON state dumps (multi-MB), not Python source. Treat as a data store WITH a pipeline."
+  ws-gateway: "socket.io events (no REST surface)."
+  atlas-map-api: "in-process MCP server (atlas-map) + tools/atlas-cli consume the same snapshot."
+  lattice_note: "apps/lattice also mirrors audit/system-map-data.js (a generated DATA snapshot — not live wiring)."
+
+deps_notable:
+  canvas-engine: ["@anthropic-ai/sdk", vite, react, zod, ajv]
+  ws-gateway: [nats, socket.io]
+
+# provides text for systems with no REST routes / cross-repo (sweep yields nothing)
+provides_note:
+  ws-gateway: "socket.io events (no REST surface)."
+  delta-scp: "compression queue: submit repo → fetch symbolic map (skeleton)."
+
+# contract ownership → drives both each system's `speaks` and the by_domain grouping.
+# every file in contracts/schemas/ must appear under some owner (generator flags strays).
+contract_owners:
+  delta-kernel: [Signal.v1, CloseSignal.v1, Directive.v1, DirectiveProposed, ModeContract.v1, CompoundState.v1, DailyPayload.v1, DailyProjection.v1, AtlasArtifact.v1, Closures.v1, WorkLedger.v1, AutomationQueue.v1, WorkflowEvent.v1, LifeSignals.v1, EnergyLog.v1, FinancialLedger.v1, NetworkRegistry.v1, SkillRegistry.v1, UserPreferenceStore.v1, ContextPackage.v1, ProjectGoal.v1, ValidationVerdict.v1, RiskMitigation.v1]
+  aegis-fabric: [AegisAgent.v1, AegisAgentAction.v1, AegisApproval.v1, AegisPolicy.v1, AegisPolicyDecision.v1, AegisTenant.v1, AegisWebhook.v1, MeteringUsage.v1]
+  cortex: [CortexTask.v1, TaskExecution.v1, BuildOutput.v1]
+  droplist: [TaskPrompt.v1, ExecutionSpec.v1, ExecutionResult.v1]
+  optogon: [OptogonNode.v1, OptogonPath.v1, OptogonSessionState.v1]
+  cognitive-sensor: [IdeaRegistry.v1, IdeasClassified.v1, IdeasDeduplicated.v1, ExcavatedIdeas.v1, CognitiveMetricsComputed, AnalystDecision.v1, TimelineEvents.v1]
+  mirofish: [SimulationReport.v1]
+  mosaic-orchestrator: [OrchestratorEvent.v1]
+  anatomy-extension: [AnatomyV1.v1]
+
+key_contracts:
+  Signal.v1: "the canonical state-mutation message ingested by delta-kernel /api/signals/ingest"
+  Directive.v1: "what optogon/cortex propose; delta-kernel commits"
+  AtlasArtifact.v1: "the /show ↔ lattice wire (sibling of Signal.v1)"
+  CloseSignal.v1: "loop-closure event"
+
+# the UIs: what each one ASKS the backends (hand-traced; fetch calls are dynamic)
+surfaces:
+  inpact:
+    props: { path: apps/inpact, lang: js, port: "3006 (static)", loc: 11066, lifecycle: active }
+    renders: "daily-flow · onboarding · cycleboard"
+    calls:
+      - "delta-kernel GET /api/cycleboard → the governance blob it renders"
+      - "delta-kernel (daily-brief / state / signals family)"
+      - "cortex POST /inpact/run/{module} → proposes/executes module actions"
+    needs: ["cycleboard blob shape", "6-mode enum", "Bearer key from /api/auth/token"]
+  lattice:
+    props: { path: apps/lattice, lang: js, port: "3011 (static)", loc: 12506, lifecycle: active }
+    renders: "viewmodel projection · tree/graph/timeline (vendors Cytoscape)"
+    calls:
+      - "delta-kernel GET /api/lattice/viewmodel → the projection it renders"
+      - "delta-kernel POST /api/lattice/correct → write-back correction loop (load-bearing)"
+      - "delta-kernel GET /api/auth/token, GET /items, GET item/{id}"
+      - "cognitive-sensor (idea/loop data)"
+    needs: ["viewmodel shape (AtlasArtifact.v1 / lattice viewmodel)", "item backbone shape"]
+    note: "apps/lattice also mirrors audit/system-map-data.js (a generated DATA snapshot — not live wiring)."
+  atlas-setup:
+    props: { path: "atlas-setup.html (served by atlas-shell :8888)", lifecycle: active }
+    renders: "clickable boot page — preset/per-service start-stop grid + pick-your-LLM box + write-token fetch"
+    calls:
+      - "atlas-map-api GET /map/launchables, POST /map/{start,stop,restart,halt}/{name}"
+      - "delta-kernel GET /api/auth/token (write token)"
+    note: "Atlas Setup (setup/ folder, apply.py) writes one profile → delta-kernel /api/cycleboard (the hub all surfaces read)."
+  delta-scp-web:
+    props: { path: apps/delta-scp-web, port: "5174 (vite)", lifecycle: active }
+    renders: "SaaS UI over delta-scp"
+    calls: ["delta-scp demo-server :3012"]
+  hydra:
+    props: { path: apps/hydra, port: "8898 (static) + engine 8899 (python)", lifecycle: active }
+    renders: "GitHub-crawling snake game (hydra.html)"
+    calls: ["hydra-engine :8899 → delta-scp :3012 (digests eaten repos into symbol maps)"]
+  code-converter:
+    props: { path: apps/code-converter, port: 3007, lifecycle: active }
+    renders: "Python → C++ converter UI (AST engine)"
+    calls: ["canvas-engine"]
+    security_flag: "known RCE risk in converter pipeline (see SHIP_READINESS audit)."
+  crucix_ui: { see: "systems.crucix (dashboard server + UI in one)" }
+  legacy_uis:
+    blueprint-generator: { path: apps/blueprint-generator, port: 3030, lifecycle: retired }
+    ai-exec-pipeline: { path: apps/ai-exec-pipeline, port: 5000, lifecycle: retired }
+    canvas-demo: { path: apps/canvas-demo, lifecycle: inactive, note: "Remotion render demo; no server" }
+    webos-333: { path: apps/webos-333, lifecycle: experimental, note: "static HTML experiment" }
+
+# endpoint annotation for a directed edge "from->to" (merged into seams)
+seam_annotations:
+  "lattice->delta-kernel": "GET /api/lattice/viewmodel, POST /api/lattice/correct"
+  "inpact->delta-kernel": "GET /api/cycleboard (+ daily-brief/state)"
+  "droplist->delta-kernel": "POST /api/signals/ingest (DROPLIST_ATLAS_SIGNALS_URL)"
+  "cognitive-sensor->delta-kernel": "ingest analyzed state"
+  "inpact->cortex": "POST /inpact/run/{module}"
+  "droplist->search-stack": "external retrieval, gated"
+  "mosaic-dashboard->mosaic-orchestrator": "legacy chain"
+  "perception->triangulation": "stub chain"
+
+cross_repo_seams:
+  - "delta-scp-web → delta-scp :3012"
+  - "hydra → hydra-engine :8899 → delta-scp :3012"
+
+data_artifacts:
+  - { system: delta-kernel, kind: "sqlite (better-sqlite3)", shape: "state · cycleboard · dayplans · journal · history · tasks · signals · timeline · work-ledger", note: "the single source of durable truth" }
+  - { system: cognitive-sensor, kind: "sqlite (sqlite3.connect via DB_PATH)", shape: "ideas · loops · decisions · metrics" }
+  - { system: cognitive-sensor, kind: json_corpus, shape: "conversations.json · memory_db.json(+bak) · idea_registry.json · ideas_{classified,deduplicated}.json · excavated_ideas_raw.json · timeline_events.json(2.2MB)", note: "large, gitignored — the corpus the pipeline mines" }
+  - { system: droplist, kind: storage_layer, shape: "DAGs · packets · entities (storage.save_dag)" }
+  - { system: atlas-map-api, kind: snapshot, shape: "reads audit/system-index.json + atlas-map.json (no own DB)" }
+  - { system: contracts, kind: json_schema, shape: "draft-07 schemas — the typed wire format", path: contracts/schemas/ }
+  - { system: audit, kind: map, shape: "system-index.json (counts/ports) + atlas-map.json (purposes/edges/governance)", note: "the machine-readable map this manifest reconciles" }
+
+security_flags:
+  - "code-converter: RCE risk"
+  - "crucix/hydra/webos: XSS (per SHIP_READINESS audit)"
+
+# cross-repo / non-system-index nodes to inject as systems
+extra_systems:
+  delta-scp:
+    class: { role: tool-service, lifecycle: active }
+    repo: "C:/Users/bruke/pre-atlas/services/delta-scp (SIBLING repo, not this one)"
+    props: { lang: ts, port: "3012 (demo-server, Supabase-free)" }
+    purpose: "Repo URL → compact symbolic JSON map (file tree + top-level symbols). The orient layer for code-recon/groundwork."
+    entry_points: ["src/demo-server.ts"]
+    provides: "compression queue: submit repo → fetch symbolic map (skeleton)."
+    consumed_by: ["hydra-engine (:8899)", "delta-scp-web (:5174)", "code-recon orient gate"]

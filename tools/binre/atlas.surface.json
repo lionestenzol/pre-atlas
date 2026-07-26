@@ -1,0 +1,19 @@
+{
+  "surface": "binre",
+  "headline": "Reverse-engineering pipeline (DiE + Dependencies + Ghidra + x64dbg + Frida) -- the perceive stage's deepest read: one merged report.json per binary, content-addressed by sha256(binary). This surface is the FAST read of a cached report (no Ghidra), minting the sha256 join key into the seam.",
+  "kind": "cli",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "report",
+      "label": "Read a cached binre report by sha256 or binary path (mint the join key, no Ghidra)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python tools/binre/report.py {target}",
+      "needs": ["target"],
+      "evidence": "C:/Users/bruke/Pre Atlas/tools/binre/report.py reads C:/Users/bruke/binre/out/<sha256>/report.json (orchestrate.py:99 out dir = digest; :124-130 report fields)",
+      "notes": "Read-only stdlib adapter, no Ghidra, fits the 20s gateway timeout. Path is relative to repo_root (the gateway cwd), mirroring tools/codex-partner. {target} is a bare sha256 OR a forward-slash binary path. The full ~67s pipeline (binre.scripts.orchestrate) is intentionally NOT exposed here -- it blows the timeout; this surface only reads what it already produced."
+    }
+  ]
+}

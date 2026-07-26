@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "atlas_profile.schema.json",
+  "title": "Atlas Behavioral Profile",
+  "description": "Single source of truth for a person's routines and A/B/C day types. Filled once (by a human or by Claude), then fanned out to every behavioral surface by setup/apply.py. The blank version (atlas_profile.template.json) is the canvas a brand-new user starts from.",
+  "type": "object",
+  "required": ["identity", "routines", "day_types", "settings"],
+  "additionalProperties": true,
+  "properties": {
+    "identity": {
+      "type": "object",
+      "required": ["mission", "motto"],
+      "additionalProperties": false,
+      "properties": {
+        "mission": { "type": "string", "description": "The concrete thing you are building toward. Not a vibe." },
+        "motto": { "type": "string", "description": "What you say to yourself when the day cracks." }
+      }
+    },
+    "focus_areas": {
+      "type": "array",
+      "description": "Life areas (PIGPEN: Production, Image, Growth, Personal, Errands, Network). Define what each means to YOU.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "definition": { "type": "string" },
+          "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+        }
+      }
+    },
+    "routines": {
+      "type": "object",
+      "description": "Named ordered step lists. 'Morning' and 'Evening' are conventional; add any custom routine (e.g. 'Commute', 'ShutDown', 'Gym').",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "day_types": {
+      "type": "object",
+      "description": "A/B/C day templates (and any custom letters). Each has a schedule of time blocks, which routines are active, and baseline/stretch goals.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "time_blocks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["time", "title"],
+              "additionalProperties": false,
+              "properties": {
+                "time": { "type": "string", "description": "Display time, e.g. '6:00 AM'." },
+                "title": { "type": "string" },
+                "duration": { "type": "integer", "description": "Minutes." }
+              }
+            }
+          },
+          "routines": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Names of routines (keys in the routines map) that are active on this day type."
+          },
+          "goals": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "baseline": { "type": "string" },
+              "stretch": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_day_type": { "type": "string", "description": "Which day type a new day defaults to. Must be a key in day_types." },
+        "dark_mode": { "type": "boolean" },
+        "notifications": { "type": "boolean" }
+      }
+    },
+    "az_tasks": {
+      "type": "array",
+      "description": "Optional monthly A-Z milestones to seed. Leave empty for a blank canvas.",
+      "items": {
+        "type": "object",
+        "required": ["letter", "task"],
+        "additionalProperties": false,
+        "properties": {
+          "letter": { "type": "string", "pattern": "^[A-Z]$" },
+          "task": { "type": "string" },
+          "status": { "type": "string", "enum": ["Not Started", "In Progress", "Stalled", "Completed"] },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "contingencies": {
+      "type": "object",
+      "description": "Named fallback playbooks (e.g. runningLate, lowEnergy). Each has enabled + a list of actions.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "actions": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

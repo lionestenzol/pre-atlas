@@ -1,0 +1,40 @@
+{
+  "surface": "code-converter",
+  "headline": "FastAPI service (:3007) that converts Python source to C++ via pattern matching, then compiles and runs both to verify output parity.",
+  "kind": "http",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "health",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /health",
+      "evidence": "apps/code-converter/server.py:78"
+    },
+    {
+      "id": "serve-index",
+      "direction": "read",
+      "exposure": "public",
+      "criticality": 0,
+      "invoke": "GET /",
+      "evidence": "apps/code-converter/server.py:37"
+    },
+    {
+      "id": "get-patterns",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "GET /patterns",
+      "evidence": "apps/code-converter/server.py:72"
+    },
+    {
+      "id": "convert",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 3,
+      "invoke": "POST /convert",
+      "evidence": "apps/code-converter/server.py:42"
+    }
+  ]
+}

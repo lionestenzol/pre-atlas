@@ -139,6 +139,48 @@ export class ActionProcessor {
     };
   }
 
+  /**
+   * Execute an action that a human has already approved via the approval
+   * queue. Skips the policy re-check (`process()` would otherwise match the
+   * same REQUIRE_HUMAN rule again and queue a new approval forever -- see
+   * ~/.claude/rules/common/code-as-furniture.md fix log). Still validates
+   * the agent/tenant so a disabled agent can't execute via a stale approval.
+   */
+  async processApproved(action: CanonicalAgentAction): Promise<ActionResponse> {
+    const { tenant_id, agent_id } = action;
+
+    const agent = this.agentRegistry.getAgent(tenant_id, agent_id);
+    if (!agent) {
+      return this.deny(action, 'Agent not found');
+    }
+    if (!agent.state.enabled) {
+      return this.deny(action, 'Agent is disabled');
+    }
+
+    const tenant = this.tenantRegistry.getTenant(tenant_id);
+    if (!tenant) {
+      return this.deny(action, 'Tenant not found');
+    }
+
+    const result = await this.executeAction(action);
+
+    this.trackUsage(action);
+    this.emit('action.completed', { action, result });
+    this.agentRegistry.updateAgentActivity(tenant_id, agent_id);
+
+    return {
+      status: 'executed',
+      action_id: action.action_id,
+      result,
+      policy_decision: {
+        effect: 'ALLOW',
+        matched_rule: null,
+        reason: 'Executed via human-approved decision (policy re-check bypassed)',
+        cached: false,
+      },
+    };
+  }
+
   // === ACTION EXECUTORS ===
 
   private async executeAction(action: CanonicalAgentAction): Promise<{ entity_id: UUID; delta_id: UUID; state: unknown }> {

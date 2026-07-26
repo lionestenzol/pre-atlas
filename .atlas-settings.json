@@ -1,0 +1,8 @@
+{
+  "$schema_note": "Runtime knobs for start_atlas.ps1 and atlas-mission-control.html. Default openDashboardsOnCron:false was set 2026-07-25 after the 15-min Chrome-tab spam. Toggle in atlas-mission-control.html or edit directly.",
+  "openDashboardsOnCron": false,
+  "dashboardUrls": [
+    "http://127.0.0.1:3006",
+    "http://127.0.0.1:8887"
+  ]
+}

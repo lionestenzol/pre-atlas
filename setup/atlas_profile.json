@@ -1,0 +1,111 @@
+{
+  "_comment": "ACTIVE PROFILE. Today (2026-06-25) is an S day — aggressive last-subscription-day ship. Run: python setup/apply.py",
+
+  "identity": {
+    "mission": "Maximize the last day of my Claude Code subscription — ship aggressively, stage the rest to run remote.",
+    "motto": "GTSD — Get tha mf shit done. Belt to ass. BOW BOW BOW."
+  },
+
+  "focus_areas": [
+    { "name": "Production", "definition": "Ship code. Outcomes, not motion.",          "color": "#3B82F6" },
+    { "name": "Image",      "definition": "Build brand and presentation",              "color": "#10B981" },
+    { "name": "Growth",     "definition": "Learning and skill development",            "color": "#8B5CF6" },
+    { "name": "Personal",   "definition": "Eat, hydrate, don't burn out mid-sprint",  "color": "#F59E0B" },
+    { "name": "Errands",    "definition": "Logistics to reduce friction",             "color": "#EF4444" },
+    { "name": "Network",    "definition": "Expand and nurture connections",           "color": "#EC4899" }
+  ],
+
+  "routines": {
+    "Ship": [
+      "Check token window + context % (how much runway in this 5h block)",
+      "Pick the ONE ship target for this window",
+      "Write the done-condition (testable: a command that proves it)",
+      "Kill distractions — close tabs, phone away",
+      "Ship — zero scope creep",
+      "Verify: run the test / smoke",
+      "Commit",
+      "Log the win",
+      "Next target, or stage it remote and recharge"
+    ],
+    "Morning": ["Hydrate", "Weather check", "Oral care", "Shower", "Skincare", "Dress", "Pack essentials", "Breakfast", "Tidy space", "Walk/Stretch", "High-priority task"],
+    "Evening": ["Light tidy", "Prep bag", "Plan tomorrow", "Gratitude entry"]
+  },
+
+  "day_types": {
+    "S": {
+      "name": "S Day — Aggressive Ship",
+      "description": "One-on-one, ready to whoop ass. Maximize every 5h token window. Eat + ship, nothing else matters. Stage overnight remote agents before the last window closes.",
+      "time_blocks": [
+        { "time": "7:45 AM",  "title": "Window 1 OPEN — Ship Launch routine, mark token budget", "duration": 15 },
+        { "time": "8:00 AM",  "title": "SPRINT 1 — ship target #1 (deep, no scope creep)",        "duration": 240 },
+        { "time": "12:00 PM", "title": "Window 1 close-out — commit, log win, stage next",         "duration": 45 },
+        { "time": "12:45 PM", "title": "Window 2 OPEN — refuel + recheck budget",                  "duration": 15 },
+        { "time": "1:00 PM",  "title": "SPRINT 2 — ship target #2",                                "duration": 240 },
+        { "time": "5:00 PM",  "title": "Window 2 close-out — commit, stage",                       "duration": 45 },
+        { "time": "5:45 PM",  "title": "Window 3 OPEN — budget check",                             "duration": 15 },
+        { "time": "6:00 PM",  "title": "SPRINT 3 — ship target #3",                                "duration": 240 },
+        { "time": "10:00 PM", "title": "Window 3 close-out — commit",                              "duration": 45 },
+        { "time": "10:45 PM", "title": "Window 4 OPEN — STAGE OVERNIGHT REMOTE AGENTS on backlog", "duration": 30 },
+        { "time": "11:15 PM", "title": "SPRINT 4 — final push + queue background work",            "duration": 180 }
+      ],
+      "routines": ["Ship", "Evening"],
+      "goals": {
+        "baseline": "Ship 1 real thing every 5h window (4 total)",
+        "stretch": "Ship every window + overnight remote agents grinding the backlog while I sleep"
+      }
+    },
+    "A": {
+      "name": "Optimal Day",
+      "description": "Full energy, maximum output",
+      "time_blocks": [
+        { "time": "6:00 AM",  "title": "Morning Routine",          "duration": 60 },
+        { "time": "7:30 AM",  "title": "Deep Work Block 1",        "duration": 90 },
+        { "time": "9:15 AM",  "title": "Deep Work Block 2",        "duration": 90 },
+        { "time": "11:15 AM", "title": "Deep Work Block 3",        "duration": 90 },
+        { "time": "1:30 PM",  "title": "Deep Work Block 4",        "duration": 90 },
+        { "time": "4:30 PM",  "title": "Evening Routine",          "duration": 30 }
+      ],
+      "routines": ["Morning", "Evening"],
+      "goals": { "baseline": "Complete 4 deep work blocks", "stretch": "Clear inbox + bonus task" }
+    },
+    "B": {
+      "name": "Low Energy Day",
+      "description": "Conserve energy, focus on essentials",
+      "time_blocks": [
+        { "time": "7:00 AM",  "title": "Light Morning Routine", "duration": 45 },
+        { "time": "8:30 AM",  "title": "Focus Block 1",         "duration": 60 },
+        { "time": "9:50 AM",  "title": "Focus Block 2",         "duration": 60 },
+        { "time": "12:30 PM", "title": "Focus Block 3",         "duration": 60 },
+        { "time": "3:00 PM",  "title": "Evening Routine",       "duration": 30 }
+      ],
+      "routines": ["Morning", "Evening"],
+      "goals": { "baseline": "Complete 3 focus blocks", "stretch": "One bonus task if energy allows" }
+    },
+    "C": {
+      "name": "Chaos Day",
+      "description": "Survival mode - one priority only",
+      "time_blocks": [
+        { "time": "8:00 AM",  "title": "Minimal Morning",       "duration": 30 },
+        { "time": "8:45 AM",  "title": "Priority Task",         "duration": 90 },
+        { "time": "12:30 PM", "title": "Damage Control",        "duration": 90 },
+        { "time": "2:30 PM",  "title": "Rest / Tomorrow Prep",  "duration": 30 }
+      ],
+      "routines": ["Evening"],
+      "goals": { "baseline": "Complete ONE priority task", "stretch": "Survive and reset for tomorrow" }
+    }
+  },
+
+  "settings": {
+    "default_day_type": "S",
+    "dark_mode": false,
+    "notifications": true
+  },
+
+  "az_tasks": [],
+
+  "contingencies": {
+    "interrupted": { "enabled": true, "actions": ["Commit WIP immediately", "Stage the current target as a background/remote agent", "Note where you stopped in the win log", "Resume next window"] },
+    "lowTokens":   { "enabled": true, "actions": ["Stop new work", "Commit + log", "Queue remaining targets as remote agents", "Recharge until window resets"] },
+    "lowEnergy":   { "enabled": true, "actions": ["Switch to B-Day mode", "Focus on baseline only", "Eat + hydrate"] }
+  }
+}

@@ -1,0 +1,467 @@
+{
+  "fest_status.py": [
+    "subprocess"
+  ],
+  "src/mosaic/__init__.py": [],
+  "src/mosaic/adapters/__init__.py": [],
+  "src/mosaic/adapters/claude_adapter.py": [
+    "anthropic",
+    "dataclasses.dataclass",
+    "dataclasses.field",
+    "enum.Enum",
+    "httpx",
+    "structlog",
+    "time",
+    "typing.Any"
+  ],
+  "src/mosaic/api.py": [
+    "contextlib.asynccontextmanager",
+    "datetime.datetime",
+    "datetime.timezone",
+    "fastapi.FastAPI",
+    "fastapi.middleware.cors.CORSMiddleware",
+    "json",
+    "mosaic.adapters.claude_adapter.ClaudeAdapter",
+    "mosaic.clients.aegis_client.AegisClient",
+    "mosaic.clients.cognitive_client.CognitiveClient",
+    "mosaic.clients.delta_client.DeltaClient",
+    "mosaic.clients.festival_client.FestivalClient",
+    "mosaic.clients.mirofish_client.MirofishClient",
+    "mosaic.clients.openclaw_client.OpenClawClient",
+    "mosaic.config.config",
+    "mosaic.metering.metering.MeteringStore",
+    "mosaic.queue.client.QueueClient",
+    "mosaic.queue.executor.EmbeddedExecutor",
+    "mosaic.queue.publisher.NatsPublisher",
+    "mosaic.workflows.compound_loop.run_compound_loop",
+    "mosaic.workflows.compound_loops.analyst_engine.compute_analyst_signals",
+    "mosaic.workflows.compound_loops.analyst_engine.evaluate_priority_adjustments",
+    "mosaic.workflows.compound_loops.automation_engine.add_task",
+    "mosaic.workflows.compound_loops.automation_engine.compute_automation_health_signals",
+    "mosaic.workflows.compound_loops.automation_engine.compute_due_tasks",
+    "mosaic.workflows.compound_loops.automation_engine.evaluate_conditions",
+    "mosaic.workflows.compound_loops.automation_engine.log_execution",
+    "mosaic.workflows.compound_loops.energy_engine.compute_energy_health_signals",
+    "mosaic.workflows.compound_loops.energy_engine.log_energy_entry",
+    "mosaic.workflows.compound_loops.finance_engine.add_transaction",
+    "mosaic.workflows.compound_loops.finance_engine.compute_budget_variance",
+    "mosaic.workflows.compound_loops.finance_engine.compute_cash_flow_projection",
+    "mosaic.workflows.compound_loops.finance_engine.compute_finance_health_signals",
+    "mosaic.workflows.compound_loops.finance_engine.compute_monthly_summary",
+    "mosaic.workflows.compound_loops.finance_engine.detect_alerts",
+    "mosaic.workflows.compound_loops.network_engine.add_contact",
+    "mosaic.workflows.compound_loops.network_engine.compute_network_health_signals",
+    "mosaic.workflows.compound_loops.network_engine.compute_outreach_due",
+    "mosaic.workflows.compound_loops.network_engine.log_interaction",
+    "mosaic.workflows.compound_loops.network_engine.match_opportunities_to_contacts",
+    "mosaic.workflows.compound_loops.project_progress.compute_goal_progress",
+    "mosaic.workflows.compound_loops.project_progress.compute_milestone_progress",
+    "mosaic.workflows.compound_loops.skill_progression.apply_skill_usage",
+    "mosaic.workflows.compound_loops.skill_progression.compute_skill_health_signals",
+    "mosaic.workflows.compound_loops.skill_progression.recommend_next_skills",
+    "mosaic.workflows.daily_loop.run_daily_loop",
+    "mosaic.workflows.idea_simulation.run_idea_to_simulation",
+    "mosaic.workflows.stall_detector.detect_stalls",
+    "structlog"
+  ],
+  "src/mosaic/clients/__init__.py": [],
+  "src/mosaic/clients/aegis_client.py": [
+    "asyncio",
+    "httpx",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/clients/cognitive_client.py": [
+    "asyncio",
+    "json",
+    "pathlib.Path",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/clients/delta_client.py": [
+    "asyncio",
+    "httpx",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/clients/festival_client.py": [
+    "asyncio",
+    "json",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/clients/mirofish_client.py": [
+    "asyncio",
+    "httpx",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/clients/openclaw_client.py": [
+    "asyncio",
+    "httpx",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/config.py": [
+    "os",
+    "pathlib.Path",
+    "pydantic.BaseModel",
+    "uuid"
+  ],
+  "src/mosaic/main.py": [
+    "asyncio",
+    "mosaic.api.app",
+    "mosaic.config.config",
+    "structlog",
+    "uvicorn"
+  ],
+  "src/mosaic/metering/__init__.py": [
+    "mosaic.metering.metering.MeteringStore"
+  ],
+  "src/mosaic/metering/metering.py": [
+    "datetime.datetime",
+    "datetime.timezone",
+    "pathlib.Path",
+    "sqlite3",
+    "structlog"
+  ],
+  "src/mosaic/queue/__init__.py": [
+    "mosaic.queue.client.QueueClient",
+    "mosaic.queue.executor.EmbeddedExecutor",
+    "mosaic.queue.publisher.NatsPublisher"
+  ],
+  "src/mosaic/queue/client.py": [
+    "__future__.annotations",
+    "asyncpg",
+    "json",
+    "structlog",
+    "typing.Any",
+    "uuid"
+  ],
+  "src/mosaic/queue/executor.py": [
+    "__future__.annotations",
+    "asyncio",
+    "mosaic.adapters.claude_adapter.ClaudeAdapter",
+    "mosaic.adapters.claude_adapter.TaskPriority",
+    "mosaic.adapters.claude_adapter.TaskSpec",
+    "mosaic.metering.metering.MeteringStore",
+    "mosaic.queue.client.QueueClient",
+    "mosaic.queue.publisher.NatsPublisher",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/queue/publisher.py": [
+    "__future__.annotations",
+    "json",
+    "nats",
+    "nats.aio.client.Client",
+    "structlog",
+    "time",
+    "typing.Any",
+    "uuid"
+  ],
+  "src/mosaic/workflows/__init__.py": [
+    "mosaic.workflows.daily_loop.run_daily_loop",
+    "mosaic.workflows.idea_simulation.run_idea_to_simulation",
+    "mosaic.workflows.stall_detector.detect_stalls"
+  ],
+  "src/mosaic/workflows/compound_loop.py": [
+    ".compound_loops.brief_generator.generate_compound_brief",
+    ".compound_loops.collector.CompoundSnapshot",
+    ".compound_loops.collector.LoopResult",
+    ".compound_loops.collector.collect_snapshot",
+    ".compound_loops.loop_analyst.compute_analyst_decisions",
+    ".compound_loops.loop_automation_health.compute_automation_health",
+    ".compound_loops.loop_closure_skill.compute_closure_to_skill",
+    ".compound_loops.loop_completion_finance.compute_completion_to_finance",
+    ".compound_loops.loop_compound_score.compute_compound_score",
+    ".compound_loops.loop_energy_health.compute_energy_health",
+    ".compound_loops.loop_energy_throttle.compute_energy_throttle",
+    ".compound_loops.loop_finance_health.compute_finance_health",
+    ".compound_loops.loop_network_health.compute_network_health",
+    ".compound_loops.loop_project_health.compute_project_health",
+    ".compound_loops.loop_risk_cascade.compute_risk_cascade",
+    ".compound_loops.loop_risk_mitigation.compute_risk_mitigation",
+    ".compound_loops.loop_skill_health.compute_skill_health",
+    ".compound_loops.loop_skill_network.compute_skill_to_network",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/__init__.py": [],
+  "src/mosaic/workflows/compound_loops/analyst_engine.py": [
+    "__future__.annotations",
+    "hashlib",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/automation_engine.py": [
+    "__future__.annotations",
+    "copy",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "datetime.timezone",
+    "hashlib",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/brief_generator.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/collector.py": [
+    "__future__.annotations",
+    "dataclasses.dataclass",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/energy_engine.py": [
+    "__future__.annotations",
+    "copy",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/finance_engine.py": [
+    "__future__.annotations",
+    "copy",
+    "datetime.datetime",
+    "datetime.timezone",
+    "hashlib",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_analyst.py": [
+    ".analyst_engine.compute_analyst_signals",
+    ".analyst_engine.evaluate_directive_execution",
+    ".analyst_engine.evaluate_lane_violations",
+    ".analyst_engine.evaluate_loop_closures",
+    ".analyst_engine.evaluate_priority_adjustments",
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_automation_health.py": [
+    ".automation_engine.compute_automation_health_signals",
+    ".automation_engine.compute_due_tasks",
+    ".automation_engine.evaluate_conditions",
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_closure_skill.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    "__future__.annotations",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_completion_finance.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    "__future__.annotations",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_compound_score.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    ".energy_engine.compute_energy_health_signals",
+    ".finance_engine.compute_finance_health_signals",
+    ".network_engine.compute_network_health_signals",
+    ".project_progress.compute_project_health_signals",
+    ".skill_progression.compute_skill_health_signals",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_energy_health.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    ".energy_engine.compute_energy_health_signals",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_energy_throttle.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    "__future__.annotations",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_finance_health.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    ".finance_engine.compute_cash_flow_projection",
+    ".finance_engine.compute_finance_health_signals",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_network_health.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    ".network_engine.compute_network_health_signals",
+    ".network_engine.match_opportunities_to_contacts",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_project_health.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    ".project_progress.compute_project_health_signals",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_risk_cascade.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    "__future__.annotations",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_risk_mitigation.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    ".energy_engine.detect_trends",
+    ".risk_engine.compute_adaptive_guardrails",
+    ".risk_engine.compute_recovery_target",
+    ".risk_engine.detect_interference",
+    ".risk_engine.generate_mitigation_plan",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_skill_health.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    ".skill_progression.compute_skill_health_signals",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/loop_skill_network.py": [
+    ".collector.CompoundSnapshot",
+    ".collector.LoopResult",
+    ".skill_progression.compute_skill_health_signals",
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/network_engine.py": [
+    "__future__.annotations",
+    "copy",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "datetime.timezone",
+    "hashlib",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/project_progress.py": [
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/risk_engine.py": [
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/compound_loops/skill_progression.py": [
+    "__future__.annotations",
+    "copy",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "datetime.timezone",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/daily_loop.py": [
+    "datetime.datetime",
+    "datetime.timezone",
+    "mosaic.clients.cognitive_client.CognitiveClient",
+    "mosaic.clients.delta_client.DeltaClient",
+    "mosaic.workflows.compound_loop.run_compound_loop",
+    "structlog",
+    "typing.Any"
+  ],
+  "src/mosaic/workflows/idea_simulation.py": [
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "mosaic.clients.cognitive_client.CognitiveClient",
+    "mosaic.clients.mirofish_client.MirofishClient",
+    "mosaic.clients.openclaw_client.OpenClawClient",
+    "structlog"
+  ],
+  "src/mosaic/workflows/stall_detector.py": [
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "mosaic.clients.cognitive_client.CognitiveClient",
+    "mosaic.clients.openclaw_client.OpenClawClient",
+    "structlog"
+  ],
+  "test_compound.py": [
+    "asyncio",
+    "json",
+    "mosaic.clients.cognitive_client.CognitiveClient",
+    "mosaic.config.config",
+    "mosaic.workflows.compound_loop.run_compound_loop",
+    "pathlib.Path",
+    "sys"
+  ],
+  "tests/conftest.py": [
+    "mosaic.clients.cognitive_client.CognitiveClient",
+    "mosaic.clients.delta_client.DeltaClient",
+    "mosaic.clients.mirofish_client.MirofishClient",
+    "mosaic.clients.openclaw_client.OpenClawClient",
+    "pathlib.Path",
+    "pytest",
+    "unittest.mock.AsyncMock",
+    "unittest.mock.MagicMock"
+  ],
+  "tests/test_api.py": [
+    "httpx.ASGITransport",
+    "httpx.AsyncClient",
+    "mosaic.api.app",
+    "pytest",
+    "pytest_asyncio",
+    "unittest.mock.AsyncMock",
+    "unittest.mock.MagicMock",
+    "unittest.mock.patch"
+  ],
+  "tests/test_metering.py": [
+    "mosaic.metering.metering.MeteringStore",
+    "pathlib.Path",
+    "pytest"
+  ],
+  "tests/test_workflows.py": [
+    "mosaic.workflows.daily_loop.run_daily_loop",
+    "mosaic.workflows.idea_simulation.find_eligible_ideas",
+    "mosaic.workflows.idea_simulation.run_idea_to_simulation",
+    "mosaic.workflows.stall_detector.detect_stalls",
+    "pytest"
+  ]
+}

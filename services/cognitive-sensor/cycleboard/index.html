@@ -247,10 +247,12 @@
             : '<div class="text-gray-500 italic">(none)</div>';
 
           const counts = board.counts || {};
-          const fmt = (k) => `<span class="mr-3"><span class="text-gray-500">${k}:</span> ${counts[k] ?? 0}</span>`;
-          document.getElementById('lifecycle-counts').innerHTML =
+          const fmt = (k) => `<span class="inline-flex items-center whitespace-nowrap mr-3"><span class="text-gray-500 mr-1">${k}:</span>${counts[k] ?? 0}</span>`;
+          const lc = document.getElementById('lifecycle-counts');
+          lc.classList.add('flex', 'flex-wrap', 'items-center', 'gap-y-1');
+          lc.innerHTML =
             ['HARVESTED', 'PLANNED', 'BUILDING', 'REVIEWING'].map(fmt).join('') +
-            '<span class="text-gray-600 mx-2">/</span>' +
+            '<span class="text-gray-600 mx-2 whitespace-nowrap">/</span>' +
             ['DONE', 'RESOLVED', 'DROPPED'].map(fmt).join('');
         } catch (e) {
           const inProg = document.getElementById('lifecycle-in-progress-list');

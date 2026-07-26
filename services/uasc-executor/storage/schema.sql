@@ -64,8 +64,12 @@ INSERT OR IGNORE INTO commands (cmd, profile_id, version, enabled, allowed_roles
     ('@EXECUTE', 'EXECUTE_v1', 1, 1, '*'),
     ('@SNAPSHOT', 'SNAPSHOT_v1', 1, 1, '*');
 
--- Delta-kernel is the primary client (shared secret for local IPC)
+-- Client credentials MUST be set after init via an operator script that hashes
+-- a real secret (from env or vault) into the `secret_hash` column. The placeholder
+-- below intentionally cannot match any auth check — surfaces auth misconfig loudly
+-- instead of silently accepting a publicly-known default. Same anti-pattern fix
+-- as Aegis a03f6b5 (removed `aegis-admin-default-key` fallback).
 INSERT OR IGNORE INTO clients (client_id, client_name, secret_hash, roles, enabled) VALUES
-    ('delta-kernel', 'Delta-Kernel Bridge', 'delta-kernel-local-secret', 'admin', 1),
-    ('cli-local', 'Local CLI', 'cli-local-secret', 'admin', 1),
-    ('atlas-execution-daemon', 'Atlas Execution Daemon', 'atlas-execution-daemon-local-secret', 'admin', 1);
+    ('delta-kernel', 'Delta-Kernel Bridge', 'REPLACE_VIA_INIT_SECRET_OR_AUTH_WILL_FAIL', 'admin', 1),
+    ('cli-local', 'Local CLI', 'REPLACE_VIA_INIT_SECRET_OR_AUTH_WILL_FAIL', 'admin', 1),
+    ('atlas-execution-daemon', 'Atlas Execution Daemon', 'REPLACE_VIA_INIT_SECRET_OR_AUTH_WILL_FAIL', 'admin', 1);

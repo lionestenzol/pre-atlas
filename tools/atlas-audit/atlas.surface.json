@@ -1,0 +1,72 @@
+{
+  "surface": "atlas-audit",
+  "headline": "One-command bash audit pipeline that runs 6 drift checks against Atlas-the-system, emits JSONL findings + markdown report + diffable snapshot, and exits with the count of NEW findings for scheduler/directive consumption.",
+  "kind": "cli",
+  "lifecycle": "live",
+  "capabilities": [
+    {
+      "id": "run_audit",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "bash tools/atlas-audit/audit.sh",
+      "evidence": "tools/atlas-audit/audit.sh:1-37"
+    },
+    {
+      "id": "scan_reserved_windows_names",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "bash tools/atlas-audit/audit.sh  # check 1: reserved device-name files (NUL/CON/...)",
+      "evidence": "tools/atlas-audit/audit.sh:54-60"
+    },
+    {
+      "id": "scan_untracked_imported_atlas_modules",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "bash tools/atlas-audit/audit.sh  # check 2: imported-but-untracked atlas/*.ts (git ls-files)",
+      "evidence": "tools/atlas-audit/audit.sh:66-76"
+    },
+    {
+      "id": "scan_mode_fsm_partial_records",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "bash tools/atlas-audit/audit.sh  # check 3: Record<Mode,...> partial 6-mode coverage",
+      "evidence": "tools/atlas-audit/audit.sh:83-103"
+    },
+    {
+      "id": "scan_atlas_test_coverage",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "bash tools/atlas-audit/audit.sh  # check 4: atlas/ LOC>100 with 0 test files",
+      "evidence": "tools/atlas-audit/audit.sh:109-113"
+    },
+    {
+      "id": "scan_governance_state_and_untracked_docs",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "bash tools/atlas-audit/audit.sh  # checks 5+6: missing mode_since + untracked long doctrine .md",
+      "evidence": "tools/atlas-audit/audit.sh:119-147"
+    },
+    {
+      "id": "write_run_artifacts_and_snapshot",
+      "direction": "write",
+      "exposure": "agent",
+      "criticality": 1,
+      "invoke": "bash tools/atlas-audit/audit.sh  # writes findings-/report-/snapshot-<date> to runs/",
+      "evidence": "tools/atlas-audit/audit.sh:38-48,152-234"
+    },
+    {
+      "id": "emit_directives_from_findings",
+      "direction": "write",
+      "exposure": "internal",
+      "criticality": 2,
+      "invoke": "bash audit.sh && jq ... findings-$(date -u +%F).json | curl -X POST localhost:3001/api/atlas/directives",
+      "evidence": "tools/atlas-audit/README.md:52-64"
+    }
+  ]
+}

@@ -1,0 +1,412 @@
+{
+  "phase": "003_CROSS_REFERENCE_MATRIX",
+  "sequence": "era_1_pre_cc",
+  "generated_at": "2026-05-28T00:52:39.140133+00:00",
+  "era": {
+    "label": "era_1_pre_cc",
+    "start": "2024-08-21",
+    "end": "2026-02-08"
+  },
+  "method": "Substring match of cluster seed_terms (case-insensitive) against ChatGPT title and CC first_user_msg. Items filtered to era window by first_date (ChatGPT) / first_ts (CC). Samples sorted by date ascending, capped at 5 per cell. HOTL: substring warnings from Phase 2 (clusters_final.json) still apply and are not auto-filtered here.",
+  "samples_per_cell": 5,
+  "totals": {
+    "chatgpt_in_era": 4989,
+    "cc_in_era": 0,
+    "chatgpt_matched_sum_over_clusters": 167,
+    "cc_matched_sum_over_clusters": 0,
+    "note": "matched_sum_over_clusters can exceed in_era because one item may match multiple clusters (e.g. an 'anatomy canvas' chat hits both anatomy and canvas_render)."
+  },
+  "substring_warnings_carried_forward": [
+    {
+      "cluster": "audio_music",
+      "warning": {
+        "seed_term": "stem",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "6321",
+            "title": "Bartering Dual Economy System"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "6281",
+            "title": "Business Ecosystem Integration"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "6098",
+            "title": "Document Processing System Design"
+          }
+        ]
+      }
+    },
+    {
+      "cluster": "productivity_skills",
+      "warning": {
+        "seed_term": "fest",
+        "length": 4,
+        "fp_examples_in_other_tokens": [
+          {
+            "channel": "chatgpt",
+            "convo_id": "6289",
+            "title": "Manifesting Through Desire"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "5988",
+            "title": "Manifestation and Facial Hair"
+          },
+          {
+            "channel": "chatgpt",
+            "convo_id": "5690",
+            "title": "OFP Lifestyle Explained"
+          }
+        ]
+      }
+    }
+  ],
+  "clusters": [
+    {
+      "name": "anatomy",
+      "seed_terms": [
+        "anatomy",
+        "anatomy-v1",
+        "anatomyv1",
+        "anatomy-extension",
+        "anatomy-research",
+        "anatomy-rewrite",
+        "anatomy-map",
+        "anatomy-frame",
+        "anatomy-sidecar"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 0,
+          "samples": []
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "mb3d_fractals",
+      "seed_terms": [
+        "mb3d",
+        "mandelbulb",
+        "mandelbulber",
+        "m3p",
+        "m3f",
+        ".fract",
+        "mandelbox",
+        "fractal",
+        "raymarcher",
+        "fragmentarium"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 2,
+          "samples": [
+            {
+              "id": "4986",
+              "date": "2025-03-20",
+              "preview": "Logistics and Fractal Thinking"
+            },
+            {
+              "id": "3945",
+              "date": "2025-06-01",
+              "preview": "Fractal Thinking and Execution"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "audio_music",
+      "seed_terms": [
+        "strudel",
+        "stem",
+        "stemai",
+        "surge",
+        "surge-xt",
+        "nih-plug",
+        "airwindows",
+        "musescore",
+        "fl356",
+        "fl 3",
+        "fl3",
+        "vst3",
+        "vst",
+        "daw",
+        "midi",
+        "synth",
+        "sampler",
+        "audio"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 89,
+          "samples": [
+            {
+              "id": "6321",
+              "date": "2024-11-06",
+              "preview": "Bartering Dual Economy System"
+            },
+            {
+              "id": "6281",
+              "date": "2024-11-15",
+              "preview": "Business Ecosystem Integration"
+            },
+            {
+              "id": "6107",
+              "date": "2024-11-29",
+              "preview": "Synthesizing Ideas for GPT"
+            },
+            {
+              "id": "6098",
+              "date": "2024-11-30",
+              "preview": "Document Processing System Design"
+            },
+            {
+              "id": "5902",
+              "date": "2025-01-06",
+              "preview": "AI Multi-Agent Systems"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "atlas_core",
+      "seed_terms": [
+        "atlas",
+        "pre atlas",
+        "pre-atlas",
+        "delta-kernel",
+        "delta kernel",
+        "cognitive-sensor",
+        "cognitive sensor",
+        "cycleboard",
+        "cortex",
+        "optogon",
+        "aegis",
+        "aegis-fabric",
+        "openclaw",
+        "mirofish",
+        "perception",
+        "triangulation",
+        "mosaic",
+        "inpact",
+        "in-pact",
+        "blueprint-generator",
+        "code-converter",
+        "ai-exec-pipeline",
+        "uasc",
+        "ws-gateway",
+        "polaris",
+        "crucix",
+        "governance",
+        "RECOVER",
+        "CLOSURE",
+        "MAINTENANCE",
+        "COMPOUND",
+        "SCALE"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 64,
+          "samples": [
+            {
+              "id": "6521",
+              "date": "2024-08-24",
+              "preview": "Voice Perception as Strength"
+            },
+            {
+              "id": "6490",
+              "date": "2024-09-07",
+              "preview": "Perception in Tough Workplaces"
+            },
+            {
+              "id": "6464",
+              "date": "2024-10-11",
+              "preview": "Perception vs Reality Balance"
+            },
+            {
+              "id": "6454",
+              "date": "2024-10-13",
+              "preview": "Organizing Perception and Behavior"
+            },
+            {
+              "id": "6223",
+              "date": "2024-11-23",
+              "preview": "Challenging Perceptions Through Performance"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "web_extract",
+      "seed_terms": [
+        "scrapling",
+        "scrape",
+        "scraping",
+        "sitepull",
+        "web-audit",
+        "web-extract",
+        "competitor-monitor",
+        "competitor monitor",
+        "brightdata",
+        "datadome",
+        "cloudflare",
+        "anti-bot",
+        "playwright",
+        "puppeteer",
+        "headless",
+        "humanize"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 1,
+          "samples": [
+            {
+              "id": "2530",
+              "date": "2025-10-17",
+              "preview": "Scrape or bite mark"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "productivity_skills",
+      "seed_terms": [
+        "weapon",
+        "fest",
+        "festival",
+        "mini-ship",
+        "miniship",
+        "autopilot",
+        "project-finisher",
+        "handoff",
+        "handoff-out",
+        "eval-harness",
+        "cookbook",
+        "search-first",
+        "security-review",
+        "strategic-compact",
+        "tdd-workflow",
+        "verification-loop",
+        "coding-standards",
+        "backend-patterns",
+        "frontend-patterns",
+        "wasp-patterns",
+        "codex-delegate",
+        "codex-partner",
+        "continuous-learning",
+        "slash command",
+        "/weapon",
+        "/fest",
+        "/mini-ship",
+        "/autopilot"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 10,
+          "samples": [
+            {
+              "id": "6289",
+              "date": "2024-11-12",
+              "preview": "Manifesting Through Desire"
+            },
+            {
+              "id": "5988",
+              "date": "2024-12-14",
+              "preview": "Manifestation and Facial Hair"
+            },
+            {
+              "id": "5690",
+              "date": "2025-02-04",
+              "preview": "OFP Lifestyle Explained"
+            },
+            {
+              "id": "5642",
+              "date": "2025-02-08",
+              "preview": "Hallucinations vs Manifestations"
+            },
+            {
+              "id": "5029",
+              "date": "2025-03-18",
+              "preview": "Angel Numbers and Manifestation"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    {
+      "name": "canvas_render",
+      "seed_terms": [
+        "canvas-engine",
+        "canvas-demo",
+        "screenshot-to-code",
+        "three-js",
+        "three.js",
+        "threejs",
+        "three-stack",
+        "three-js-migrate",
+        "react-three-fiber",
+        "r3f",
+        "drei",
+        "anime-js",
+        "anime.js",
+        "animejs",
+        "anime-js-migrate",
+        "remotion",
+        "webgl",
+        "webgpu",
+        "shader",
+        "raymarch",
+        "virtualstudio",
+        "comfyui"
+      ],
+      "channels": {
+        "chatgpt": {
+          "count": 1,
+          "samples": [
+            {
+              "id": "1705",
+              "date": "2026-01-24",
+              "preview": "ComfyUI Workflow Explanation"
+            }
+          ]
+        },
+        "cc": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    }
+  ]
+}

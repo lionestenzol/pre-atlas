@@ -1,0 +1,1193 @@
+{
+  "phase": "002_KEYWORD_CLUSTERS",
+  "sequence": "01_seed_clusters_from_portfolio",
+  "generated_at": "2026-05-28T03:06:49.916400",
+  "method": "Cluster names + seed terms hand-derived from portfolio names and MEMORY.md threads. Hits computed by case-insensitive substring match on item.name only. Uncategorized list surfaced for transparency; will fall through Phase 3 cross-reference matrix unless a cluster claims them in Seq 02 expansion. HOTL: counts only, no auto-judgement.",
+  "portfolio_total": 140,
+  "categorized_count": 80,
+  "uncategorized_count": 50,
+  "clusters": [
+    {
+      "name": "anatomy",
+      "seed_terms": [
+        "anatomy",
+        "anatomy-v1",
+        "anatomyv1",
+        "anatomy-extension",
+        "anatomy-research",
+        "anatomy-rewrite",
+        "anatomy-map",
+        "anatomy-frame",
+        "anatomy-sidecar"
+      ],
+      "rationale": "DOM-capture + envelope schema arc \u00b7 extension captures, research mines, rewrite consolidates, schema (AnatomyV1.v1.json) is the contract. Seeds taken from the 4 explicit anatomy-* tools + map skill + the anatomy-frame-sidecar referenced in MEMORY.md carbo-shrink.",
+      "portfolio_hit_count": 4,
+      "portfolio_hits": [
+        {
+          "name": "anatomy-map",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-map"
+          ]
+        },
+        {
+          "name": "anatomy-extension",
+          "surface": "pre_atlas_tools",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-extension"
+          ]
+        },
+        {
+          "name": "anatomy-research",
+          "surface": "pre_atlas_tools",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-research"
+          ]
+        },
+        {
+          "name": "anatomy-rewrite",
+          "surface": "pre_atlas_tools",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-rewrite"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mb3d_fractals",
+      "seed_terms": [
+        "mb3d",
+        "mb3d_anim_demo",
+        "mb3d-blender",
+        "mandelbulb",
+        "mandelbulb3d",
+        "mandelbulber",
+        "mandelbulber2",
+        "mandelbulber2_install",
+        "m3p",
+        "m3p-to-fract",
+        "m3f",
+        ".fract",
+        "fractal-machine",
+        "mandelbox",
+        "raymarcher",
+        "fragmentarium"
+      ],
+      "rationale": "3D fractal rendering arc \u00b7 MB3D family (.m3p/.m3f) + Mandelbulber 2 (.fract) + the Blender bridge addon. Seeds taken from the 7 portfolio repos (mandelbulb3d skill, mandelbulber2 skill, m3p-to-fract, mb3d-blender, mb3d_anim_demo, mandelbulber2_install, fractal-machine) plus format extensions that disambiguate the cluster from general 3D.",
+      "portfolio_hit_count": 7,
+      "portfolio_hits": [
+        {
+          "name": "fractal-machine",
+          "surface": "standalone_repo",
+          "signal_band": "none",
+          "matched_terms": [
+            "fractal-machine"
+          ]
+        },
+        {
+          "name": "m3p-to-fract",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "m3p",
+            "m3p-to-fract"
+          ]
+        },
+        {
+          "name": "mandelbulber2_install",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mandelbulber2_install"
+          ]
+        },
+        {
+          "name": "mb3d-blender",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mb3d",
+            "mb3d-blender"
+          ]
+        },
+        {
+          "name": "mb3d_anim_demo",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mb3d_anim_demo"
+          ]
+        },
+        {
+          "name": "mandelbulb3d",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mandelbulb3d"
+          ]
+        },
+        {
+          "name": "mandelbulber2",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mandelbulber2"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "audio_music",
+      "seed_terms": [
+        "strudel",
+        "stemai",
+        "surge",
+        "surge-xt",
+        "nih-plug",
+        "airwindows",
+        "musescore",
+        "fl356",
+        "fl 3",
+        "fl3",
+        "vst3",
+        "vst",
+        "daw",
+        "midi",
+        "synth",
+        "sampler",
+        "audio"
+      ],
+      "rationale": "Live-coding (Strudel) \u00b7 stem analysis (STEMai) \u00b7 VST plugin modernization (surge-xt, nih-plug Rust bootstrap, airwindows vendor source) \u00b7 FL Studio 3.5.6 CLI renderer (fl356, tracked in MEMORY.md) \u00b7 MuseScore MCP. Generic terms (vst, midi, synth) included so co-occurrence scan picks up convo discussions that pre-date the named project.",
+      "portfolio_hit_count": 9,
+      "portfolio_hits": [
+        {
+          "name": "airwindows",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "airwindows"
+          ]
+        },
+        {
+          "name": "musescore-mcp",
+          "surface": "standalone_repo",
+          "signal_band": "none",
+          "matched_terms": [
+            "musescore"
+          ]
+        },
+        {
+          "name": "nih-plug",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "nih-plug"
+          ]
+        },
+        {
+          "name": "STEMai",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "stemai"
+          ]
+        },
+        {
+          "name": "STRUDEL",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "strudel"
+          ]
+        },
+        {
+          "name": "surge-xt",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "surge",
+            "surge-xt"
+          ]
+        },
+        {
+          "name": "strudel",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "strudel"
+          ]
+        },
+        {
+          "name": "strudel-skills",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "strudel"
+          ]
+        },
+        {
+          "name": "STEMai",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "stemai"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "atlas_core",
+      "seed_terms": [
+        "atlas",
+        "pre atlas",
+        "pre-atlas",
+        "delta-kernel",
+        "delta kernel",
+        "cognitive-sensor",
+        "cognitive sensor",
+        "cycleboard",
+        "cortex",
+        "optogon",
+        "aegis",
+        "aegis-fabric",
+        "openclaw",
+        "mirofish",
+        "perception service",
+        "perception layer",
+        "perception module",
+        "triangulation",
+        "mosaic",
+        "inpact",
+        "in-pact",
+        "blueprint-generator",
+        "code-converter",
+        "ai-exec-pipeline",
+        "uasc",
+        "ws-gateway",
+        "polaris",
+        "crucix",
+        "governance"
+      ],
+      "rationale": "The Pre Atlas substrate \u00b7 15 services + 6 apps + governance mode system + the public/private GitHub repos. Mode names (RECOVER/CLOSURE/MAINTENANCE/COMPOUND/SCALE) included so Phase 3 can join era against mode-mention density. POLARIS included per its MEMORY.md positioning as agent-execution layer.",
+      "portfolio_hit_count": 24,
+      "portfolio_hits": [
+        {
+          "name": "atlas",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas"
+          ]
+        },
+        {
+          "name": "POLARIS",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "polaris"
+          ]
+        },
+        {
+          "name": "Pre Atlas",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas",
+            "pre atlas"
+          ]
+        },
+        {
+          "name": "pre-atlas",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas",
+            "pre-atlas"
+          ]
+        },
+        {
+          "name": "atlas",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas"
+          ]
+        },
+        {
+          "name": "inpact-site",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "inpact"
+          ]
+        },
+        {
+          "name": "POLARIS",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "polaris"
+          ]
+        },
+        {
+          "name": "aegis-fabric",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "aegis",
+            "aegis-fabric"
+          ]
+        },
+        {
+          "name": "cognitive-sensor",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "cognitive-sensor"
+          ]
+        },
+        {
+          "name": "cortex",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "cortex"
+          ]
+        },
+        {
+          "name": "crucix",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "crucix"
+          ]
+        },
+        {
+          "name": "delta-kernel",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "delta-kernel"
+          ]
+        },
+        {
+          "name": "mirofish",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mirofish"
+          ]
+        },
+        {
+          "name": "mosaic-dashboard",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mosaic"
+          ]
+        },
+        {
+          "name": "mosaic-orchestrator",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mosaic"
+          ]
+        },
+        {
+          "name": "openclaw",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "openclaw"
+          ]
+        },
+        {
+          "name": "optogon",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "optogon"
+          ]
+        },
+        {
+          "name": "triangulation",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "triangulation"
+          ]
+        },
+        {
+          "name": "uasc-executor",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "uasc"
+          ]
+        },
+        {
+          "name": "ws-gateway",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "ws-gateway"
+          ]
+        },
+        {
+          "name": "ai-exec-pipeline",
+          "surface": "pre_atlas_apps",
+          "signal_band": "strong",
+          "matched_terms": [
+            "ai-exec-pipeline"
+          ]
+        },
+        {
+          "name": "blueprint-generator",
+          "surface": "pre_atlas_apps",
+          "signal_band": "strong",
+          "matched_terms": [
+            "blueprint-generator"
+          ]
+        },
+        {
+          "name": "code-converter",
+          "surface": "pre_atlas_apps",
+          "signal_band": "strong",
+          "matched_terms": [
+            "code-converter"
+          ]
+        },
+        {
+          "name": "inpact",
+          "surface": "pre_atlas_apps",
+          "signal_band": "strong",
+          "matched_terms": [
+            "inpact"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "web_extract",
+      "seed_terms": [
+        "scrapling",
+        "scraping",
+        "sitepull",
+        "web-audit",
+        "web-extract",
+        "competitor-monitor",
+        "competitor monitor",
+        "brightdata",
+        "datadome",
+        "cloudflare",
+        "anti-bot",
+        "playwright",
+        "puppeteer",
+        "headless",
+        "humanize"
+      ],
+      "rationale": "Web-extraction stack \u00b7 Scrapling (cloned, smoke, official skill) \u00b7 sitepull/web-audit (Node CLI sibling) \u00b7 competitor-monitor (template + skill + MCP) \u00b7 web-extract-workflow router skill. Anti-bot terms (brightdata, datadome, cloudflare) included so the cluster captures the managed-unlock-over-stealth doctrine threads from MEMORY.md.",
+      "portfolio_hit_count": 10,
+      "portfolio_hits": [
+        {
+          "name": "competitor-monitor",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "competitor-monitor"
+          ]
+        },
+        {
+          "name": "Scrapling",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ]
+        },
+        {
+          "name": "scrapling-smoke",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ]
+        },
+        {
+          "name": "web-audit",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "web-audit"
+          ]
+        },
+        {
+          "name": "competitor-monitor",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "competitor-monitor"
+          ]
+        },
+        {
+          "name": "Scrapling",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ]
+        },
+        {
+          "name": "competitor-monitor",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "competitor-monitor"
+          ]
+        },
+        {
+          "name": "scrapling-official",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ]
+        },
+        {
+          "name": "web-audit",
+          "surface": "custom_skill",
+          "signal_band": "partial",
+          "matched_terms": [
+            "web-audit"
+          ]
+        },
+        {
+          "name": "web-extract-workflow",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "web-extract"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "productivity_skills",
+      "seed_terms": [
+        "weapon",
+        "festival",
+        "mini-ship",
+        "miniship",
+        "autopilot",
+        "project-finisher",
+        "handoff",
+        "handoff-out",
+        "eval-harness",
+        "cookbook",
+        "search-first",
+        "security-review",
+        "strategic-compact",
+        "tdd-workflow",
+        "verification-loop",
+        "coding-standards",
+        "backend-patterns",
+        "frontend-patterns",
+        "wasp-patterns",
+        "codex-delegate",
+        "codex-partner",
+        "continuous-learning",
+        "slash command",
+        "/weapon",
+        "/fest",
+        "/mini-ship",
+        "/autopilot"
+      ],
+      "rationale": "Meta-tooling cluster \u00b7 Claude Code custom skills that automate or organize the dev loop itself. Weapon (autonomous exec), fest (festival project methodology), mini-ship (smallest-atom loop), autopilot (state-machine driver), project-finisher, plus the lower-traffic pattern skills (backend/frontend/wasp/coding-standards). Slash-prefix variants included so CC transcript scan picks up invocations.",
+      "portfolio_hit_count": 20,
+      "portfolio_hits": [
+        {
+          "name": "autopilot",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "autopilot"
+          ]
+        },
+        {
+          "name": "backend-patterns",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "backend-patterns"
+          ]
+        },
+        {
+          "name": "codex-delegate",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "codex-delegate"
+          ]
+        },
+        {
+          "name": "coding-standards",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "coding-standards"
+          ]
+        },
+        {
+          "name": "continuous-learning-v2",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "continuous-learning"
+          ]
+        },
+        {
+          "name": "cookbook",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "cookbook"
+          ]
+        },
+        {
+          "name": "eval-harness",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "eval-harness"
+          ]
+        },
+        {
+          "name": "frontend-patterns",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "frontend-patterns"
+          ]
+        },
+        {
+          "name": "handoff-out",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "handoff",
+            "handoff-out"
+          ]
+        },
+        {
+          "name": "mini-ship",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "mini-ship"
+          ]
+        },
+        {
+          "name": "project-finisher",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "project-finisher"
+          ]
+        },
+        {
+          "name": "search-first",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "search-first"
+          ]
+        },
+        {
+          "name": "security-review",
+          "surface": "custom_skill",
+          "signal_band": "partial",
+          "matched_terms": [
+            "security-review"
+          ]
+        },
+        {
+          "name": "strategic-compact",
+          "surface": "custom_skill",
+          "signal_band": "partial",
+          "matched_terms": [
+            "strategic-compact"
+          ]
+        },
+        {
+          "name": "tdd-workflow",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "tdd-workflow"
+          ]
+        },
+        {
+          "name": "verification-loop",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "verification-loop"
+          ]
+        },
+        {
+          "name": "wasp-patterns",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "wasp-patterns"
+          ]
+        },
+        {
+          "name": "weapon",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "weapon"
+          ]
+        },
+        {
+          "name": "codex-partner",
+          "surface": "pre_atlas_tools",
+          "signal_band": "strong",
+          "matched_terms": [
+            "codex-partner"
+          ]
+        },
+        {
+          "name": "mini-ship",
+          "surface": "pre_atlas_tools",
+          "signal_band": "none",
+          "matched_terms": [
+            "mini-ship"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "canvas_render",
+      "seed_terms": [
+        "canvas-engine",
+        "canvas-demo",
+        "screenshot-to-code",
+        "three-js",
+        "three.js",
+        "threejs",
+        "three-stack",
+        "three-js-migrate",
+        "react-three-fiber",
+        "r3f",
+        "drei",
+        "anime-js",
+        "anime.js",
+        "animejs",
+        "anime-js-migrate",
+        "remotion",
+        "webgl",
+        "webgpu",
+        "shader",
+        "raymarch",
+        "virtualstudio"
+      ],
+      "rationale": "Web-rendering pipelines \u00b7 canvas-engine (anatomy renderer, Vite sandbox pool) \u00b7 screenshot-to-code (vision\u2192code) \u00b7 the three.js stack (vanilla + R3F + drei + migrate) \u00b7 anime.js + migrate \u00b7 remotion (programmatic video) \u00b7 virtualstudio + VirtualStudio-Cinematic-Hero. Generic terms (webgl, webgpu, shader, raymarch) included for early ChatGPT-era ideation before named projects existed.",
+      "portfolio_hit_count": 16,
+      "portfolio_hits": [
+        {
+          "name": "anime-js",
+          "surface": "standalone_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "anime-js"
+          ]
+        },
+        {
+          "name": "r3f",
+          "surface": "standalone_repo",
+          "signal_band": "none",
+          "matched_terms": [
+            "r3f"
+          ]
+        },
+        {
+          "name": "remotion-test",
+          "surface": "standalone_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "remotion"
+          ]
+        },
+        {
+          "name": "screenshot-to-code",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "screenshot-to-code"
+          ]
+        },
+        {
+          "name": "three-js",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "three-js"
+          ]
+        },
+        {
+          "name": "three-stack",
+          "surface": "standalone_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "three-stack"
+          ]
+        },
+        {
+          "name": "virtualstudio",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "virtualstudio"
+          ]
+        },
+        {
+          "name": "VirtualStudio-Cinematic-Hero",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "virtualstudio"
+          ]
+        },
+        {
+          "name": "anime-js",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anime-js"
+          ]
+        },
+        {
+          "name": "anime-js-migrate",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "anime-js",
+            "anime-js-migrate"
+          ]
+        },
+        {
+          "name": "react-three-fiber",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "react-three-fiber"
+          ]
+        },
+        {
+          "name": "remotion",
+          "surface": "custom_skill",
+          "signal_band": "partial",
+          "matched_terms": [
+            "remotion"
+          ]
+        },
+        {
+          "name": "three-js",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "three-js"
+          ]
+        },
+        {
+          "name": "three-js-migrate",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "three-js",
+            "three-js-migrate"
+          ]
+        },
+        {
+          "name": "canvas-engine",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "canvas-engine"
+          ]
+        },
+        {
+          "name": "canvas-demo",
+          "surface": "pre_atlas_apps",
+          "signal_band": "partial",
+          "matched_terms": [
+            "canvas-demo"
+          ]
+        }
+      ]
+    }
+  ],
+  "uncategorized_items": [
+    {
+      "name": "binre",
+      "surface": "standalone_repo",
+      "signal_band": "strong"
+    },
+    {
+      "name": "cpython",
+      "surface": "standalone_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "Downloads",
+      "surface": "standalone_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "everything-claude-code",
+      "surface": "standalone_repo",
+      "signal_band": "strong"
+    },
+    {
+      "name": "fleet-launch",
+      "surface": "standalone_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "mcp",
+      "surface": "standalone_repo",
+      "signal_band": "none"
+    },
+    {
+      "name": "my-app",
+      "surface": "standalone_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "my-habit-tracker",
+      "surface": "standalone_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "my-project",
+      "surface": "standalone_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "my-vite-app",
+      "surface": "standalone_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "my_project",
+      "surface": "standalone_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "operator-system",
+      "surface": "standalone_repo",
+      "signal_band": "strong"
+    },
+    {
+      "name": "private-gpt",
+      "surface": "standalone_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "privateGPT",
+      "surface": "standalone_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "task-manager",
+      "surface": "standalone_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "URBANNOMAD",
+      "surface": "standalone_repo",
+      "signal_band": "strong"
+    },
+    {
+      "name": "wasp",
+      "surface": "standalone_repo",
+      "signal_band": "strong"
+    },
+    {
+      "name": "weather",
+      "surface": "standalone_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "welcome-to-docker",
+      "surface": "standalone_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "ai-fashion-prompt-console",
+      "surface": "github_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "mpc",
+      "surface": "github_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "SteerPOP",
+      "surface": "github_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "URBANNOMAD",
+      "surface": "github_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "comfyui-controller",
+      "surface": "github_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "THING",
+      "surface": "github_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "WallPaper",
+      "surface": "github_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "outpost",
+      "surface": "github_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "saas-boilerplate",
+      "surface": "github_repo",
+      "signal_band": "none"
+    },
+    {
+      "name": "CreatorOS",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "web-os-555",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "FragOS",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "nextjs-ai-chatbot",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "python-sdk",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "DAPO",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "m-357249",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "joyful-analytics-symphony",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "servers",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "wasp",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "cpython",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "meshmap.net",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "js-dos",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "SuperTool",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "MB-Lab",
+      "surface": "github_repo",
+      "signal_band": "partial"
+    },
+    {
+      "name": "lionestenzol",
+      "surface": "github_repo",
+      "signal_band": "stale"
+    },
+    {
+      "name": "fest",
+      "surface": "custom_skill",
+      "signal_band": "stale"
+    },
+    {
+      "name": "learned",
+      "surface": "custom_skill",
+      "signal_band": "none"
+    },
+    {
+      "name": "st3gg",
+      "surface": "custom_skill",
+      "signal_band": "stale"
+    },
+    {
+      "name": "perception",
+      "surface": "pre_atlas_services",
+      "signal_band": "strong"
+    },
+    {
+      "name": "webos-333",
+      "surface": "pre_atlas_apps",
+      "signal_band": "none"
+    },
+    {
+      "name": "fest-reconcile",
+      "surface": "pre_atlas_tools",
+      "signal_band": "none"
+    }
+  ]
+}

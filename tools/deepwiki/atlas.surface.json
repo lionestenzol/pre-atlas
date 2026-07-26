@@ -1,0 +1,19 @@
+{
+  "surface": "deepwiki",
+  "kind": "cli",
+  "lifecycle": "live",
+  "headline": "The NARRATE stage: read a repo's generated wiki (deepwiki-open, local/Ollama) as a content-addressed receipt -- the narrator's prose explanation of what a repo IS. Fast cached-read only (mirrors code-recon orient); the join key is sha256 over the scrubbed wiki, so a NARRATE claim can be pinned to a code-recon PROVER verification.",
+  "capabilities": [
+    {
+      "id": "narrate",
+      "label": "Read a repo's cached deepwiki wiki, content-addressed (read-only)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python tools/deepwiki/ask.py {repo}",
+      "needs": ["repo"],
+      "evidence": "C:/Users/bruke/Pre Atlas/tools/deepwiki/ask.py wraps deepwiki-open GET /api/wiki_cache (C:/Users/bruke/deepwiki-open/api/api.py:463); content-address = sha256 of the wiki JSON with volatile keys scrubbed",
+      "notes": "Read-only. {repo} is a github/gitlab URL or a local path (forward slashes; charset-safe -- no '*'). found:false (exit 0) when the backend is down OR no wiki is cached for the repo (a legitimate absence, like orient MISSING) -- generate the wiki out-of-band first (deepwiki-open is Ollama-slow, never every-commit). Live RAG Q&A (--ask) is STANDALONE-only and never reached through the gateway: it runs Ollama for tens of seconds (blows the 20s timeout) and a stochastic answer has no stable content-address. A wiki is a NARRATOR artifact -- confabulates; prove with code-recon before acting."
+    }
+  ]
+}

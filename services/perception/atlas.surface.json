@@ -1,0 +1,7 @@
+{
+  "surface": "perception",
+  "headline": "STUB — Phase A library stub, never launched; do not build on this surface",
+  "kind": "library",
+  "lifecycle": "stub",
+  "capabilities": []
+}

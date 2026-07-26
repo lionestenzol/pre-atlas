@@ -33,7 +33,7 @@ class TestSkillsEndpoint:
         assert resp.status_code == 200
         skills = resp.json()["skills"]
         skill_names = {s["name"] for s in skills}
-        assert {"status", "brief", "fest", "simulate", "approve"} == skill_names
+        assert {"status", "brief", "fest", "simulate", "approve", "pending"} == skill_names
 
     def test_execute_unknown_skill(self):
         client = TestClient(app)

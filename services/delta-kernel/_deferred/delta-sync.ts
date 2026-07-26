@@ -39,8 +39,8 @@ import {
   SyncSessionState,
   SyncPriority,
   SYNC_PRIORITY_MAP,
-} from './types';
-import { generateUUID, now, hashState, applyPatch, verifyHashChain } from './delta';
+} from '../src/core/types.js';
+import { generateUUID, now, hashState, applyPatch, verifyHashChain } from '../src/core/delta.js';
 
 // === CONSTANTS ===
 

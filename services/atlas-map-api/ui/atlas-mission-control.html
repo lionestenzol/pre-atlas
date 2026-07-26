@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas Mission Control</title>
+<link rel="icon" href="data:," />
+<meta name="robots" content="noindex" />
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #1c2330; --line: #2a3343;
+    --ink: #e6edf3; --dim: #8b98a9; --accent: #4cc2ff; --accent2: #7ee787;
+    --green: #3fb950; --red: #f85149; --amber: #d29922; --radius: 10px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  h1 { font-size: 22px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+  h1 .sub { color: var(--dim); font-weight: 400; font-size: 14px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; background: var(--panel2); border: 1px solid var(--line); font-family: var(--mono); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); flex: 0 0 auto; }
+  .dot.up { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot.down { background: var(--red); }
+  .dot.unknown { background: var(--amber); }
+  .dot.stale { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 18px; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin: 0 0 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .panel h2 .count { font-family: var(--mono); text-transform: none; letter-spacing: 0; color: var(--ink); font-size: 12px; padding: 2px 8px; background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; }
+  .muted { color: var(--dim); font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .svc { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: border-color .15s; }
+  .svc:hover { border-color: var(--accent); }
+  .svc .top { display: flex; align-items: center; gap: 8px; }
+  .svc .nm { font-weight: 600; font-family: var(--mono); font-size: 13px; }
+  .svc .port { color: var(--dim); font-size: 12px; margin-left: auto; font-family: var(--mono); }
+  .svc .pids { color: var(--dim); font-family: var(--mono); font-size: 11px; }
+  .svc.down { opacity: 0.62; }
+  .task { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 8px 10px; border-radius: 6px; align-items: center; font-family: var(--mono); font-size: 12px; }
+  .task:nth-child(odd) { background: var(--panel2); }
+  .task .name { font-weight: 600; }
+  .task .state { color: var(--dim); }
+  .task .state.ready { color: var(--accent2); }
+  .task .state.disabled { color: var(--amber); }
+  .task .trigs { color: var(--dim); text-align: right; font-size: 11px; }
+  .empty { color: var(--dim); font-style: italic; padding: 8px 2px; }
+  .heartbeat { display: flex; gap: 20px; align-items: center; font-family: var(--mono); font-size: 12px; }
+  .heartbeat .kv { display: flex; flex-direction: column; gap: 2px; }
+  .heartbeat .k { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .heartbeat .v { color: var(--ink); font-size: 13px; }
+  .err { color: var(--red); font-family: var(--mono); font-size: 12px; padding: 10px; background: var(--panel2); border: 1px solid var(--red); border-radius: 6px; }
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Atlas Mission Control <span class="sub">· backend at a glance</span></h1>
+    <span class="pill"><span id="connDot" class="dot unknown"></span><span id="connText">connecting</span></span>
+    <span class="pill" id="upPill"><span class="dot up"></span><span id="upText">? up</span></span>
+    <span class="pill" id="agePill" title="seconds since last successful fetch">age <span id="ageText">?</span>s</span>
+    <a class="pill" href="atlas-setup.html" style="text-decoration:none">boot ui</a>
+    <a class="pill" href="http://localhost:3072/status" target="_blank" rel="noopener" style="text-decoration:none">raw json</a>
+  </header>
+  <p class="muted">Polls <span class="pill">:3072/status</span> every 2s. Every ported service, the governance daemon heartbeat, the Atlas scheduled tasks, and any orphaned listeners.</p>
+
+  <div class="panel">
+    <h2>Services <span class="count" id="svcCount">?</span></h2>
+    <div class="grid" id="svcGrid"><div class="muted"><span class="spin"></span> loading</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Governance daemon <span class="count" id="daemonCount">delta-kernel :3001</span></h2>
+    <div id="daemonBox" class="muted">loading</div>
+  </div>
+
+  <div class="panel">
+    <h2>Scheduled tasks <span class="count" id="taskCount">?</span></h2>
+    <div id="taskList"><div class="muted">loading</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Orphan listeners <span class="count" id="orphanCount">?</span></h2>
+    <div id="orphanBox" class="muted">loading</div>
+  </div>
+</div>
+
+<script>
+const HUB = "http://localhost:3072";
+const POLL_MS = 2000;
+let lastOk = 0;
+let ageTimer = null;
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+function setConn(state, text) {
+  const dot = $("connDot");
+  dot.className = "dot " + state;
+  $("connText").textContent = text;
+}
+
+function fmtAge(sec) {
+  if (sec == null) return "?";
+  if (sec < 60) return sec + "s";
+  if (sec < 3600) return Math.floor(sec/60) + "m";
+  return Math.floor(sec/3600) + "h";
+}
+
+function renderServices(services) {
+  const grid = $("svcGrid");
+  grid.innerHTML = "";
+  const up = services.filter(s => s.up).length;
+  $("svcCount").textContent = `${up}/${services.length} up`;
+  $("upText").textContent = `${up}/${services.length} up`;
+  $("upPill").querySelector(".dot").className = "dot " + (up === services.length ? "up" : up === 0 ? "down" : "stale");
+  for (const s of services) {
+    const card = el("div", "svc" + (s.up ? "" : " down"));
+    const top = el("div", "top");
+    top.appendChild(el("span", "dot " + (s.up ? "up" : "down")));
+    top.appendChild(el("span", "nm", s.name));
+    top.appendChild(el("span", "port", ":" + s.port));
+    card.appendChild(top);
+    const pids = s.up && s.pids && s.pids.length
+      ? "pid " + s.pids.join(", ")
+      : (s.up ? "up" : "down");
+    card.appendChild(el("div", "pids", pids));
+    grid.appendChild(card);
+  }
+}
+
+function renderDaemon(d) {
+  const box = $("daemonBox");
+  box.innerHTML = "";
+  if (!d || !d.reachable) {
+    box.className = "err";
+    box.textContent = d && d.error ? d.error : "delta-kernel :3001 unreachable";
+    return;
+  }
+  box.className = "heartbeat";
+  const running = el("div", "kv");
+  running.appendChild(el("div", "k", "running"));
+  const rv = el("div", "v", d.running ? "yes" : "no");
+  rv.style.color = d.running ? "var(--accent2)" : "var(--red)";
+  running.appendChild(rv);
+  box.appendChild(running);
+
+  if (d.last_heartbeat) {
+    const beat = el("div", "kv");
+    beat.appendChild(el("div", "k", "last heartbeat"));
+    const ageSec = Math.max(0, Math.floor((Date.now() - d.last_heartbeat) / 1000));
+    const bv = el("div", "v", fmtAge(ageSec) + " ago");
+    if (ageSec > 60) bv.style.color = "var(--amber)";
+    if (ageSec > 300) bv.style.color = "var(--red)";
+    beat.appendChild(bv);
+    box.appendChild(beat);
+  }
+
+  const job = el("div", "kv");
+  job.appendChild(el("div", "k", "current job"));
+  job.appendChild(el("div", "v", d.current_job ? String(d.current_job) : "idle"));
+  box.appendChild(job);
+}
+
+function renderTasks(payload) {
+  const list = $("taskList");
+  list.innerHTML = "";
+  if (payload && payload.error) {
+    const e = el("div", "err", payload.error);
+    list.appendChild(e);
+    $("taskCount").textContent = "error";
+    return;
+  }
+  const tasks = (payload && payload.tasks) || [];
+  $("taskCount").textContent = tasks.length + " tasks";
+  if (!tasks.length) { list.appendChild(el("div", "empty", "no Atlas tasks registered")); return; }
+  for (const t of tasks) {
+    const row = el("div", "task");
+    row.appendChild(el("div", "name", t.name || "?"));
+    const state = String(t.state || "?").toLowerCase();
+    const stateEl = el("div", "state " + state, t.state || "?");
+    row.appendChild(stateEl);
+    const trigs = Array.isArray(t.triggers) ? t.triggers.join(" · ") : "";
+    row.appendChild(el("div", "trigs", trigs));
+    list.appendChild(row);
+  }
+}
+
+function renderOrphans(o) {
+  const box = $("orphanBox");
+  box.innerHTML = "";
+  if (o && o.error) { box.className = "err"; box.textContent = o.error; $("orphanCount").textContent = "error"; return; }
+  const count = (o && o.count) || 0;
+  $("orphanCount").textContent = count;
+  box.className = "muted";
+  if (!count) { box.textContent = "no orphaned listeners on Atlas ports"; return; }
+  const list = el("div");
+  for (const c of (o.candidates || [])) {
+    const line = el("div", "task");
+    line.appendChild(el("div", "name", c.name || ("pid " + c.pid)));
+    line.appendChild(el("div", "state", ":" + c.port));
+    line.appendChild(el("div", "trigs", c.cmd ? String(c.cmd).slice(0, 120) : ""));
+    list.appendChild(line);
+  }
+  box.appendChild(list);
+}
+
+async function poll() {
+  try {
+    const r = await fetch(HUB + "/status", { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+    lastOk = Date.now();
+    setConn("up", "hub online");
+    renderServices(data.services || []);
+    renderDaemon(data.daemon);
+    renderTasks(data.scheduled_tasks);
+    renderOrphans(data.orphans);
+  } catch (e) {
+    setConn("down", "hub unreachable · " + e.message);
+    $("svcCount").textContent = "no data";
+  }
+}
+
+function tickAge() {
+  if (!lastOk) { $("ageText").textContent = "?"; return; }
+  const s = Math.floor((Date.now() - lastOk) / 1000);
+  $("ageText").textContent = s;
+  const pill = $("agePill");
+  pill.querySelector(".dot") || pill.prepend(el("span", "dot"));
+  const dot = pill.querySelector(".dot");
+  dot.className = "dot " + (s < 5 ? "up" : s < 30 ? "stale" : "down");
+}
+
+poll();
+setInterval(poll, POLL_MS);
+ageTimer = setInterval(tickAge, 1000);
+</script>
+</body>
+</html>

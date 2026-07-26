@@ -1,0 +1,56 @@
+{
+  "_comment": "BLANK CANVAS. This is what a brand-new person starts from. Fill every empty string / array with YOUR real life, then run: python setup/apply.py --profile setup/atlas_profile.template.json. Copy this to atlas_profile.json to make it your active profile. Keys beginning with _ are ignored by the loader. See setup/README.md.",
+
+  "identity": {
+    "mission": "",
+    "motto": ""
+  },
+
+  "focus_areas": [
+    { "name": "Production", "definition": "", "color": "#3B82F6" },
+    { "name": "Image",      "definition": "", "color": "#10B981" },
+    { "name": "Growth",     "definition": "", "color": "#8B5CF6" },
+    { "name": "Personal",   "definition": "", "color": "#F59E0B" },
+    { "name": "Errands",    "definition": "", "color": "#EF4444" },
+    { "name": "Network",    "definition": "", "color": "#EC4899" }
+  ],
+
+  "routines": {
+    "Morning": [],
+    "Evening": []
+  },
+
+  "day_types": {
+    "A": {
+      "name": "Optimal Day",
+      "description": "",
+      "time_blocks": [],
+      "routines": ["Morning", "Evening"],
+      "goals": { "baseline": "", "stretch": "" }
+    },
+    "B": {
+      "name": "Low Energy Day",
+      "description": "",
+      "time_blocks": [],
+      "routines": ["Morning", "Evening"],
+      "goals": { "baseline": "", "stretch": "" }
+    },
+    "C": {
+      "name": "Chaos Day",
+      "description": "",
+      "time_blocks": [],
+      "routines": ["Evening"],
+      "goals": { "baseline": "", "stretch": "" }
+    }
+  },
+
+  "settings": {
+    "default_day_type": "A",
+    "dark_mode": false,
+    "notifications": true
+  },
+
+  "az_tasks": [],
+
+  "contingencies": {}
+}

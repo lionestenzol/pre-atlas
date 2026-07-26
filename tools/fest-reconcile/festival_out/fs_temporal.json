@@ -1,0 +1,1164 @@
+{
+  "generated_at": "2026-05-27T19:25:49.199418",
+  "source": "portfolio_evidence.json + Path.stat()",
+  "schema": "name -> (surface, path, mtime, ctime, size_bytes)",
+  "count": 140,
+  "items": [
+    {
+      "name": "pre-atlas",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "atlas",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "competitor-monitor",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "Scrapling",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "strudel",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "ai-fashion-prompt-console",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "mpc",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "inpact-site",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "SteerPOP",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "strudel-skills",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "STEMai",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "POLARIS",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "URBANNOMAD",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "comfyui-controller",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "virtualstudio",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "VirtualStudio-Cinematic-Hero",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "THING",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "WallPaper",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "outpost",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "saas-boilerplate",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "CreatorOS",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "web-os-555",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "FragOS",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "nextjs-ai-chatbot",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "python-sdk",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "DAPO",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "m-357249",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "joyful-analytics-symphony",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "servers",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "wasp",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "cpython",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "meshmap.net",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "js-dos",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "SuperTool",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "MB-Lab",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "lionestenzol",
+      "surface": "github_repo",
+      "path": null,
+      "mtime": null,
+      "ctime": null,
+      "size_bytes": null,
+      "error": "no_path_in_portfolio"
+    },
+    {
+      "name": "Downloads",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\Downloads",
+      "mtime": "2026-05-26T12:32:13.790633",
+      "ctime": "2023-06-26T18:40:10.499602",
+      "size_bytes": null
+    },
+    {
+      "name": "private-gpt",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\private-gpt",
+      "mtime": "2024-11-26T15:14:23.697101",
+      "ctime": "2024-11-26T15:14:22.597599",
+      "size_bytes": null
+    },
+    {
+      "name": "privateGPT",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\privateGPT",
+      "mtime": "2024-11-26T20:32:10.768771",
+      "ctime": "2024-11-26T17:52:25.552247",
+      "size_bytes": null
+    },
+    {
+      "name": "my-app",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\my-app",
+      "mtime": "2025-01-01T17:16:59.938043",
+      "ctime": "2025-01-01T16:18:13.575579",
+      "size_bytes": null
+    },
+    {
+      "name": "my-project",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\my-project",
+      "mtime": "2025-02-03T11:23:34.634575",
+      "ctime": "2025-01-01T18:00:29.858910",
+      "size_bytes": null
+    },
+    {
+      "name": "my-vite-app",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\my-vite-app",
+      "mtime": "2025-01-01T18:35:54.345565",
+      "ctime": "2025-01-01T18:35:08.414545",
+      "size_bytes": null
+    },
+    {
+      "name": "my_project",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\my_project",
+      "mtime": "2025-02-03T12:59:54.491281",
+      "ctime": "2025-02-02T15:09:35.430875",
+      "size_bytes": null
+    },
+    {
+      "name": "my-habit-tracker",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\my-habit-tracker",
+      "mtime": "2025-02-09T05:21:30.166614",
+      "ctime": "2025-02-09T04:04:03.410030",
+      "size_bytes": null
+    },
+    {
+      "name": "cpython",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\cpython",
+      "mtime": "2025-03-17T04:08:10.893390",
+      "ctime": "2025-03-14T01:39:58.906296",
+      "size_bytes": null
+    },
+    {
+      "name": "welcome-to-docker",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\welcome-to-docker",
+      "mtime": "2025-03-27T19:45:40.444889",
+      "ctime": "2025-03-27T19:45:39.299068",
+      "size_bytes": null
+    },
+    {
+      "name": "weather",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\weather",
+      "mtime": "2025-03-31T02:17:21.132657",
+      "ctime": "2025-03-28T12:36:50.167092",
+      "size_bytes": null
+    },
+    {
+      "name": "mcp",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\mcp",
+      "mtime": "2025-03-31T22:57:00.655726",
+      "ctime": "2025-03-31T22:57:00.654723",
+      "size_bytes": null
+    },
+    {
+      "name": "cognitive-sensor",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\cognitive-sensor",
+      "mtime": "2026-05-27T19:01:04.475175",
+      "ctime": "2026-01-03T17:47:55.141462",
+      "size_bytes": null
+    },
+    {
+      "name": "webos-333",
+      "surface": "pre_atlas_apps",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\webos-333",
+      "mtime": "2026-01-06T12:08:58.112923",
+      "ctime": "2026-01-05T21:52:15.419801",
+      "size_bytes": null
+    },
+    {
+      "name": "delta-kernel",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\delta-kernel",
+      "mtime": "2026-04-16T10:58:08.684314",
+      "ctime": "2026-01-06T15:58:39.428885",
+      "size_bytes": null
+    },
+    {
+      "name": "Pre Atlas",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\Pre Atlas",
+      "mtime": "2026-05-27T10:34:19.618242",
+      "ctime": "2026-01-08T08:17:39.390811",
+      "size_bytes": null
+    },
+    {
+      "name": "blueprint-generator",
+      "surface": "pre_atlas_apps",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\blueprint-generator",
+      "mtime": "2026-04-14T16:13:04.551937",
+      "ctime": "2026-02-21T20:54:27.589884",
+      "size_bytes": null
+    },
+    {
+      "name": "POLARIS",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\POLARIS",
+      "mtime": "2026-03-09T07:56:30.062666",
+      "ctime": "2026-02-22T13:32:01.334536",
+      "size_bytes": null
+    },
+    {
+      "name": "aegis-fabric",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\aegis-fabric",
+      "mtime": "2026-04-27T14:28:51.534119",
+      "ctime": "2026-02-22T16:44:27.447682",
+      "size_bytes": null
+    },
+    {
+      "name": "STRUDEL",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\STRUDEL",
+      "mtime": "2026-04-26T13:14:40.088749",
+      "ctime": "2026-02-23T18:20:48.839844",
+      "size_bytes": null
+    },
+    {
+      "name": "STEMai",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\STEMai",
+      "mtime": "2026-03-11T16:48:17.879102",
+      "ctime": "2026-03-01T19:42:51.852156",
+      "size_bytes": null
+    },
+    {
+      "name": "URBANNOMAD",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\URBANNOMAD",
+      "mtime": "2026-03-08T16:04:53.798776",
+      "ctime": "2026-03-08T15:25:57.050368",
+      "size_bytes": null
+    },
+    {
+      "name": "project-finisher",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\project-finisher",
+      "mtime": "2026-03-24T10:44:00.578630",
+      "ctime": "2026-03-24T10:43:43.565068",
+      "size_bytes": null
+    },
+    {
+      "name": "fest",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\fest",
+      "mtime": "2026-03-25T13:34:57.345156",
+      "ctime": "2026-03-25T13:20:37.835879",
+      "size_bytes": null
+    },
+    {
+      "name": "weapon",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\weapon",
+      "mtime": "2026-03-26T13:47:40.538963",
+      "ctime": "2026-03-25T20:45:26.471686",
+      "size_bytes": null
+    },
+    {
+      "name": "mosaic-orchestrator",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\mosaic-orchestrator",
+      "mtime": "2026-04-16T10:52:05.662391",
+      "ctime": "2026-03-25T22:39:24.929574",
+      "size_bytes": null
+    },
+    {
+      "name": "mirofish",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\mirofish",
+      "mtime": "2026-04-14T16:12:04.472789",
+      "ctime": "2026-03-25T23:44:33.157850",
+      "size_bytes": null
+    },
+    {
+      "name": "openclaw",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\openclaw",
+      "mtime": "2026-04-14T16:13:04.931933",
+      "ctime": "2026-03-26T00:41:53.139972",
+      "size_bytes": null
+    },
+    {
+      "name": "mosaic-dashboard",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\mosaic-dashboard",
+      "mtime": "2026-04-14T16:13:04.902935",
+      "ctime": "2026-03-26T01:06:31.845822",
+      "size_bytes": null
+    },
+    {
+      "name": "cookbook",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\cookbook",
+      "mtime": "2026-03-26T12:09:32.612348",
+      "ctime": "2026-03-26T09:36:50.363720",
+      "size_bytes": null
+    },
+    {
+      "name": "autopilot",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\autopilot",
+      "mtime": "2026-03-26T09:57:36.892953",
+      "ctime": "2026-03-26T09:51:25.408568",
+      "size_bytes": null
+    },
+    {
+      "name": "everything-claude-code",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\everything-claude-code",
+      "mtime": "2026-04-01T00:47:00.973993",
+      "ctime": "2026-03-31T22:13:37.645754",
+      "size_bytes": null
+    },
+    {
+      "name": "continuous-learning-v2",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\continuous-learning-v2",
+      "mtime": "2026-04-01T01:01:38.203394",
+      "ctime": "2026-04-01T01:01:38.134828",
+      "size_bytes": null
+    },
+    {
+      "name": "strategic-compact",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\strategic-compact",
+      "mtime": "2026-04-01T01:01:38.268894",
+      "ctime": "2026-04-01T01:01:38.258927",
+      "size_bytes": null
+    },
+    {
+      "name": "security-review",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\security-review",
+      "mtime": "2026-04-01T01:01:38.306477",
+      "ctime": "2026-04-01T01:01:38.290892",
+      "size_bytes": null
+    },
+    {
+      "name": "tdd-workflow",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\tdd-workflow",
+      "mtime": "2026-04-01T01:01:38.328483",
+      "ctime": "2026-04-01T01:01:38.327482",
+      "size_bytes": null
+    },
+    {
+      "name": "coding-standards",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\coding-standards",
+      "mtime": "2026-04-01T01:01:38.351484",
+      "ctime": "2026-04-01T01:01:38.349482",
+      "size_bytes": null
+    },
+    {
+      "name": "frontend-patterns",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\frontend-patterns",
+      "mtime": "2026-04-01T01:01:38.374208",
+      "ctime": "2026-04-01T01:01:38.373208",
+      "size_bytes": null
+    },
+    {
+      "name": "backend-patterns",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\backend-patterns",
+      "mtime": "2026-04-01T01:01:38.396208",
+      "ctime": "2026-04-01T01:01:38.396208",
+      "size_bytes": null
+    },
+    {
+      "name": "search-first",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\search-first",
+      "mtime": "2026-04-01T01:01:38.420222",
+      "ctime": "2026-04-01T01:01:38.419228",
+      "size_bytes": null
+    },
+    {
+      "name": "eval-harness",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\eval-harness",
+      "mtime": "2026-04-01T01:01:38.441213",
+      "ctime": "2026-04-01T01:01:38.440207",
+      "size_bytes": null
+    },
+    {
+      "name": "verification-loop",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\verification-loop",
+      "mtime": "2026-04-01T01:01:38.464226",
+      "ctime": "2026-04-01T01:01:38.463206",
+      "size_bytes": null
+    },
+    {
+      "name": "learned",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\learned",
+      "mtime": "2026-04-01T12:23:24.635996",
+      "ctime": "2026-04-01T12:23:24.635996",
+      "size_bytes": null
+    },
+    {
+      "name": "wasp",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\wasp",
+      "mtime": "2026-04-01T12:56:43.072841",
+      "ctime": "2026-04-01T12:45:15.326199",
+      "size_bytes": null
+    },
+    {
+      "name": "wasp-patterns",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\wasp-patterns",
+      "mtime": "2026-04-01T12:51:23.156184",
+      "ctime": "2026-04-01T12:50:30.695511",
+      "size_bytes": null
+    },
+    {
+      "name": "task-manager",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\task-manager",
+      "mtime": "2026-04-01T13:01:24.759686",
+      "ctime": "2026-04-01T12:57:28.159888",
+      "size_bytes": null
+    },
+    {
+      "name": "musescore-mcp",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\musescore-mcp",
+      "mtime": "2026-04-02T21:32:16.673974",
+      "ctime": "2026-04-02T21:27:08.181766",
+      "size_bytes": null
+    },
+    {
+      "name": "ws-gateway",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\ws-gateway",
+      "mtime": "2026-04-14T16:12:35.333871",
+      "ctime": "2026-04-06T06:55:07.961910",
+      "size_bytes": null
+    },
+    {
+      "name": "code-converter",
+      "surface": "pre_atlas_apps",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\code-converter",
+      "mtime": "2026-04-14T16:13:04.556937",
+      "ctime": "2026-04-06T11:04:28.768788",
+      "size_bytes": null
+    },
+    {
+      "name": "uasc-executor",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\uasc-executor",
+      "mtime": "2026-04-14T16:12:35.512636",
+      "ctime": "2026-04-06T12:23:27.531076",
+      "size_bytes": null
+    },
+    {
+      "name": "crucix",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\crucix",
+      "mtime": "2026-04-06T23:10:53.985041",
+      "ctime": "2026-04-06T23:10:34.237186",
+      "size_bytes": null
+    },
+    {
+      "name": "cortex",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\cortex",
+      "mtime": "2026-04-19T05:03:30.006142",
+      "ctime": "2026-04-08T18:15:17.460554",
+      "size_bytes": null
+    },
+    {
+      "name": "atlas",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\atlas",
+      "mtime": "2026-05-27T08:49:04.026216",
+      "ctime": "2026-04-11T07:44:32.335967",
+      "size_bytes": null
+    },
+    {
+      "name": "inpact",
+      "surface": "pre_atlas_apps",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\inpact",
+      "mtime": "2026-05-25T20:17:35.397428",
+      "ctime": "2026-04-13T20:18:57.429386",
+      "size_bytes": null
+    },
+    {
+      "name": "web-audit",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\web-audit",
+      "mtime": "2026-04-17T19:15:17.396520",
+      "ctime": "2026-04-17T17:30:56.756896",
+      "size_bytes": null
+    },
+    {
+      "name": "web-audit",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\web-audit",
+      "mtime": "2026-05-10T10:04:18.173115",
+      "ctime": "2026-04-17T18:19:00.581978",
+      "size_bytes": null
+    },
+    {
+      "name": "optogon",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\optogon",
+      "mtime": "2026-04-19T04:20:58.191542",
+      "ctime": "2026-04-19T04:15:48.733433",
+      "size_bytes": null
+    },
+    {
+      "name": "ai-exec-pipeline",
+      "surface": "pre_atlas_apps",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\ai-exec-pipeline",
+      "mtime": "2026-04-21T13:05:42.283189",
+      "ctime": "2026-04-21T12:46:26.741599",
+      "size_bytes": null
+    },
+    {
+      "name": "anatomy-map",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\anatomy-map",
+      "mtime": "2026-04-22T15:43:41.423056",
+      "ctime": "2026-04-22T09:53:02.262479",
+      "size_bytes": null
+    },
+    {
+      "name": "anatomy-extension",
+      "surface": "pre_atlas_tools",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\anatomy-extension",
+      "mtime": "2026-04-26T22:00:34.654472",
+      "ctime": "2026-04-22T18:48:59.819211",
+      "size_bytes": null
+    },
+    {
+      "name": "anatomy-research",
+      "surface": "pre_atlas_tools",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\anatomy-research",
+      "mtime": "2026-04-23T12:02:24.287346",
+      "ctime": "2026-04-22T19:45:33.965567",
+      "size_bytes": null
+    },
+    {
+      "name": "anatomy-rewrite",
+      "surface": "pre_atlas_tools",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\anatomy-rewrite",
+      "mtime": "2026-04-23T14:50:14.710398",
+      "ctime": "2026-04-23T14:47:56.107286",
+      "size_bytes": null
+    },
+    {
+      "name": "remotion",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\remotion",
+      "mtime": "2026-04-23T19:01:52.570259",
+      "ctime": "2026-04-23T18:57:38.635320",
+      "size_bytes": null
+    },
+    {
+      "name": "canvas-demo",
+      "surface": "pre_atlas_apps",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\apps\\canvas-demo",
+      "mtime": "2026-04-23T21:02:25.514745",
+      "ctime": "2026-04-23T20:32:55.874905",
+      "size_bytes": null
+    },
+    {
+      "name": "codex-partner",
+      "surface": "pre_atlas_tools",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\codex-partner",
+      "mtime": "2026-04-26T14:01:35.646046",
+      "ctime": "2026-04-25T16:45:48.453805",
+      "size_bytes": null
+    },
+    {
+      "name": "codex-delegate",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\codex-delegate",
+      "mtime": "2026-05-02T08:00:45.274688",
+      "ctime": "2026-04-25T16:47:36.236543",
+      "size_bytes": null
+    },
+    {
+      "name": "perception",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\perception",
+      "mtime": "2026-04-26T09:15:09.472719",
+      "ctime": "2026-04-26T08:17:30.609285",
+      "size_bytes": null
+    },
+    {
+      "name": "triangulation",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\triangulation",
+      "mtime": "2026-04-26T09:29:08.522664",
+      "ctime": "2026-04-26T09:17:44.825783",
+      "size_bytes": null
+    },
+    {
+      "name": "canvas-engine",
+      "surface": "pre_atlas_services",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\services\\canvas-engine",
+      "mtime": "2026-05-25T15:46:02.029982",
+      "ctime": "2026-04-26T09:37:37.630724",
+      "size_bytes": null
+    },
+    {
+      "name": "st3gg",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\st3gg",
+      "mtime": "2026-05-01T07:04:58.215184",
+      "ctime": "2026-05-01T06:58:09.443106",
+      "size_bytes": null
+    },
+    {
+      "name": "mini-ship",
+      "surface": "pre_atlas_tools",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\mini-ship",
+      "mtime": "2026-05-02T17:19:28.234768",
+      "ctime": "2026-05-02T11:42:18.287493",
+      "size_bytes": null
+    },
+    {
+      "name": "Scrapling",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\Scrapling",
+      "mtime": "2026-05-02T20:01:04.298724",
+      "ctime": "2026-05-02T18:14:46.314682",
+      "size_bytes": null
+    },
+    {
+      "name": "scrapling-official",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\scrapling-official",
+      "mtime": "2026-05-02T18:15:04.524079",
+      "ctime": "2026-05-02T18:15:03.970235",
+      "size_bytes": null
+    },
+    {
+      "name": "scrapling-smoke",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\scrapling-smoke",
+      "mtime": "2026-05-02T19:58:51.900055",
+      "ctime": "2026-05-02T19:40:50.270212",
+      "size_bytes": null
+    },
+    {
+      "name": "web-extract-workflow",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\web-extract-workflow",
+      "mtime": "2026-05-02T19:46:08.936962",
+      "ctime": "2026-05-02T19:45:45.396290",
+      "size_bytes": null
+    },
+    {
+      "name": "competitor-monitor",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\competitor-monitor",
+      "mtime": "2026-05-03T12:24:40.312757",
+      "ctime": "2026-05-03T12:24:40.296658",
+      "size_bytes": null
+    },
+    {
+      "name": "competitor-monitor",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\competitor-monitor",
+      "mtime": "2026-05-04T01:35:23.333676",
+      "ctime": "2026-05-04T01:32:00.874969",
+      "size_bytes": null
+    },
+    {
+      "name": "mini-ship",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\mini-ship",
+      "mtime": "2026-05-04T09:56:58.062390",
+      "ctime": "2026-05-04T09:56:57.956391",
+      "size_bytes": null
+    },
+    {
+      "name": "fleet-launch",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\fleet-launch",
+      "mtime": "2026-05-05T03:04:54.814534",
+      "ctime": "2026-05-05T03:04:27.812118",
+      "size_bytes": null
+    },
+    {
+      "name": "operator-system",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\operator-system",
+      "mtime": "2026-05-06T17:33:09.882279",
+      "ctime": "2026-05-05T16:31:10.316124",
+      "size_bytes": null
+    },
+    {
+      "name": "handoff-out",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\handoff-out",
+      "mtime": "2026-05-05T16:33:31.987972",
+      "ctime": "2026-05-05T16:33:31.985976",
+      "size_bytes": null
+    },
+    {
+      "name": "anime-js",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\anime-js",
+      "mtime": "2026-05-09T21:02:48.850290",
+      "ctime": "2026-05-09T16:00:46.214882",
+      "size_bytes": null
+    },
+    {
+      "name": "remotion-test",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\remotion-test",
+      "mtime": "2026-05-09T16:44:07.161273",
+      "ctime": "2026-05-09T16:25:46.534254",
+      "size_bytes": null
+    },
+    {
+      "name": "anime-js",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js",
+      "mtime": "2026-05-09T19:30:21.389846",
+      "ctime": "2026-05-09T16:30:39.653063",
+      "size_bytes": null
+    },
+    {
+      "name": "anime-js-migrate",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\anime-js-migrate",
+      "mtime": "2026-05-09T17:44:55.096985",
+      "ctime": "2026-05-09T17:43:16.262584",
+      "size_bytes": null
+    },
+    {
+      "name": "three-js",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\three-js",
+      "mtime": "2026-05-09T22:27:54.204227",
+      "ctime": "2026-05-09T22:16:08.901341",
+      "size_bytes": null
+    },
+    {
+      "name": "three-js",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\three-js",
+      "mtime": "2026-05-09T22:28:40.007737",
+      "ctime": "2026-05-09T22:18:29.824380",
+      "size_bytes": null
+    },
+    {
+      "name": "three-js-migrate",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\three-js-migrate",
+      "mtime": "2026-05-09T22:32:26.732783",
+      "ctime": "2026-05-09T22:28:47.093383",
+      "size_bytes": null
+    },
+    {
+      "name": "r3f",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\r3f",
+      "mtime": "2026-05-09T22:53:06.022850",
+      "ctime": "2026-05-09T22:34:55.773555",
+      "size_bytes": null
+    },
+    {
+      "name": "react-three-fiber",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\react-three-fiber",
+      "mtime": "2026-05-09T23:03:49.418151",
+      "ctime": "2026-05-09T22:47:00.233871",
+      "size_bytes": null
+    },
+    {
+      "name": "three-stack",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\three-stack",
+      "mtime": "2026-05-10T10:37:06.364364",
+      "ctime": "2026-05-10T10:30:42.693568",
+      "size_bytes": null
+    },
+    {
+      "name": "mandelbulb3d",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulb3d",
+      "mtime": "2026-05-12T11:16:57.433939",
+      "ctime": "2026-05-10T16:35:09.741361",
+      "size_bytes": null
+    },
+    {
+      "name": "binre",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\binre",
+      "mtime": "2026-05-16T22:02:28.488261",
+      "ctime": "2026-05-10T20:52:21.571460",
+      "size_bytes": null
+    },
+    {
+      "name": "mb3d_anim_demo",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\mb3d_anim_demo",
+      "mtime": "2026-05-12T15:16:42.514528",
+      "ctime": "2026-05-11T08:54:34.082679",
+      "size_bytes": null
+    },
+    {
+      "name": "mandelbulber2_install",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\mandelbulber2_install",
+      "mtime": "2026-05-13T07:34:26.491248",
+      "ctime": "2026-05-11T22:24:20.404483",
+      "size_bytes": null
+    },
+    {
+      "name": "mandelbulber2",
+      "surface": "custom_skill",
+      "path": "C:\\Users\\bruke\\.claude\\skills\\mandelbulber2",
+      "mtime": "2026-05-14T06:04:25.788095",
+      "ctime": "2026-05-11T22:43:30.960265",
+      "size_bytes": null
+    },
+    {
+      "name": "m3p-to-fract",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\m3p-to-fract",
+      "mtime": "2026-05-12T10:11:27.036333",
+      "ctime": "2026-05-12T10:00:08.908159",
+      "size_bytes": null
+    },
+    {
+      "name": "mb3d-blender",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\mb3d-blender",
+      "mtime": "2026-05-12T11:40:30.201156",
+      "ctime": "2026-05-12T11:36:17.715992",
+      "size_bytes": null
+    },
+    {
+      "name": "fractal-machine",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\fractal-machine",
+      "mtime": "2026-05-15T22:02:41.310123",
+      "ctime": "2026-05-14T15:16:37.651298",
+      "size_bytes": null
+    },
+    {
+      "name": "nih-plug",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\nih-plug",
+      "mtime": "2026-05-16T21:53:21.852370",
+      "ctime": "2026-05-16T20:55:55.121507",
+      "size_bytes": null
+    },
+    {
+      "name": "airwindows",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\airwindows",
+      "mtime": "2026-05-16T21:37:39.285663",
+      "ctime": "2026-05-16T21:36:24.935556",
+      "size_bytes": null
+    },
+    {
+      "name": "surge-xt",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\surge-xt",
+      "mtime": "2026-05-16T21:41:14.829104",
+      "ctime": "2026-05-16T21:37:44.019147",
+      "size_bytes": null
+    },
+    {
+      "name": "screenshot-to-code",
+      "surface": "standalone_repo",
+      "path": "C:\\Users\\bruke\\screenshot-to-code",
+      "mtime": "2026-05-23T21:19:12.562886",
+      "ctime": "2026-05-23T21:18:04.633659",
+      "size_bytes": null
+    },
+    {
+      "name": "fest-reconcile",
+      "surface": "pre_atlas_tools",
+      "path": "C:\\Users\\bruke\\Pre Atlas\\tools\\fest-reconcile",
+      "mtime": "2026-05-27T19:25:44.657383",
+      "ctime": "2026-05-27T13:18:38.344708",
+      "size_bytes": null
+    }
+  ]
+}

@@ -11,6 +11,12 @@ import {
   pickPattern,
   type Pattern,
 } from '../pattern-library/index.js';
+import { buildComponentNameMap } from './component-names.js';
+import {
+  buildSliceComponent,
+  buildSourceModule,
+  type ImageSize,
+} from './asset-extract.js';
 import type { VitePool } from '../sandbox/vite-pool.js';
 import type { SessionStore } from './session-store.js';
 
@@ -69,21 +75,12 @@ function formatErrorMessage(error: unknown): string {
   return String(error);
 }
 
-function toPascalCase(value: string): string {
-  const cleaned = value
-    .split(/[\s-]+/)
-    .map((part) => part.replace(/[^a-zA-Z0-9]/g, ''))
-    .filter((part) => part.length > 0)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
-
-  const joined = cleaned.join('');
-  return /^[0-9]/.test(joined) ? `R${joined}` : joined;
-}
-
 function buildRegionComponentSpecs(
   envelope: AnatomyV1,
 ): RegionComponentSpec[] {
-  const seenNames = new Map<string, number>();
+  // Component names come from the shared map so the deterministic edit loop,
+  // which resolves files by the same map, can never disagree with what we emit.
+  const componentNames = buildComponentNameMap(envelope);
   // Each landmark slot can only be filled once · subsequent regions with the
   // same landmark pattern fall back to the main slot so the page stays sane.
   const claimedSlots = new Set<Slot>();
@@ -91,12 +88,8 @@ function buildRegionComponentSpecs(
   return [...envelope.regions]
     .sort((left, right) => left.n - right.n)
     .map((region) => {
-      const baseName = toPascalCase(region.name) || `Region${region.n}`;
-      const duplicateIndex = seenNames.get(baseName) ?? 0;
-      seenNames.set(baseName, duplicateIndex + 1);
-
       const componentName =
-        duplicateIndex === 0 ? baseName : `${baseName}${region.n}`;
+        componentNames.get(region.id) ?? `Region${region.n}`;
 
       const { pattern } = pickPattern(region, PATTERN_REGISTRY);
       const proposedSlot = SLOT_BY_PATTERN[pattern.name] ?? 'main';
@@ -314,8 +307,26 @@ function renderApp(specs: RegionComponentSpec[]): string {
   return lines.join('\n');
 }
 
-function generateFromEnvelope(envelope: AnatomyV1): GeneratedFile[] {
+export interface GenerateOptions {
+  // When set, image-kind regions render a real CSS slice of this screenshot
+  // (asset-extract.ts) instead of a placeholder pattern. The url/anatomy path
+  // leaves this unset, so its behaviour is unchanged.
+  imageSrc?: string;
+  imageSize?: ImageSize | null;
+}
+
+// Deterministic ENV → CODE consumer (no LLM). Exported so the image→envelope
+// bridge (image-to-envelope.ts) can feed it a screenshot-derived envelope and
+// reach the SAME canonical React skeleton the url/anatomy path produces · and,
+// when given the screenshot, render real pixels for image regions.
+export function generateFromEnvelope(
+  envelope: AnatomyV1,
+  opts: GenerateOptions = {},
+): GeneratedFile[] {
   const specs = buildRegionComponentSpecs(envelope);
+  const { imageSrc } = opts;
+  const imageSize = opts.imageSize ?? null;
+
   const files: GeneratedFile[] = [
     {
       path: 'src/App.jsx',
@@ -329,14 +340,28 @@ function generateFromEnvelope(envelope: AnatomyV1): GeneratedFile[] {
     },
   ];
 
+  let usedSlice = false;
   for (const spec of specs) {
+    const isImageAsset =
+      imageSrc !== undefined && spec.region.kind === 'image';
+    if (isImageAsset && spec.region.bounds !== undefined) usedSlice = true;
     files.push({
       path: spec.filePath,
-      content: spec.pattern.render({
-        componentName: spec.componentName,
-        region: spec.region,
-        chains: envelope.chains,
-      }),
+      content: isImageAsset
+        ? buildSliceComponent(spec.componentName, spec.region, imageSize)
+        : spec.pattern.render({
+            componentName: spec.componentName,
+            region: spec.region,
+            chains: envelope.chains,
+          }),
+    });
+  }
+
+  // Emit the shared source module only if at least one slice references it.
+  if (imageSrc !== undefined && usedSlice) {
+    files.push({
+      path: 'src/assets/source.js',
+      content: buildSourceModule(imageSrc),
     });
   }
 

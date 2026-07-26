@@ -18,9 +18,9 @@ import {
   UIListItem,
   StreamMetrics,
   RejectReason,
-} from './types';
-import { applyDelta, now, computeHash, generateUUID, applyPatch } from './delta';
-import { validateUIPatch, ComponentRegistry } from './ui-surface';
+} from '../src/core/types.js';
+import { applyDelta, now, computeHash, generateUUID, applyPatch } from '../src/core/delta.js';
+import { validateUIPatch, ComponentRegistry } from './ui-surface.js';
 
 // === STREAM METRICS ===
 

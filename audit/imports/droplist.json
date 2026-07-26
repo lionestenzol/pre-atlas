@@ -1,0 +1,368 @@
+{
+  "droplist/__init__.py": [],
+  "droplist/__main__.py": [
+    ".cli.main"
+  ],
+  "droplist/agents.py": [
+    "..llm",
+    ".dispatcher.get_node",
+    "__future__.annotations",
+    "time"
+  ],
+  "droplist/atlas_signal.py": [
+    "..clock",
+    "..retry_queue",
+    "..storage",
+    "__future__.annotations",
+    "json",
+    "jsonschema",
+    "os",
+    "typing.Any",
+    "urllib.error",
+    "urllib.request",
+    "uuid"
+  ],
+  "droplist/classifier.py": [
+    "..llm",
+    ".hashing.ClassificationCache",
+    ".schema.DOMAINS",
+    ".schema.TYPES",
+    "__future__.annotations",
+    "re",
+    "time"
+  ],
+  "droplist/cli.py": [
+    "..command_brief",
+    "..daily",
+    "..engine",
+    "..entities",
+    "..graph_engine",
+    "..inventory",
+    "..retrieval",
+    "..review",
+    "..state",
+    "..storage",
+    "..watcher",
+    ".schema.WorkPacket",
+    "__future__.annotations",
+    "argparse",
+    "json",
+    "sys"
+  ],
+  "droplist/clock.py": [
+    "__future__.annotations",
+    "datetime",
+    "os"
+  ],
+  "droplist/command_brief.py": [
+    "..clock",
+    "..state",
+    "..storage",
+    "__future__.annotations",
+    "os"
+  ],
+  "droplist/completion.py": [
+    "..llm",
+    ".schema.WorkPacket",
+    "__future__.annotations",
+    "time"
+  ],
+  "droplist/dag_builder.py": [
+    ".schema.WorkPacket",
+    "__future__.annotations",
+    "subprocess",
+    "uuid"
+  ],
+  "droplist/dag_update.py": [
+    "__future__.annotations",
+    "uuid"
+  ],
+  "droplist/daily.py": [
+    "..storage",
+    "__future__.annotations"
+  ],
+  "droplist/dispatcher.py": [
+    "__future__.annotations"
+  ],
+  "droplist/engine.py": [
+    "..classifier",
+    "..completion",
+    "..retrieval",
+    "..router",
+    "..storage",
+    ".hashing.ClassificationCache",
+    ".hashing.input_hash",
+    ".hashing.normalize",
+    ".schema.MiniShipPacket",
+    ".schema.WorkPacket",
+    "__future__.annotations",
+    "time",
+    "uuid"
+  ],
+  "droplist/entities.py": [
+    "..clock",
+    "..storage",
+    "__future__.annotations",
+    "json",
+    "os",
+    "re"
+  ],
+  "droplist/graph_engine.py": [
+    "..atlas_signal",
+    "..clock",
+    "..dag_builder",
+    "..dag_update",
+    "..dispatcher",
+    "..engine",
+    "..entities",
+    "..node_reviewer",
+    "..node_router",
+    "..retry_queue",
+    "..state",
+    "..storage",
+    "__future__.annotations",
+    "os"
+  ],
+  "droplist/hashing.py": [
+    "__future__.annotations",
+    "hashlib",
+    "re",
+    "unicodedata"
+  ],
+  "droplist/inventory.py": [
+    "..storage",
+    ".schema.WorkPacket",
+    "__future__.annotations",
+    "hashlib",
+    "json",
+    "os",
+    "time",
+    "uuid"
+  ],
+  "droplist/llm.py": [
+    "..storage",
+    "__future__.annotations",
+    "anthropic",
+    "json",
+    "os",
+    "time",
+    "typing.Any",
+    "uuid"
+  ],
+  "droplist/node_reviewer.py": [
+    "..toolrouter",
+    "__future__.annotations"
+  ],
+  "droplist/node_router.py": [
+    "..agents",
+    "..toolrouter",
+    "__future__.annotations"
+  ],
+  "droplist/retrieval.py": [
+    "__future__.annotations",
+    "json",
+    "os",
+    "re",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "droplist/retry_queue.py": [
+    "..clock",
+    "..storage",
+    "__future__.annotations",
+    "datetime",
+    "json",
+    "os",
+    "tempfile",
+    "typing.Any"
+  ],
+  "droplist/review.py": [
+    "..storage",
+    "__future__.annotations",
+    "collections.Counter"
+  ],
+  "droplist/router.py": [
+    "__future__.annotations"
+  ],
+  "droplist/schema.py": [
+    "__future__.annotations",
+    "dataclasses.asdict",
+    "dataclasses.dataclass",
+    "dataclasses.field",
+    "typing.Any"
+  ],
+  "droplist/server.py": [
+    "..atlas_signal",
+    "..command_brief",
+    "..dag_builder",
+    "..entities",
+    "..state",
+    "..storage",
+    "__future__.annotations",
+    "fastapi.FastAPI",
+    "fastapi.HTTPException",
+    "fastapi.middleware.cors.CORSMiddleware",
+    "pathlib.Path",
+    "typing.Optional",
+    "uvicorn"
+  ],
+  "droplist/state.py": [
+    "..clock",
+    "..storage",
+    "__future__.annotations",
+    "json",
+    "os",
+    "uuid"
+  ],
+  "droplist/storage.py": [
+    "__future__.annotations",
+    "json",
+    "os",
+    "time",
+    "typing.Any",
+    "typing.Iterator",
+    "uuid"
+  ],
+  "droplist/toolrouter.py": [
+    "..storage",
+    "__future__.annotations",
+    "json",
+    "os",
+    "subprocess",
+    "time",
+    "urllib.error",
+    "urllib.request",
+    "uuid"
+  ],
+  "droplist/watcher.py": [
+    "..clock",
+    "..dag_builder",
+    "..entities",
+    "..state",
+    "..storage",
+    "__future__.annotations",
+    "os",
+    "uuid"
+  ],
+  "test_atlas_emit.py": [
+    "__future__.annotations",
+    "droplist.graph_engine",
+    "droplist.storage",
+    "http.server.BaseHTTPRequestHandler",
+    "http.server.HTTPServer",
+    "json",
+    "os",
+    "shutil",
+    "sys",
+    "tempfile",
+    "test_atlas_signal.structural_check",
+    "threading"
+  ],
+  "test_atlas_retry.py": [
+    "__future__.annotations",
+    "droplist.atlas_signal",
+    "droplist.clock",
+    "droplist.graph_engine",
+    "droplist.retry_queue",
+    "droplist.storage",
+    "http.server.BaseHTTPRequestHandler",
+    "http.server.HTTPServer",
+    "json",
+    "os",
+    "shutil",
+    "sys",
+    "tempfile",
+    "test_atlas_signal.fixture_animal_needs_human",
+    "threading"
+  ],
+  "test_atlas_signal.py": [
+    "__future__.annotations",
+    "droplist.atlas_signal",
+    "json",
+    "jsonschema",
+    "os",
+    "sys"
+  ],
+  "test_atlas_validate.py": [
+    "__future__.annotations",
+    "droplist.atlas_signal",
+    "droplist.storage",
+    "http.server.BaseHTTPRequestHandler",
+    "http.server.HTTPServer",
+    "json",
+    "os",
+    "shutil",
+    "sys",
+    "tempfile",
+    "test_atlas_signal.fixture_animal_needs_human",
+    "threading"
+  ],
+  "test_drops.py": [
+    "__future__.annotations",
+    "droplist.cli.print_packet",
+    "droplist.engine",
+    "droplist.schema.DOMAINS",
+    "droplist.schema.TYPES",
+    "droplist.storage",
+    "os",
+    "shutil",
+    "sys",
+    "tempfile"
+  ],
+  "test_graph.py": [
+    "__future__.annotations",
+    "droplist.graph_engine",
+    "droplist.storage",
+    "os",
+    "shutil",
+    "tempfile"
+  ],
+  "test_persist.py": [
+    "__future__.annotations",
+    "datetime",
+    "droplist.command_brief",
+    "droplist.entities",
+    "droplist.graph_engine",
+    "droplist.state",
+    "droplist.storage",
+    "droplist.watcher",
+    "os",
+    "shutil",
+    "tempfile"
+  ],
+  "test_retrieval_external.py": [
+    "__future__.annotations",
+    "droplist.retrieval",
+    "http.server.BaseHTTPRequestHandler",
+    "http.server.HTTPServer",
+    "json",
+    "pytest",
+    "threading"
+  ],
+  "test_server.py": [
+    "__future__.annotations",
+    "droplist.entities",
+    "droplist.graph_engine",
+    "droplist.server.app",
+    "droplist.state",
+    "json",
+    "os",
+    "shutil",
+    "socket",
+    "sys",
+    "tempfile",
+    "threading",
+    "time",
+    "urllib.error",
+    "urllib.request",
+    "uvicorn"
+  ],
+  "test_tools.py": [
+    "__future__.annotations",
+    "droplist.graph_engine",
+    "droplist.storage",
+    "os",
+    "shutil",
+    "tempfile"
+  ]
+}

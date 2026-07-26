@@ -13,8 +13,8 @@
  * Bandwidth: ~20-50 bytes/sec for voice (vs 64kbps raw audio)
  */
 
-import { UUID, Timestamp, Delta, JsonPatch } from './types';
-import { generateUUID, now, computeHash } from './delta';
+import { UUID, Timestamp, Delta, JsonPatch } from '../src/core/types.js';
+import { generateUUID, now, computeHash } from '../src/core/delta.js';
 
 // === TYPES ===
 

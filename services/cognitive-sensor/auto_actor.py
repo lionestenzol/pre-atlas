@@ -181,6 +181,11 @@ def record_decision(convo_id: str, decision: str, title: str) -> bool:
     con.close()
 
     # Notify delta-kernel
+    # Bearer header was missing — silent 401 made the closure → Atlas link
+    # appear dead. See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
+    headers = {"Content-Type": "application/json"}
+    if _DELTA_API_KEY:
+        headers["Authorization"] = f"Bearer {_DELTA_API_KEY}"
     try:
         req = urllib.request.Request(
             "http://localhost:3001/api/law/close_loop",
@@ -193,7 +198,7 @@ def record_decision(convo_id: str, decision: str, title: str) -> bool:
                 "coverage_score": None,
                 "status": "RESOLVED" if decision == "CLOSE" else "DROPPED",
             }).encode(),
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             method="POST"
         )
         urllib.request.urlopen(req, timeout=5)

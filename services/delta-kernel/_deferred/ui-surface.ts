@@ -27,8 +27,8 @@ import {
   UIButtonProps,
   UIListItem,
   RejectReason,
-} from './types';
-import { createEntity, applyDelta, now, generateUUID, computeHash } from './delta';
+} from '../src/core/types.js';
+import { createEntity, applyDelta, now, generateUUID, computeHash } from '../src/core/delta.js';
 
 // === SCHEMA VALIDATORS ===
 

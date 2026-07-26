@@ -1,0 +1,3691 @@
+{
+  "phase": "002_KEYWORD_CLUSTERS",
+  "sequence": "02_expand_clusters_from_corpus",
+  "generated_at": "2026-05-28T00:37:20.951901+00:00",
+  "method": "Substring-match each cluster's seed terms against chatgpt titles + cc first_user_msgs. From matching texts, tokenize and rank co-occurring terms after stopword + seed-token filtering. Top 30 per cluster (union of channel tops), 5 sample IDs per term per channel.",
+  "stopword_count": 321,
+  "top_n": 30,
+  "max_samples_per_term": 5,
+  "clusters": [
+    {
+      "name": "anatomy",
+      "seed_terms": [
+        "anatomy",
+        "anatomy-v1",
+        "anatomyv1",
+        "anatomy-extension",
+        "anatomy-research",
+        "anatomy-rewrite",
+        "anatomy-map",
+        "anatomy-frame",
+        "anatomy-sidecar"
+      ],
+      "rationale": "DOM-capture + envelope schema arc \u00b7 extension captures, research mines, rewrite consolidates, schema (AnatomyV1.v1.json) is the contract. Seeds taken from the 4 explicit anatomy-* tools + map skill + the anatomy-frame-sidecar referenced in MEMORY.md carbo-shrink.",
+      "portfolio_hit_count": 4,
+      "portfolio_hits": [
+        {
+          "name": "anatomy-map",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-map"
+          ]
+        },
+        {
+          "name": "anatomy-extension",
+          "surface": "pre_atlas_tools",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-extension"
+          ]
+        },
+        {
+          "name": "anatomy-research",
+          "surface": "pre_atlas_tools",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-research"
+          ]
+        },
+        {
+          "name": "anatomy-rewrite",
+          "surface": "pre_atlas_tools",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anatomy",
+            "anatomy-rewrite"
+          ]
+        }
+      ],
+      "chatgpt_match_count": 2,
+      "cc_match_count": 13,
+      "chatgpt_sample_ids": [
+        "316",
+        "171"
+      ],
+      "cc_sample_ids": [
+        "8ed779dd-223f-4752-8b46-07fbc14cc921",
+        "c9590916-4b42-4226-8289-ece8f5716855",
+        "agent-a67f62918e9be4b29",
+        "agent-a6c8ce5b23c406661",
+        "agent-ae36c9bb65a06dc3e",
+        "agent-a80ff93e7b4b8b4ea",
+        "agent-a49132d6b61d8bf6c",
+        "agent-afcfa26f7cec58a61",
+        "agent-af96b4b3f9d2263c7",
+        "agent-a35a4a4f9e2fb1fca"
+      ],
+      "discovered_terms": [
+        {
+          "term": "atlas",
+          "chatgpt_count": 0,
+          "cc_count": 9,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "c9590916-4b42-4226-8289-ece8f5716855",
+            "c9590916-4b42-4226-8289-ece8f5716855",
+            "agent-a67f62918e9be4b29",
+            "agent-ae36c9bb65a06dc3e",
+            "agent-a80ff93e7b4b8b4ea"
+          ]
+        },
+        {
+          "term": "chrome",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-afcfa26f7cec58a61",
+            "agent-a47bf236aa9db88a9",
+            "agent-a47bf236aa9db88a9",
+            "agent-af642a8907c55f6e8"
+          ]
+        },
+        {
+          "term": "schema",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "c9590916-4b42-4226-8289-ece8f5716855",
+            "agent-a67f62918e9be4b29",
+            "agent-a6c8ce5b23c406661",
+            "agent-a6c8ce5b23c406661"
+          ]
+        },
+        {
+          "term": "extension",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a47bf236aa9db88a9",
+            "agent-a47bf236aa9db88a9",
+            "agent-af642a8907c55f6e8",
+            "agent-af642a8907c55f6e8"
+          ]
+        },
+        {
+          "term": "goal",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a67f62918e9be4b29",
+            "agent-a6c8ce5b23c406661",
+            "agent-ae36c9bb65a06dc3e"
+          ]
+        },
+        {
+          "term": "audit",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-afcfa26f7cec58a61",
+            "agent-a35a4a4f9e2fb1fca",
+            "agent-a47bf236aa9db88a9"
+          ]
+        },
+        {
+          "term": "report",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a67f62918e9be4b29",
+            "agent-ae36c9bb65a06dc3e",
+            "agent-a80ff93e7b4b8b4ea"
+          ]
+        },
+        {
+          "term": "schemas",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "c9590916-4b42-4226-8289-ece8f5716855",
+            "agent-a67f62918e9be4b29",
+            "agent-a67f62918e9be4b29"
+          ]
+        },
+        {
+          "term": "mv3",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-afcfa26f7cec58a61",
+            "agent-a47bf236aa9db88a9",
+            "agent-af642a8907c55f6e8"
+          ]
+        },
+        {
+          "term": "mode",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "c9590916-4b42-4226-8289-ece8f5716855",
+            "agent-afcfa26f7cec58a61",
+            "agent-af96b4b3f9d2263c7"
+          ]
+        },
+        {
+          "term": "map",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-abfc94117da3cc8ae",
+            "agent-af642a8907c55f6e8"
+          ]
+        },
+        {
+          "term": "live",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-abfc94117da3cc8ae",
+            "agent-af642a8907c55f6e8"
+          ]
+        },
+        {
+          "term": "complete",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-abfc94117da3cc8ae",
+            "agent-af642a8907c55f6e8"
+          ]
+        },
+        {
+          "term": "actual",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a6c8ce5b23c406661",
+            "agent-a47bf236aa9db88a9"
+          ]
+        },
+        {
+          "term": "claims",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a49132d6b61d8bf6c",
+            "agent-a47bf236aa9db88a9"
+          ]
+        },
+        {
+          "term": "comparing",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-abfc94117da3cc8ae",
+            "agent-af642a8907c55f6e8"
+          ]
+        },
+        {
+          "term": "source",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a49132d6b61d8bf6c",
+            "agent-afcfa26f7cec58a61"
+          ]
+        },
+        {
+          "term": "canvas-engine",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a35a4a4f9e2fb1fca",
+            "agent-abfc94117da3cc8ae"
+          ]
+        },
+        {
+          "term": "captures",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a6c8ce5b23c406661",
+            "agent-af642a8907c55f6e8"
+          ]
+        },
+        {
+          "term": "adoring-rubin-7f09bf",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a49132d6b61d8bf6c",
+            "agent-af96b4b3f9d2263c7"
+          ]
+        },
+        {
+          "term": "contracts",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "c9590916-4b42-4226-8289-ece8f5716855",
+            "agent-a67f62918e9be4b29"
+          ]
+        },
+        {
+          "term": "pensive-sinoussi-eb4d9c",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae36c9bb65a06dc3e",
+            "agent-a80ff93e7b4b8b4ea"
+          ]
+        },
+        {
+          "term": "cwd",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae36c9bb65a06dc3e",
+            "agent-a80ff93e7b4b8b4ea"
+          ]
+        },
+        {
+          "term": "words",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae36c9bb65a06dc3e",
+            "agent-a80ff93e7b4b8b4ea"
+          ]
+        },
+        {
+          "term": "accurate",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-abfc94117da3cc8ae",
+            "agent-af642a8907c55f6e8"
+          ]
+        },
+        {
+          "term": "components",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "171"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "site",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "316"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "engine",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "316"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "ship",
+          "chatgpt_count": 0,
+          "cc_count": 1,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "8ed779dd-223f-4752-8b46-07fbc14cc921"
+          ]
+        },
+        {
+          "term": "canvas",
+          "chatgpt_count": 0,
+          "cc_count": 1,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "8ed779dd-223f-4752-8b46-07fbc14cc921"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mb3d_fractals",
+      "seed_terms": [
+        "mb3d",
+        "mandelbulb",
+        "mandelbulber",
+        "m3p",
+        "m3f",
+        ".fract",
+        "mandelbox",
+        "fractal",
+        "raymarcher",
+        "fragmentarium"
+      ],
+      "rationale": "3D fractal rendering arc \u00b7 MB3D family (.m3p/.m3f) + Mandelbulber 2 (.fract) + the Blender bridge addon. Seeds taken from the 7 portfolio repos (mandelbulb3d skill, mandelbulber2 skill, m3p-to-fract, mb3d-blender, mb3d_anim_demo, mandelbulber2_install, fractal-machine) plus format extensions that disambiguate the cluster from general 3D.",
+      "portfolio_hit_count": 7,
+      "portfolio_hits": [
+        {
+          "name": "fractal-machine",
+          "surface": "standalone_repo",
+          "signal_band": "none",
+          "matched_terms": [
+            "fractal"
+          ]
+        },
+        {
+          "name": "m3p-to-fract",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "m3p"
+          ]
+        },
+        {
+          "name": "mandelbulber2_install",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mandelbulb",
+            "mandelbulber"
+          ]
+        },
+        {
+          "name": "mb3d-blender",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mb3d"
+          ]
+        },
+        {
+          "name": "mb3d_anim_demo",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mb3d"
+          ]
+        },
+        {
+          "name": "mandelbulb3d",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mandelbulb"
+          ]
+        },
+        {
+          "name": "mandelbulber2",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mandelbulb",
+            "mandelbulber"
+          ]
+        }
+      ],
+      "chatgpt_match_count": 8,
+      "cc_match_count": 8,
+      "chatgpt_sample_ids": [
+        "4986",
+        "3945",
+        "682",
+        "685",
+        "119",
+        "123",
+        "86",
+        "43"
+      ],
+      "cc_sample_ids": [
+        "7ba2eb8c-c02a-44fb-8675-187fe9bb4529",
+        "agent-a69bdf93fdc6f5d59",
+        "agent-aa7b886131aa69506",
+        "agent-a81c2c8b08c4d367c",
+        "agent-a4b747d3a25fee930",
+        "agent-a62ea5ac65c430d9f",
+        "agent-a108874b4fef7d87a",
+        "agent-ad771e047f0c1f50f"
+      ],
+      "discovered_terms": [
+        {
+          "term": "mandelbulb3d",
+          "chatgpt_count": 2,
+          "cc_count": 5,
+          "chatgpt_samples": [
+            "119",
+            "123"
+          ],
+          "cc_samples": [
+            "agent-a69bdf93fdc6f5d59",
+            "agent-aa7b886131aa69506",
+            "agent-a108874b4fef7d87a",
+            "agent-ad771e047f0c1f50f",
+            "agent-ad771e047f0c1f50f"
+          ]
+        },
+        {
+          "term": "research",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f",
+            "agent-ad771e047f0c1f50f",
+            "agent-ad771e047f0c1f50f"
+          ]
+        },
+        {
+          "term": "addons",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "goal",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a69bdf93fdc6f5d59",
+            "agent-aa7b886131aa69506"
+          ]
+        },
+        {
+          "term": "scripts",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "delphi",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-aa7b886131aa69506",
+            "agent-a108874b4fef7d87a"
+          ]
+        },
+        {
+          "term": "overlap",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "ifs",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "meaningfully",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "pascal",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-aa7b886131aa69506",
+            "agent-a4b747d3a25fee930"
+          ]
+        },
+        {
+          "term": "anything",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "sdf-based",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "raymarchers",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "mb3d-source",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a4b747d3a25fee930",
+            "agent-ad771e047f0c1f50f"
+          ]
+        },
+        {
+          "term": "integrate",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "blender",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "cli",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-aa7b886131aa69506",
+            "agent-a4b747d3a25fee930"
+          ]
+        },
+        {
+          "term": "fractals",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "repos",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a4b747d3a25fee930",
+            "agent-ad771e047f0c1f50f"
+          ]
+        },
+        {
+          "term": "skill",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a69bdf93fdc6f5d59",
+            "agent-a4b747d3a25fee930"
+          ]
+        },
+        {
+          "term": "mb2",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a108874b4fef7d87a",
+            "agent-a108874b4fef7d87a"
+          ]
+        },
+        {
+          "term": "porting",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "plugins",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a81c2c8b08c4d367c",
+            "agent-a62ea5ac65c430d9f"
+          ]
+        },
+        {
+          "term": "forge",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "119"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "visual",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "682"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "verification",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "682"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "rgb",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "86"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "spec",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "685"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "audiovisual",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "43"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "daw",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "43"
+          ],
+          "cc_samples": []
+        }
+      ]
+    },
+    {
+      "name": "audio_music",
+      "seed_terms": [
+        "strudel",
+        "stem",
+        "stemai",
+        "surge",
+        "surge-xt",
+        "nih-plug",
+        "airwindows",
+        "musescore",
+        "fl356",
+        "fl 3",
+        "fl3",
+        "vst3",
+        "vst",
+        "daw",
+        "midi",
+        "synth",
+        "sampler",
+        "audio"
+      ],
+      "rationale": "Live-coding (Strudel) \u00b7 stem analysis (STEMai) \u00b7 VST plugin modernization (surge-xt, nih-plug Rust bootstrap, airwindows vendor source) \u00b7 FL Studio 3.5.6 CLI renderer (fl356, tracked in MEMORY.md) \u00b7 MuseScore MCP. Generic terms (vst, midi, synth) included so co-occurrence scan picks up convo discussions that pre-date the named project.",
+      "portfolio_hit_count": 10,
+      "portfolio_hits": [
+        {
+          "name": "airwindows",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "airwindows"
+          ]
+        },
+        {
+          "name": "musescore-mcp",
+          "surface": "standalone_repo",
+          "signal_band": "none",
+          "matched_terms": [
+            "musescore"
+          ]
+        },
+        {
+          "name": "nih-plug",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "nih-plug"
+          ]
+        },
+        {
+          "name": "operator-system",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "stem"
+          ]
+        },
+        {
+          "name": "STEMai",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "stem",
+            "stemai"
+          ]
+        },
+        {
+          "name": "STRUDEL",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "strudel"
+          ]
+        },
+        {
+          "name": "surge-xt",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "surge",
+            "surge-xt"
+          ]
+        },
+        {
+          "name": "strudel",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "strudel"
+          ]
+        },
+        {
+          "name": "strudel-skills",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "strudel"
+          ]
+        },
+        {
+          "name": "STEMai",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "stem",
+            "stemai"
+          ]
+        }
+      ],
+      "chatgpt_match_count": 209,
+      "cc_match_count": 323,
+      "chatgpt_sample_ids": [
+        "6321",
+        "6281",
+        "6107",
+        "6098",
+        "5902",
+        "5840",
+        "5762",
+        "5765",
+        "5748",
+        "5699"
+      ],
+      "cc_sample_ids": [
+        "agent-a583652",
+        "agent-a3dfc3b",
+        "agent-aeff131",
+        "agent-a6c684c",
+        "agent-a1b63ec",
+        "agent-a2cb570",
+        "agent-acc1577",
+        "agent-a0dc6dd",
+        "agent-a9a61bb",
+        "agent-a1a0276"
+      ],
+      "discovered_terms": [
+        {
+          "term": "system",
+          "chatgpt_count": 122,
+          "cc_count": 75,
+          "chatgpt_samples": [
+            "6321",
+            "6098",
+            "5840",
+            "5762",
+            "5765"
+          ],
+          "cc_samples": [
+            "agent-a583652",
+            "agent-a3dfc3b",
+            "agent-aeff131",
+            "agent-a6c684c",
+            "agent-a1b63ec"
+          ]
+        },
+        {
+          "term": "packages",
+          "chatgpt_count": 0,
+          "cc_count": 119,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a1f3d16",
+            "agent-a1f3d16",
+            "agent-a69876f",
+            "agent-a84ec3c",
+            "agent-a72872f"
+          ]
+        },
+        {
+          "term": "mjs",
+          "chatgpt_count": 0,
+          "cc_count": 79,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a84ec3c",
+            "agent-ad7d2e1",
+            "agent-af93287",
+            "agent-a4670e2",
+            "agent-a8f45a098793e0105"
+          ]
+        },
+        {
+          "term": "package",
+          "chatgpt_count": 0,
+          "cc_count": 62,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a84ec3c",
+            "agent-a72872f",
+            "agent-af550d6",
+            "agent-ad7d2e1",
+            "agent-a2c4eed"
+          ]
+        },
+        {
+          "term": "loop-engine",
+          "chatgpt_count": 0,
+          "cc_count": 62,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a8f45a098793e0105",
+            "agent-a8f45a098793e0105",
+            "agent-abe46444a0084d1fb",
+            "agent-abe46444a0084d1fb",
+            "agent-a872d535b1ced4fee"
+          ]
+        },
+        {
+          "term": "skill",
+          "chatgpt_count": 0,
+          "cc_count": 62,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a55dd383ea969ad1e",
+            "agent-a55dd383ea969ad1e",
+            "agent-a16424e49f8529a92",
+            "agent-a2188d1fd4ce08938",
+            "agent-a2188d1fd4ce08938"
+          ]
+        },
+        {
+          "term": "chord-pad",
+          "chatgpt_count": 0,
+          "cc_count": 50,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a461d34196e0d366f",
+            "agent-a461d34196e0d366f",
+            "agent-ae6f5bf5976886267",
+            "agent-ae6f5bf5976886267",
+            "agent-ae6f5bf5976886267"
+          ]
+        },
+        {
+          "term": "ecosystem",
+          "chatgpt_count": 11,
+          "cc_count": 36,
+          "chatgpt_samples": [
+            "6281",
+            "5508",
+            "4892",
+            "4517",
+            "3627"
+          ],
+          "cc_samples": [
+            "f5b6edca-21e6-4bc1-aaef-357d803524da",
+            "agent-a59228666f4cc0124",
+            "agent-a9af9512493befbee",
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc"
+          ]
+        },
+        {
+          "term": "plan",
+          "chatgpt_count": 0,
+          "cc_count": 47,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-aeff131",
+            "agent-a27ce36",
+            "agent-abab82c",
+            "agent-a2a3fc4",
+            "agent-aea31cc"
+          ]
+        },
+        {
+          "term": "audit",
+          "chatgpt_count": 3,
+          "cc_count": 38,
+          "chatgpt_samples": [
+            "1009",
+            "676",
+            "580"
+          ],
+          "cc_samples": [
+            "agent-ad52f4b7b736400cf",
+            "agent-a5ef71d8b01466c25",
+            "agent-a251e2fbe7bcb76a2",
+            "agent-a1d0b38b97c065d48",
+            "agent-a1d0b38b97c065d48"
+          ]
+        },
+        {
+          "term": "thoroughly",
+          "chatgpt_count": 0,
+          "cc_count": 41,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-acc1577",
+            "agent-a0dc6dd",
+            "agent-ab7d096",
+            "agent-a72872f",
+            "agent-af550d6"
+          ]
+        },
+        {
+          "term": "atlas",
+          "chatgpt_count": 2,
+          "cc_count": 36,
+          "chatgpt_samples": [
+            "1929",
+            "654"
+          ],
+          "cc_samples": [
+            "agent-a583652",
+            "agent-a583652",
+            "agent-a3dfc3b",
+            "agent-aeff131",
+            "agent-a6c684c"
+          ]
+        },
+        {
+          "term": "design",
+          "chatgpt_count": 5,
+          "cc_count": 32,
+          "chatgpt_samples": [
+            "6098",
+            "3599",
+            "1422",
+            "1196",
+            "865"
+          ],
+          "cc_samples": [
+            "agent-a3dfc3b",
+            "agent-aeff131",
+            "agent-a1a0276",
+            "agent-a27ce36",
+            "agent-abab82c"
+          ]
+        },
+        {
+          "term": "full",
+          "chatgpt_count": 0,
+          "cc_count": 37,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-aea31cc",
+            "agent-a84ec3c",
+            "agent-a72872f",
+            "agent-af550d6",
+            "agent-ad7d2e1"
+          ]
+        },
+        {
+          "term": "implementation",
+          "chatgpt_count": 0,
+          "cc_count": 33,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-aeff131",
+            "agent-a27ce36",
+            "agent-abab82c",
+            "agent-a2a3fc4",
+            "agent-aea31cc"
+          ]
+        },
+        {
+          "term": "systems",
+          "chatgpt_count": 22,
+          "cc_count": 10,
+          "chatgpt_samples": [
+            "5902",
+            "5748",
+            "5248",
+            "5145",
+            "4418"
+          ],
+          "cc_samples": [
+            "agent-ac642a1",
+            "agent-aa76c27d710ab7ed1",
+            "agent-a01cf3b2dd1d76168",
+            "agent-ac4c92262851bdef0",
+            "agent-a37e056d38f9dc898"
+          ]
+        },
+        {
+          "term": "codebase",
+          "chatgpt_count": 1,
+          "cc_count": 31,
+          "chatgpt_samples": [
+            "1154"
+          ],
+          "cc_samples": [
+            "agent-a0dc6dd",
+            "agent-a1a0276",
+            "agent-ac642a1",
+            "agent-a1f3d16",
+            "agent-a69876f"
+          ]
+        },
+        {
+          "term": "monorepo",
+          "chatgpt_count": 0,
+          "cc_count": 32,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a0dc6dd",
+            "agent-a42b900",
+            "agent-a97b172",
+            "agent-ab4f4fa",
+            "agent-acab3e0"
+          ]
+        },
+        {
+          "term": "music",
+          "chatgpt_count": 7,
+          "cc_count": 21,
+          "chatgpt_samples": [
+            "1291",
+            "1255",
+            "1249",
+            "670",
+            "672"
+          ],
+          "cc_samples": [
+            "agent-aea31cc",
+            "agent-a42b900",
+            "agent-a1a0c5b",
+            "agent-a7a2ca2",
+            "agent-ab4f4fa"
+          ]
+        },
+        {
+          "term": "engine",
+          "chatgpt_count": 5,
+          "cc_count": 23,
+          "chatgpt_samples": [
+            "2555",
+            "1244",
+            "1251",
+            "943",
+            "317"
+          ],
+          "cc_samples": [
+            "agent-aea31cc",
+            "agent-a0e882ac6b1fbd1da",
+            "agent-a8d1d8cb38cec659b",
+            "agent-a6ffb464b40a51560",
+            "agent-a251e2fbe7bcb76a2"
+          ]
+        },
+        {
+          "term": "structure",
+          "chatgpt_count": 1,
+          "cc_count": 24,
+          "chatgpt_samples": [
+            "565"
+          ],
+          "cc_samples": [
+            "agent-a3dfc3b",
+            "agent-a1f3d16",
+            "agent-a1f3d16",
+            "agent-a72872f",
+            "agent-af550d6"
+          ]
+        },
+        {
+          "term": "each",
+          "chatgpt_count": 0,
+          "cc_count": 24,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ab35567fda5a8c5c3",
+            "agent-ac7774dad1cfa5a28",
+            "agent-aa8f789ff24872df4",
+            "agent-afffed8913275773d",
+            "agent-acompact-f867baf88e9dc0a5"
+          ]
+        },
+        {
+          "term": "website",
+          "chatgpt_count": 0,
+          "cc_count": 24,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a97b172",
+            "agent-ae03faca674842cea",
+            "agent-ae03faca674842cea",
+            "agent-ae03faca674842cea",
+            "agent-afed121bf872cefa3"
+          ]
+        },
+        {
+          "term": "skills",
+          "chatgpt_count": 0,
+          "cc_count": 24,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ad7e32703ba857974",
+            "agent-a55dd383ea969ad1e",
+            "agent-a16424e49f8529a92",
+            "agent-a16424e49f8529a92",
+            "agent-a16424e49f8529a92"
+          ]
+        },
+        {
+          "term": "analysis",
+          "chatgpt_count": 15,
+          "cc_count": 8,
+          "chatgpt_samples": [
+            "5158",
+            "3935",
+            "2368",
+            "1266",
+            "1278"
+          ],
+          "cc_samples": [
+            "agent-a583652",
+            "agent-a2dcf3a95959c4e9a",
+            "agent-ac929daabde460443",
+            "agent-aa0d95416a4f8cff3",
+            "agent-a91b4e8b096697de4"
+          ]
+        },
+        {
+          "term": "thorough",
+          "chatgpt_count": 0,
+          "cc_count": 23,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a7c4647f25723f2d4",
+            "agent-a5b7dbf36bbb5782f",
+            "agent-a2dcf3a95959c4e9a",
+            "agent-a5cedc246c23aa821",
+            "agent-ac7774dad1cfa5a28"
+          ]
+        },
+        {
+          "term": "repl",
+          "chatgpt_count": 0,
+          "cc_count": 23,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ab4f4fa",
+            "agent-a2340842e9467bb80",
+            "agent-a2340842e9467bb80",
+            "agent-a2340842e9467bb80",
+            "agent-ac8679f39d9ab7a13"
+          ]
+        },
+        {
+          "term": "every",
+          "chatgpt_count": 0,
+          "cc_count": 22,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a84ec3c",
+            "agent-ab35567fda5a8c5c3",
+            "agent-a5b7dbf36bbb5782f",
+            "agent-a4cd54765e9451b26",
+            "agent-a5ef71d8b01466c25"
+          ]
+        },
+        {
+          "term": "architecture",
+          "chatgpt_count": 8,
+          "cc_count": 12,
+          "chatgpt_samples": [
+            "2270",
+            "1278",
+            "1252",
+            "1189",
+            "1008"
+          ],
+          "cc_samples": [
+            "agent-acc1577",
+            "agent-a2a3fc4",
+            "agent-a7c4647f25723f2d4",
+            "agent-a01cf3b2dd1d76168",
+            "agent-ab64e775370eef478"
+          ]
+        },
+        {
+          "term": "exploration",
+          "chatgpt_count": 0,
+          "cc_count": 19,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a7c4647f25723f2d4",
+            "agent-a5b7dbf36bbb5782f",
+            "agent-a5cedc246c23aa821",
+            "agent-addf0d0d7b2fc3ddf",
+            "agent-ac7774dad1cfa5a28"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "atlas_core",
+      "seed_terms": [
+        "atlas",
+        "pre atlas",
+        "pre-atlas",
+        "delta-kernel",
+        "delta kernel",
+        "cognitive-sensor",
+        "cognitive sensor",
+        "cycleboard",
+        "cortex",
+        "optogon",
+        "aegis",
+        "aegis-fabric",
+        "openclaw",
+        "mirofish",
+        "perception",
+        "triangulation",
+        "mosaic",
+        "inpact",
+        "in-pact",
+        "blueprint-generator",
+        "code-converter",
+        "ai-exec-pipeline",
+        "uasc",
+        "ws-gateway",
+        "polaris",
+        "crucix",
+        "governance",
+        "RECOVER",
+        "CLOSURE",
+        "MAINTENANCE",
+        "COMPOUND",
+        "SCALE"
+      ],
+      "rationale": "The Pre Atlas substrate \u00b7 15 services + 6 apps + governance mode system + the public/private GitHub repos. Mode names (RECOVER/CLOSURE/MAINTENANCE/COMPOUND/SCALE) included so Phase 3 can join era against mode-mention density. POLARIS included per its MEMORY.md positioning as agent-execution layer.",
+      "portfolio_hit_count": 25,
+      "portfolio_hits": [
+        {
+          "name": "atlas",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas"
+          ]
+        },
+        {
+          "name": "POLARIS",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "polaris"
+          ]
+        },
+        {
+          "name": "Pre Atlas",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas",
+            "pre atlas"
+          ]
+        },
+        {
+          "name": "pre-atlas",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas",
+            "pre-atlas"
+          ]
+        },
+        {
+          "name": "atlas",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "atlas"
+          ]
+        },
+        {
+          "name": "inpact-site",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "inpact"
+          ]
+        },
+        {
+          "name": "POLARIS",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "polaris"
+          ]
+        },
+        {
+          "name": "aegis-fabric",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "aegis",
+            "aegis-fabric"
+          ]
+        },
+        {
+          "name": "cognitive-sensor",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "cognitive-sensor"
+          ]
+        },
+        {
+          "name": "cortex",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "cortex"
+          ]
+        },
+        {
+          "name": "crucix",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "crucix"
+          ]
+        },
+        {
+          "name": "delta-kernel",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "delta-kernel"
+          ]
+        },
+        {
+          "name": "mirofish",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mirofish"
+          ]
+        },
+        {
+          "name": "mosaic-dashboard",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mosaic"
+          ]
+        },
+        {
+          "name": "mosaic-orchestrator",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "mosaic"
+          ]
+        },
+        {
+          "name": "openclaw",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "openclaw"
+          ]
+        },
+        {
+          "name": "optogon",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "optogon"
+          ]
+        },
+        {
+          "name": "perception",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "perception"
+          ]
+        },
+        {
+          "name": "triangulation",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "triangulation"
+          ]
+        },
+        {
+          "name": "uasc-executor",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "uasc"
+          ]
+        },
+        {
+          "name": "ws-gateway",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "ws-gateway"
+          ]
+        },
+        {
+          "name": "ai-exec-pipeline",
+          "surface": "pre_atlas_apps",
+          "signal_band": "strong",
+          "matched_terms": [
+            "ai-exec-pipeline"
+          ]
+        },
+        {
+          "name": "blueprint-generator",
+          "surface": "pre_atlas_apps",
+          "signal_band": "strong",
+          "matched_terms": [
+            "blueprint-generator"
+          ]
+        },
+        {
+          "name": "code-converter",
+          "surface": "pre_atlas_apps",
+          "signal_band": "strong",
+          "matched_terms": [
+            "code-converter"
+          ]
+        },
+        {
+          "name": "inpact",
+          "surface": "pre_atlas_apps",
+          "signal_band": "strong",
+          "matched_terms": [
+            "inpact"
+          ]
+        }
+      ],
+      "chatgpt_match_count": 93,
+      "cc_match_count": 330,
+      "chatgpt_sample_ids": [
+        "6521",
+        "6490",
+        "6464",
+        "6454",
+        "6223",
+        "6152",
+        "5937",
+        "5915",
+        "5910",
+        "5854"
+      ],
+      "cc_sample_ids": [
+        "agent-a423012",
+        "agent-a008dc1",
+        "agent-a145acc",
+        "agent-a583652",
+        "agent-a865666",
+        "agent-a3dfc3b",
+        "agent-a3ebe13",
+        "agent-a1d3798",
+        "agent-aeff131",
+        "agent-a1dea06"
+      ],
+      "discovered_terms": [
+        {
+          "term": "services",
+          "chatgpt_count": 0,
+          "cc_count": 101,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a145acc",
+            "agent-a583652",
+            "agent-a865666",
+            "agent-a3dfc3b",
+            "agent-a3ebe13"
+          ]
+        },
+        {
+          "term": "skill",
+          "chatgpt_count": 0,
+          "cc_count": 86,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "22079c43-39d4-4a57-96b4-e55b9e431a8e",
+            "22af32d3-c1f6-443a-aa39-0f94f3d8f9bd",
+            "d1440dd2-25b9-46ae-89e0-8a4e41abf765",
+            "6988e6c7-5fbc-4913-8f48-4e816bd11d3b",
+            "3778f484-d76a-4103-a799-b69eae46c749"
+          ]
+        },
+        {
+          "term": "questions",
+          "chatgpt_count": 0,
+          "cc_count": 73,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-aa11b42",
+            "agent-a1a0276",
+            "22079c43-39d4-4a57-96b4-e55b9e431a8e",
+            "22af32d3-c1f6-443a-aa39-0f94f3d8f9bd",
+            "d1440dd2-25b9-46ae-89e0-8a4e41abf765"
+          ]
+        },
+        {
+          "term": "answer",
+          "chatgpt_count": 0,
+          "cc_count": 71,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a3876998f52a9a6fc",
+            "22079c43-39d4-4a57-96b4-e55b9e431a8e",
+            "22af32d3-c1f6-443a-aa39-0f94f3d8f9bd",
+            "d1440dd2-25b9-46ae-89e0-8a4e41abf765",
+            "6988e6c7-5fbc-4913-8f48-4e816bd11d3b"
+          ]
+        },
+        {
+          "term": "present",
+          "chatgpt_count": 0,
+          "cc_count": 70,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "22079c43-39d4-4a57-96b4-e55b9e431a8e",
+            "22af32d3-c1f6-443a-aa39-0f94f3d8f9bd",
+            "d1440dd2-25b9-46ae-89e0-8a4e41abf765",
+            "6988e6c7-5fbc-4913-8f48-4e816bd11d3b",
+            "3778f484-d76a-4103-a799-b69eae46c749"
+          ]
+        },
+        {
+          "term": "atlas-midday",
+          "chatgpt_count": 0,
+          "cc_count": 50,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "d1440dd2-25b9-46ae-89e0-8a4e41abf765",
+            "d1440dd2-25b9-46ae-89e0-8a4e41abf765",
+            "6e7c05da-ba0e-425c-962f-985132a0b3af",
+            "6e7c05da-ba0e-425c-962f-985132a0b3af",
+            "ae4edf5f-2dec-4983-8ac0-05a071266060"
+          ]
+        },
+        {
+          "term": "atlas-evening",
+          "chatgpt_count": 0,
+          "cc_count": 46,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "22079c43-39d4-4a57-96b4-e55b9e431a8e",
+            "22079c43-39d4-4a57-96b4-e55b9e431a8e",
+            "6988e6c7-5fbc-4913-8f48-4e816bd11d3b",
+            "6988e6c7-5fbc-4913-8f48-4e816bd11d3b",
+            "b1bca19e-af7e-4964-afc0-04c45a78f8fa"
+          ]
+        },
+        {
+          "term": "atlas-morning",
+          "chatgpt_count": 0,
+          "cc_count": 44,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "22af32d3-c1f6-443a-aa39-0f94f3d8f9bd",
+            "22af32d3-c1f6-443a-aa39-0f94f3d8f9bd",
+            "3778f484-d76a-4103-a799-b69eae46c749",
+            "3778f484-d76a-4103-a799-b69eae46c749",
+            "fa1bfc50-9304-4ce3-947b-5056d75d653d"
+          ]
+        },
+        {
+          "term": "system",
+          "chatgpt_count": 6,
+          "cc_count": 33,
+          "chatgpt_samples": [
+            "5840",
+            "2201",
+            "1929",
+            "1471",
+            "636"
+          ],
+          "cc_samples": [
+            "agent-a583652",
+            "agent-a3dfc3b",
+            "agent-aeff131",
+            "agent-a6c684c",
+            "agent-acc1577"
+          ]
+        },
+        {
+          "term": "codebase",
+          "chatgpt_count": 0,
+          "cc_count": 33,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a423012",
+            "agent-a008dc1",
+            "agent-abdb190",
+            "agent-a526a64",
+            "agent-a51888a"
+          ]
+        },
+        {
+          "term": "atlas-substrate-daily-soak",
+          "chatgpt_count": 0,
+          "cc_count": 30,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "c4cce583-9626-490c-aeef-581af2c48f9b",
+            "c4cce583-9626-490c-aeef-581af2c48f9b",
+            "35a22dcc-6da2-430d-9589-62a210e1d6c9",
+            "35a22dcc-6da2-430d-9589-62a210e1d6c9",
+            "9c28376d-4e3d-4dc5-b088-4895df68b450"
+          ]
+        },
+        {
+          "term": "service",
+          "chatgpt_count": 0,
+          "cc_count": 30,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a59e452",
+            "agent-a1f9458",
+            "agent-aded249",
+            "agent-ad72cb2",
+            "agent-a02bc7e"
+          ]
+        },
+        {
+          "term": "thoroughly",
+          "chatgpt_count": 0,
+          "cc_count": 29,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a423012",
+            "agent-a3ebe13",
+            "agent-a526a64",
+            "agent-ad72cb2",
+            "agent-a02bc7e"
+          ]
+        },
+        {
+          "term": "every",
+          "chatgpt_count": 0,
+          "cc_count": 25,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a5ff408",
+            "agent-a59e452",
+            "agent-a1f9458",
+            "agent-a7e0ced",
+            "agent-a7c10da"
+          ]
+        },
+        {
+          "term": "report",
+          "chatgpt_count": 0,
+          "cc_count": 24,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a5ff408",
+            "agent-ad72bcc",
+            "agent-a91fc31",
+            "agent-a73cf3d",
+            "agent-ab7d096"
+          ]
+        },
+        {
+          "term": "plan",
+          "chatgpt_count": 1,
+          "cc_count": 22,
+          "chatgpt_samples": [
+            "2335"
+          ],
+          "cc_samples": [
+            "agent-aeff131",
+            "agent-a51888a",
+            "agent-a0d6792",
+            "agent-a27ce36",
+            "agent-acbdc92"
+          ]
+        },
+        {
+          "term": "audit",
+          "chatgpt_count": 0,
+          "cc_count": 23,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a59e452",
+            "agent-a1f9458",
+            "agent-a7e0ced",
+            "agent-aded249",
+            "agent-a7c10da"
+          ]
+        },
+        {
+          "term": "thorough",
+          "chatgpt_count": 0,
+          "cc_count": 22,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a5ff408",
+            "agent-a884603",
+            "agent-a59e452",
+            "agent-a1f9458",
+            "agent-a7e0ced"
+          ]
+        },
+        {
+          "term": "design",
+          "chatgpt_count": 1,
+          "cc_count": 19,
+          "chatgpt_samples": [
+            "2105"
+          ],
+          "cc_samples": [
+            "agent-a3dfc3b",
+            "agent-aeff131",
+            "agent-a1a0276",
+            "agent-a27ce36",
+            "agent-acbdc92"
+          ]
+        },
+        {
+          "term": "structure",
+          "chatgpt_count": 1,
+          "cc_count": 18,
+          "chatgpt_samples": [
+            "2324"
+          ],
+          "cc_samples": [
+            "agent-a423012",
+            "agent-a3dfc3b",
+            "agent-a526a64",
+            "agent-a33ed2a",
+            "agent-ad72cb2"
+          ]
+        },
+        {
+          "term": "implementation",
+          "chatgpt_count": 0,
+          "cc_count": 18,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-aeff131",
+            "agent-a27ce36",
+            "agent-acbdc92",
+            "agent-a202380",
+            "agent-a83cb8f"
+          ]
+        },
+        {
+          "term": "full",
+          "chatgpt_count": 0,
+          "cc_count": 17,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a4b2fe4",
+            "agent-ae02583",
+            "agent-ab2607c",
+            "agent-a848f9d",
+            "agent-a3cb9a1"
+          ]
+        },
+        {
+          "term": "check",
+          "chatgpt_count": 0,
+          "cc_count": 17,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a1dea06",
+            "agent-a59e452",
+            "agent-a59e452",
+            "agent-a1f9458",
+            "agent-a1f9458"
+          ]
+        },
+        {
+          "term": "data",
+          "chatgpt_count": 0,
+          "cc_count": 17,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a008dc1",
+            "agent-a145acc",
+            "agent-a865666",
+            "agent-a3dfc3b",
+            "agent-a430bc0"
+          ]
+        },
+        {
+          "term": "words",
+          "chatgpt_count": 0,
+          "cc_count": 17,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a1f0e7bcc313eeeb2",
+            "agent-a7e2fc3b0c8bb368b",
+            "agent-adc13c6e31b5ede6d",
+            "agent-ae36c9bb65a06dc3e",
+            "agent-a728dfd6bec07e329"
+          ]
+        },
+        {
+          "term": "dashboard",
+          "chatgpt_count": 1,
+          "cc_count": 15,
+          "chatgpt_samples": [
+            "3967"
+          ],
+          "cc_samples": [
+            "agent-a1dea06",
+            "agent-a27ce36",
+            "agent-ab2607c",
+            "agent-a1fc9db",
+            "agent-a83cb8f"
+          ]
+        },
+        {
+          "term": "prese",
+          "chatgpt_count": 0,
+          "cc_count": 16,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "c4cce583-9626-490c-aeef-581af2c48f9b",
+            "35a22dcc-6da2-430d-9589-62a210e1d6c9",
+            "9c28376d-4e3d-4dc5-b088-4895df68b450",
+            "65f3ad00-60fb-44ad-8128-1aed3ba38c17",
+            "ac1bd782-ad19-4501-8cb2-6ba48f9a43a6"
+          ]
+        },
+        {
+          "term": "map",
+          "chatgpt_count": 0,
+          "cc_count": 16,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a33ed2a",
+            "agent-a0dc6dd",
+            "agent-ace1ca5",
+            "agent-a6dc8ff",
+            "agent-a37e056d38f9dc898"
+          ]
+        },
+        {
+          "term": "exploration",
+          "chatgpt_count": 0,
+          "cc_count": 16,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a5ff408",
+            "agent-a202380",
+            "agent-ae5df01",
+            "agent-a48d776",
+            "agent-af17a174bfea01828"
+          ]
+        },
+        {
+          "term": "these",
+          "chatgpt_count": 0,
+          "cc_count": 16,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a583652",
+            "agent-a3ebe13",
+            "agent-a1d3798",
+            "agent-a7e0ced",
+            "agent-ad72bcc"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "web_extract",
+      "seed_terms": [
+        "scrapling",
+        "scrape",
+        "scraping",
+        "sitepull",
+        "web-audit",
+        "web-extract",
+        "competitor-monitor",
+        "competitor monitor",
+        "brightdata",
+        "datadome",
+        "cloudflare",
+        "anti-bot",
+        "playwright",
+        "puppeteer",
+        "headless",
+        "humanize"
+      ],
+      "rationale": "Web-extraction stack \u00b7 Scrapling (cloned, smoke, official skill) \u00b7 sitepull/web-audit (Node CLI sibling) \u00b7 competitor-monitor (template + skill + MCP) \u00b7 web-extract-workflow router skill. Anti-bot terms (brightdata, datadome, cloudflare) included so the cluster captures the managed-unlock-over-stealth doctrine threads from MEMORY.md.",
+      "portfolio_hit_count": 10,
+      "portfolio_hits": [
+        {
+          "name": "competitor-monitor",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "competitor-monitor"
+          ]
+        },
+        {
+          "name": "Scrapling",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ]
+        },
+        {
+          "name": "scrapling-smoke",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ]
+        },
+        {
+          "name": "web-audit",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "web-audit"
+          ]
+        },
+        {
+          "name": "competitor-monitor",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "competitor-monitor"
+          ]
+        },
+        {
+          "name": "Scrapling",
+          "surface": "github_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ]
+        },
+        {
+          "name": "competitor-monitor",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "competitor-monitor"
+          ]
+        },
+        {
+          "name": "scrapling-official",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "scrapling"
+          ]
+        },
+        {
+          "name": "web-audit",
+          "surface": "custom_skill",
+          "signal_band": "partial",
+          "matched_terms": [
+            "web-audit"
+          ]
+        },
+        {
+          "name": "web-extract-workflow",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "web-extract"
+          ]
+        }
+      ],
+      "chatgpt_match_count": 1,
+      "cc_match_count": 14,
+      "chatgpt_sample_ids": [
+        "2530"
+      ],
+      "cc_sample_ids": [
+        "agent-a01d4e01e13ff1183",
+        "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a",
+        "agent-ae7f276e3fce0678d",
+        "agent-a1c28c9cd1aa6fc4c",
+        "agent-a27072086b81bf4f9",
+        "agent-afe996c4ae54d2b0d",
+        "agent-a0dfeeae8f407a9ed",
+        "agent-ad99c7aca380bafb9",
+        "agent-add1bd45fa4c2bfd6",
+        "agent-a35a4a4f9e2fb1fca"
+      ],
+      "discovered_terms": [
+        {
+          "term": "mode",
+          "chatgpt_count": 0,
+          "cc_count": 5,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a27072086b81bf4f9",
+            "agent-afe996c4ae54d2b0d",
+            "agent-a0dfeeae8f407a9ed",
+            "agent-ad99c7aca380bafb9",
+            "agent-add1bd45fa4c2bfd6"
+          ]
+        },
+        {
+          "term": "source",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c",
+            "agent-a1c28c9cd1aa6fc4c",
+            "agent-afe996c4ae54d2b0d"
+          ]
+        },
+        {
+          "term": "goal",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a01d4e01e13ff1183",
+            "agent-a1501fa05a44d1366",
+            "agent-aa7b886131aa69506"
+          ]
+        },
+        {
+          "term": "audit",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-afe996c4ae54d2b0d",
+            "agent-a35a4a4f9e2fb1fca",
+            "agent-af5c715c16135f820"
+          ]
+        },
+        {
+          "term": "end-to-end",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c",
+            "agent-a27072086b81bf4f9"
+          ]
+        },
+        {
+          "term": "claims",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c",
+            "agent-af5c715c16135f820"
+          ]
+        },
+        {
+          "term": "close",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a27072086b81bf4f9",
+            "agent-afe996c4ae54d2b0d",
+            "agent-a0dfeeae8f407a9ed"
+          ]
+        },
+        {
+          "term": "loop",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a27072086b81bf4f9",
+            "agent-a0dfeeae8f407a9ed"
+          ]
+        },
+        {
+          "term": "pre-atlas",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a35a4a4f9e2fb1fca",
+            "agent-a1501fa05a44d1366"
+          ]
+        },
+        {
+          "term": "previously",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c"
+          ]
+        },
+        {
+          "term": "clone",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a",
+            "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a"
+          ]
+        },
+        {
+          "term": "shipped",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-add1bd45fa4c2bfd6",
+            "agent-af5c715c16135f820"
+          ]
+        },
+        {
+          "term": "never",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c"
+          ]
+        },
+        {
+          "term": "against",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-add1bd45fa4c2bfd6",
+            "agent-af5c715c16135f820"
+          ]
+        },
+        {
+          "term": "opened",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c"
+          ]
+        },
+        {
+          "term": "report",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a01d4e01e13ff1183",
+            "agent-add1bd45fa4c2bfd6"
+          ]
+        },
+        {
+          "term": "verification",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c"
+          ]
+        },
+        {
+          "term": "readme",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c"
+          ]
+        },
+        {
+          "term": "fork",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a",
+            "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a"
+          ]
+        },
+        {
+          "term": "prompt",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a",
+            "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a"
+          ]
+        },
+        {
+          "term": "binre",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ab53a14ce78e18e5c",
+            "agent-ab53a14ce78e18e5c"
+          ]
+        },
+        {
+          "term": "about",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c"
+          ]
+        },
+        {
+          "term": "based",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae7f276e3fce0678d",
+            "agent-a1c28c9cd1aa6fc4c"
+          ]
+        },
+        {
+          "term": "lionestenzol",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a35a4a4f9e2fb1fca",
+            "agent-a1501fa05a44d1366"
+          ]
+        },
+        {
+          "term": "install",
+          "chatgpt_count": 0,
+          "cc_count": 2,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "6f2d5bd8-7972-4d0f-8249-a5e5b4a11b4a",
+            "agent-a0dfeeae8f407a9ed"
+          ]
+        },
+        {
+          "term": "bite",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "2530"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "mark",
+          "chatgpt_count": 1,
+          "cc_count": 0,
+          "chatgpt_samples": [
+            "2530"
+          ],
+          "cc_samples": []
+        },
+        {
+          "term": "inside",
+          "chatgpt_count": 0,
+          "cc_count": 1,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a01d4e01e13ff1183"
+          ]
+        },
+        {
+          "term": "atlas",
+          "chatgpt_count": 0,
+          "cc_count": 1,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a01d4e01e13ff1183"
+          ]
+        },
+        {
+          "term": "sibling",
+          "chatgpt_count": 0,
+          "cc_count": 1,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a01d4e01e13ff1183"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "productivity_skills",
+      "seed_terms": [
+        "weapon",
+        "fest",
+        "festival",
+        "mini-ship",
+        "miniship",
+        "autopilot",
+        "project-finisher",
+        "handoff",
+        "handoff-out",
+        "eval-harness",
+        "cookbook",
+        "search-first",
+        "security-review",
+        "strategic-compact",
+        "tdd-workflow",
+        "verification-loop",
+        "coding-standards",
+        "backend-patterns",
+        "frontend-patterns",
+        "wasp-patterns",
+        "codex-delegate",
+        "codex-partner",
+        "continuous-learning",
+        "slash command",
+        "/weapon",
+        "/fest",
+        "/mini-ship",
+        "/autopilot"
+      ],
+      "rationale": "Meta-tooling cluster \u00b7 Claude Code custom skills that automate or organize the dev loop itself. Weapon (autonomous exec), fest (festival project methodology), mini-ship (smallest-atom loop), autopilot (state-machine driver), project-finisher, plus the lower-traffic pattern skills (backend/frontend/wasp/coding-standards). Slash-prefix variants included so CC transcript scan picks up invocations.",
+      "portfolio_hit_count": 22,
+      "portfolio_hits": [
+        {
+          "name": "autopilot",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "autopilot"
+          ]
+        },
+        {
+          "name": "backend-patterns",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "backend-patterns"
+          ]
+        },
+        {
+          "name": "codex-delegate",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "codex-delegate"
+          ]
+        },
+        {
+          "name": "coding-standards",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "coding-standards"
+          ]
+        },
+        {
+          "name": "continuous-learning-v2",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "continuous-learning"
+          ]
+        },
+        {
+          "name": "cookbook",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "cookbook"
+          ]
+        },
+        {
+          "name": "eval-harness",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "eval-harness"
+          ]
+        },
+        {
+          "name": "fest",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "fest"
+          ]
+        },
+        {
+          "name": "frontend-patterns",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "frontend-patterns"
+          ]
+        },
+        {
+          "name": "handoff-out",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "handoff",
+            "handoff-out"
+          ]
+        },
+        {
+          "name": "mini-ship",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "mini-ship"
+          ]
+        },
+        {
+          "name": "project-finisher",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "project-finisher"
+          ]
+        },
+        {
+          "name": "search-first",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "search-first"
+          ]
+        },
+        {
+          "name": "security-review",
+          "surface": "custom_skill",
+          "signal_band": "partial",
+          "matched_terms": [
+            "security-review"
+          ]
+        },
+        {
+          "name": "strategic-compact",
+          "surface": "custom_skill",
+          "signal_band": "partial",
+          "matched_terms": [
+            "strategic-compact"
+          ]
+        },
+        {
+          "name": "tdd-workflow",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "tdd-workflow"
+          ]
+        },
+        {
+          "name": "verification-loop",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "verification-loop"
+          ]
+        },
+        {
+          "name": "wasp-patterns",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "wasp-patterns"
+          ]
+        },
+        {
+          "name": "weapon",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "weapon"
+          ]
+        },
+        {
+          "name": "codex-partner",
+          "surface": "pre_atlas_tools",
+          "signal_band": "strong",
+          "matched_terms": [
+            "codex-partner"
+          ]
+        },
+        {
+          "name": "fest-reconcile",
+          "surface": "pre_atlas_tools",
+          "signal_band": "none",
+          "matched_terms": [
+            "fest"
+          ]
+        },
+        {
+          "name": "mini-ship",
+          "surface": "pre_atlas_tools",
+          "signal_band": "none",
+          "matched_terms": [
+            "mini-ship"
+          ]
+        }
+      ],
+      "chatgpt_match_count": 15,
+      "cc_match_count": 40,
+      "chatgpt_sample_ids": [
+        "6289",
+        "5988",
+        "5690",
+        "5642",
+        "5029",
+        "4918",
+        "4704",
+        "4253",
+        "3567",
+        "3119"
+      ],
+      "cc_sample_ids": [
+        "agent-a9754e290206d157a",
+        "agent-a6eeed689c5fafcd0",
+        "agent-a68552af63657dbb4",
+        "agent-a75ffea21fe055e70",
+        "agent-a629ea6c733f0f70c",
+        "agent-a5cc2ccd623eeaa77",
+        "agent-ab511bbac40ec1d94",
+        "agent-acompact-8b93c12f8208f4d0",
+        "agent-acompact-a1a58b4a7bf533d4",
+        "agent-a3bfdcce75036d75a"
+      ],
+      "discovered_terms": [
+        {
+          "term": "atlas",
+          "chatgpt_count": 0,
+          "cc_count": 15,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a9f714a9e4f616b58",
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+            "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+            "eda32d3d-d20f-430d-932b-0f28bd56fc34"
+          ]
+        },
+        {
+          "term": "system",
+          "chatgpt_count": 0,
+          "cc_count": 11,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a75ffea21fe055e70",
+            "agent-a629ea6c733f0f70c",
+            "agent-a5cc2ccd623eeaa77",
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8"
+          ]
+        },
+        {
+          "term": "mode",
+          "chatgpt_count": 0,
+          "cc_count": 10,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "agent-a27072086b81bf4f9",
+            "agent-afcfa26f7cec58a61",
+            "agent-afe996c4ae54d2b0d"
+          ]
+        },
+        {
+          "term": "chord-pad",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a75ffea21fe055e70",
+            "agent-a75ffea21fe055e70",
+            "agent-a629ea6c733f0f70c",
+            "agent-a629ea6c733f0f70c",
+            "agent-a629ea6c733f0f70c"
+          ]
+        },
+        {
+          "term": "audit",
+          "chatgpt_count": 0,
+          "cc_count": 6,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a6eeed689c5fafcd0",
+            "agent-a68552af63657dbb4",
+            "agent-a0d3f2e6823318059",
+            "agent-afcfa26f7cec58a61",
+            "agent-afe996c4ae54d2b0d"
+          ]
+        },
+        {
+          "term": "mape-k",
+          "chatgpt_count": 0,
+          "cc_count": 6,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+            "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+            "eda32d3d-d20f-430d-932b-0f28bd56fc34",
+            "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4"
+          ]
+        },
+        {
+          "term": "chord",
+          "chatgpt_count": 0,
+          "cc_count": 6,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a75ffea21fe055e70",
+            "agent-a75ffea21fe055e70",
+            "agent-ab511bbac40ec1d94",
+            "agent-acompact-8b93c12f8208f4d0",
+            "agent-acompact-a1a58b4a7bf533d4"
+          ]
+        },
+        {
+          "term": "strudel",
+          "chatgpt_count": 2,
+          "cc_count": 3,
+          "chatgpt_samples": [
+            "1260",
+            "1262"
+          ],
+          "cc_samples": [
+            "agent-a9754e290206d157a",
+            "agent-a9754e290206d157a",
+            "agent-a9754e290206d157a"
+          ]
+        },
+        {
+          "term": "each",
+          "chatgpt_count": 0,
+          "cc_count": 5,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a68552af63657dbb4",
+            "agent-acompact-a1a58b4a7bf533d4",
+            "agent-a3bfdcce75036d75a",
+            "agent-af76d4521ea8cf69d",
+            "2ffbf12e-4008-4472-af6d-f59ff005e6ad"
+          ]
+        },
+        {
+          "term": "executing",
+          "chatgpt_count": 0,
+          "cc_count": 5,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+            "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+            "eda32d3d-d20f-430d-932b-0f28bd56fc34",
+            "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4"
+          ]
+        },
+        {
+          "term": "pre-atlas-closed-loop",
+          "chatgpt_count": 0,
+          "cc_count": 5,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+            "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+            "eda32d3d-d20f-430d-932b-0f28bd56fc34",
+            "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4"
+          ]
+        },
+        {
+          "term": "personal",
+          "chatgpt_count": 0,
+          "cc_count": 5,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+            "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+            "eda32d3d-d20f-430d-932b-0f28bd56fc34",
+            "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4"
+          ]
+        },
+        {
+          "term": "autonomic",
+          "chatgpt_count": 0,
+          "cc_count": 5,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+            "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+            "eda32d3d-d20f-430d-932b-0f28bd56fc34",
+            "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4"
+          ]
+        },
+        {
+          "term": "help",
+          "chatgpt_count": 1,
+          "cc_count": 3,
+          "chatgpt_samples": [
+            "4704"
+          ],
+          "cc_samples": [
+            "agent-acompact-a1a58b4a7bf533d4",
+            "agent-acompact-a1a58b4a7bf533d4",
+            "567642ee-dbb8-4061-b572-96de01bca697"
+          ]
+        },
+        {
+          "term": "goal",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a9f714a9e4f616b58",
+            "agent-a0d3f2e6823318059",
+            "agent-a2b2ce267b2390f12",
+            "agent-a73b2bdbd46b86198"
+          ]
+        },
+        {
+          "term": "mjs",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a75ffea21fe055e70",
+            "agent-a629ea6c733f0f70c",
+            "agent-a629ea6c733f0f70c",
+            "agent-a5cc2ccd623eeaa77"
+          ]
+        },
+        {
+          "term": "directive",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+            "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+            "eda32d3d-d20f-430d-932b-0f28bd56fc34",
+            "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4"
+          ]
+        },
+        {
+          "term": "scrapling",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a27072086b81bf4f9",
+            "agent-a27072086b81bf4f9",
+            "agent-a0dfeeae8f407a9ed",
+            "agent-a0dfeeae8f407a9ed"
+          ]
+        },
+        {
+          "term": "don",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a137cdfb5f6edfb72",
+            "agent-add1bd45fa4c2bfd6",
+            "agent-a2b2ce267b2390f12",
+            "agent-a55bb268651ac9198"
+          ]
+        },
+        {
+          "term": "planning",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a3294358ccb4da81d",
+            "agent-af76d4521ea8cf69d",
+            "agent-ae633198c74931111",
+            "agent-a0524fe9acf153e0c"
+          ]
+        },
+        {
+          "term": "plan",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a5cc2ccd623eeaa77",
+            "414d306c-0436-418d-b925-5d9f35116de0",
+            "567642ee-dbb8-4061-b572-96de01bca697",
+            "567642ee-dbb8-4061-b572-96de01bca697"
+          ]
+        },
+        {
+          "term": "arrow",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+            "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+            "eda32d3d-d20f-430d-932b-0f28bd56fc34",
+            "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4"
+          ]
+        },
+        {
+          "term": "wallpaper",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a6eeed689c5fafcd0",
+            "agent-a6eeed689c5fafcd0",
+            "agent-a68552af63657dbb4",
+            "agent-a68552af63657dbb4"
+          ]
+        },
+        {
+          "term": "close",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a27072086b81bf4f9",
+            "agent-afcfa26f7cec58a61",
+            "agent-afe996c4ae54d2b0d",
+            "agent-a0dfeeae8f407a9ed"
+          ]
+        },
+        {
+          "term": "progressions",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a75ffea21fe055e70",
+            "agent-ab511bbac40ec1d94",
+            "agent-ab511bbac40ec1d94",
+            "agent-acompact-8b93c12f8208f4d0"
+          ]
+        },
+        {
+          "term": "timing",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a629ea6c733f0f70c",
+            "agent-ab511bbac40ec1d94",
+            "agent-ab511bbac40ec1d94",
+            "agent-acompact-8b93c12f8208f4d0"
+          ]
+        },
+        {
+          "term": "here",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a5cc2ccd623eeaa77",
+            "agent-a0d3f2e6823318059",
+            "414d306c-0436-418d-b925-5d9f35116de0",
+            "5b5cecf0-ad9b-4534-a72f-6facf88f7357"
+          ]
+        },
+        {
+          "term": "wires",
+          "chatgpt_count": 0,
+          "cc_count": 4,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "7de08e58-a8e0-4cfc-a668-a7e8ca1102c8",
+            "4e835f21-268a-4e6e-bbaa-e221f7c76ec1",
+            "eda32d3d-d20f-430d-932b-0f28bd56fc34",
+            "58d791bb-aa84-4d85-abbe-6ba9e4ce7eb4"
+          ]
+        },
+        {
+          "term": "integration",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a629ea6c733f0f70c",
+            "7df31495-e016-4783-939b-fd3994d110be",
+            "agent-a27072086b81bf4f9"
+          ]
+        },
+        {
+          "term": "android",
+          "chatgpt_count": 0,
+          "cc_count": 3,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a6eeed689c5fafcd0",
+            "agent-a68552af63657dbb4",
+            "agent-a68552af63657dbb4"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "canvas_render",
+      "seed_terms": [
+        "canvas-engine",
+        "canvas-demo",
+        "screenshot-to-code",
+        "three-js",
+        "three.js",
+        "threejs",
+        "three-stack",
+        "three-js-migrate",
+        "react-three-fiber",
+        "r3f",
+        "drei",
+        "anime-js",
+        "anime.js",
+        "animejs",
+        "anime-js-migrate",
+        "remotion",
+        "webgl",
+        "webgpu",
+        "shader",
+        "raymarch",
+        "virtualstudio",
+        "comfyui"
+      ],
+      "rationale": "Web-rendering pipelines \u00b7 canvas-engine (anatomy renderer, Vite sandbox pool) \u00b7 screenshot-to-code (vision\u2192code) \u00b7 the three.js stack (vanilla + R3F + drei + migrate) \u00b7 anime.js + migrate \u00b7 remotion (programmatic video) \u00b7 virtualstudio + VirtualStudio-Cinematic-Hero. Generic terms (webgl, webgpu, shader, raymarch) included for early ChatGPT-era ideation before named projects existed.",
+      "portfolio_hit_count": 17,
+      "portfolio_hits": [
+        {
+          "name": "anime-js",
+          "surface": "standalone_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "anime-js"
+          ]
+        },
+        {
+          "name": "r3f",
+          "surface": "standalone_repo",
+          "signal_band": "none",
+          "matched_terms": [
+            "r3f"
+          ]
+        },
+        {
+          "name": "remotion-test",
+          "surface": "standalone_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "remotion"
+          ]
+        },
+        {
+          "name": "screenshot-to-code",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "screenshot-to-code"
+          ]
+        },
+        {
+          "name": "three-js",
+          "surface": "standalone_repo",
+          "signal_band": "strong",
+          "matched_terms": [
+            "three-js"
+          ]
+        },
+        {
+          "name": "three-stack",
+          "surface": "standalone_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "three-stack"
+          ]
+        },
+        {
+          "name": "comfyui-controller",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "comfyui"
+          ]
+        },
+        {
+          "name": "virtualstudio",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "virtualstudio"
+          ]
+        },
+        {
+          "name": "VirtualStudio-Cinematic-Hero",
+          "surface": "github_repo",
+          "signal_band": "partial",
+          "matched_terms": [
+            "virtualstudio"
+          ]
+        },
+        {
+          "name": "anime-js",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "anime-js"
+          ]
+        },
+        {
+          "name": "anime-js-migrate",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "anime-js",
+            "anime-js-migrate"
+          ]
+        },
+        {
+          "name": "react-three-fiber",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "react-three-fiber"
+          ]
+        },
+        {
+          "name": "remotion",
+          "surface": "custom_skill",
+          "signal_band": "partial",
+          "matched_terms": [
+            "remotion"
+          ]
+        },
+        {
+          "name": "three-js",
+          "surface": "custom_skill",
+          "signal_band": "strong",
+          "matched_terms": [
+            "three-js"
+          ]
+        },
+        {
+          "name": "three-js-migrate",
+          "surface": "custom_skill",
+          "signal_band": "stale",
+          "matched_terms": [
+            "three-js",
+            "three-js-migrate"
+          ]
+        },
+        {
+          "name": "canvas-engine",
+          "surface": "pre_atlas_services",
+          "signal_band": "strong",
+          "matched_terms": [
+            "canvas-engine"
+          ]
+        },
+        {
+          "name": "canvas-demo",
+          "surface": "pre_atlas_apps",
+          "signal_band": "partial",
+          "matched_terms": [
+            "canvas-demo"
+          ]
+        }
+      ],
+      "chatgpt_match_count": 12,
+      "cc_match_count": 79,
+      "chatgpt_sample_ids": [
+        "1705",
+        "1447",
+        "1452",
+        "1404",
+        "1435",
+        "1386",
+        "1389",
+        "1390",
+        "685",
+        "136"
+      ],
+      "cc_sample_ids": [
+        "agent-ab98334",
+        "agent-af2176f",
+        "agent-ad5b22a",
+        "agent-aa651b7",
+        "agent-a431fc5",
+        "agent-a11cb6f",
+        "agent-ad800fb",
+        "agent-af0069a",
+        "agent-a77d747",
+        "agent-a5f76fb"
+      ],
+      "discovered_terms": [
+        {
+          "term": "ecosystem",
+          "chatgpt_count": 0,
+          "cc_count": 34,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a9af9512493befbee",
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014"
+          ]
+        },
+        {
+          "term": "audit",
+          "chatgpt_count": 0,
+          "cc_count": 32,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-aa651b7",
+            "agent-a35a4a4f9e2fb1fca",
+            "agent-a3df1f61f57111852",
+            "agent-adce87c9bc34121ea",
+            "agent-adce87c9bc34121ea"
+          ]
+        },
+        {
+          "term": "source",
+          "chatgpt_count": 0,
+          "cc_count": 15,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-af2176f",
+            "agent-aa651b7",
+            "agent-ac3c1b8",
+            "agent-a9d58ddc92d330733",
+            "agent-a9d58ddc92d330733"
+          ]
+        },
+        {
+          "term": "downloads",
+          "chatgpt_count": 0,
+          "cc_count": 15,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a40bb33",
+            "agent-a499706",
+            "agent-af40f63",
+            "agent-ab51315",
+            "agent-a44ffae"
+          ]
+        },
+        {
+          "term": "clone",
+          "chatgpt_count": 0,
+          "cc_count": 14,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a0eb17e",
+            "agent-a0eb17e",
+            "agent-aa22c004d8e637dc0",
+            "agent-a3df1f61f57111852",
+            "agent-adce87c9bc34121ea"
+          ]
+        },
+        {
+          "term": "list",
+          "chatgpt_count": 0,
+          "cc_count": 12,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ab98334",
+            "agent-a0275212d7b86a1f5",
+            "agent-a0275212d7b86a1f5",
+            "agent-a1bec985e445c2a62",
+            "agent-a1bec985e445c2a62"
+          ]
+        },
+        {
+          "term": "comparison",
+          "chatgpt_count": 0,
+          "cc_count": 11,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae001c9",
+            "agent-a67201d05a27bb9c8",
+            "agent-a67201d05a27bb9c8",
+            "agent-ad613b299ee206eec",
+            "agent-ad613b299ee206eec"
+          ]
+        },
+        {
+          "term": "cherry-picking",
+          "chatgpt_count": 0,
+          "cc_count": 10,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014",
+            "agent-aabe0749b68a3432f"
+          ]
+        },
+        {
+          "term": "every",
+          "chatgpt_count": 0,
+          "cc_count": 10,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-af40f63",
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014"
+          ]
+        },
+        {
+          "term": "full",
+          "chatgpt_count": 0,
+          "cc_count": 9,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ae001c9",
+            "agent-a9d58ddc92d330733",
+            "agent-a645d74e7cba13b82",
+            "agent-ad3f239d319c6b3ac",
+            "agent-ad9d2af38f0bb5438"
+          ]
+        },
+        {
+          "term": "hero",
+          "chatgpt_count": 0,
+          "cc_count": 9,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ab98334",
+            "agent-af2176f",
+            "agent-ad5b22a",
+            "agent-aa651b7",
+            "agent-aa651b7"
+          ]
+        },
+        {
+          "term": "services",
+          "chatgpt_count": 0,
+          "cc_count": 9,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a728dfd6bec07e329",
+            "agent-a05ded370a41d2d49",
+            "agent-aa22c004d8e637dc0",
+            "agent-aa22c004d8e637dc0",
+            "7708126a-5eb6-4df6-bc90-97e941ee67c6"
+          ]
+        },
+        {
+          "term": "blender",
+          "chatgpt_count": 0,
+          "cc_count": 9,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-af0069a",
+            "agent-af0069a",
+            "agent-a77d747",
+            "agent-a5f76fb",
+            "agent-a1b63ec"
+          ]
+        },
+        {
+          "term": "notebook",
+          "chatgpt_count": 0,
+          "cc_count": 9,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-af40f63",
+            "agent-af40f63",
+            "agent-ab51315",
+            "agent-ab51315",
+            "agent-a44ffae"
+          ]
+        },
+        {
+          "term": "these",
+          "chatgpt_count": 0,
+          "cc_count": 9,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a431fc5",
+            "agent-a11cb6f",
+            "agent-ad800fb",
+            "agent-a2cb570",
+            "agent-afdd7ec"
+          ]
+        },
+        {
+          "term": "auditing",
+          "chatgpt_count": 0,
+          "cc_count": 9,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a35a4a4f9e2fb1fca",
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014"
+          ]
+        },
+        {
+          "term": "each",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ac3c1b8",
+            "agent-aa22c004d8e637dc0",
+            "agent-a67201d05a27bb9c8",
+            "agent-ad613b299ee206eec",
+            "agent-afb75d49476b4bd98"
+          ]
+        },
+        {
+          "term": "selective",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a721c76fce7d65d3c",
+            "agent-a9d58ddc92d330733",
+            "agent-a645d74e7cba13b82",
+            "agent-ad3f239d319c6b3ac",
+            "agent-ad9d2af38f0bb5438"
+          ]
+        },
+        {
+          "term": "previous",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014",
+            "agent-aabe0749b68a3432f"
+          ]
+        },
+        {
+          "term": "cinematic",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ab98334",
+            "agent-af2176f",
+            "agent-ad5b22a",
+            "agent-aa651b7",
+            "agent-aa651b7"
+          ]
+        },
+        {
+          "term": "walk",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a9d58ddc92d330733",
+            "agent-a9d58ddc92d330733",
+            "agent-a645d74e7cba13b82",
+            "agent-ad3f239d319c6b3ac",
+            "agent-ad9d2af38f0bb5438"
+          ]
+        },
+        {
+          "term": "checked",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014",
+            "agent-aabe0749b68a3432f"
+          ]
+        },
+        {
+          "term": "urls",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014",
+            "agent-aabe0749b68a3432f"
+          ]
+        },
+        {
+          "term": "react",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-a431fc5",
+            "agent-a11cb6f",
+            "agent-ad800fb",
+            "agent-aa22c004d8e637dc0",
+            "agent-a3df1f61f57111852"
+          ]
+        },
+        {
+          "term": "last-commit",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014",
+            "agent-aabe0749b68a3432f"
+          ]
+        },
+        {
+          "term": "dates",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014",
+            "agent-aabe0749b68a3432f"
+          ]
+        },
+        {
+          "term": "slice",
+          "chatgpt_count": 0,
+          "cc_count": 8,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-adce87c9bc34121ea",
+            "agent-af805b25bb98a0dfc",
+            "agent-ae91fa65c41269995",
+            "agent-a8b05889bbbba0014",
+            "agent-aabe0749b68a3432f"
+          ]
+        },
+        {
+          "term": "onedrive",
+          "chatgpt_count": 0,
+          "cc_count": 7,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ab98334",
+            "agent-af2176f",
+            "agent-ad5b22a",
+            "agent-aa651b7",
+            "agent-a431fc5"
+          ]
+        },
+        {
+          "term": "kimi_agent_virtualstudio",
+          "chatgpt_count": 0,
+          "cc_count": 7,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ab98334",
+            "agent-af2176f",
+            "agent-ad5b22a",
+            "agent-aa651b7",
+            "agent-a431fc5"
+          ]
+        },
+        {
+          "term": "desktop",
+          "chatgpt_count": 0,
+          "cc_count": 7,
+          "chatgpt_samples": [],
+          "cc_samples": [
+            "agent-ab98334",
+            "agent-af2176f",
+            "agent-ad5b22a",
+            "agent-aa651b7",
+            "agent-a431fc5"
+          ]
+        }
+      ]
+    }
+  ]
+}

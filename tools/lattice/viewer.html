@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lattice Run Viewer — LangGraph Skill Lattice Seq 6</title>
+<script src="/vendor/cytoscape.min.js"></script>
+<script src="/vendor/cytoscape-dagre.js"></script>
+<style>
+  body { font-family: -apple-system, Segoe UI, sans-serif; margin: 0; background: #0b0d12; color: #e6e6e6; }
+  header { padding: 12px 16px; border-bottom: 1px solid #262b36; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  header input, header select { background: #161a22; border: 1px solid #2c3140; color: #e6e6e6; padding: 6px 8px; border-radius: 4px; }
+  header input[name="prompt"] { flex: 1; min-width: 260px; }
+  header button { background: #2d6cdf; border: none; color: white; padding: 7px 14px; border-radius: 4px; cursor: pointer; }
+  header button.demo { background: #3a3f4d; }
+  header button:disabled { opacity: 0.5; cursor: default; }
+  #status { padding: 6px 16px; font-size: 13px; color: #9aa4b2; min-height: 18px; }
+  #cy { width: 100%; height: calc(100vh - 96px); }
+  .legend { display: flex; gap: 14px; padding: 0 16px 8px; font-size: 12px; color: #9aa4b2; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+<header>
+  <button id="demoBtn" class="demo">Run demo chain (no API cost)</button>
+  <select id="skillSelect">
+    <option value="code-recon">code-recon</option>
+    <option value="groundwork">groundwork</option>
+    <option value="weapon">weapon</option>
+  </select>
+  <input name="prompt" id="promptInput" placeholder="prompt for the real skill call (costs real API budget)">
+  <button id="realBtn">Run real chain</button>
+</header>
+<div class="legend">
+  <span><i class="dot" style="background:#3a3f4d"></i>pending</span>
+  <span><i class="dot" style="background:#2d6cdf"></i>running</span>
+  <span><i class="dot" style="background:#2fbf71"></i>ok</span>
+  <span><i class="dot" style="background:#e5484d"></i>error</span>
+</div>
+<div id="status"></div>
+<div id="cy"></div>
+<script>
+cytoscape.use(window.cytoscapeDagre);
+
+const cy = cytoscape({
+  container: document.getElementById('cy'),
+  style: [
+    { selector: 'node', style: {
+        'label': 'data(label)', 'color': '#e6e6e6', 'text-valign': 'center', 'text-halign': 'center',
+        'background-color': '#3a3f4d', 'width': 90, 'height': 44, 'shape': 'round-rectangle',
+        'font-size': 11, 'border-width': 2, 'border-color': '#2c3140',
+        'transition-property': 'background-color, border-color', 'transition-duration': '400ms',
+    }},
+    { selector: 'node.running', style: { 'background-color': '#2d6cdf', 'border-color': '#5a92f0' } },
+    { selector: 'node.ok',      style: { 'background-color': '#2fbf71', 'border-color': '#5adf9a' } },
+    { selector: 'node.error',   style: { 'background-color': '#e5484d', 'border-color': '#f08488' } },
+    { selector: 'edge', style: {
+        'width': 2, 'line-color': '#2c3140', 'target-arrow-color': '#2c3140',
+        'target-arrow-shape': 'triangle', 'curve-style': 'bezier',
+    }},
+  ],
+});
+
+const statusEl = document.getElementById('status');
+function setStatus(msg) { statusEl.textContent = msg; }
+
+function renderStructure(structure) {
+  cy.elements().remove();
+  const elements = [];
+  for (const n of structure.nodes) {
+    elements.push({ data: { id: n.id, label: n.id } });
+  }
+  for (const e of structure.edges) {
+    elements.push({ data: { id: e.source + '->' + e.target, source: e.source, target: e.target } });
+  }
+  cy.add(elements);
+  cy.layout({ name: 'dagre', rankDir: 'LR', nodeSep: 30, rankSep: 70 }).run();
+  cy.fit(undefined, 40);
+}
+
+async function startRun(body) {
+  cy.elements().remove();
+  setStatus('starting run...');
+  const res = await fetch('/run', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  if (!res.ok) { setStatus('failed to start: ' + (await res.text())); return; }
+  const { thread_id } = await res.json();
+  setStatus('thread_id=' + thread_id + ' — loading graph structure...');
+
+  const structRes = await fetch('/structure/' + thread_id);
+  const structure = await structRes.json();
+  renderStructure(structure);
+  setStatus('thread_id=' + thread_id + ' — streaming...');
+
+  const es = new EventSource('/stream/' + thread_id);
+  es.onmessage = (ev) => {
+    const data = JSON.parse(ev.data);
+    if (data.event === 'done') {
+      setStatus('thread_id=' + thread_id + ' — done. ledger rows fed: ' + (data.ledger_rows_fed || 0));
+      es.close();
+      return;
+    }
+    if (data.event === 'error') {
+      setStatus('thread_id=' + thread_id + ' — error: ' + data.message);
+      es.close();
+      return;
+    }
+    const node = cy.getElementById(data.node);
+    node.removeClass('running ok error').addClass(data.status === 'ok' ? 'ok' : 'error');
+  };
+  es.onerror = () => { setStatus('stream closed'); es.close(); };
+
+  // mark all nodes "running" immediately after wiring the stream, since the
+  // chain is linear and starts executing right away -- a real bandit/branching
+  // graph (Seq 4) would only mark the first node running here.
+  cy.nodes().not('[id = "__start__"]').not('[id = "__end__"]').addClass('running');
+}
+
+document.getElementById('demoBtn').addEventListener('click', () => {
+  startRun({ demo: true });
+});
+
+document.getElementById('realBtn').addEventListener('click', () => {
+  const skill = document.getElementById('skillSelect').value;
+  const prompt = document.getElementById('promptInput').value.trim();
+  if (!prompt) { setStatus('enter a prompt for the real skill call'); return; }
+  startRun({ pairs: [[skill, prompt]] });
+});
+</script>
+</body>
+</html>

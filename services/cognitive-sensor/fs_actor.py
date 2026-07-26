@@ -28,6 +28,12 @@ DELTA_URL = "http://localhost:3001"
 FS_PREFIX = "fs-"
 TERMINAL_VERDICTS = {"CLOSE", "ARCHIVE", "DROP"}
 
+# Bearer auth for delta-kernel — see ~/.claude/rules/common/code-as-furniture.md.
+_DELTA_API_KEY = ""
+_key_path = BASE.parent.parent / ".aegis-tenant-key"
+if _key_path.exists():
+    _DELTA_API_KEY = _key_path.read_text(encoding="utf-8").strip()
+
 
 def _notify_delta(loop_id: str, title: str, verdict: str) -> bool:
     outcome_map = {"CLOSE": "closed", "ARCHIVE": "archived", "DROP": "dropped"}
@@ -41,11 +47,14 @@ def _notify_delta(loop_id: str, title: str, verdict: str) -> bool:
         "coverage_score": None,
         "status": status_map.get(verdict, "RESOLVED"),
     }
+    headers = {"Content-Type": "application/json"}
+    if _DELTA_API_KEY:
+        headers["Authorization"] = f"Bearer {_DELTA_API_KEY}"
     try:
         req = urllib.request.Request(
             f"{DELTA_URL}/api/law/close_loop",
             data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             method="POST",
         )
         urllib.request.urlopen(req, timeout=5)

@@ -7,8 +7,8 @@
  * This is NOT high-fidelity audio. It's intelligible voice over LoRa.
  */
 
-import { UUID, Delta } from './types';
-import { AudioSurfaceState, AUDIO_BANDS, CompactAudioDelta } from './audio-adapter';
+import { UUID, Delta } from '../src/core/types.js';
+import { AudioSurfaceState, AUDIO_BANDS, CompactAudioDelta } from './audio-adapter.js';
 
 // === AUDIO SURFACE STORE ===
 

@@ -11,6 +11,7 @@ class CortexConfig:
     AEGIS_URL: str = os.getenv("AEGIS_URL", "http://localhost:3002")
     UASC_URL: str = os.getenv("UASC_URL", "http://localhost:3008")
     MOSAIC_URL: str = os.getenv("MOSAIC_URL", "http://localhost:3005")
+    OPTOGON_URL: str = os.getenv("OPTOGON_URL", "http://localhost:3010")
     NATS_URL: str = os.getenv("NATS_URL", "nats://localhost:4222")
 
     # Cortex identity

@@ -1,0 +1,1356 @@
+{
+  "_archive/belief_core.py": [
+    "collections.Counter",
+    "collections.defaultdict",
+    "json",
+    "pathlib.Path",
+    "re"
+  ],
+  "_archive/belief_grammar.py": [
+    "collections.Counter",
+    "collections.defaultdict",
+    "json",
+    "pathlib.Path",
+    "re"
+  ],
+  "_archive/brain.py": [
+    "collections.Counter",
+    "json",
+    "os",
+    "pathlib.Path",
+    "re",
+    "sys"
+  ],
+  "_archive/brain_2.py": [
+    "collections.Counter",
+    "json",
+    "os",
+    "pathlib.Path",
+    "re",
+    "sys"
+  ],
+  "_archive/cluster_business_topics.py": [
+    "collections.defaultdict",
+    "json",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "_archive/cluster_topics.py": [
+    "collections.Counter",
+    "json",
+    "numpy",
+    "sentence_transformers.SentenceTransformer",
+    "sklearn.cluster.KMeans",
+    "sqlite3"
+  ],
+  "_archive/decision_engine.py": [
+    "collections.Counter",
+    "collections.defaultdict",
+    "json",
+    "pathlib.Path",
+    "re"
+  ],
+  "_archive/language_loops.py": [
+    "collections.Counter",
+    "json",
+    "pathlib.Path",
+    "re"
+  ],
+  "_archive/profile_report.py": [
+    "collections.Counter",
+    "json",
+    "pathlib.Path",
+    "re"
+  ],
+  "_archive/search_loops.py": [
+    "json",
+    "model_cache.get_model",
+    "numpy",
+    "numpy.linalg.norm",
+    "sqlite3",
+    "sys"
+  ],
+  "_archive/semantic_loops.py": [
+    "json",
+    "model_cache.get_model",
+    "model_cache.get_model_name",
+    "numpy",
+    "numpy.linalg.norm",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "_archive/test_vectorization.py": [
+    "numpy",
+    "pathlib.Path",
+    "sentence_transformers",
+    "sklearn",
+    "sqlite3",
+    "subprocess",
+    "sys"
+  ],
+  "aegis_client.py": [
+    "__future__.annotations",
+    "json",
+    "pathlib.Path",
+    "typing.Any",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "agent_book_miner.py": [
+    "base64",
+    "collections.defaultdict",
+    "datetime.datetime",
+    "json",
+    "model_cache.get_model",
+    "numpy",
+    "numpy.linalg.norm",
+    "pathlib.Path",
+    "re",
+    "sqlite3",
+    "text_utils.chunk_text"
+  ],
+  "agent_classifier.py": [
+    "base64",
+    "collections.Counter",
+    "json",
+    "numpy",
+    "numpy.linalg.norm",
+    "pathlib.Path",
+    "re",
+    "validate.require_valid"
+  ],
+  "agent_classifier_convo.py": [
+    "json",
+    "model_cache.get_model",
+    "numpy",
+    "numpy.linalg.norm",
+    "pathlib.Path",
+    "re",
+    "sqlite3"
+  ],
+  "agent_deduplicator.py": [
+    "base64",
+    "collections.Counter",
+    "json",
+    "numpy",
+    "numpy.linalg.norm",
+    "pathlib.Path",
+    "validate.require_valid"
+  ],
+  "agent_excavator.py": [
+    "base64",
+    "json",
+    "model_cache.get_model",
+    "numpy",
+    "numpy.linalg.norm",
+    "pathlib.Path",
+    "re",
+    "sqlite3",
+    "text_utils.chunk_text",
+    "validate.require_valid"
+  ],
+  "agent_orchestrator.py": [
+    "collections.defaultdict",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "json",
+    "pathlib.Path",
+    "validate.require_valid"
+  ],
+  "agent_reporter.py": [
+    "collections.Counter",
+    "datetime.datetime",
+    "json",
+    "pathlib.Path"
+  ],
+  "agent_synthesizer.py": [
+    "collections.Counter",
+    "collections.defaultdict",
+    "datetime.datetime",
+    "json",
+    "pathlib.Path",
+    "re"
+  ],
+  "atlas.py": [
+    "argparse",
+    "datetime.datetime",
+    "json",
+    "pathlib.Path",
+    "subprocess",
+    "sys"
+  ],
+  "atlas_agent.py": [
+    "atlas_config.ACTIVE_LANES",
+    "atlas_config.AGENTS",
+    "atlas_config.AutonomyLevel",
+    "atlas_config.NORTH_STAR",
+    "atlas_config.TARGETS",
+    "datetime.datetime",
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "time"
+  ],
+  "atlas_approve.py": [
+    "__future__.annotations",
+    "aegis_client.log_action",
+    "argparse",
+    "atomic_write.atomic_write_json",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "os",
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "typing.Any"
+  ],
+  "atlas_cli.py": [
+    "atlas_agent.AtlasAgent",
+    "sys"
+  ],
+  "atlas_config.py": [
+    "enum.IntEnum"
+  ],
+  "atlas_data.py": [
+    "numpy",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "atlas_graph.py": [
+    "atlas_layout.forceatlas2_layout",
+    "collections.Counter",
+    "numpy",
+    "sklearn.metrics.pairwise.cosine_similarity"
+  ],
+  "atlas_layers.py": [
+    "collections.defaultdict",
+    "datetime.datetime"
+  ],
+  "atlas_layout.py": [
+    "numpy"
+  ],
+  "atlas_projection.py": [
+    "hdbscan",
+    "numpy",
+    "umap"
+  ],
+  "atlas_query.py": [
+    "__future__.annotations",
+    "argparse",
+    "collections.Counter",
+    "collections.defaultdict",
+    "dataclasses.dataclass",
+    "json",
+    "math",
+    "pathlib.Path",
+    "sqlite3",
+    "sys",
+    "typing.Any"
+  ],
+  "atlas_render.py": [
+    "atlas_graph.build_graph_data",
+    "collections.defaultdict",
+    "datetime.datetime",
+    "json",
+    "numpy",
+    "pathlib.Path"
+  ],
+  "atlas_triage_cli.py": [
+    "__future__.annotations",
+    "aegis_client.log_action",
+    "argparse",
+    "datetime.datetime",
+    "fuzz.cli.register",
+    "json",
+    "lifecycle",
+    "os",
+    "pathlib.Path",
+    "shutil",
+    "sqlite3",
+    "subprocess",
+    "sys",
+    "tempfile",
+    "triage_server.serve",
+    "urllib.error",
+    "urllib.request",
+    "verify_coverage",
+    "webbrowser"
+  ],
+  "atomic_write.py": [
+    "hashlib",
+    "json",
+    "os",
+    "pathlib.Path",
+    "tempfile",
+    "typing.Any"
+  ],
+  "auto_actor.py": [
+    "aegis_client.log_action",
+    "datetime.datetime",
+    "json",
+    "lifecycle",
+    "pathlib.Path",
+    "sqlite3",
+    "sys",
+    "time",
+    "typing.Any",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "auto_triage.py": [
+    "__future__.annotations",
+    "atomic_write.atomic_write_json",
+    "cortex_bridge.emit",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "logging",
+    "os",
+    "pathlib.Path",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "batch_triage.py": [
+    "datetime.datetime",
+    "sqlite3"
+  ],
+  "behavioral_memory.py": [
+    "datetime.datetime",
+    "datetime.timedelta",
+    "json",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "behavioral_memory_assess.py": [
+    "behavioral_memory.assess_yesterday",
+    "pathlib.Path",
+    "sys"
+  ],
+  "behavioral_memory_snapshot.py": [
+    "behavioral_memory.snapshot_today",
+    "pathlib.Path",
+    "sys"
+  ],
+  "build_atlas_explorer.py": [
+    "__future__.annotations",
+    "argparse",
+    "collections.Counter",
+    "collections.defaultdict",
+    "json",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "build_atlas_galaxy.py": [
+    "__future__.annotations",
+    "argparse",
+    "json",
+    "pathlib.Path"
+  ],
+  "build_cognitive_atlas.py": [
+    "atlas_data.load_message_data",
+    "atlas_layers.build_cluster_summary",
+    "atlas_layers.build_layers",
+    "atlas_projection.compute_hdbscan",
+    "atlas_projection.compute_umap",
+    "atlas_render.build_html",
+    "collections.defaultdict",
+    "datetime.datetime",
+    "json",
+    "numpy",
+    "pathlib.Path"
+  ],
+  "build_cognitive_map.py": [
+    "collections.defaultdict",
+    "datetime.datetime",
+    "json",
+    "numpy",
+    "pathlib.Path",
+    "sklearn.cluster.KMeans",
+    "sklearn.decomposition.PCA",
+    "sklearn.metrics.pairwise.cosine_similarity",
+    "sqlite3"
+  ],
+  "build_dashboard.py": [
+    "html",
+    "json",
+    "lifecycle_summary.manifest_statuses",
+    "lifecycle_summary.summarize",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "build_docs_manifest.py": [
+    "datetime.datetime",
+    "json",
+    "pathlib.Path"
+  ],
+  "build_memory_db.py": [
+    "__future__.annotations",
+    "argparse",
+    "datetime.datetime",
+    "json",
+    "pathlib.Path",
+    "shutil",
+    "time",
+    "typing.Any"
+  ],
+  "build_projection.py": [
+    "datetime.datetime",
+    "json",
+    "pathlib.Path",
+    "validate.require_valid"
+  ],
+  "build_strategic_priorities.py": [
+    "datetime.datetime",
+    "json",
+    "pathlib.Path",
+    "shutil"
+  ],
+  "close_loop.py": [
+    "datetime.datetime",
+    "json",
+    "pathlib.Path",
+    "sqlite3",
+    "subprocess",
+    "sys",
+    "urllib.request"
+  ],
+  "cluster_leverage_map.py": [
+    "collections.Counter",
+    "collections.defaultdict",
+    "datetime.datetime",
+    "gc",
+    "json",
+    "numpy",
+    "pathlib.Path",
+    "re",
+    "sklearn.feature_extraction.text.TfidfVectorizer",
+    "sklearn.metrics.pairwise.cosine_similarity",
+    "sqlite3"
+  ],
+  "code_themes.py": [
+    "__future__.annotations",
+    "argparse",
+    "collections.Counter",
+    "collections.defaultdict",
+    "io",
+    "json",
+    "pathlib.Path",
+    "re",
+    "sys"
+  ],
+  "cognitive_api.py": [
+    "datetime.datetime",
+    "datetime.timedelta",
+    "json",
+    "sqlite3"
+  ],
+  "completion_stats.py": [
+    "datetime.datetime",
+    "datetime.timedelta",
+    "json",
+    "sqlite3"
+  ],
+  "cortex_bridge.py": [
+    "__future__.annotations",
+    "atomic_write.atomic_write_json",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "logging",
+    "os",
+    "pathlib.Path",
+    "subprocess",
+    "typing.Any",
+    "urllib.error",
+    "urllib.request",
+    "uuid"
+  ],
+  "crucix_bridge.py": [
+    "datetime.datetime",
+    "json",
+    "logging",
+    "pathlib.Path",
+    "sys",
+    "time",
+    "typing.Any",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "cycleboard_push.py": [
+    "__future__.annotations",
+    "argparse",
+    "atomic_write.atomic_write_json",
+    "atomic_write.atomic_write_text",
+    "datetime.datetime",
+    "datetime.timezone",
+    "hashlib",
+    "json",
+    "logging",
+    "pathlib.Path",
+    "sys",
+    "time",
+    "typing.Any",
+    "typing.Optional",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "decide.py": [
+    "datetime.datetime",
+    "json",
+    "os",
+    "pathlib.Path",
+    "sqlite3",
+    "subprocess",
+    "urllib.request"
+  ],
+  "decisions_to_atlas.py": [
+    "__future__.annotations",
+    "atomic_write.atomic_write_json",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "logging",
+    "pathlib.Path"
+  ],
+  "directive_engine.py": [
+    "behavioral_memory.get_compliance_rate",
+    "behavioral_memory.get_rolling_context",
+    "datetime.date",
+    "datetime.datetime",
+    "json",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "drift_detector.py": [
+    "behavioral_memory.get_rolling_context",
+    "datetime.datetime",
+    "json",
+    "pathlib.Path"
+  ],
+  "dump_conversation.py": [
+    "__future__.annotations",
+    "argparse",
+    "json",
+    "pathlib.Path",
+    "sys"
+  ],
+  "es_scan.py": [
+    "__future__.annotations",
+    "atlas_config.ROUTING",
+    "atomic_write.atomic_write_json",
+    "dataclasses.asdict",
+    "dataclasses.dataclass",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "logging",
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "typing.Iterable"
+  ],
+  "es_to_cards.py": [
+    "__future__.annotations",
+    "atomic_write.atomic_write_json",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "logging",
+    "pathlib.Path"
+  ],
+  "export_cognitive_state.py": [
+    "atomic_write.atomic_write_json",
+    "json",
+    "lifecycle_summary.manifest_statuses",
+    "lifecycle_summary.summarize",
+    "pathlib.Path",
+    "subprocess",
+    "validate.require_valid"
+  ],
+  "export_daily_payload.py": [
+    "atlas_config.compute_mode",
+    "atomic_write.atomic_write_json",
+    "datetime.datetime",
+    "json",
+    "pathlib.Path",
+    "validate.require_valid"
+  ],
+  "export_markdown.py": [
+    "__future__.annotations",
+    "argparse",
+    "datetime.datetime",
+    "io",
+    "json",
+    "pathlib.Path",
+    "re",
+    "sys",
+    "typing.Any"
+  ],
+  "extract_atlas_data.py": [
+    "__future__.annotations",
+    "argparse",
+    "collections.Counter",
+    "collections.defaultdict",
+    "json",
+    "pathlib.Path",
+    "re"
+  ],
+  "fest_actor.py": [
+    "__future__.annotations",
+    "atomic_write.atomic_write_json",
+    "dataclasses.dataclass",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "logging",
+    "os",
+    "pathlib.Path",
+    "subprocess",
+    "typing.Iterable",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "fest_to_cards.py": [
+    "__future__.annotations",
+    "atomic_write.atomic_write_json",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "logging",
+    "pathlib.Path",
+    "subprocess"
+  ],
+  "fs_actor.py": [
+    "__future__.annotations",
+    "atomic_write.atomic_write_json",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "logging",
+    "pathlib.Path",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "fuzz/__init__.py": [
+    "fuzz.generator.generate_corpus",
+    "fuzz.shapes.Fragment",
+    "fuzz.shapes.SHAPE_REGISTRY"
+  ],
+  "fuzz/cli.py": [
+    "__future__.annotations",
+    "argparse",
+    "fuzz.generator.generate_corpus",
+    "fuzz.pull._load_url_list",
+    "fuzz.pull.pull_corpus",
+    "fuzz.runner.PlaywrightMissing",
+    "fuzz.runner.latest_corpus_dir",
+    "fuzz.runner.run",
+    "fuzz.shapes.SHAPE_REGISTRY",
+    "pathlib.Path",
+    "random",
+    "sys"
+  ],
+  "fuzz/envelope.py": [
+    "__future__.annotations",
+    "fuzz.shapes.Fragment"
+  ],
+  "fuzz/generator.py": [
+    "__future__.annotations",
+    "dataclasses.asdict",
+    "datetime.datetime",
+    "datetime.timezone",
+    "fuzz.envelope",
+    "fuzz.shapes.FILTER_SHAPE_NAMES",
+    "fuzz.shapes.FIRING_SHAPE_NAMES",
+    "fuzz.shapes.Fragment",
+    "fuzz.shapes.SHAPE_REGISTRY",
+    "json",
+    "os",
+    "pathlib.Path",
+    "random",
+    "tempfile"
+  ],
+  "fuzz/pull.py": [
+    "__future__.annotations",
+    "dataclasses.dataclass",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "os",
+    "pathlib.Path",
+    "playwright.sync_api.sync_playwright",
+    "shutil",
+    "subprocess",
+    "sys",
+    "tempfile",
+    "time",
+    "urllib.parse.urlparse"
+  ],
+  "fuzz/runner.py": [
+    "__future__.annotations",
+    "datetime.datetime",
+    "datetime.timezone",
+    "fuzz.scorer.FileResult",
+    "fuzz.scorer.aggregate",
+    "fuzz.scorer.make_error_result",
+    "fuzz.scorer.score_file",
+    "json",
+    "os",
+    "pathlib.Path",
+    "playwright.sync_api.sync_playwright",
+    "shutil",
+    "sys",
+    "tempfile",
+    "time",
+    "typing.Any",
+    "typing.Iterable"
+  ],
+  "fuzz/scorer.py": [
+    "__future__.annotations",
+    "typing.TypedDict"
+  ],
+  "fuzz/shapes.py": [
+    "__future__.annotations",
+    "dataclasses.dataclass",
+    "random",
+    "typing.Callable"
+  ],
+  "generate_cli_reference.py": [
+    "json",
+    "pathlib.Path"
+  ],
+  "genesis_tree.py": [
+    "argparse",
+    "collections.defaultdict",
+    "datetime.datetime",
+    "hashlib",
+    "json",
+    "numpy",
+    "os",
+    "pathlib.Path",
+    "sqlite3",
+    "sys",
+    "typing.Any"
+  ],
+  "ghost_executor.py": [
+    "argparse",
+    "datetime.datetime",
+    "json",
+    "os",
+    "pathlib.Path",
+    "sys",
+    "typing.Any"
+  ],
+  "governance_config_api.py": [
+    "atlas_config.ACTIVE_LANES",
+    "atlas_config.AutonomyLevel",
+    "atlas_config.DAILY_BRIEF_TEMPLATE",
+    "atlas_config.IDEAS_RESERVOIR_RULES",
+    "atlas_config.NORTH_STAR",
+    "atlas_config.ROUTING",
+    "atlas_config.TARGETS",
+    "atlas_config.WEEKLY_PACKET_TEMPLATE",
+    "json",
+    "pathlib.Path"
+  ],
+  "governor_daily.py": [
+    "aegis_client.log_action",
+    "atlas_config.ACTIVE_LANES",
+    "atlas_config.AutonomyLevel",
+    "atlas_config.DAILY_BRIEF_TEMPLATE",
+    "atlas_config.IDEAS_RESERVOIR_RULES",
+    "atlas_config.KERNEL",
+    "atlas_config.NORTH_STAR",
+    "atlas_config.ROUTING",
+    "atlas_config.TARGETS",
+    "atlas_config.compute_mode",
+    "behavioral_memory.get_compliance_rate",
+    "behavioral_memory.get_rolling_context",
+    "crucix_bridge.poll_and_extract",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "directive_engine.generate_directive",
+    "directive_engine.get_loops_with_ages",
+    "json",
+    "lifecycle_summary.summarize",
+    "pathlib.Path"
+  ],
+  "governor_weekly.py": [
+    "atlas_config.ACTIVE_LANES",
+    "atlas_config.AutonomyLevel",
+    "atlas_config.KERNEL",
+    "atlas_config.NORTH_STAR",
+    "atlas_config.TARGETS",
+    "atlas_config.WEEKLY_PACKET_TEMPLATE",
+    "datetime.datetime",
+    "json",
+    "lifecycle_summary.summarize",
+    "pathlib.Path"
+  ],
+  "harvester.py": [
+    "__future__.annotations",
+    "argparse",
+    "datetime.datetime",
+    "io",
+    "json",
+    "pathlib.Path",
+    "re",
+    "sqlite3",
+    "sys",
+    "thread_scorer.BASE",
+    "thread_scorer.CODE_FENCE",
+    "thread_scorer.DB_PATH",
+    "thread_scorer.FRUSTRATION_WORDS",
+    "thread_scorer.HEDGE_WORDS",
+    "thread_scorer.RESOLUTION_WORDS",
+    "thread_scorer._code_signature",
+    "thread_scorer._fix_stdout",
+    "thread_scorer._get_repo_sigs",
+    "thread_scorer._msg_text",
+    "thread_scorer.load_classifications",
+    "thread_scorer.load_clusters",
+    "thread_scorer.load_memory",
+    "thread_scorer.scan_blocks_against_repo",
+    "thread_scorer.score_thread"
+  ],
+  "idea_code_join.py": [
+    "__future__.annotations",
+    "argparse",
+    "datetime.datetime",
+    "io",
+    "json",
+    "pathlib.Path",
+    "sqlite3",
+    "sys",
+    "thread_scorer.BASE",
+    "thread_scorer.DB_PATH",
+    "thread_scorer._fix_stdout",
+    "thread_scorer.load_classifications",
+    "thread_scorer.load_clusters",
+    "thread_scorer.load_memory",
+    "thread_scorer.score_thread"
+  ],
+  "index_chatgpt_exports.py": [
+    "__future__.annotations",
+    "argparse",
+    "json",
+    "pathlib.Path",
+    "time"
+  ],
+  "ingest.py": [
+    "__future__.annotations",
+    "argparse",
+    "atexit",
+    "dataclasses.dataclass",
+    "json",
+    "os",
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "time"
+  ],
+  "init_convo_time.py": [
+    "datetime.datetime",
+    "json",
+    "os",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "init_embeddings.py": [
+    "datetime.datetime",
+    "json",
+    "model_cache.get_model",
+    "model_cache.get_model_name",
+    "numpy",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "init_message_embeddings.py": [
+    "datetime.datetime",
+    "json",
+    "model_cache.get_model",
+    "model_cache.get_model_name",
+    "numpy",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "init_results_db.py": [
+    "json",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "init_titles.py": [
+    "json",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "init_topics.py": [
+    "collections.Counter",
+    "json",
+    "pathlib.Path",
+    "re",
+    "sqlite3"
+  ],
+  "inject_directive.py": [
+    "pathlib.Path"
+  ],
+  "lifecycle.py": [
+    "__future__.annotations",
+    "dataclasses.dataclass",
+    "datetime.datetime",
+    "json",
+    "logging",
+    "os",
+    "pathlib.Path",
+    "tempfile",
+    "typing.Iterable"
+  ],
+  "lifecycle_summary.py": [
+    "datetime.date",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "datetime.timezone",
+    "json",
+    "pathlib.Path",
+    "sys",
+    "typing.Any"
+  ],
+  "loops.py": [
+    "atlas_config.ROUTING",
+    "atomic_write.atomic_write_json",
+    "json",
+    "pathlib.Path",
+    "sqlite3"
+  ],
+  "migrate_manifest_status.py": [
+    "__future__.annotations",
+    "argparse",
+    "json",
+    "pathlib.Path"
+  ],
+  "mirofish/__init__.py": [],
+  "mirofish/config.py": [
+    "os",
+    "pathlib.Path",
+    "pydantic.BaseModel"
+  ],
+  "mirofish/graph/__init__.py": [],
+  "mirofish/graph/conversation_chunker.py": [
+    "dataclasses.dataclass"
+  ],
+  "mirofish/graph/conversation_extractor.py": [
+    "httpx",
+    "json",
+    "mirofish.config.config",
+    "structlog"
+  ],
+  "mirofish/graph/embedder.py": [
+    "asyncio",
+    "httpx",
+    "mirofish.config.config",
+    "structlog"
+  ],
+  "mirofish/graph/ingester.py": [
+    "datetime.datetime",
+    "json",
+    "mirofish.config.config",
+    "mirofish.graph.conversation_chunker.chunk_conversation",
+    "mirofish.graph.conversation_chunker.get_user_text",
+    "mirofish.graph.conversation_extractor.ConversationExtractor",
+    "mirofish.graph.embedder.OllamaEmbedder",
+    "mirofish.graph.neo4j_client.Neo4jClient",
+    "mirofish.ingest_state.IngestState",
+    "mirofish.ingest_state.load_state",
+    "mirofish.ingest_state.save_state",
+    "pathlib.Path",
+    "structlog"
+  ],
+  "mirofish/graph/neo4j_client.py": [
+    "base64.b64encode",
+    "dataclasses.dataclass",
+    "httpx",
+    "mirofish.config.config",
+    "structlog"
+  ],
+  "mirofish/ingest_state.py": [
+    "dataclasses.asdict",
+    "dataclasses.dataclass",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "mirofish.config.config",
+    "pathlib.Path",
+    "structlog"
+  ],
+  "mirofish/prediction/__init__.py": [],
+  "mirofish/prediction/insight_engine.py": [
+    "atlas_config.compute_mode",
+    "dataclasses.asdict",
+    "dataclasses.dataclass",
+    "datetime.datetime",
+    "datetime.timezone",
+    "mirofish.graph.neo4j_client.Neo4jClient",
+    "mirofish.prediction.loop_predictor.LoopPrediction",
+    "mirofish.prediction.loop_predictor.LoopPredictor",
+    "mirofish.prediction.mode_simulator.ModeSimulator",
+    "mirofish.prediction.pattern_detector.Pattern",
+    "mirofish.prediction.pattern_detector.PatternDetector",
+    "structlog"
+  ],
+  "mirofish/prediction/loop_predictor.py": [
+    "dataclasses.dataclass",
+    "dataclasses.field",
+    "datetime.datetime",
+    "math",
+    "mirofish.config.config",
+    "mirofish.graph.neo4j_client.Neo4jClient",
+    "structlog"
+  ],
+  "mirofish/prediction/mode_simulator.py": [
+    "atlas_config.ROUTING",
+    "atlas_config.compute_mode",
+    "dataclasses.dataclass",
+    "dataclasses.field",
+    "json",
+    "mirofish.config.config",
+    "pathlib.Path",
+    "structlog",
+    "sys"
+  ],
+  "mirofish/prediction/pattern_detector.py": [
+    "dataclasses.dataclass",
+    "mirofish.config.config",
+    "mirofish.graph.neo4j_client.Neo4jClient",
+    "structlog"
+  ],
+  "model_cache.py": [
+    "sentence_transformers.SentenceTransformer"
+  ],
+  "notify.py": [
+    "pathlib.Path",
+    "plyer.notification",
+    "subprocess"
+  ],
+  "parse_conversation.py": [
+    "__future__.annotations",
+    "argparse",
+    "collections.Counter",
+    "collections.defaultdict",
+    "dataclasses.asdict",
+    "dataclasses.dataclass",
+    "json",
+    "pathlib.Path",
+    "re"
+  ],
+  "proposal_runner.py": [
+    "__future__.annotations",
+    "atomic_write.atomic_write_json",
+    "cycleboard_push._load_api_key",
+    "cycleboard_push._now_iso",
+    "cycleboard_push._today_date",
+    "cycleboard_push.get_cycleboard_state",
+    "cycleboard_push.put_cycleboard_state",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "logging",
+    "os",
+    "pathlib.Path",
+    "shutil",
+    "subprocess",
+    "sys",
+    "time",
+    "typing.Any",
+    "typing.Optional"
+  ],
+  "radar.py": [
+    "sqlite3"
+  ],
+  "refresh.py": [
+    "atexit",
+    "os",
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "time"
+  ],
+  "reporter.py": [
+    "datetime.datetime",
+    "subprocess"
+  ],
+  "resurfacer.py": [
+    "datetime.datetime",
+    "datetime.timedelta",
+    "json",
+    "sqlite3"
+  ],
+  "route_today.py": [
+    "atlas_config.compute_mode",
+    "datetime.datetime",
+    "json"
+  ],
+  "run_agents.py": [
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "time"
+  ],
+  "run_audit.py": [
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "time"
+  ],
+  "run_daily.py": [
+    "aegis_client.log_action",
+    "json",
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "time",
+    "urllib.error",
+    "urllib.request"
+  ],
+  "run_graph_ingest.py": [
+    "asyncio",
+    "json",
+    "mirofish.graph.ingester.ConversationIngester",
+    "mirofish.graph.neo4j_client.Neo4jClient",
+    "mirofish.ingest_state.load_state",
+    "pathlib.Path",
+    "socket",
+    "sys",
+    "urllib.request"
+  ],
+  "run_predictions.py": [
+    "asyncio",
+    "dataclasses.asdict",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "mirofish.graph.neo4j_client.Neo4jClient",
+    "mirofish.prediction.insight_engine.InsightEngine",
+    "pathlib.Path",
+    "socket",
+    "sys"
+  ],
+  "run_weekly.py": [
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "time"
+  ],
+  "signal_ingest.py": [
+    "datetime.datetime",
+    "json",
+    "logging",
+    "pathlib.Path",
+    "typing.Any"
+  ],
+  "tests/conftest.py": [
+    "json",
+    "numpy",
+    "pathlib.Path",
+    "pytest",
+    "sqlite3",
+    "sys"
+  ],
+  "tests/test_atlas_approve.py": [
+    "__future__.annotations",
+    "atlas_approve",
+    "json",
+    "pathlib.Path",
+    "pytest"
+  ],
+  "tests/test_atlas_data.py": [
+    "atlas_data.load_message_data",
+    "numpy",
+    "pytest",
+    "sqlite3"
+  ],
+  "tests/test_atlas_graph.py": [
+    "atlas_graph.DEFAULT_MAX_EDGES_PER_NODE",
+    "atlas_graph.DEFAULT_OVERLAP_MIN",
+    "atlas_graph.DEFAULT_SIM_MIN",
+    "atlas_graph.build_graph_data",
+    "collections.Counter",
+    "numpy",
+    "pytest"
+  ],
+  "tests/test_atlas_layers.py": [
+    "atlas_layers.build_cluster_summary",
+    "atlas_layers.build_layers",
+    "numpy",
+    "pytest"
+  ],
+  "tests/test_atlas_layout.py": [
+    "atlas_layout.forceatlas2_layout",
+    "numpy",
+    "pytest"
+  ],
+  "tests/test_atlas_projection.py": [
+    "atlas_projection.HDBSCAN_DEFAULTS",
+    "atlas_projection.UMAP_DEFAULTS",
+    "atlas_projection.compute_hdbscan",
+    "atlas_projection.compute_umap",
+    "numpy",
+    "pytest"
+  ],
+  "tests/test_atlas_render.py": [
+    "atlas_render.TEMPLATE_FILE",
+    "atlas_render.build_html",
+    "atlas_render.build_payload",
+    "atlas_render.load_leverage_data",
+    "atlas_render.load_template",
+    "json",
+    "numpy",
+    "pathlib.Path",
+    "pytest"
+  ],
+  "tests/test_cycleboard_push.py": [
+    "__future__.annotations",
+    "cycleboard_push",
+    "json",
+    "pathlib.Path",
+    "pytest"
+  ],
+  "tests/test_governor.py": [
+    "governor_daily.compute_lane_status",
+    "governor_daily.compute_mode",
+    "governor_daily.compute_world_changed",
+    "governor_daily.detect_lane_violations",
+    "governor_daily.generate_brief",
+    "pathlib.Path",
+    "sys"
+  ],
+  "tests/test_loops.py": [
+    "atlas_config.ROUTING",
+    "pathlib.Path",
+    "sys"
+  ],
+  "tests/test_proposal_runner.py": [
+    "__future__.annotations",
+    "json",
+    "pathlib.Path",
+    "proposal_runner",
+    "pytest",
+    "subprocess"
+  ],
+  "tests/test_routing.py": [
+    "atlas_config.ROUTING",
+    "atlas_config.compute_mode",
+    "pathlib.Path",
+    "sys"
+  ],
+  "text_utils.py": [
+    "__future__.annotations",
+    "langchain_text_splitters.RecursiveCharacterTextSplitter"
+  ],
+  "theme_winners.py": [
+    "__future__.annotations",
+    "argparse",
+    "io",
+    "json",
+    "pathlib.Path",
+    "sqlite3",
+    "sys",
+    "thread_scorer.BASE",
+    "thread_scorer.DB_PATH",
+    "thread_scorer._fix_stdout",
+    "thread_scorer.load_classifications",
+    "thread_scorer.load_clusters",
+    "thread_scorer.load_memory",
+    "thread_scorer.score_thread"
+  ],
+  "thread_ranker.py": [
+    "__future__.annotations",
+    "argparse",
+    "io",
+    "json",
+    "pathlib.Path",
+    "sqlite3",
+    "sys",
+    "thread_scorer.BASE",
+    "thread_scorer.DB_PATH",
+    "thread_scorer._fix_stdout",
+    "thread_scorer.load_classifications",
+    "thread_scorer.load_clusters",
+    "thread_scorer.load_memory",
+    "thread_scorer.score_thread"
+  ],
+  "thread_scorer.py": [
+    "__future__.annotations",
+    "argparse",
+    "collections.Counter",
+    "collections.defaultdict",
+    "datetime.datetime",
+    "io",
+    "json",
+    "pathlib.Path",
+    "re",
+    "sqlite3",
+    "sys",
+    "typing.Any"
+  ],
+  "triage_server.py": [
+    "__future__.annotations",
+    "argparse",
+    "atomic_write.atomic_write_json",
+    "auto_triage.OPTOGON_URL",
+    "auto_triage._drive_to_close",
+    "auto_triage._post_json",
+    "datetime.datetime",
+    "datetime.timezone",
+    "fastapi.FastAPI",
+    "fastapi.Request",
+    "fastapi.middleware.cors.CORSMiddleware",
+    "fastapi.responses.JSONResponse",
+    "fastapi.staticfiles.StaticFiles",
+    "json",
+    "logging",
+    "os",
+    "pathlib.Path",
+    "subprocess",
+    "sys",
+    "threading",
+    "uvicorn"
+  ],
+  "validate.py": [
+    "json",
+    "jsonschema",
+    "jsonschema.ValidationError",
+    "jsonschema.validate",
+    "pathlib.Path",
+    "typing.Any"
+  ],
+  "verify_coverage.py": [
+    "__future__.annotations",
+    "argparse",
+    "dataclasses.asdict",
+    "dataclasses.dataclass",
+    "json",
+    "os",
+    "pathlib.Path",
+    "re",
+    "subprocess"
+  ],
+  "weekly_plan.py": [
+    "behavioral_memory.get_compliance_rate",
+    "datetime.datetime",
+    "datetime.timedelta",
+    "json",
+    "pathlib.Path",
+    "typing.Any"
+  ],
+  "wire_cycleboard.py": [
+    "atomic_write.atomic_write_json",
+    "atomic_write.atomic_write_text",
+    "datetime.date",
+    "datetime.datetime",
+    "datetime.timezone",
+    "json",
+    "pathlib.Path",
+    "shutil"
+  ]
+}

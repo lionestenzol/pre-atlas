@@ -1594,25 +1594,30 @@ export class GovernanceDaemon {
   }
 
   /**
-   * Closure Scan: enumerate worktrees, rank branches idle beyond threshold,
-   * and emit a dated capsule scan report for human review. Read-only per
-   * TRUST_BOUNDARY.md -- merge/tag/delete decisions stay human-gated.
-   * Addresses the fan-out-then-abandon signature quantified in
-   * FORENSIC_DOSSIER_2026-06-26 (86 branches -> ~17 real capsules).
+   * Bookmark scan: refresh the central worktree bookmark index at
+   * capsules/BOOKMARKS.md via scripts/scan_worktree_bookmarks.py.
+   * Doctrine (2026-07-25): worktrees are project bookmarks
+   * (what/left/done?), NOT candidates to close. Read-only per
+   * TRUST_BOUNDARY.md -- nothing is merged, tagged, or deleted here.
+   * Done? = merged into main OR capsule/* tagged.
    */
   private async runClosureScan(): Promise<void> {
     const result = await Promise.race([
       runClosureScan(this.repoRoot),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Closure scan timed out after ${this.CLOSURE_SCAN_TIMEOUT_MS}ms`)), this.CLOSURE_SCAN_TIMEOUT_MS)),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Bookmark scan timed out after ${this.CLOSURE_SCAN_TIMEOUT_MS}ms`)), this.CLOSURE_SCAN_TIMEOUT_MS)),
     ]);
     await this.updateSystemState({
       'daemon.last_closure_scan': now(),
       'daemon.closure_scan_report': result.report_path,
-      'daemon.closure_scan_candidates': result.candidates.length,
+      'daemon.closure_scan_open': result.open_count,
+      'daemon.closure_scan_merged': result.merged_count,
+      'daemon.closure_scan_tagged': result.tagged_count,
     });
     this.timeline.emit('CLOSURE_SCAN_COMPLETE', 'governance_daemon', {
       worktree_count: result.worktree_count,
-      candidates: result.candidates.length,
+      open: result.open_count,
+      merged: result.merged_count,
+      tagged: result.tagged_count,
       report_path: result.report_path,
     });
   }

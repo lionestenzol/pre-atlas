@@ -39,6 +39,7 @@ import {
   CorrectionValidationError as LatticeCorrectionValidationError,
   type StorageLike as LatticeStorageLike,
 } from '../atlas/lattice-projection.js';
+import { buildItinerary, parseOpenLoops, type ItineraryBuildContext } from './itinerary.js';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -2147,6 +2148,83 @@ app.get('/api/atlas/cockpit', (_req, res) => {
 
     const cockpit = buildCockpit(ctx);
     res.json({ ok: true, cockpit });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+/**
+ * GET /api/atlas/itinerary
+ *
+ * The day compiler: composes pending_actions + open_loops + tasks + directive
+ * into an ordered march order with a `close_via` verb per block.
+ * Deterministic over live state, zero new persistence.
+ *
+ * Closes the MAPE-K plan/execute gap surfaced by ATLAS_END_TO_END_DIAGNOSTIC.md.
+ */
+app.get('/api/atlas/itinerary', (req, res) => {
+  try {
+    const systemStateEntities = storage.loadEntitiesByType<SystemStateData>('system_state');
+    if (systemStateEntities.length === 0) {
+      res.status(503).json({ ok: false, error: 'No system_state entity present' });
+      return;
+    }
+
+    const rawLimit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : NaN;
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 && rawLimit <= 50 ? rawLimit : 8;
+
+    const pendingActions = storage.loadEntitiesByType<PendingActionData>('pending_action');
+    const tasks = storage.loadEntitiesByType<TaskData>('task');
+
+    // Read governance_state.json for open_loops (source of truth for closure state)
+    let governanceState: unknown = null;
+    try {
+      const govPath = path.join(cognitiveSensorDir, 'governance_state.json');
+      governanceState = JSON.parse(fs.readFileSync(govPath, 'utf8'));
+    } catch {
+      // Absent governance_state.json is expected on a fresh install; itinerary
+      // still composes over pending + tasks + directive without loops.
+    }
+    const openLoops = parseOpenLoops(governanceState);
+
+    // Directive is best-effort; if the emitter fails, itinerary still returns.
+    let directive: { id?: string; text: string } | null = null;
+    try {
+      const prefsStore = preferencesStore.read(ATLAS_USER_ID);
+      const userPreferences: Record<string, unknown> = {};
+      for (const p of prefsStore.preferences) userPreferences[p.key] = p.value;
+      const unifiedState = buildUnifiedState();
+      const emitted = new DirectiveEmitter(repoRoot).emit({
+        delta_state: (unifiedState.delta?.system_state ?? undefined) as Record<string, unknown> | undefined,
+        cognitive_state: (unifiedState.cognitive?.cognitive_state ?? undefined) as Record<string, unknown> | undefined,
+        work_ledger: workController.getLedger(),
+        user_preferences: userPreferences,
+      });
+      if (emitted) {
+        const asRec = emitted as unknown as Record<string, unknown>;
+        const text = (typeof asRec.text === 'string' && asRec.text)
+          || (typeof asRec.message === 'string' && asRec.message)
+          || (typeof asRec.directive === 'string' && asRec.directive)
+          || 'Follow the next directive.';
+        const id = typeof asRec.id === 'string' ? asRec.id : undefined;
+        directive = { id, text: text as string };
+      }
+    } catch {
+      // Directive emitter is opportunistic — swallow and continue.
+    }
+
+    const ctx: ItineraryBuildContext = {
+      systemState: systemStateEntities[0],
+      pendingActions,
+      openLoops,
+      tasks,
+      directive,
+      limit,
+    };
+
+    const itinerary = buildItinerary(ctx);
+    res.json({ ok: true, itinerary });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({ ok: false, error: message });

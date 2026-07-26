@@ -186,9 +186,9 @@ def classify(normalized: str, input_hash: str, cache: ClassificationCache) -> di
         llm.log_call("classification", "cache", input_hash, normalized, "CACHE HIT", 0, "success")
         return cached
 
-    if llm.anthropic_available():
+    if llm.model_available():
         user = f'Drop: """{normalized}"""\nReturn JSON: {{"type":"","domain":"","entities":[],"confidence":0.0}}'
-        data = llm.call_json("classification", _LLM_SYSTEM, user, input_hash)
+        data = llm.complete_json("classification", _LLM_SYSTEM, user, input_hash)
         if data and data.get("type") in TYPES and data.get("domain") in DOMAINS:
             result = {
                 "type": data["type"],

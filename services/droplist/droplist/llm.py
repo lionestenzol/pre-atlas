@@ -373,6 +373,74 @@ def anthropic_available() -> bool:
         return False
 
 
+# ---------------------------------------------------------------------------
+# Provider-agnostic gate + JSON completion. Wraps `complete()` (which already
+# routes claude-cli / anthropic / openai / gemini / openrouter / ollama through
+# one call) with the same "return None on failure so caller falls back to the
+# heuristic" contract that call_json (Anthropic-only) has always had. This is
+# what makes the DAG executor path (agents.run_agent), the chain runner, and
+# the classifier honour the same model picker the workshop chat uses, instead
+# of only firing when ANTHROPIC_API_KEY + DROPLIST_LLM=anthropic are both set.
+#
+# The BACKEND env gate is preserved from anthropic_available(): heuristic mode
+# stays the default so tests, first-runs, and offline dev do zero I/O and cost
+# nothing. Opt in with DROPLIST_LLM in {anthropic, auto, any} — 'anthropic'
+# still forces the old Anthropic-only path (backward compat), 'auto' / 'any'
+# route through the picker (default_model → complete → claude-cli / litellm).
+# See ~/.claude/rules/common/code-as-furniture.md — no half-wired executor.
+# ---------------------------------------------------------------------------
+_LIVE_BACKENDS = frozenset({"anthropic", "auto", "any"})
+
+
+def model_available(model: str | None = None) -> bool:
+    """True when a provider-agnostic LLM call is wireable right now.
+
+    Gated by DROPLIST_LLM so `claude` merely being on PATH does not silently
+    turn every DAG node into a subprocess spawn — the zero-key, zero-surprise
+    default is preserved. With no `model` arg, returns True iff a live backend
+    is opted in AND default_model() resolves. With a model id, must ALSO match
+    available_models().
+    """
+    if BACKEND not in _LIVE_BACKENDS:
+        return False
+    if model:
+        return any(m["id"] == model for m in available_models())
+    return default_model() is not None
+
+
+def complete_json(
+    purpose: str,
+    system: str,
+    user: str,
+    input_hash: str,  # noqa: ARG001 — logged by complete() via its own input_hash
+    model: str | None = None,
+) -> dict[str, Any] | None:
+    """Provider-agnostic JSON call. Same None-on-failure contract as call_json.
+
+    Uses the picker-visible default (honouring DROPLIST_MODEL); pass an explicit
+    model id to override. Strips ```json fences before parsing so a chatty model
+    that wraps its reply still round-trips.
+    """
+    m = model or default_model()
+    if not m:
+        return None
+    try:
+        resp = complete(
+            model=m,
+            messages=[{"role": "user", "content": user}],
+            system=system,
+            max_tokens=1024,
+            purpose=purpose,
+        )
+        text = "".join(
+            b.get("text", "") for b in resp.get("content", []) if isinstance(b, dict)
+        )
+        cleaned = text.replace("```json", "").replace("```", "").strip()
+        return json.loads(cleaned)
+    except Exception:  # noqa: BLE001 — any failure -> caller falls back to heuristic
+        return None
+
+
 def call_json(purpose: str, system: str, user: str, input_hash: str) -> dict[str, Any] | None:
     """Call the real model and parse a JSON object response.
 

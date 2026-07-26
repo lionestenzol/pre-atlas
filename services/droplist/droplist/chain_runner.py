@@ -259,8 +259,8 @@ def is_due(
 def _run_prompt(prompt: str, targets: list[dict[str, Any]]) -> str:
     """Run one step's prompt against its selected targets, returning draft text.
 
-    When a live Anthropic backend is available (llm.anthropic_available(),
-    llm.py:58) the real model drafts the text; otherwise a DETERMINISTIC
+    When any provider-agnostic model is available (llm.model_available(),
+    llm.py) the real model drafts the text; otherwise a DETERMINISTIC
     heuristic produces it. The heuristic path is what makes a chain provable
     with NO api key — the whole zero-key design intent of llm.py:1-8.
 
@@ -269,7 +269,7 @@ def _run_prompt(prompt: str, targets: list[dict[str, Any]]) -> str:
     ``expect: non_empty`` gate passes, and (b) carry real, inspectable content
     into the report and the follow-up drop.
     """
-    if llm.anthropic_available():
+    if llm.model_available():
         ctx = json.dumps(
             [
                 {
@@ -284,7 +284,7 @@ def _run_prompt(prompt: str, targets: list[dict[str, Any]]) -> str:
                 for t in targets
             ]
         )
-        data = llm.call_json(
+        data = llm.complete_json(
             purpose="chain_step",
             system="You draft a short, direct nudge. Reply as JSON {\"text\": str}.",
             user=f"{prompt}\n\nTargets:\n{ctx}",
@@ -292,7 +292,7 @@ def _run_prompt(prompt: str, targets: list[dict[str, Any]]) -> str:
         )
         if data and isinstance(data.get("text"), str) and data["text"].strip():
             return data["text"].strip()
-        # fall through to heuristic on any model failure (llm.call_json -> None)
+        # fall through to heuristic on any model failure (llm.complete_json -> None)
 
     lines = [f"{prompt}"]
     for t in targets:

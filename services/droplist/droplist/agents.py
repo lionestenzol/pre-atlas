@@ -133,7 +133,10 @@ def run_agent(node: dict, dag: dict) -> dict:
     t0 = time.time()
     tmpl = AGENTS.get(node["agent"], {})
 
-    if llm.anthropic_available():
+    # Any provider-agnostic model wins (claude-cli, ollama, anthropic, openai,
+    # gemini, openrouter). Model choice comes from default_model() which honours
+    # DROPLIST_MODEL — the same picker that populates the workshop chat header.
+    if llm.model_available():
         system = (f"You are the '{node['agent']}' agent. {tmpl.get('objective','')} "
                   f"Constraints: {tmpl.get('constraints')}. Respond ONLY with JSON: "
                   '{"status":"done|blocked|failed","result":"","evidence":"",'
@@ -142,7 +145,7 @@ def run_agent(node: dict, dag: dict) -> dict:
         user = (f"Node: {node['title']} (type {node['type']})\n"
                 f"Drop: {dag.get('raw_input','')}\n"
                 f"Parent results: {parents}")
-        data = llm.call_json("agent_run", system, user, dag.get("source_drop", ""))
+        data = llm.complete_json("agent_run", system, user, dag.get("source_drop", ""))
         if data and "result" in data:
             return {
                 "node_id": node["id"],

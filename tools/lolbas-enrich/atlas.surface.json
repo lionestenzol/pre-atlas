@@ -1,0 +1,20 @@
+{
+  "surface": "lolbas-enrich",
+  "kind": "cli",
+  "lifecycle": "live",
+  "headline": "OS-binary enrichment: which Windows built-in binaries (LOLBAS catalog, ~215 entries) does a repo actually invoke, joined with categories, MITRE IDs, and detection references. Content-addressed on {pack commit, findings, hit locations} so the same repo state hashes identically run-to-run.",
+  "capabilities": [
+    {
+      "id": "scan",
+      "label": "Scan a repo for LOLBAS-catalogued Windows binary invocations (strict mode, read-only, no ledger writes)",
+      "direction": "read",
+      "exposure": "agent",
+      "criticality": 0,
+      "invoke": "python tools/lolbas-enrich/lolbas_enrich_seam.py {root}",
+      "needs": ["root"],
+      "evidence": "C:/Users/bruke/Pre Atlas/tools/lolbas-enrich/lolbas_enrich_seam.py wraps ~/.claude/skills/code-recon/scripts/lolbas-enrich.mjs (strict mode: <name>.exe|.dll|.com|.scr required; never --ledger)",
+      "notes": "Read-only: never passes --ledger, so no .audit/recon-ledger.jsonl writes when called through the seam. Strict mode only (extension-required matches). Pack read from $LOLBAS_PACK_PATH or the vendored services/lolbas/pack/LOLBAS_PACK.json. Zero findings is a valid answer (found:true, finding_count:0) -- absence of LOLBAS hits does not mean absence of shell-outs. {root} is a forward-slash path.",
+      "triggers": ["lolbas this repo", "what windows binaries does this touch", "os-binary enrichment", "which built-ins does this invoke", "lolbas-enrich"]
+    }
+  ]
+}

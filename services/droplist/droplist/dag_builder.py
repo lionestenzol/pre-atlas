@@ -34,10 +34,17 @@ def _resolve_python_literal() -> str:
     for candidate in ("python3", "python"):
         try:
             r = subprocess.run([candidate, "--version"], capture_output=True,
-                               timeout=5)
+                               timeout=15)
             if r.returncode == 0:
                 return candidate
-        except (FileNotFoundError, OSError):
+        # TimeoutExpired matters at import time: under IO pressure `python
+        # --version` can miss a 5s deadline and — before this catch was added —
+        # took down the entire droplist server on every PM2 restart (see 144
+        # restart-count incident). Fall through to the "python" fallback; if
+        # the literal is actually broken it will surface as a script_runner
+        # failure at run time, not as an import-time crash loop.
+        # See ~/.claude/rules/common/code-as-furniture.md.
+        except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
             continue
     return "python"  # last-resort fallback; will surface as a script_runner failure
 

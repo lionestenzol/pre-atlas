@@ -1922,7 +1922,7 @@ function lineSeed(){
     grip.addEventListener('pointercancel', end);
   }
   async function bootModelPicker(){
-    var models = [], def = null, configured = {};
+    var models = [], def = null, configured = {}, serverPicked = null;
     try{
       var r = await fetch('/api/ai/models');
       if(r.ok){ var j = await r.json(); models = j.models||[]; def = j.default||null; }
@@ -1931,7 +1931,16 @@ function lineSeed(){
       var rk = await fetch('/api/ai/keys');
       if(rk.ok){ configured = (await rk.json()).configured || {}; }
     }catch(e){}
-    if(!window.DL_MODEL && def) window.DL_MODEL = def;
+    // Server-side picker persistence: /api/ai/selected returns whatever the
+    // last POST-picked model was (or the env/first-available fallback). The
+    // server is the source of truth so the daemon (agents.run_agent + friends)
+    // and the UI stay in lockstep — pick in the header, daemon uses it next tick.
+    try{
+      var rs = await fetch('/api/ai/selected');
+      if(rs.ok){ var js = await rs.json(); serverPicked = js.picked || null; }
+    }catch(e){}
+    if(serverPicked) window.DL_MODEL = serverPicked;
+    else if(!window.DL_MODEL && def) window.DL_MODEL = def;
     if(models.length && !models.some(function(m){return m.id===window.DL_MODEL;})) window.DL_MODEL = def || models[0].id;
     if(window.DL_MODEL){ try{ localStorage.setItem(MODEL_KEY, window.DL_MODEL); }catch(e){} }
 
@@ -1963,7 +1972,21 @@ function lineSeed(){
         o.style.color = '#0c0e0d';
         sel.appendChild(o);
       });
-      sel.onchange = function(){ window.DL_MODEL = sel.value; try{ localStorage.setItem(MODEL_KEY, sel.value); }catch(e){} };
+      sel.onchange = function(){
+        window.DL_MODEL = sel.value;
+        try{ localStorage.setItem(MODEL_KEY, sel.value); }catch(e){}
+        // Fire-and-forget POST so the daemon (agents.run_agent, chain_runner,
+        // classifier) picks up the same model on its next tick. If offline or
+        // the token isn't loaded yet we silently swallow — the localStorage
+        // write already covers the same-tab chat path.
+        try{
+          fetch('/api/ai/selected', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-Atlas-Token':(window.__DL_TOKEN__||'')},
+            body: JSON.stringify({model: sel.value})
+          }).catch(function(){});
+        }catch(_){}
+      };
       wrap.appendChild(sel);
     }
 

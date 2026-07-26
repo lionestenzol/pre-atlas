@@ -152,11 +152,69 @@ def available_models() -> list[dict[str, str]]:
     return out
 
 
+# ---------------------------------------------------------------------------
+# Picker persistence. When the UI picks a model it POSTs to /api/ai/selected,
+# which writes a one-line file at ${DATA_DIR}/selected_model.txt. That file is
+# the top-priority signal in default_model() so the daemon inherits whatever
+# the header picker last chose — no env-var restart dance needed. Missing or
+# empty file = no override (fall through to DROPLIST_MODEL env, then first
+# available). Bounded write (max 200 chars) so a malformed POST can't
+# accumulate a giant file over time.
+# ---------------------------------------------------------------------------
+_SELECTED_MODEL_FILE = "selected_model.txt"
+_SELECTED_MODEL_MAX = 200
+
+
+def _selected_model_path() -> str:
+    return os.path.join(storage.DATA_DIR, _SELECTED_MODEL_FILE)
+
+
+def selected_model() -> str | None:
+    """Model id the picker last posted, or None if unset / file unreadable."""
+    try:
+        with open(_selected_model_path(), encoding="utf-8") as f:
+            v = f.read(_SELECTED_MODEL_MAX + 1).strip()
+        return v or None
+    except (OSError, FileNotFoundError):
+        return None
+
+
+def set_selected_model(model: str | None) -> None:
+    """Persist (or clear) the picker's choice. Called by POST /api/ai/selected.
+
+    Empty / None clears the override — default_model() falls back to env then
+    first available. Truncates over-long strings defensively; validation of
+    "is this a real model id" is the caller's job (route validates against
+    available_models() before calling us).
+    """
+    path = _selected_model_path()
+    storage.ensure_data_dir()
+    if not model:
+        try:
+            os.remove(path)
+        except (OSError, FileNotFoundError):
+            pass
+        return
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(model[:_SELECTED_MODEL_MAX])
+
+
 def default_model() -> str | None:
-    """First available model id, honoring DROPLIST_MODEL if it's available."""
+    """First available model id, in priority order: picker's server-persisted
+    choice (selected_model_file) → DROPLIST_MODEL env → first available. The
+    picker file takes precedence because the UI writes it in real time, and a
+    stale env override would otherwise silently win over a live user choice.
+    """
     avail = available_models()
     if not avail:
         return None
+    picked = selected_model()
+    if picked:
+        for m in avail:
+            if m["id"] == picked or m["model"] == picked:
+                return m["id"]
+        # picker choice references a provider whose key was later removed —
+        # ignore rather than pin to a broken id; fall through to env/first.
     want = os.environ.get("DROPLIST_MODEL")
     if want:
         for m in avail:

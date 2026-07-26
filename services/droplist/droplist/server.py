@@ -315,6 +315,48 @@ def ai_models() -> dict:
     return {"models": models, "default": llm.default_model()}
 
 
+@app.get("/api/ai/selected")
+def ai_selected() -> dict:
+    """Which model the header picker last chose. Server-side persisted so the
+    daemon (agents.run_agent, chain_runner, classifier) inherits it — the picker
+    becomes the real executor selector, not just a chat-widget preference.
+
+    Source labels: 'selected' = a live user pick; 'env' = DROPLIST_MODEL fallback;
+    'auto' = first available; 'none' = no provider has a key. Public read — the
+    model id leaks no secret and the UI needs it to boot the picker.
+    """
+    picked = llm.selected_model()
+    resolved = llm.default_model()
+    if picked and resolved:
+        source = "selected"
+    elif os.environ.get("DROPLIST_MODEL") and resolved:
+        source = "env"
+    elif resolved:
+        source = "auto"
+    else:
+        source = "none"
+    return {"model": resolved, "source": source, "picked": picked}
+
+
+@app.post("/api/ai/selected", dependencies=[Depends(auth.require_write_token)])
+async def ai_set_selected(request: Request) -> Response:
+    """Persist the picker's choice. Body: {model: str} — empty string clears the
+    override (revert to env → first available). Validates against the live
+    available_models() list so a typo can't silently pin the daemon to a broken
+    id. Write-token guarded because it changes which provider spends money."""
+    body = await request.json()
+    model = (body.get("model") or "").strip()
+    if model:
+        avail_ids = {m["id"] for m in llm.available_models()}
+        if model not in avail_ids:
+            return Response(
+                content=json.dumps({"error": f"unknown model '{model}'", "available": sorted(avail_ids)}).encode(),
+                status_code=400, media_type="application/json",
+            )
+    llm.set_selected_model(model or None)
+    return {"ok": True, "model": llm.default_model(), "picked": llm.selected_model()}
+
+
 @app.get("/api/ai/keys")
 def ai_keys() -> dict:
     """Which providers have a key configured. Booleans only — NEVER the key values."""

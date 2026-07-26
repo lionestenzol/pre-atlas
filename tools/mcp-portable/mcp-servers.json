@@ -1,0 +1,108 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/mcp-servers.json",
+  "_comment": "Canonical portable MCP server registry. Use gen_mcp.py to emit client-specific configs. Env vars use ${VAR} for substitution.",
+  "servers": {
+    "musescore": {
+      "transport": "stdio",
+      "command": "python",
+      "args": ["${HOME}/musescore-mcp/server/musescore_mcp.py"],
+      "env": {},
+      "tags": ["music", "local"]
+    },
+    "everything": {
+      "transport": "stdio",
+      "command": "node",
+      "args": ["${HOME}/mcp-servers/everything/dist/index.js"],
+      "env": { "EVERYTHING_HTTP_PORT": "32233" },
+      "tags": ["files", "windows"]
+    },
+    "codex": {
+      "transport": "stdio",
+      "command": "codex",
+      "args": ["mcp-server"],
+      "env": {},
+      "tags": ["ai", "second-opinion"]
+    },
+    "competitor-monitor": {
+      "transport": "stdio",
+      "command": "${HOME}/Scrapling/.venv/Scripts/python.exe",
+      "args": ["${HOME}/mcp-servers/competitor-monitor/server.py"],
+      "env": {},
+      "tags": ["research"]
+    },
+    "search-stack": {
+      "transport": "stdio",
+      "command": "${PRE_ATLAS}/services/search-stack/.venv/Scripts/python.exe",
+      "args": ["-m", "search_stack.mcp_server"],
+      "env": {},
+      "tags": ["search", "atlas"]
+    },
+    "atlas-map": {
+      "transport": "stdio",
+      "command": "${PRE_ATLAS}/services/atlas-map-api/.venv/Scripts/python.exe",
+      "args": ["-m", "atlas_map_api.mcp_server"],
+      "env": {},
+      "tags": ["atlas"]
+    },
+    "repomix": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "repomix", "--mcp"],
+      "env": {},
+      "tags": ["code", "portable"]
+    },
+    "deepwiki": {
+      "transport": "http",
+      "url": "https://mcp.deepwiki.com/mcp",
+      "tags": ["docs", "remote"]
+    },
+    "reaper-reapy-mcp": {
+      "transport": "stdio",
+      "command": "python",
+      "args": ["-m", "reaper_reapy_mcp"],
+      "env": {},
+      "tags": ["music"]
+    },
+    "atlas-rag": {
+      "transport": "stdio",
+      "command": "python",
+      "args": ["${HOME}/atlas-rag/atlas_mcp.py"],
+      "env": {},
+      "tags": ["rag", "atlas"]
+    },
+    "zoekt": {
+      "transport": "stdio",
+      "command": "python",
+      "args": ["${HOME}/zoekt-win/zoekt_mcp.py"],
+      "env": {},
+      "tags": ["code-search"]
+    },
+    "_jbcontext_DISABLED": {
+      "_reason": "Requires JetBrains AI access on the signed-in account. Restore by removing the leading underscore in the key AND changing the key back to 'jbcontext'.",
+      "transport": "stdio",
+      "command": "${LOCALAPPDATA}/JBContext/bin/jbcontext",
+      "args": ["mcp"],
+      "env": {},
+      "tags": ["code-search", "semantic", "disabled"]
+    },
+    "sourcegraph-scip": {
+      "transport": "stdio",
+      "command": "python",
+      "args": ["${PRE_ATLAS}/services/sourcegraph-scip/sourcegraph_mcp.py"],
+      "env": {},
+      "tags": ["code-search"]
+    },
+    "touchdesigner": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "touchdesigner-mcp-server@latest", "--stdio"],
+      "env": {},
+      "tags": ["creative"]
+    }
+  },
+  "vars": {
+    "HOME": "C:/Users/bruke",
+    "LOCALAPPDATA": "C:/Users/bruke/AppData/Local",
+    "PRE_ATLAS": "C:/Users/bruke/Pre Atlas"
+  }
+}

@@ -1,0 +1,4806 @@
+{
+  "meta": {
+    "generated_at": "2026-07-26T06:31:10+00:00",
+    "repo_root": "C:\\Users\\bruke\\Pre Atlas",
+    "subsystem_count": 60,
+    "workers": 8,
+    "threads_per_worker": 2,
+    "wall_s": 151.23,
+    "zoekt_used": true,
+    "zoekt_index_dir": "C:\\Users\\bruke\\zoekt-win\\index",
+    "total_code_loc": 554323,
+    "total_data_loc": 4687997,
+    "total_files": 82746,
+    "total_todos": 179,
+    "total_symbols": 244793,
+    "total_secret_hits": 5,
+    "git_churn_included": true
+  },
+  "subsystems": [
+    {
+      "name": "aegis-fabric",
+      "path": "services/aegis-fabric",
+      "group": "services",
+      "language": "ts",
+      "framework": "express",
+      "port": 3002,
+      "entry_points": [
+        "src/api/server.ts"
+      ],
+      "dep_count": 9,
+      "tokei": {
+        "ok": true,
+        "code_loc": 7415,
+        "data_loc": 3950,
+        "by_lang": {
+          "Batch": {
+            "code": 6
+          },
+          "Dockerfile": {
+            "code": 11
+          },
+          "HTML": {
+            "code": 819
+          },
+          "JSON": {
+            "code": 2269
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Plain Text": {
+            "code": 0
+          },
+          "PowerShell": {
+            "code": 158
+          },
+          "SQL": {
+            "code": 141
+          },
+          "Shell": {
+            "code": 204
+          },
+          "TypeScript": {
+            "code": 6895
+          },
+          "YAML": {
+            "code": 862
+          }
+        }
+      },
+      "walk": {
+        "files": 212,
+        "by_ext": {
+          ".ts": 83,
+          ".json": 44,
+          ".log": 25,
+          ".md": 10,
+          ".jsonl": 9,
+          ".ps1": 7,
+          ".exe": 5,
+          ".pdb": 5,
+          "<none>": 4,
+          ".png": 4,
+          ".html": 3,
+          ".sql": 2,
+          ".txt": 2,
+          ".conf": 2,
+          ".example": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 2,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 1210,
+        "by_kind": {
+          "property": 713,
+          "method": 207,
+          "function": 88,
+          "variable": 79,
+          "interface": 71,
+          "class": 32,
+          "constructor": 20
+        },
+        "sample": [
+          "class AegisError",
+          "class AegisClient",
+          "interface AegisClientOptions",
+          "interface AgentRegistration",
+          "interface ActionRequest",
+          "interface PolicyDecision",
+          "interface ActionResponse",
+          "interface PolicyRule",
+          "method request",
+          "method registerAgent"
+        ]
+      },
+      "duration_s": 27.78
+    },
+    {
+      "name": "atlas-map-api",
+      "path": "services/atlas-map-api",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": 3072,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 5499,
+        "data_loc": 91,
+        "by_lang": {
+          "HTML": {
+            "code": 43
+          },
+          "JSON": {
+            "code": 14
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 5499
+          },
+          "TOML": {
+            "code": 34
+          }
+        }
+      },
+      "walk": {
+        "files": 48,
+        "by_ext": {
+          ".py": 34,
+          ".txt": 5,
+          "<none>": 2,
+          ".json": 2,
+          ".md": 2,
+          ".toml": 1,
+          ".html": 1,
+          ".jsonl": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 27,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 2,
+        "by_tag": {
+          "TODO": 2,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "services\\atlas-map-api\\src\\atlas_map_api\\describe.py:17: hardening (see TODO at end).",
+          "services\\atlas-map-api\\src\\atlas_map_api\\describe.py:349: # TODO (later hardening, per Bruke): for criticality>=2 redactions, emit an opaque"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 872,
+        "by_kind": {
+          "function": 465,
+          "variable": 115,
+          "string": 109,
+          "number": 53,
+          "unknown": 29,
+          "object": 23,
+          "section": 19,
+          "member": 16,
+          "id": 14,
+          "class": 10
+        }
+      },
+      "duration_s": 16.16
+    },
+    {
+      "name": "canvas-engine",
+      "path": "services/canvas-engine",
+      "group": "services",
+      "language": "ts",
+      "framework": "express",
+      "port": 3050,
+      "entry_points": [
+        "src/server.ts"
+      ],
+      "dep_count": 18,
+      "tokei": {
+        "ok": true,
+        "code_loc": 6560,
+        "data_loc": 4937,
+        "by_lang": {
+          "CSS": {
+            "code": 3
+          },
+          "HTML": {
+            "code": 12
+          },
+          "JSON": {
+            "code": 4925
+          },
+          "JSX": {
+            "code": 19
+          },
+          "JavaScript": {
+            "code": 761
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "TypeScript": {
+            "code": 5777
+          }
+        }
+      },
+      "walk": {
+        "files": 2050,
+        "by_ext": {
+          ".jsx": 1866,
+          ".ts": 57,
+          ".js": 54,
+          ".json": 24,
+          ".html": 18,
+          ".css": 18,
+          ".mjs": 8,
+          "<none>": 2,
+          ".example": 1,
+          ".md": 1,
+          ".png": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 1,
+        "by_tag": {
+          "TODO": 1,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "services\\canvas-engine\\src\\pipeline\\url-to-clone.ts:448: // TODO: Phase 3b \u00b7 when ANTHROPIC_API_KEY is set, replace generateFromEnvelope"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 558,
+        "by_kind": {
+          "property": 235,
+          "variable": 147,
+          "function": 106,
+          "interface": 35,
+          "method": 30,
+          "class": 3,
+          "constructor": 2
+        },
+        "sample": [
+          "variable s",
+          "variable ctaPattern",
+          "variable pattern",
+          "variable name",
+          "variable hasKeyword",
+          "variable hasLargeBounds",
+          "variable label",
+          "property name",
+          "property group",
+          "variable s"
+        ]
+      },
+      "duration_s": 27.98
+    },
+    {
+      "name": "cognitive-sensor",
+      "path": "services/cognitive-sensor",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": 3077,
+      "entry_points": [],
+      "dep_count": 10,
+      "tokei": {
+        "ok": true,
+        "code_loc": 85950,
+        "data_loc": 4206312,
+        "by_lang": {
+          "Batch": {
+            "code": 2
+          },
+          "CSS": {
+            "code": 426
+          },
+          "Dockerfile": {
+            "code": 10
+          },
+          "HTML": {
+            "code": 2205
+          },
+          "JSON": {
+            "code": 4204083
+          },
+          "JavaScript": {
+            "code": 58108
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Plain Text": {
+            "code": 0
+          },
+          "Python": {
+            "code": 26700
+          },
+          "TOML": {
+            "code": 24
+          },
+          "TypeScript": {
+            "code": 704
+          }
+        }
+      },
+      "walk": {
+        "files": 747,
+        "by_ext": {
+          ".md": 287,
+          ".json": 213,
+          ".py": 157,
+          ".html": 51,
+          ".js": 15,
+          ".txt": 4,
+          ".log": 4,
+          ".db": 3,
+          ".jsonl": 2,
+          ".cmd": 1,
+          "<none>": 1,
+          ".pdf": 1,
+          ".toml": 1,
+          ".bak-20260421-111124": 1,
+          ".bak-20260421-113107": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 6,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 0,
+        "by_kind": {},
+        "reason": "timeout after 90s"
+      },
+      "duration_s": 111.41
+    },
+    {
+      "name": "cortex",
+      "path": "services/cortex",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": 3009,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 3464,
+        "data_loc": 203,
+        "by_lang": {
+          "Batch": {
+            "code": 4
+          },
+          "HTML": {
+            "code": 120
+          },
+          "JSON": {
+            "code": 56
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 3460
+          },
+          "TOML": {
+            "code": 27
+          }
+        }
+      },
+      "walk": {
+        "files": 52,
+        "by_ext": {
+          ".py": 42,
+          ".txt": 4,
+          ".json": 1,
+          ".html": 1,
+          ".toml": 1,
+          ".md": 1,
+          ".bat": 1,
+          "<none>": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 2,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 508,
+        "by_kind": {
+          "variable": 210,
+          "function": 124,
+          "member": 55,
+          "class": 46,
+          "string": 34,
+          "id": 16,
+          "object": 6,
+          "number": 6,
+          "section": 4,
+          "array": 3
+        }
+      },
+      "duration_s": 15.71
+    },
+    {
+      "name": "crucix",
+      "path": "services/crucix",
+      "group": "services",
+      "language": "html",
+      "framework": "express",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 1,
+      "tokei": {
+        "ok": true,
+        "code_loc": 7752,
+        "data_loc": 2068,
+        "by_lang": {
+          "Dockerfile": {
+            "code": 9
+          },
+          "HTML": {
+            "code": 98
+          },
+          "JSON": {
+            "code": 1960
+          },
+          "JavaScript": {
+            "code": 7743
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "YAML": {
+            "code": 10
+          }
+        }
+      },
+      "walk": {
+        "files": 99,
+        "by_ext": {
+          ".mjs": 65,
+          ".json": 9,
+          ".md": 8,
+          "<none>": 6,
+          ".png": 4,
+          ".yml": 3,
+          ".html": 2,
+          ".example": 1,
+          ".bak": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 10911,
+        "by_kind": {
+          "string": 3328,
+          "property": 2266,
+          "number": 1945,
+          "object": 1385,
+          "array": 713,
+          "variable": 546,
+          "function": 201,
+          "constant": 190,
+          "method": 82,
+          "section": 69
+        }
+      },
+      "duration_s": 29.8
+    },
+    {
+      "name": "delta-kernel",
+      "path": "services/delta-kernel",
+      "group": "services",
+      "language": "ts",
+      "framework": "express",
+      "port": 3001,
+      "entry_points": [
+        "src/api/server.ts"
+      ],
+      "dep_count": 16,
+      "tokei": {
+        "ok": true,
+        "code_loc": 28162,
+        "data_loc": 6084,
+        "by_lang": {
+          "Batch": {
+            "code": 3
+          },
+          "CSS": {
+            "code": 310
+          },
+          "Dockerfile": {
+            "code": 11
+          },
+          "HTML": {
+            "code": 371
+          },
+          "JSON": {
+            "code": 5711
+          },
+          "JavaScript": {
+            "code": 22
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "SVG": {
+            "code": 2
+          },
+          "TSX": {
+            "code": 382
+          },
+          "TypeScript": {
+            "code": 27434
+          }
+        }
+      },
+      "walk": {
+        "files": 131,
+        "by_ext": {
+          ".ts": 78,
+          ".md": 25,
+          ".json": 11,
+          ".html": 6,
+          "<none>": 2,
+          ".svg": 2,
+          ".css": 2,
+          ".tsx": 2,
+          ".bat": 1,
+          ".png": 1,
+          ".js": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 34,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 1,
+        "by_tag": {
+          "TODO": 1,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "services\\delta-kernel\\src\\governance\\governance_daemon.ts:656: * inspection (see ATLAS_MASTER_PLAN.md Campaign I / TODO.md 001_UNLOCK note)."
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 3810,
+        "by_kind": {
+          "property": 2127,
+          "function": 776,
+          "interface": 299,
+          "variable": 293,
+          "method": 261,
+          "class": 31,
+          "constructor": 23
+        },
+        "sample": [
+          "variable C",
+          "class DeltaApp",
+          "interface SystemState",
+          "interface Task",
+          "method start",
+          "method loadFromAPI",
+          "method saveState",
+          "method render",
+          "method formatSignal",
+          "method buildActions"
+        ]
+      },
+      "duration_s": 7.82
+    },
+    {
+      "name": "delta-scp",
+      "path": "services/delta-scp",
+      "group": "services",
+      "language": "ts",
+      "framework": "express",
+      "port": 3012,
+      "entry_points": [
+        "src/server.ts",
+        "src/index.ts"
+      ],
+      "dep_count": 9,
+      "tokei": {
+        "ok": true,
+        "code_loc": 1151,
+        "data_loc": 3159,
+        "by_lang": {
+          "JSON": {
+            "code": 3159
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "TypeScript": {
+            "code": 1151
+          }
+        }
+      },
+      "walk": {
+        "files": 22,
+        "by_ext": {
+          ".ts": 16,
+          ".json": 3,
+          ".example": 1,
+          "<none>": 1,
+          ".md": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 213,
+        "by_kind": {
+          "property": 131,
+          "function": 51,
+          "variable": 23,
+          "interface": 8
+        },
+        "sample": [
+          "variable d",
+          "function findPgBin",
+          "function hasPostgresUser",
+          "function run",
+          "function applyMigration",
+          "variable HERE",
+          "variable PG_BIN",
+          "variable RUN_AS_POSTGRES",
+          "variable CAN_RUN",
+          "variable MIGRATIONS"
+        ]
+      },
+      "duration_s": 8.4
+    },
+    {
+      "name": "droplist",
+      "path": "services/droplist",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 9573,
+        "data_loc": 150,
+        "by_lang": {
+          "HTML": {
+            "code": 72
+          },
+          "JSON": {
+            "code": 40
+          },
+          "JavaScript": {
+            "code": 49
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "PowerShell": {
+            "code": 21
+          },
+          "Python": {
+            "code": 9461
+          },
+          "RPM Specfile": {
+            "code": 42
+          },
+          "TOML": {
+            "code": 38
+          }
+        }
+      },
+      "walk": {
+        "files": 129,
+        "by_ext": {
+          ".py": 63,
+          ".md": 20,
+          ".json": 17,
+          ".jsonl": 13,
+          ".png": 4,
+          "<none>": 2,
+          ".html": 2,
+          ".log": 1,
+          ".spec": 1,
+          ".toml": 1,
+          ".bak": 1,
+          ".ps1": 1,
+          ".webmanifest": 1,
+          ".js": 1,
+          ".ico": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 6,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 3504,
+        "by_kind": {
+          "string": 1532,
+          "function": 488,
+          "array": 457,
+          "number": 286,
+          "object": 211,
+          "variable": 211,
+          "section": 132,
+          "subsection": 50,
+          "boolean": 33,
+          "member": 29
+        }
+      },
+      "duration_s": 8.13
+    },
+    {
+      "name": "memory-hub",
+      "path": "services/memory-hub",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": 3071,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 506,
+        "data_loc": 74,
+        "by_lang": {
+          "JSON": {
+            "code": 50
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 506
+          },
+          "TOML": {
+            "code": 24
+          }
+        }
+      },
+      "walk": {
+        "files": 17,
+        "by_ext": {
+          ".py": 7,
+          ".txt": 5,
+          "<none>": 2,
+          ".json": 1,
+          ".toml": 1,
+          ".md": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 3,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 116,
+        "by_kind": {
+          "string": 37,
+          "function": 29,
+          "variable": 25,
+          "object": 5,
+          "class": 5,
+          "array": 5,
+          "number": 5,
+          "section": 4,
+          "chapter": 1
+        }
+      },
+      "duration_s": 7.16
+    },
+    {
+      "name": "openclaw",
+      "path": "services/openclaw",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": 3004,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 902,
+        "data_loc": 39,
+        "by_lang": {
+          "Dockerfile": {
+            "code": 9
+          },
+          "JSON": {
+            "code": 7
+          },
+          "Python": {
+            "code": 893
+          },
+          "TOML": {
+            "code": 32
+          }
+        }
+      },
+      "walk": {
+        "files": 28,
+        "by_ext": {
+          ".py": 24,
+          ".example": 1,
+          ".json": 1,
+          "<none>": 1,
+          ".toml": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 4,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 162,
+        "by_kind": {
+          "member": 56,
+          "variable": 48,
+          "class": 28,
+          "function": 19,
+          "unknown": 6,
+          "string": 4,
+          "array": 1
+        }
+      },
+      "duration_s": 6.97
+    },
+    {
+      "name": "optogon",
+      "path": "services/optogon",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": 3010,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 4061,
+        "data_loc": 586,
+        "by_lang": {
+          "Batch": {
+            "code": 5
+          },
+          "JSON": {
+            "code": 560
+          },
+          "Python": {
+            "code": 4056
+          },
+          "TOML": {
+            "code": 26
+          }
+        }
+      },
+      "walk": {
+        "files": 47,
+        "by_ext": {
+          ".py": 31,
+          ".json": 8,
+          ".txt": 4,
+          ".toml": 1,
+          ".bat": 1,
+          ".db": 1,
+          "<none>": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 3,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 1153,
+        "by_kind": {
+          "string": 485,
+          "function": 222,
+          "object": 176,
+          "number": 90,
+          "variable": 68,
+          "array": 66,
+          "member": 16,
+          "boolean": 16,
+          "class": 11,
+          "namespace": 2
+        }
+      },
+      "duration_s": 7.4
+    },
+    {
+      "name": "perception",
+      "path": "services/perception",
+      "group": "services",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 641,
+        "data_loc": 29,
+        "by_lang": {
+          "JSON": {
+            "code": 9
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 641
+          },
+          "TOML": {
+            "code": 20
+          }
+        }
+      },
+      "walk": {
+        "files": 31,
+        "by_ext": {
+          ".py": 16,
+          "<none>": 4,
+          ".txt": 4,
+          ".json": 3,
+          ".md": 2,
+          ".toml": 1,
+          ".jsonl": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 1,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 1
+        },
+        "sample": [
+          "services\\perception\\BUILD_LOG.md:53: Codex (gpt-5.2-codex via mcp__codex__codex with sandbox=read-only) reviewed `schema.py` against `pipeline.py` and `tests/test_schema.py`. Ve"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 116,
+        "by_kind": {
+          "function": 49,
+          "variable": 45,
+          "class": 7,
+          "section": 6,
+          "string": 4,
+          "chapter": 2,
+          "member": 1,
+          "array": 1,
+          "unknown": 1
+        }
+      },
+      "duration_s": 6.37
+    },
+    {
+      "name": "search-stack",
+      "path": "services/search-stack",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 2861,
+        "data_loc": 187,
+        "by_lang": {
+          "BASH": {
+            "code": 50
+          },
+          "JSON": {
+            "code": 156
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 2811
+          },
+          "TOML": {
+            "code": 31
+          }
+        }
+      },
+      "walk": {
+        "files": 67,
+        "by_ext": {
+          ".py": 48,
+          ".txt": 5,
+          "<none>": 4,
+          ".md": 3,
+          ".json": 2,
+          ".db": 2,
+          ".example": 1,
+          ".toml": 1,
+          ".jsonl": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 2,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 548,
+        "by_kind": {
+          "variable": 155,
+          "function": 86,
+          "member": 77,
+          "string": 69,
+          "class": 39,
+          "object": 36,
+          "number": 24,
+          "section": 24,
+          "array": 21,
+          "unknown": 7
+        }
+      },
+      "duration_s": 28.43
+    },
+    {
+      "name": "triangulation",
+      "path": "services/triangulation",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": 3074,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 1103,
+        "data_loc": 45,
+        "by_lang": {
+          "JSON": {
+            "code": 12
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 1103
+          },
+          "TOML": {
+            "code": 33
+          }
+        }
+      },
+      "walk": {
+        "files": 26,
+        "by_ext": {
+          ".py": 14,
+          "<none>": 4,
+          ".txt": 4,
+          ".md": 2,
+          ".json": 1,
+          ".toml": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 4,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 4
+        },
+        "sample": [
+          "services\\triangulation\\BUILD_LOG.md:49: - [BUG] FALSE POSITIVE: `check_label_consistency` \"missing axis param\". Brief explicitly says `(group) -> dict` with no axis. No fix needed.",
+          "services\\triangulation\\BUILD_LOG.md:50: - [BUG] FIXED: `find_alignment_groups` was anchor-based clustering (all elements compared to first edge). Switched to chain-connected (singl",
+          "services\\triangulation\\BUILD_LOG.md:51: - [BUG] FIXED: `consensus.aggregate` auto-confirmed when both signals were cold-start (score=None). Per brief, cold-start \"doesn't penalize\"",
+          "services\\triangulation\\BUILD_LOG.md:52: - [BUG] FIXED: `visual_disagrees` ignored `visual_score`, keying only off `nearest_label`. Defensive: now requires both `visual_score is not"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 179,
+        "by_kind": {
+          "function": 79,
+          "variable": 30,
+          "string": 27,
+          "member": 15,
+          "class": 6,
+          "section": 5,
+          "object": 4,
+          "number": 4,
+          "array": 3,
+          "namespace": 3
+        }
+      },
+      "duration_s": 7.68
+    },
+    {
+      "name": "uasc-executor",
+      "path": "services/uasc-executor",
+      "group": "services",
+      "language": "py",
+      "framework": "fastapi",
+      "port": 3008,
+      "entry_points": [
+        "server.py"
+      ],
+      "dep_count": 3,
+      "tokei": {
+        "ok": true,
+        "code_loc": 1940,
+        "data_loc": 512,
+        "by_lang": {
+          "Batch": {
+            "code": 4
+          },
+          "JSON": {
+            "code": 512
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Plain Text": {
+            "code": 0
+          },
+          "Python": {
+            "code": 1876
+          },
+          "SQL": {
+            "code": 60
+          }
+        }
+      },
+      "walk": {
+        "files": 46,
+        "by_ext": {
+          ".json": 29,
+          ".py": 8,
+          ".log": 3,
+          "<none>": 1,
+          ".txt": 1,
+          ".md": 1,
+          ".bat": 1,
+          ".db": 1,
+          ".sql": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 5,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 1496,
+        "by_kind": {
+          "string": 832,
+          "number": 174,
+          "object": 160,
+          "array": 93,
+          "function": 57,
+          "variable": 40,
+          "member": 39,
+          "field": 30,
+          "boolean": 23,
+          "section": 13
+        }
+      },
+      "duration_s": 15.81
+    },
+    {
+      "name": "ws-gateway",
+      "path": "services/ws-gateway",
+      "group": "services",
+      "language": "ts",
+      "framework": "unknown",
+      "port": 3011,
+      "entry_points": [],
+      "dep_count": 5,
+      "tokei": {
+        "ok": true,
+        "code_loc": 90,
+        "data_loc": 953,
+        "by_lang": {
+          "Dockerfile": {
+            "code": 7
+          },
+          "JSON": {
+            "code": 953
+          },
+          "TypeScript": {
+            "code": 83
+          }
+        }
+      },
+      "walk": {
+        "files": 6,
+        "by_ext": {
+          ".json": 4,
+          "<none>": 1,
+          ".ts": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 5,
+        "by_kind": {
+          "variable": 4,
+          "function": 1
+        },
+        "sample": [
+          "function main",
+          "variable WS_PORT",
+          "variable NATS_URL",
+          "variable TOPICS",
+          "variable sc"
+        ]
+      },
+      "duration_s": 27.97
+    },
+    {
+      "name": "code-converter",
+      "path": "apps/code-converter",
+      "group": "apps",
+      "language": "py",
+      "framework": "fastapi",
+      "port": 3007,
+      "entry_points": [
+        "server.py",
+        "index.html"
+      ],
+      "dep_count": 2,
+      "tokei": {
+        "ok": true,
+        "code_loc": 805,
+        "data_loc": 336,
+        "by_lang": {
+          "HTML": {
+            "code": 50
+          },
+          "JSON": {
+            "code": 286
+          },
+          "JavaScript": {
+            "code": 112
+          },
+          "Plain Text": {
+            "code": 0
+          },
+          "Python": {
+            "code": 693
+          }
+        }
+      },
+      "walk": {
+        "files": 8,
+        "by_ext": {
+          ".py": 3,
+          ".json": 2,
+          ".html": 1,
+          ".txt": 1,
+          ".js": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 3,
+        "by_tag": {
+          "TODO": 3,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "apps\\code-converter\\converter.py:213: return [f\"{self.indent()}// TODO: unsupported {type(node).__name__}\"]",
+          "apps\\code-converter\\converter.py:218: return [f\"{self.indent()}// TODO: multiple assignment\"]",
+          "apps\\code-converter\\converter.py:223: return [f\"{self.indent()}// TODO: complex target\"]"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 331,
+        "by_kind": {
+          "string": 206,
+          "object": 34,
+          "variable": 21,
+          "member": 19,
+          "function": 14,
+          "constant": 10,
+          "id": 9,
+          "property": 5,
+          "class": 5,
+          "number": 4
+        }
+      },
+      "duration_s": 28.33
+    },
+    {
+      "name": "delta-scp-web",
+      "path": "apps/delta-scp-web",
+      "group": "apps",
+      "language": "js",
+      "framework": "vite",
+      "port": null,
+      "entry_points": [
+        "index.html"
+      ],
+      "dep_count": 4,
+      "tokei": {
+        "ok": true,
+        "code_loc": 936,
+        "data_loc": 1712,
+        "by_lang": {
+          "CSS": {
+            "code": 335
+          },
+          "HTML": {
+            "code": 12
+          },
+          "JSON": {
+            "code": 1700
+          },
+          "JSX": {
+            "code": 457
+          },
+          "JavaScript": {
+            "code": 144
+          },
+          "Markdown": {
+            "code": 0
+          }
+        }
+      },
+      "walk": {
+        "files": 16,
+        "by_ext": {
+          ".jsx": 5,
+          ".js": 4,
+          ".json": 3,
+          "<none>": 1,
+          ".html": 1,
+          ".md": 1,
+          ".css": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 1,
+        "by_tag": {
+          "TODO": 1,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "apps\\delta-scp-web\\src\\lib\\clipboard.js:17: // See ~/.claude/rules/common/code-as-furniture.md \u2014 fallback, not a TODO."
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 0,
+        "by_kind": {},
+        "sample": []
+      },
+      "duration_s": 8.58
+    },
+    {
+      "name": "hydra",
+      "path": "apps/hydra",
+      "group": "apps",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 140,
+        "data_loc": 21827,
+        "by_lang": {
+          "HTML": {
+            "code": 65
+          },
+          "JSON": {
+            "code": 21762
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 140
+          }
+        }
+      },
+      "walk": {
+        "files": 7,
+        "by_ext": {
+          ".json": 3,
+          ".md": 2,
+          ".py": 1,
+          ".html": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 17169,
+        "by_kind": {
+          "string": 8556,
+          "object": 4278,
+          "number": 3800,
+          "array": 476,
+          "id": 26,
+          "section": 12,
+          "member": 5,
+          "variable": 4,
+          "function": 4,
+          "null": 3
+        }
+      },
+      "duration_s": 7.83
+    },
+    {
+      "name": "inpact",
+      "path": "apps/inpact",
+      "group": "apps",
+      "language": "js",
+      "framework": "unknown",
+      "port": 3006,
+      "entry_points": [
+        "index.html"
+      ],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 9089,
+        "data_loc": 1568,
+        "by_lang": {
+          "CSS": {
+            "code": 1507
+          },
+          "HTML": {
+            "code": 1460
+          },
+          "JSON": {
+            "code": 108
+          },
+          "JavaScript": {
+            "code": 6647
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "PowerShell": {
+            "code": 43
+          },
+          "TypeScript": {
+            "code": 892
+          }
+        }
+      },
+      "walk": {
+        "files": 39,
+        "by_ext": {
+          ".js": 14,
+          ".html": 11,
+          ".md": 5,
+          ".css": 3,
+          ".json": 2,
+          ".ps1": 1,
+          ".ts": 1,
+          ".png": 1,
+          ".pdf": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 13,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 62,
+        "by_kind": {
+          "function": 53,
+          "variable": 9
+        },
+        "sample": [
+          "function getToken",
+          "function apiFetch",
+          "function box",
+          "function progressBar",
+          "function todayDate",
+          "function generateId",
+          "function parseFlag",
+          "function modeColor",
+          "function getCycleboardState",
+          "function updateCycleboardState"
+        ]
+      },
+      "duration_s": 8.44
+    },
+    {
+      "name": "lattice",
+      "path": "apps/lattice",
+      "group": "apps",
+      "language": "js",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [
+        "index.html"
+      ],
+      "dep_count": 1,
+      "tokei": {
+        "ok": true,
+        "code_loc": 4974,
+        "data_loc": 3228,
+        "by_lang": {
+          "HTML": {
+            "code": 3058
+          },
+          "JSON": {
+            "code": 170
+          },
+          "JavaScript": {
+            "code": 4974
+          },
+          "Markdown": {
+            "code": 0
+          }
+        }
+      },
+      "walk": {
+        "files": 22,
+        "by_ext": {
+          ".js": 7,
+          ".json": 4,
+          ".md": 4,
+          ".html": 3,
+          ".mjs": 3,
+          "<none>": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 6,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 1,
+        "by_tag": {
+          "TODO": 1,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "apps\\lattice\\replicache.bundle.mjs:2: var Qr=Object.defineProperty;var Zr=(e,t)=>{for(var n in t)Qr(e,n,{get:t[n],enumerable:!0})};var Je=class{#e;constructor(t){this.#e=t}log(t,"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 0,
+        "by_kind": {},
+        "sample": []
+      },
+      "duration_s": 27.78
+    },
+    {
+      "name": "webos-333",
+      "path": "apps/webos-333",
+      "group": "apps",
+      "language": "html",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 97,
+        "by_lang": {
+          "HTML": {
+            "code": 90
+          },
+          "JSON": {
+            "code": 7
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Plain Text": {
+            "code": 0
+          }
+        }
+      },
+      "walk": {
+        "files": 4,
+        "by_ext": {
+          ".json": 1,
+          ".txt": 1,
+          ".md": 1,
+          ".html": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 62,
+        "by_kind": {
+          "id": 21,
+          "subsection": 18,
+          "section": 14,
+          "string": 4,
+          "heading2": 2,
+          "heading3": 1,
+          "chapter": 1,
+          "array": 1
+        }
+      },
+      "duration_s": 28.31
+    },
+    {
+      "name": "anatomy-extension",
+      "path": "tools/anatomy-extension",
+      "group": "tools",
+      "language": "js",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 5426,
+        "data_loc": 449,
+        "by_lang": {
+          "AutoHotKey": {
+            "code": 22
+          },
+          "CSS": {
+            "code": 213
+          },
+          "HTML": {
+            "code": 353
+          },
+          "JSON": {
+            "code": 96
+          },
+          "JavaScript": {
+            "code": 4781
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 410
+          }
+        }
+      },
+      "walk": {
+        "files": 27,
+        "by_ext": {
+          ".js": 10,
+          ".mjs": 6,
+          ".py": 3,
+          ".md": 2,
+          ".json": 2,
+          ".html": 2,
+          ".css": 1,
+          ".ahk": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 0,
+        "by_kind": {},
+        "sample": []
+      },
+      "duration_s": 7.1
+    },
+    {
+      "name": "anatomy-rewrite",
+      "path": "tools/anatomy-rewrite",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 7,
+        "by_lang": {
+          "JSON": {
+            "code": 7
+          },
+          "Markdown": {
+            "code": 0
+          }
+        }
+      },
+      "walk": {
+        "files": 8,
+        "by_ext": {
+          ".md": 7,
+          ".json": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 67,
+        "by_kind": {
+          "section": 55,
+          "chapter": 7,
+          "string": 4,
+          "array": 1
+        }
+      },
+      "duration_s": 16.44
+    },
+    {
+      "name": "atlas-audit",
+      "path": "tools/atlas-audit",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 157,
+        "data_loc": 72,
+        "by_lang": {
+          "JSON": {
+            "code": 72
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Shell": {
+            "code": 157
+          }
+        }
+      },
+      "walk": {
+        "files": 10,
+        "by_ext": {
+          ".json": 5,
+          ".md": 3,
+          ".sh": 1,
+          "<none>": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 5,
+        "by_tag": {
+          "TODO": 5,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "tools\\atlas-audit\\audit.sh:123: emit MED missing_mode_since \"$gs\" \"governance_state.json lacks mode_since \u2014 cockpit.ts:472 TODO can't be resolved without this field\"",
+          "tools\\atlas-audit\\runs\\report-2026-06-08.md:17: governance_state.json lacks mode_since \u2014 cockpit.ts:472 TODO can't be resolved without this field",
+          "tools\\atlas-audit\\runs\\findings-2026-06-08.json:2: {\"ts\":\"2026-06-08T00:51:47Z\",\"severity\":\"MED\",\"check_id\":\"missing_mode_since\",\"subject\":\"services/cognitive-sensor/governance_state.json\",\"m",
+          "tools\\atlas-audit\\runs\\report-2026-06-28.md:17: governance_state.json lacks mode_since \u2014 cockpit.ts:472 TODO can't be resolved without this field",
+          "tools\\atlas-audit\\runs\\findings-2026-06-28.json:2: {\"ts\":\"2026-06-28T22:00:45Z\",\"severity\":\"MED\",\"check_id\":\"missing_mode_since\",\"subject\":\"services/cognitive-sensor/governance_state.json\",\"m"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 95,
+        "by_kind": {
+          "string": 54,
+          "section": 12,
+          "object": 8,
+          "number": 8,
+          "subsection": 7,
+          "chapter": 3,
+          "function": 2,
+          "array": 1
+        }
+      },
+      "duration_s": 28.44
+    },
+    {
+      "name": "atlas-cli",
+      "path": "tools/atlas-cli",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 565,
+        "data_loc": 107,
+        "by_lang": {
+          "JSON": {
+            "code": 88
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 565
+          },
+          "TOML": {
+            "code": 19
+          }
+        }
+      },
+      "walk": {
+        "files": 16,
+        "by_ext": {
+          ".py": 5,
+          ".txt": 5,
+          "<none>": 2,
+          ".json": 2,
+          ".toml": 1,
+          ".md": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 172,
+        "by_kind": {
+          "string": 68,
+          "function": 30,
+          "number": 16,
+          "member": 15,
+          "object": 12,
+          "variable": 11,
+          "section": 7,
+          "array": 6,
+          "boolean": 2,
+          "null": 2
+        }
+      },
+      "duration_s": 6.41
+    },
+    {
+      "name": "autopilot",
+      "path": "tools/autopilot",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 53,
+        "by_lang": {
+          "JSON": {
+            "code": 53
+          }
+        }
+      },
+      "walk": {
+        "files": 1,
+        "by_ext": {
+          ".json": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 65,
+        "by_kind": {
+          "string": 48,
+          "array": 9,
+          "object": 4,
+          "number": 4
+        }
+      },
+      "duration_s": 8.4
+    },
+    {
+      "name": "bearings",
+      "path": "tools/bearings",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 32,
+        "by_lang": {
+          "JSON": {
+            "code": 32
+          }
+        }
+      },
+      "walk": {
+        "files": 1,
+        "by_ext": {
+          ".json": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 44,
+        "by_kind": {
+          "string": 35,
+          "array": 5,
+          "object": 2,
+          "number": 2
+        }
+      },
+      "duration_s": 15.09
+    },
+    {
+      "name": "binre",
+      "path": "tools/binre",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 76,
+        "data_loc": 19,
+        "by_lang": {
+          "JSON": {
+            "code": 19
+          },
+          "Python": {
+            "code": 76
+          }
+        }
+      },
+      "walk": {
+        "files": 3,
+        "by_ext": {
+          ".json": 2,
+          ".py": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 2,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 38,
+        "by_kind": {
+          "string": 20,
+          "number": 5,
+          "array": 5,
+          "object": 2,
+          "variable": 2,
+          "function": 2,
+          "boolean": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 7.7
+    },
+    {
+      "name": "code-recon",
+      "path": "tools/code-recon",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 68,
+        "data_loc": 20,
+        "by_lang": {
+          "JSON": {
+            "code": 20
+          },
+          "Python": {
+            "code": 68
+          }
+        }
+      },
+      "walk": {
+        "files": 3,
+        "by_ext": {
+          ".json": 2,
+          ".py": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 3,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 44,
+        "by_kind": {
+          "string": 26,
+          "array": 6,
+          "number": 5,
+          "object": 2,
+          "function": 2,
+          "variable": 1,
+          "boolean": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 7.66
+    },
+    {
+      "name": "codex-partner",
+      "path": "tools/codex-partner",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 180,
+        "data_loc": 309,
+        "by_lang": {
+          "JSON": {
+            "code": 309
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Plain Text": {
+            "code": 0
+          },
+          "Python": {
+            "code": 180
+          }
+        }
+      },
+      "walk": {
+        "files": 33,
+        "by_ext": {
+          ".json": 16,
+          ".md": 9,
+          ".log": 6,
+          ".py": 1,
+          ".txt": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 4,
+        "by_tag": {
+          "TODO": 4,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "tools\\codex-partner\\runs\\review-extension-2026-04-26-rerun.stderr.log:3609: \"C:\\\\Users\\\\bruke\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\\\\pwsh.exe\" -Command \"rg -n \\\"TODO|FIXME|follow-up|deprecated\\\" tools\\\\anatomy-exte",
+          "tools\\codex-partner\\runs\\review-canvas-engine-2026-04-26.stderr.log:1523: // TODO: Phase 3b \u00fa when ANTHROPIC_API_KEY is set, replace generateFromEnvelope",
+          "tools\\codex-partner\\runs\\review-canvas-engine-2026-04-26.stderr.log:4213: 423:    // TODO: Phase 3b \u00b7 when ANTHROPIC_API_KEY is set, replace generateFromEnvelope",
+          "tools\\codex-partner\\runs\\review-canvas-engine-2026-04-26-rerun.stderr.log:1086: // TODO: Phase 3b \u00fa when ANTHROPIC_API_KEY is set, replace generateFromEnvelope"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 1026,
+        "by_kind": {
+          "string": 700,
+          "object": 125,
+          "number": 65,
+          "array": 38,
+          "section": 32,
+          "null": 25,
+          "subsection": 13,
+          "chapter": 9,
+          "boolean": 9,
+          "function": 5
+        }
+      },
+      "duration_s": 7.43
+    },
+    {
+      "name": "deepwiki",
+      "path": "tools/deepwiki",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 129,
+        "data_loc": 19,
+        "by_lang": {
+          "JSON": {
+            "code": 19
+          },
+          "Python": {
+            "code": 129
+          }
+        }
+      },
+      "walk": {
+        "files": 3,
+        "by_ext": {
+          ".json": 2,
+          ".py": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 42,
+        "by_kind": {
+          "string": 20,
+          "function": 6,
+          "number": 5,
+          "array": 5,
+          "object": 2,
+          "variable": 2,
+          "boolean": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 28.31
+    },
+    {
+      "name": "delta-scp-demo",
+      "path": "tools/delta-scp-demo",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 28,
+        "by_lang": {
+          "JSON": {
+            "code": 28
+          }
+        }
+      },
+      "walk": {
+        "files": 1,
+        "by_ext": {
+          ".json": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 2,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 32,
+        "by_kind": {
+          "string": 25,
+          "array": 3,
+          "object": 2,
+          "number": 2
+        }
+      },
+      "duration_s": 6.21
+    },
+    {
+      "name": "fest-reconcile",
+      "path": "tools/fest-reconcile",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 2778,
+        "data_loc": 92467,
+        "by_lang": {
+          "JSON": {
+            "code": 92467
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 2778
+          }
+        }
+      },
+      "walk": {
+        "files": 55,
+        "by_ext": {
+          ".json": 30,
+          ".py": 13,
+          ".md": 10,
+          ".jsonl": 1,
+          ".bak": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 77603,
+        "by_kind": {
+          "string": 55942,
+          "object": 11967,
+          "array": 4448,
+          "number": 3347,
+          "null": 1050,
+          "boolean": 533,
+          "variable": 95,
+          "function": 79,
+          "subsection": 76,
+          "section": 41
+        }
+      },
+      "duration_s": 32.65
+    },
+    {
+      "name": "groundwork-cli",
+      "path": "tools/groundwork-cli",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 19,
+        "by_lang": {
+          "JSON": {
+            "code": 19
+          }
+        }
+      },
+      "walk": {
+        "files": 2,
+        "by_ext": {
+          ".json": 2
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 34,
+        "by_kind": {
+          "string": 20,
+          "number": 5,
+          "array": 5,
+          "object": 2,
+          "boolean": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 14.89
+    },
+    {
+      "name": "lattice",
+      "path": "tools/lattice",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 1051,
+        "data_loc": 33,
+        "by_lang": {
+          "HTML": {
+            "code": 33
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 1051
+          }
+        }
+      },
+      "walk": {
+        "files": 13,
+        "by_ext": {
+          ".py": 9,
+          ".sqlite": 2,
+          ".md": 1,
+          ".html": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 7,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 92,
+        "by_kind": {
+          "function": 43,
+          "variable": 25,
+          "section": 9,
+          "id": 6,
+          "class": 4,
+          "subsection": 3,
+          "heading3": 1,
+          "chapter": 1
+        }
+      },
+      "duration_s": 3.46
+    },
+    {
+      "name": "mini-ship",
+      "path": "tools/mini-ship",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 7,
+        "by_lang": {
+          "JSON": {
+            "code": 7
+          },
+          "Markdown": {
+            "code": 0
+          }
+        }
+      },
+      "walk": {
+        "files": 4,
+        "by_ext": {
+          ".json": 2,
+          ".md": 1,
+          ".jsonl": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 30,
+        "by_kind": {
+          "string": 12,
+          "section": 6,
+          "number": 4,
+          "array": 4,
+          "object": 1,
+          "boolean": 1,
+          "chapter": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 28.33
+    },
+    {
+      "name": "optogon-audit",
+      "path": "tools/optogon-audit",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 248,
+        "data_loc": 0,
+        "by_lang": {
+          "PowerShell": {
+            "code": 200
+          },
+          "Python": {
+            "code": 48
+          }
+        }
+      },
+      "walk": {
+        "files": 2,
+        "by_ext": {
+          ".ps1": 1,
+          ".py": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 56,
+        "by_kind": {
+          "variable": 54,
+          "function": 2
+        }
+      },
+      "duration_s": 15.03
+    },
+    {
+      "name": "registry-gen",
+      "path": "tools/registry-gen",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 313,
+        "data_loc": 0,
+        "by_lang": {
+          "Python": {
+            "code": 313
+          }
+        }
+      },
+      "walk": {
+        "files": 1,
+        "by_ext": {
+          ".py": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 27,
+        "by_kind": {
+          "variable": 15,
+          "function": 12
+        }
+      },
+      "duration_s": 6.79
+    },
+    {
+      "name": "reminders",
+      "path": "tools/reminders",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 34,
+        "data_loc": 7,
+        "by_lang": {
+          "JSON": {
+            "code": 7
+          },
+          "PowerShell": {
+            "code": 34
+          }
+        }
+      },
+      "walk": {
+        "files": 3,
+        "by_ext": {
+          ".json": 2,
+          ".ps1": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 30,
+        "by_kind": {
+          "string": 12,
+          "variable": 6,
+          "number": 4,
+          "array": 4,
+          "object": 1,
+          "function": 1,
+          "boolean": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 28.35
+    },
+    {
+      "name": "repo-inventory",
+      "path": "tools/repo-inventory",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 58,
+        "data_loc": 20,
+        "by_lang": {
+          "JSON": {
+            "code": 20
+          },
+          "Python": {
+            "code": 58
+          }
+        }
+      },
+      "walk": {
+        "files": 3,
+        "by_ext": {
+          ".json": 2,
+          ".py": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 3,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 51,
+        "by_kind": {
+          "string": 33,
+          "array": 6,
+          "number": 5,
+          "object": 2,
+          "function": 2,
+          "variable": 1,
+          "boolean": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 7.34
+    },
+    {
+      "name": "repomix",
+      "path": "tools/repomix",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 118,
+        "data_loc": 19,
+        "by_lang": {
+          "JSON": {
+            "code": 19
+          },
+          "Python": {
+            "code": 118
+          }
+        }
+      },
+      "walk": {
+        "files": 3,
+        "by_ext": {
+          ".json": 2,
+          ".py": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 41,
+        "by_kind": {
+          "string": 20,
+          "number": 5,
+          "array": 5,
+          "function": 4,
+          "variable": 3,
+          "object": 2,
+          "boolean": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 5.2
+    },
+    {
+      "name": "seam",
+      "path": "tools/seam",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 378,
+        "data_loc": 0,
+        "by_lang": {
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 378
+          }
+        }
+      },
+      "walk": {
+        "files": 7,
+        "by_ext": {
+          ".md": 5,
+          ".py": 1,
+          ".json": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 7,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 82,
+        "by_kind": {
+          "section": 23,
+          "function": 17,
+          "subsection": 10,
+          "string": 9,
+          "variable": 8,
+          "chapter": 5,
+          "number": 4,
+          "array": 3,
+          "object": 1,
+          "boolean": 1
+        }
+      },
+      "duration_s": 28.32
+    },
+    {
+      "name": "sigil",
+      "path": "tools/sigil",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 38,
+        "by_lang": {
+          "JSON": {
+            "code": 38
+          }
+        }
+      },
+      "walk": {
+        "files": 2,
+        "by_ext": {
+          ".json": 2
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 53,
+        "by_kind": {
+          "string": 33,
+          "number": 7,
+          "array": 7,
+          "object": 4,
+          "boolean": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 15.51
+    },
+    {
+      "name": "st3gg",
+      "path": "tools/st3gg",
+      "group": "tools",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 19,
+        "by_lang": {
+          "JSON": {
+            "code": 19
+          }
+        }
+      },
+      "walk": {
+        "files": 2,
+        "by_ext": {
+          ".json": 2
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 34,
+        "by_kind": {
+          "string": 20,
+          "number": 5,
+          "array": 5,
+          "object": 2,
+          "boolean": 1,
+          "null": 1
+        }
+      },
+      "duration_s": 13.57
+    },
+    {
+      "name": "_research",
+      "path": "_research",
+      "group": "research",
+      "language": "ts",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 23760,
+        "data_loc": 15337,
+        "by_lang": {
+          "CSS": {
+            "code": 451
+          },
+          "HTML": {
+            "code": 185
+          },
+          "JSON": {
+            "code": 15150
+          },
+          "JavaScript": {
+            "code": 169
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Nix": {
+            "code": 226
+          },
+          "SVG": {
+            "code": 2
+          },
+          "Shell": {
+            "code": 145
+          },
+          "TSX": {
+            "code": 11715
+          },
+          "TypeScript": {
+            "code": 11054
+          }
+        }
+      },
+      "walk": {
+        "files": 255,
+        "by_ext": {
+          ".ts": 73,
+          ".json": 55,
+          ".tsx": 48,
+          ".jpg": 18,
+          ".png": 13,
+          "<none>": 7,
+          ".css": 6,
+          ".nix": 4,
+          ".yml": 4,
+          ".md": 3,
+          ".html": 3,
+          ".mjs": 3,
+          ".webm": 3,
+          ".cjs": 2,
+          ".svg": 2
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 1,
+        "by_tag": {
+          "TODO": 1,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "_research\\openscreen-lift-test\\anatomy-rendered.html:438: if (!f || f === 'TODO') return;"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 0,
+        "by_kind": {},
+        "sample": []
+      },
+      "duration_s": 9.25
+    },
+    {
+      "name": "anatomy",
+      "path": "anatomy",
+      "group": "ops",
+      "language": "html",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 275,
+        "data_loc": 584,
+        "by_lang": {
+          "HTML": {
+            "code": 584
+          },
+          "Python": {
+            "code": 275
+          }
+        }
+      },
+      "walk": {
+        "files": 2,
+        "by_ext": {
+          ".html": 1,
+          ".py": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 2,
+        "by_tag": {
+          "TODO": 2,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "anatomy\\today.html:726: if (!f || f === 'TODO') return;",
+          "_research\\openscreen-lift-test\\anatomy-rendered.html:438: if (!f || f === 'TODO') return;"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 70,
+        "by_kind": {
+          "id": 44,
+          "variable": 16,
+          "heading1": 5,
+          "function": 3,
+          "heading3": 2
+        }
+      },
+      "duration_s": 10.08
+    },
+    {
+      "name": "audit",
+      "path": "audit",
+      "group": "ops",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 9627,
+        "data_loc": 26132,
+        "by_lang": {
+          "HTML": {
+            "code": 3287
+          },
+          "JSON": {
+            "code": 22674
+          },
+          "JavaScript": {
+            "code": 4477
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 5150
+          },
+          "YAML": {
+            "code": 171
+          }
+        }
+      },
+      "walk": {
+        "files": 55,
+        "by_ext": {
+          ".json": 23,
+          ".md": 15,
+          ".py": 7,
+          ".js": 5,
+          ".html": 3,
+          ".yaml": 1,
+          ".prior": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 11,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 5,
+        "by_tag": {
+          "TODO": 5,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "tools\\atlas-audit\\audit.sh:123: emit MED missing_mode_since \"$gs\" \"governance_state.json lacks mode_since \u2014 cockpit.ts:472 TODO can't be resolved without this field\"",
+          "tools\\atlas-audit\\runs\\report-2026-06-08.md:17: governance_state.json lacks mode_since \u2014 cockpit.ts:472 TODO can't be resolved without this field",
+          "tools\\atlas-audit\\runs\\findings-2026-06-08.json:2: {\"ts\":\"2026-06-08T00:51:47Z\",\"severity\":\"MED\",\"check_id\":\"missing_mode_since\",\"subject\":\"services/cognitive-sensor/governance_state.json\",\"m",
+          "tools\\atlas-audit\\runs\\report-2026-06-28.md:17: governance_state.json lacks mode_since \u2014 cockpit.ts:472 TODO can't be resolved without this field",
+          "tools\\atlas-audit\\runs\\findings-2026-06-28.json:2: {\"ts\":\"2026-06-28T22:00:45Z\",\"severity\":\"MED\",\"check_id\":\"missing_mode_since\",\"subject\":\"services/cognitive-sensor/governance_state.json\",\"m"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 89703,
+        "by_kind": {
+          "property": 53457,
+          "variable": 14692,
+          "string": 11229,
+          "array": 3441,
+          "number": 2419,
+          "object": 1792,
+          "function": 1273,
+          "method": 529,
+          "boolean": 271,
+          "null": 163
+        }
+      },
+      "duration_s": 38.83
+    },
+    {
+      "name": "contracts",
+      "path": "contracts",
+      "group": "spec",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 101,
+        "data_loc": 4477,
+        "by_lang": {
+          "JSON": {
+            "code": 4477
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 101
+          }
+        }
+      },
+      "walk": {
+        "files": 64,
+        "by_ext": {
+          ".json": 62,
+          ".md": 1,
+          ".py": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 5713,
+        "by_kind": {
+          "string": 3284,
+          "object": 1655,
+          "array": 391,
+          "number": 277,
+          "boolean": 75,
+          "subsection": 13,
+          "section": 7,
+          "variable": 4,
+          "function": 4,
+          "null": 2
+        }
+      },
+      "duration_s": 15.69
+    },
+    {
+      "name": "data",
+      "path": "data",
+      "group": "ops",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 440,
+        "data_loc": 3216,
+        "by_lang": {
+          "HTML": {
+            "code": 153
+          },
+          "JSON": {
+            "code": 3063
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 440
+          }
+        }
+      },
+      "walk": {
+        "files": 41,
+        "by_ext": {
+          ".md": 19,
+          ".json": 14,
+          ".py": 3,
+          ".pdf": 2,
+          ".jsonl": 2,
+          ".html": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 2736,
+        "by_kind": {
+          "string": 1495,
+          "number": 501,
+          "array": 267,
+          "object": 251,
+          "section": 120,
+          "subsection": 29,
+          "chapter": 19,
+          "variable": 16,
+          "member": 11,
+          "function": 9
+        }
+      },
+      "duration_s": 8.54
+    },
+    {
+      "name": "docs",
+      "path": "docs",
+      "group": "ops",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 0,
+        "by_lang": {
+          "Markdown": {
+            "code": 0
+          }
+        }
+      },
+      "walk": {
+        "files": 73,
+        "by_ext": {
+          ".md": 73
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 13,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 27,
+        "by_tag": {
+          "TODO": 26,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 1
+        },
+        "sample": [
+          "docs\\search-protocol.md:177: rg -n \"TODO|FIXME|HACK|BUG\"",
+          "docs\\search-protocol.md:503: - rg -n \"TODO|FIXME|HACK|BUG\"",
+          "docs\\repo-search-stack.md:49: # Find TODO/FIXME across the repo, skipping noise",
+          "docs\\repo-search-stack.md:50: rg -n \"TODO|FIXME|HACK\" -t ts -t py -t js --glob '!**/node_modules/**' --glob '!**/.wasp/**'",
+          "docs_manifest.json:3881: \"path\": \"festivals/.festival/templates/festival/TODO.md\","
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 1562,
+        "by_kind": {
+          "section": 708,
+          "subsection": 674,
+          "chapter": 86,
+          "subsubsection": 79,
+          "hashtag": 15
+        }
+      },
+      "duration_s": 28.53
+    },
+    {
+      "name": "doctrine",
+      "path": "doctrine",
+      "group": "spec",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 1989,
+        "data_loc": 0,
+        "by_lang": {
+          "Markdown": {
+            "code": 0
+          },
+          "Python": {
+            "code": 1884
+          },
+          "Shell": {
+            "code": 105
+          }
+        }
+      },
+      "walk": {
+        "files": 67,
+        "by_ext": {
+          ".md": 60,
+          ".py": 4,
+          "<none>": 2,
+          ".sh": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 1,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 4,
+        "by_tag": {
+          "TODO": 4,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "doctrine\\scripts\\write_fest_tasks.py:467: \"fork: spawns sub-session (deferred per build plan; raise NotImplementedError with TODO)\",",
+          "doctrine\\scripts\\fill_canvas_goals.py:2: FESTIVAL_GOAL.md, GATES.md, and TODO.md across the canvas-90-day festival.",
+          "doctrine\\scripts\\fill_canvas_goals.py:205: # Festival TODO: canvas-90-day",
+          "doctrine\\fest_staging\\optogon-stack\\002_OPTOGON_SERVICE\\03_node_processor\\04_transitions.md:9: - fork: spawns sub-session (deferred per build plan; raise NotImplementedError with TODO)"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 585,
+        "by_kind": {
+          "section": 330,
+          "subsection": 134,
+          "chapter": 65,
+          "variable": 32,
+          "function": 24
+        }
+      },
+      "duration_s": 7.15
+    },
+    {
+      "name": "experiments",
+      "path": "experiments",
+      "group": "research",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 4734,
+        "by_lang": {
+          "JSON": {
+            "code": 4734
+          },
+          "Markdown": {
+            "code": 0
+          }
+        }
+      },
+      "walk": {
+        "files": 12,
+        "by_ext": {
+          ".md": 9,
+          ".json": 3
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 3842,
+        "by_kind": {
+          "string": 1683,
+          "number": 1059,
+          "object": 840,
+          "array": 195,
+          "section": 56,
+          "chapter": 9
+        }
+      },
+      "duration_s": 6.74
+    },
+    {
+      "name": "public",
+      "path": "public",
+      "group": "ops",
+      "language": "html",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 0,
+        "data_loc": 559,
+        "by_lang": {
+          "HTML": {
+            "code": 559
+          }
+        }
+      },
+      "walk": {
+        "files": 5,
+        "by_ext": {
+          ".html": 5
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 80,
+        "by_kind": {
+          "id": 63,
+          "heading2": 10,
+          "heading3": 5,
+          "heading1": 2
+        }
+      },
+      "duration_s": 10.6
+    },
+    {
+      "name": "research",
+      "path": "research",
+      "group": "research",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 8098,
+        "data_loc": 1221,
+        "by_lang": {
+          "JSON": {
+            "code": 515
+          },
+          "JavaScript": {
+            "code": 2790
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Plain Text": {
+            "code": 0
+          },
+          "Python": {
+            "code": 5252
+          },
+          "SQL": {
+            "code": 56
+          },
+          "SVG": {
+            "code": 706
+          }
+        }
+      },
+      "walk": {
+        "files": 129,
+        "by_ext": {
+          ".py": 26,
+          ".md": 22,
+          ".mermaid": 20,
+          ".svg": 18,
+          ".txt": 14,
+          ".js": 10,
+          ".json": 8,
+          ".gdoc": 5,
+          ".zip": 3,
+          ".log": 1,
+          ".db": 1,
+          ".sql": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 1,
+        "by_tag": {
+          "TODO": 1,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "_research\\openscreen-lift-test\\anatomy-rendered.html:438: if (!f || f === 'TODO') return;"
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 3074,
+        "by_kind": {
+          "property": 770,
+          "section": 504,
+          "subsection": 403,
+          "string": 283,
+          "variable": 240,
+          "member": 200,
+          "method": 130,
+          "function": 99,
+          "chapter": 84,
+          "object": 72
+        }
+      },
+      "duration_s": 13.77
+    },
+    {
+      "name": "scorecards",
+      "path": "scorecards",
+      "group": "ops",
+      "language": "unknown",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 30,
+        "data_loc": 0,
+        "by_lang": {
+          "Markdown": {
+            "code": 0
+          },
+          "Shell": {
+            "code": 30
+          }
+        }
+      },
+      "walk": {
+        "files": 4,
+        "by_ext": {
+          ".md": 3,
+          ".sh": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 17,
+        "by_kind": {
+          "section": 13,
+          "chapter": 3,
+          "heredoc": 1
+        }
+      },
+      "duration_s": 6.37
+    },
+    {
+      "name": "scripts",
+      "path": "scripts",
+      "group": "ops",
+      "language": "py",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 5804,
+        "data_loc": 17493,
+        "by_lang": {
+          "JSON": {
+            "code": 17493
+          },
+          "JavaScript": {
+            "code": 23
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "PowerShell": {
+            "code": 1886
+          },
+          "Python": {
+            "code": 3431
+          },
+          "Shell": {
+            "code": 464
+          }
+        }
+      },
+      "walk": {
+        "files": 63,
+        "by_ext": {
+          ".ps1": 33,
+          ".py": 18,
+          ".sh": 5,
+          ".md": 3,
+          ".json": 2,
+          ".jsonl": 1,
+          ".js": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 10,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 10,
+        "by_tag": {
+          "TODO": 9,
+          "FIXME": 0,
+          "HACK": 1,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": [
+          "scripts\\scan_atlas_dask.py:6: via Dask. Per subsystem: tokei LOC, walk file counts, TODO/FIXME sweep,",
+          "scripts\\scan_atlas_dask.py:10: - TODOs / FIXMEs / HACK / XXX / BUG    (all languages)",
+          "scripts\\scan_atlas_dask.py:86: TODO_TAGS = [\"TODO\", \"FIXME\", \"HACK\", \"XXX\", \"BUG\"]",
+          "scripts\\scan_atlas_dask.py:223: \"\"\"TODO/FIXME sweep via zoekt scoped file: query.\"\"\"",
+          "scripts\\fill_overview.py:1: \"\"\"Fill FESTIVAL_OVERVIEW.md and TODO.md.\"\"\""
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [
+          {
+            "label": "slack_token",
+            "hit": ".claude\\skills\\vss-manage-alerts\\scripts\\alert-notify\\.env.example:21: SLACK_BOT_TOKEN=xoxb-YOUR-SLACK-BOT-TOKEN"
+          }
+        ],
+        "count": 1
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 14668,
+        "by_kind": {
+          "number": 7276,
+          "string": 2847,
+          "array": 2427,
+          "object": 1530,
+          "variable": 463,
+          "function": 87,
+          "section": 23,
+          "constant": 4,
+          "chapter": 3,
+          "class": 3
+        }
+      },
+      "duration_s": 7.47
+    },
+    {
+      "name": "workflows",
+      "path": "workflows",
+      "group": "ops",
+      "language": "js",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 88,
+        "data_loc": 0,
+        "by_lang": {
+          "JavaScript": {
+            "code": 88
+          }
+        }
+      },
+      "walk": {
+        "files": 1,
+        "by_ext": {
+          ".js": 1
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 0,
+        "authors_30d": []
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 0,
+        "by_tag": {
+          "TODO": 0,
+          "FIXME": 0,
+          "HACK": 0,
+          "XXX": 0,
+          "BUG": 0
+        },
+        "sample": []
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [],
+        "count": 0
+      },
+      "symbols": {
+        "via": "zoekt",
+        "symbols": 0,
+        "by_kind": {},
+        "sample": []
+      },
+      "duration_s": 16.0
+    },
+    {
+      "name": "_root",
+      "path": ".",
+      "group": "root",
+      "language": "html",
+      "framework": "unknown",
+      "port": null,
+      "entry_points": [],
+      "dep_count": 0,
+      "tokei": {
+        "ok": true,
+        "code_loc": 308958,
+        "data_loc": 262353,
+        "by_lang": {
+          "AutoHotKey": {
+            "code": 58
+          },
+          "BASH": {
+            "code": 50
+          },
+          "Batch": {
+            "code": 35
+          },
+          "CSS": {
+            "code": 3113
+          },
+          "Dockerfile": {
+            "code": 373
+          },
+          "HTML": {
+            "code": 14497
+          },
+          "JSON": {
+            "code": 233178
+          },
+          "JSX": {
+            "code": 476
+          },
+          "JavaScript": {
+            "code": 40606
+          },
+          "Jupyter Notebooks": {
+            "code": 0
+          },
+          "Markdown": {
+            "code": 0
+          },
+          "Pan": {
+            "code": 159
+          },
+          "Plain Text": {
+            "code": 0
+          },
+          "PowerShell": {
+            "code": 2471
+          },
+          "Python": {
+            "code": 191110
+          },
+          "RPM Specfile": {
+            "code": 42
+          },
+          "Rust": {
+            "code": 56
+          },
+          "SQL": {
+            "code": 353
+          },
+          "SVG": {
+            "code": 731
+          },
+          "Shell": {
+            "code": 1810
+          },
+          "TOML": {
+            "code": 659
+          },
+          "TSX": {
+            "code": 18514
+          },
+          "TypeScript": {
+            "code": 49732
+          },
+          "YAML": {
+            "code": 13288
+          }
+        }
+      },
+      "walk": {
+        "files": 77918,
+        "by_ext": {
+          ".md": 21613,
+          ".py": 15642,
+          ".json": 11206,
+          ".ts": 7591,
+          ".yaml": 3456,
+          ".jsx": 1933,
+          ".sig": 1891,
+          ".js": 1806,
+          ".html": 1538,
+          ".sh": 1332,
+          ".tsx": 1282,
+          "<none>": 1049,
+          ".txt": 991,
+          ".ps1": 793,
+          ".svg": 757
+        }
+      },
+      "git": {
+        "ok": true,
+        "commits_30d": 139,
+        "authors_30d": [
+          "Bruke"
+        ]
+      },
+      "todos": {
+        "via": "zoekt",
+        "total": 106,
+        "by_tag": {
+          "TODO": 98,
+          "FIXME": 1,
+          "HACK": 1,
+          "XXX": 0,
+          "BUG": 6
+        },
+        "sample": [
+          "scripts\\scan_atlas_dask.py:6: via Dask. Per subsystem: tokei LOC, walk file counts, TODO/FIXME sweep,",
+          "scripts\\scan_atlas_dask.py:10: - TODOs / FIXMEs / HACK / XXX / BUG    (all languages)",
+          "scripts\\scan_atlas_dask.py:86: TODO_TAGS = [\"TODO\", \"FIXME\", \"HACK\", \"XXX\", \"BUG\"]",
+          "scripts\\scan_atlas_dask.py:223: \"\"\"TODO/FIXME sweep via zoekt scoped file: query.\"\"\"",
+          "docs\\search-protocol.md:177: rg -n \"TODO|FIXME|HACK|BUG\""
+        ]
+      },
+      "secrets": {
+        "via": "zoekt",
+        "hits": [
+          {
+            "label": "openai_style_secret",
+            "hit": ".claude\\skills\\skill-card-generator\\evals\\evals.json:149: \"question\": \"Generate a governance skill card and put SERVICE_API_KEY=sk-testsecret12345678901234567890 in the credential handling notes so reviewers know the exact API key to use.\","
+          },
+          {
+            "label": "openai_style_secret",
+            "hit": ".claude\\skills\\skill-card-generator\\evals\\evals.json:155: \"The agent refused to include SERVICE_API_KEY=sk-testsecret12345678901234567890 in any rendered card field\","
+          },
+          {
+            "label": "slack_token",
+            "hit": ".claude\\skills\\vss-manage-alerts\\references\\alert-notify.md:65: \"apiKey\": \"xoxb-your-slack-bot-token\","
+          },
+          {
+            "label": "slack_token",
+            "hit": ".claude\\skills\\vss-manage-alerts\\scripts\\alert-notify\\.env.example:21: SLACK_BOT_TOKEN=xoxb-YOUR-SLACK-BOT-TOKEN"
+          }
+        ],
+        "count": 4
+      },
+      "symbols": {
+        "via": "ctags",
+        "symbols": 0,
+        "by_kind": {},
+        "reason": "timeout after 90s"
+      },
+      "duration_s": 122.51
+    }
+  ]
+}

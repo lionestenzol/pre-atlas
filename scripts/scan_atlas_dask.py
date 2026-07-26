@@ -87,6 +87,15 @@ TODO_TAGS = ["TODO", "FIXME", "HACK", "XXX", "BUG"]
 
 ZOEKT_TS_LANGS = {"ts", "tsx", "js", "jsx", "typescript", "javascript"}
 
+# Languages tokei reports but that are data/prose, not source code.
+# Kept in by_lang for visibility; excluded from code_loc so a single fixture
+# dump can't dominate the totals.
+TOKEI_DATA_LANGS = {
+    "JSON", "JSON5", "YAML", "TOML", "XML", "SVG", "CSV", "TSV",
+    "Markdown", "reStructuredText", "AsciiDoc", "Org", "Plain Text",
+    "Jupyter Notebooks", "HTML",
+}
+
 
 # ------------- infra helpers -------------
 
@@ -187,7 +196,10 @@ def load_subsystems(only: set[str] | None) -> list[dict[str, Any]]:
 def rung_tokei(abs_path: Path) -> dict[str, Any]:
     if not abs_path.exists():
         return {"ok": False, "reason": "missing path"}
-    code, out, err = run(["tokei", "--output", "json", str(abs_path)], REPO_ROOT, 60)
+    excludes = sum((["--exclude", d] for d in SKIP_DIRS), [])
+    code, out, err = run(
+        ["tokei", "--output", "json", *excludes, str(abs_path)], REPO_ROOT, 60
+    )
     if code != 0 or not out.strip():
         return {"ok": False, "reason": (err or "tokei failed")[:120], "code": code}
     try:
@@ -196,13 +208,22 @@ def rung_tokei(abs_path: Path) -> dict[str, Any]:
         return {"ok": False, "reason": "bad json"}
     langs: dict[str, dict[str, int]] = {}
     total_code = 0
+    total_data = 0
     for lang, v in data.items():
         if lang == "Total":
             continue
         c = int(v.get("code", 0))
         langs[lang] = {"code": c}
-        total_code += c
-    return {"ok": True, "code_loc": total_code, "by_lang": langs}
+        if lang in TOKEI_DATA_LANGS:
+            total_data += c
+        else:
+            total_code += c
+    return {
+        "ok": True,
+        "code_loc": total_code,
+        "data_loc": total_data,
+        "by_lang": langs,
+    }
 
 
 def rung_walk(abs_path: Path) -> dict[str, Any]:
@@ -396,6 +417,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Total wall time: **{m['wall_s']}s** across **{m['workers']}** Dask workers")
     lines.append(f"- Zoekt path used: **{m['zoekt_used']}** (index: `{ZOEKT_INDEX_DIR}`)")
     lines.append(f"- Total code LOC (tokei): **{m['total_code_loc']:,}**")
+    lines.append(f"- Total data LOC (JSON/YAML/XML/MD/HTML, excluded from code): **{m.get('total_data_loc', 0):,}**")
     lines.append(f"- Total files (walk): **{m['total_files']:,}**")
     lines.append(f"- Total TODOs/FIXMEs: **{m['total_todos']:,}**")
     lines.append(f"- Total symbols: **{m['total_symbols']:,}** (zoekt for TS/JS, ctags for the rest)")
@@ -479,6 +501,7 @@ def main() -> int:
     wall = round(time.time() - t0, 2)
 
     total_loc = sum((r.get("tokei", {}).get("code_loc") or 0) for r in results)
+    total_data_loc = sum((r.get("tokei", {}).get("data_loc") or 0) for r in results)
     total_files = sum((r.get("walk", {}).get("files") or 0) for r in results)
     total_todos = sum((r.get("todos", {}).get("total") or 0) for r in results)
     total_syms = sum((r.get("symbols", {}).get("symbols") or 0) for r in results)
@@ -497,7 +520,8 @@ def main() -> int:
             "workers": args.workers, "threads_per_worker": args.threads_per_worker,
             "wall_s": wall, "zoekt_used": use_zoekt,
             "zoekt_index_dir": str(ZOEKT_INDEX_DIR) if use_zoekt else None,
-            "total_code_loc": total_loc, "total_files": total_files,
+            "total_code_loc": total_loc, "total_data_loc": total_data_loc,
+            "total_files": total_files,
             "total_todos": total_todos, "total_symbols": total_syms,
             "total_secret_hits": total_secs, "git_churn_included": not args.no_git,
         },

@@ -12,6 +12,7 @@ import asyncio
 import json
 import re
 import subprocess
+import time
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,14 @@ import httpx
 from . import launcher
 
 DELTA_KERNEL = "http://127.0.0.1:3001"
+
+# /status runs two ~3s PowerShell subprocess calls plus a delta-kernel probe.
+# Mission Control polls /status every 2s — without a cache each poll respawns
+# them and requests stack. TTL is short so live changes still surface within
+# one poll cycle.
+_STATUS_TTL_S = 2.0
+_status_cache: dict[str, Any] = {"at": 0.0, "value": None}
+_status_lock = asyncio.Lock()
 _PS_TASK_FILTER = (
     "$_.TaskName -match '^(Atlas|PreAtlas)' -or $_.TaskName -eq 'Optogon Audit'"
 )
@@ -122,16 +131,32 @@ def collect_orphans(repo_root: Path) -> dict[str, Any]:
 
 
 async def unified_status(snap) -> dict[str, Any]:
-    """The single view: services + scheduled tasks + daemon heartbeat + orphans."""
-    services = collect_services(snap)
-    daemon_task = asyncio.create_task(collect_daemon())
-    sched = await asyncio.to_thread(collect_scheduled_tasks)
-    orphans = await asyncio.to_thread(collect_orphans, snap.repo_root)
-    daemon = await daemon_task
-    return {
-        "services": services,
-        "services_up": sum(1 for s in services if s["up"]),
-        "scheduled_tasks": sched,
-        "daemon": daemon,
-        "orphans": orphans,
-    }
+    """The single view: services + scheduled tasks + daemon heartbeat + orphans.
+
+    Fan-out is concurrent (the two PowerShell probes each take ~3s serially)
+    and cached for _STATUS_TTL_S so Mission Control's 2s poll doesn't stack
+    subprocess spawns.
+    """
+    now = time.monotonic()
+    if _status_cache["value"] is not None and now - _status_cache["at"] < _STATUS_TTL_S:
+        return _status_cache["value"]
+    async with _status_lock:
+        now = time.monotonic()
+        if _status_cache["value"] is not None and now - _status_cache["at"] < _STATUS_TTL_S:
+            return _status_cache["value"]
+        services = collect_services(snap)
+        sched, orphans, daemon = await asyncio.gather(
+            asyncio.to_thread(collect_scheduled_tasks),
+            asyncio.to_thread(collect_orphans, snap.repo_root),
+            collect_daemon(),
+        )
+        value = {
+            "services": services,
+            "services_up": sum(1 for s in services if s["up"]),
+            "scheduled_tasks": sched,
+            "daemon": daemon,
+            "orphans": orphans,
+        }
+        _status_cache["value"] = value
+        _status_cache["at"] = time.monotonic()
+        return value

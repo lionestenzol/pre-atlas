@@ -16,11 +16,29 @@ import * as os from 'os';
 import * as crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
+// __filename/__dirname must survive three shapes: (1) tsx ESM from source, where
+// import.meta.url is a real file URL; (2) esbuild --format=cjs bundle, where
+// import.meta.url is rewritten to undefined at bundle time; (3) Node SEA embed,
+// where the CJS wrapper's __filename points inside the blob. The try/catch keeps
+// the CJS/SEA cases from throwing at load; the fallback is process.execPath
+// (the atlas.exe binary itself). See ~/.claude/rules/common/code-as-furniture.md.
+let __filename: string;
+try {
+  const _metaUrl = import.meta.url;
+  __filename = _metaUrl ? fileURLToPath(_metaUrl) : process.execPath;
+} catch {
+  __filename = process.execPath;
+}
 const __dirname = path.dirname(__filename);
 
 const API = 'http://localhost:3001';
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
+// REPO_ROOT resolution mirrors the three shapes above. ATLAS_REPO_ROOT env
+// wins for portable installs; otherwise probe up-4 from __dirname; otherwise
+// probe up-4 from the atlas.exe location (build/ -> repo root).
+const REPO_ROOT = process.env.ATLAS_REPO_ROOT
+  || (fs.existsSync(path.resolve(__dirname, '..', '..', '..', '..', 'services'))
+        ? path.resolve(__dirname, '..', '..', '..', '..')
+        : path.resolve(path.dirname(process.execPath), '..', '..', '..', '..'));
 const BRAIN_DIR = path.resolve(REPO_ROOT, 'services', 'cognitive-sensor', 'cycleboard', 'brain');
 const ATLAS_DIR = path.join(os.homedir(), '.atlas');
 
@@ -79,8 +97,22 @@ async function apiFetch(urlPath: string, options: RequestInit = {}): Promise<any
   const headers: Record<string, string> = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
   if (options.body) headers['Content-Type'] = 'application/json';
-  const res = await fetch(`${API}${urlPath}`, { ...options, headers });
-  return res.json();
+  try {
+    const res = await fetch(`${API}${urlPath}`, { ...options, headers });
+    return res.json();
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // Any network-layer failure against the local API is almost always "delta-kernel
+    // is not running." Surface a one-liner instead of a Node stack trace so atlas.exe
+    // is honest about the state of its dependencies. Exit 3 = door open, service down.
+    if (/ECONNREFUSED|fetch failed|ENOTFOUND|ETIMEDOUT/i.test(msg)) {
+      process.stderr.write(
+        `atlas: delta-kernel offline at ${API} (start with scripts/start_atlas.ps1)\n`
+      );
+      process.exit(3);
+    }
+    throw err;
+  }
 }
 
 // ── memory-hub (Campaign II: history search wired into daily surfaces) ──

@@ -17,6 +17,41 @@ from . import (atlas_signal, clock, dag_builder, dag_update, dispatcher, engine,
 
 _MAX_CYCLES = 16
 
+# ---------------------------------------------------------------------------
+# Executor classification (human vs. AI/coding).
+# The UI splits DAGs into two tabs so a physical/manual chore doesn't share the
+# same surface as a build-a-thing task. Classification is best-effort at create
+# time (keyword heuristic on goal + domain); the user can flip any DAG via
+# POST /api/dag/{id}/executor. Persisted as dag["executor"] ∈ {"human","ai"}.
+# ---------------------------------------------------------------------------
+_AI_KEYWORDS = frozenset({
+    "code", "coding", "build", "test", "tests", "debug", "refactor", "deploy",
+    "npm", "pip", "git", "pr", "api", "endpoint", "script", "cli", "repo",
+    "implement", "error", "bug", "fix", "lint", "type", "types", "compile",
+    "server", "database", "db", "sql", "migration", "query", "schema", "commit",
+    "merge", "branch", "diff", "regex", "docker", "container", "shell", "bash",
+    "powershell", "python", "typescript", "javascript", "wasp", "prisma",
+    "curl", "http", "json", "yaml", "env", "config", "package", "module",
+    "function", "class", "method", "loop", "audit", "wire", "ship",
+})
+_AI_DOMAINS = frozenset({"build_product"})
+
+
+def classify_executor(goal: str, domain: str = "") -> str:
+    """Return "ai" if the goal reads as a coding/AI task, else "human".
+
+    Two signals: (1) the DAG's domain — build_product means engineering. (2) A
+    tokenized keyword hit on the goal text. The heuristic is intentionally loose
+    (the flip button is one click), so we bias toward calling ambiguous work AI
+    only when it clearly names build/code territory."""
+    if (domain or "").lower() in _AI_DOMAINS:
+        return "ai"
+    text = (goal or "").lower()
+    tokens = {t.strip(".,;:!?()[]{}\"'") for t in text.split()}
+    if tokens & _AI_KEYWORDS:
+        return "ai"
+    return "human"
+
 
 def _maybe_emit_atlas_signal(dag: dict) -> None:
     """Emit a Signal.v1 to Atlas if DROPLIST_ATLAS_SIGNALS_URL is set.
@@ -97,6 +132,7 @@ def _enrich(dag: dict, packet) -> dict:
     dag["updated_at"] = clock.now_iso()
     project = "DropList" if "droplist" in packet.normalized_input.lower() else ""
     dag["project"] = project
+    dag["executor"] = classify_executor(dag.get("goal", ""), packet.domain)
 
     ent_refs = entities.resolve_from_packet(packet.to_dict())
     dag["entity_refs"] = ent_refs

@@ -112,6 +112,18 @@
   .seg{font-family:'Chakra Petch';font-weight:600;letter-spacing:.16em;font-size:10.5px;color:var(--faint);text-transform:uppercase;margin:20px 0 8px;display:flex;align-items:center;gap:10px;}
   .seg::after{content:"";flex:1;height:1px;background:var(--line);}
 
+  /* Executor tabs (Human / AI). See scrToday() — separates coding/AI work from
+     physical / non-technical tasks so each list stays legible on its own. */
+  .exec-tabs{display:flex;gap:8px;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:2px;}
+  .exec-tab{flex:1 1 0;background:transparent;color:var(--muted);border:0;border-bottom:2px solid transparent;padding:10px 6px 8px;font:600 12.5px/1 'Chakra Petch',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:color .15s, border-color .15s;}
+  .exec-tab:hover{color:var(--fg);}
+  .exec-tab.on{color:var(--fg);border-bottom-color:var(--signal);}
+  .exec-ct{font-family:system-ui,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0;color:var(--faint);border:1px solid var(--line2);border-radius:20px;padding:2px 7px;min-width:20px;text-align:center;}
+  .exec-tab.on .exec-ct{color:var(--signal);border-color:var(--signal);}
+  /* Per-row flip button (🤖/👤). Placed between title and status chip. */
+  .exec-flip{background:transparent;border:1px solid var(--line2);color:var(--faint);border-radius:8px;padding:3px 7px;font-size:14px;cursor:pointer;flex:0 0 auto;transition:color .15s, border-color .15s;line-height:1;}
+  .exec-flip:hover{color:var(--fg);border-color:var(--fg);}
+
   .sheet-bg{position:fixed;inset:0;background:rgba(4,6,5,.66);backdrop-filter:blur(3px);z-index:50;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s;}
   .sheet{width:100%;max-width:520px;background:var(--bg2);border:1px solid var(--line2);border-bottom:0;border-radius:20px 20px 0 0;max-height:88vh;overflow-y:auto;padding:8px 18px 26px;animation:up .26s cubic-bezier(.2,.8,.2,1);}
   @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
@@ -640,22 +652,49 @@ function scrDrop(){
   </div>`;
 }
 
+// Executor tab: 'human' | 'ai'. Persists across reloads. DAGs that already
+// have an executor use it verbatim; DAGs without one default to 'human' (the
+// server also backfills on read via classify_executor). Flip is per-DAG via
+// the 🤖/👤 button on each row (see data-act="flipExec").
+const EXEC_TAB_KEY = 'droplist:exectab:v1';
+function currentExecTab(){
+  try{ return localStorage.getItem(EXEC_TAB_KEY) || 'human'; }catch(e){ return 'human'; }
+}
+function setExecTab(v){
+  try{ localStorage.setItem(EXEC_TAB_KEY, v); }catch(e){}
+}
+function jobExecutor(j){ return (j && j.executor) || 'human'; }
+
 function scrToday(){
   const jobs = todaysJobs();
+  const tab = currentExecTab();
+  const humanCount = jobs.filter(j=>jobExecutor(j)==='human').length;
+  const aiCount = jobs.filter(j=>jobExecutor(j)==='ai').length;
+  const tabBar = `<div class="exec-tabs" role="tablist" aria-label="Task executor">
+    <button role="tab" aria-selected="${tab==='human'}" data-exectab="human" class="exec-tab ${tab==='human'?'on':''}"><span aria-hidden="true">&#128100;</span> Human <span class="exec-ct">${humanCount}</span></button>
+    <button role="tab" aria-selected="${tab==='ai'}" data-exectab="ai" class="exec-tab ${tab==='ai'?'on':''}"><span aria-hidden="true">&#129302;</span> AI / Code <span class="exec-ct">${aiCount}</span></button>
+  </div>`;
   if(!jobs.length){
-    return `<div class="scr"><div class="empty"><div class="big display">Empty queue.</div><div>Nothing dropped yet today.</div>
+    return `<div class="scr">${tabBar}<div class="empty"><div class="big display">Empty queue.</div><div>Nothing dropped yet today.</div>
       <div style="margin-top:22px"><button class="btn signal" data-nav="drop">Brain Drop &rarr;</button></div></div></div>`;
   }
+  const inTab = jobs.filter(j=>jobExecutor(j)===tab);
   const order = {active:0,waiting:1,stuck:2,carry:3,skipped:4,done:5};
-  const sorted = [...jobs].sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+  const sorted = [...inTab].sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
   const live = sorted.filter(j=>['active','waiting','stuck','carry'].includes(j.status));
   const closed = sorted.filter(j=>['done','skipped'].includes(j.status));
+  // Flip button: 🤖 shown on human rows (click sends to AI), 👤 shown on AI rows (click sends to human).
+  // Only server-backed DAG rows can flip — packets have no dag_id yet. stopPropagation via data-nostop wiring in bind().
+  const flipBtn = j => (j.serverBacked && j.dagId) ? `<button class="exec-flip" data-act="flipExec" data-id="${j.id}" data-to="${jobExecutor(j)==='human'?'ai':'human'}" aria-label="Move to ${jobExecutor(j)==='human'?'AI / Code':'Human'} tab" title="Move to ${jobExecutor(j)==='human'?'AI / Code':'Human'}">${jobExecutor(j)==='human'?'&#129302;':'&#128100;'}</button>` : '';
   const rowHTML = j=>`<div class="row ${j.status} ${j.status==='active'?'active':''}" data-act="opendetail" data-id="${j.id}" role="button" tabindex="0" aria-label="Open job ${esc(j.title)} (${j.status})">
-      <span class="ttl">${esc(j.title)}</span><span class="chip ${j.status}">${j.status}</span></div>`;
+      <span class="ttl">${esc(j.title)}</span>${flipBtn(j)}<span class="chip ${j.status}">${j.status}</span></div>`;
+  const emptyTab = !inTab.length ? `<div class="empty" style="padding:22px 0"><div>Nothing in the ${tab==='human'?'Human':'AI / Code'} tab yet.</div></div>` : '';
   return `<div class="scr">
-    <div class="kicker">Today's Queue</div>
+    ${tabBar}
+    <div class="kicker">${tab==='human'?'Human':'AI / Code'} queue</div>
     <div class="lead display">${live.length} live &middot; ${closed.length} closed</div>
     <div class="sub">One runs at a time. Tap a job to open it.</div>
+    ${emptyTab}
     <div class="list">${live.map(rowHTML).join('')}</div>
     ${closed.length?`<div class="seg">Closed</div><div class="list">${closed.map(rowHTML).join('')}</div>`:''}
   </div>`;
@@ -1007,7 +1046,12 @@ function bind(){
       else if(a==='dropReroute'){ dropReroute(); }
       else if(a==='minadd'){ minAdd(); }
       else if(a==='toworkshop'){ MODE='workshop'; saveMode(); view='now'; render(); }
+      else if(a==='flipExec'){ e.stopPropagation(); flipExecutor(b.dataset.id, b.dataset.to); }
     };
+  });
+  // Executor tab switch — persists across reloads (see EXEC_TAB_KEY).
+  document.querySelectorAll('[data-exectab]').forEach(t=>{
+    t.onclick = ()=>{ setExecTab(t.dataset.exectab); render(); };
   });
   { const ma=document.querySelector('#minadd'); if(ma) ma.onkeydown=(e)=>{ if(e.key==='Enter'){ e.preventDefault(); minAdd(); } }; }
   document.querySelectorAll('[data-lnlevel]').forEach(b=>b.onclick=()=>{
@@ -1027,6 +1071,29 @@ function addDrops(){
   lines.forEach(l=>S.jobs.push(newJob(l)));
   ensureActive(); LINE.raw=''; save(); view='today'; render();
   if(window.EngineClient && EngineClient.wired) EngineClient.dropMany(lines);  // real intake + re-hydrate
+}
+
+// Flip one DAG between Human and AI. Server holds truth (writes to disk under
+// data/dags/<id>.json); we mirror the change locally + re-hydrate to catch any
+// downstream reclassification. On failure the tab won't move — that's the tell.
+async function flipExecutor(jobId, toExec){
+  if(!jobId || !toExec) return;
+  const j = S.jobs.find(x=>x.id===jobId);
+  if(!j || !j.dagId){ return; }  // packets can't flip until they have a DAG
+  const prev = j.executor || 'human';
+  j.executor = toExec;             // optimistic local flip so the row leaves the current tab immediately
+  render();
+  try{
+    const r = await fetch('/api/dag/'+encodeURIComponent(j.dagId)+'/executor', {
+      method:'POST', headers:hdrs(true), body: JSON.stringify({executor: toExec})
+    });
+    if(!r.ok) throw new Error('flip '+r.status);
+    if(window.EngineClient && EngineClient.wired) EngineClient.hydrate();  // pull authoritative state
+  }catch(err){
+    j.executor = prev;              // rollback the optimistic flip
+    render();
+    console.log('[droplist] executor flip failed:', err && err.message || err);
+  }
 }
 
 function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -1702,7 +1769,11 @@ function lineSeed(){
         var dags = (await pair[0].json()).dags || [];
         var packets = pair[1].ok ? ((await pair[1].json()).packets || []) : [];
         var openDags = dags.filter(function(d){ return d.status!=='complete'; });
-        var dagJobs = await Promise.all(openDags.map(function(d){ return jobFromChecklist(d.dag_id, d.goal); }));
+        var dagJobs = await Promise.all(openDags.map(async function(d){
+          var job = await jobFromChecklist(d.dag_id, d.goal);
+          job.executor = d.executor || 'human';  // server classifies at create; fall back to human for pre-executor DAGs
+          return job;
+        }));
         var planned = {};
         dags.forEach(function(d){ if(d.source_drop) planned[d.source_drop]=true; });
         var pktJobs = packets.filter(function(p){
@@ -1711,7 +1782,8 @@ function lineSeed(){
         }).map(function(p){
           return { id:'pkt:'+(p.drop_id||p.id), dropId:(p.drop_id||p.id), serverBacked:true, pending:true,
                    title: p.next_action || p.normalized_input || p.title || '(captured)',
-                   why:'', doneMeans:'', nextMove:'', steps:[], status:'waiting' };
+                   why:'', doneMeans:'', nextMove:'', steps:[], status:'waiting',
+                   executor: 'human' };  // pre-plan packet has no DAG yet; classifier stamps at DAG creation
         });
         if(typeof S==='undefined' || !S) return false;
         var jobs = dagJobs.concat(pktJobs);   // DAG-backed jobs first -> they win the active slot
@@ -1773,8 +1845,82 @@ function lineSeed(){
   // window.DL_MODEL that the 5 AI call sites read. No model = AI buttons still
   // work as no-ops (they already try/catch to a manual fallback). ----
   var MODEL_KEY = 'droplist:model:v1';
+  var POS_KEY = 'droplist:picker:pos:v1';
   window.DL_MODEL = (function(){ try{ return localStorage.getItem(MODEL_KEY) || ''; }catch(e){ return ''; } })();
   var KEY_PROVIDERS = ['anthropic','openai','gemini','openrouter','ollama'];
+
+  // Draggable + edge-snapping widget positioning. Persists {edge,offset} across
+  // reloads so the picker stays where the user parked it. Vanilla JS — no dep;
+  // the surface is tiny enough that a library (interact.js, dnd-kit) would be
+  // more weight than the ~45 lines it takes to write.
+  function _loadPickerPos(){
+    try{ return JSON.parse(localStorage.getItem(POS_KEY) || 'null'); }catch(e){ return null; }
+  }
+  function _savePickerPos(p){
+    try{ localStorage.setItem(POS_KEY, JSON.stringify(p)); }catch(e){}
+  }
+  function _applyPickerEdge(wrap, pos){
+    var pad = 8;
+    var rect = wrap.getBoundingClientRect();
+    var vw = window.innerWidth, vh = window.innerHeight;
+    wrap.style.top = wrap.style.right = wrap.style.bottom = wrap.style.left = 'auto';
+    if(pos.edge === 'top'){
+      wrap.style.top = pad+'px';
+      wrap.style.left = Math.max(pad, Math.min(pos.offset, vw-rect.width-pad))+'px';
+    } else if(pos.edge === 'bottom'){
+      wrap.style.bottom = pad+'px';
+      wrap.style.left = Math.max(pad, Math.min(pos.offset, vw-rect.width-pad))+'px';
+    } else if(pos.edge === 'left'){
+      wrap.style.left = pad+'px';
+      wrap.style.top = Math.max(pad, Math.min(pos.offset, vh-rect.height-pad))+'px';
+    } else {
+      wrap.style.right = pad+'px';
+      wrap.style.top = Math.max(pad, Math.min(pos.offset, vh-rect.height-pad))+'px';
+    }
+  }
+  function _snapPickerEdge(wrap){
+    var r = wrap.getBoundingClientRect();
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var cx = r.left + r.width/2, cy = r.top + r.height/2;
+    var dists = { top: cy, bottom: vh - cy, left: cx, right: vw - cx };
+    var edge = 'right', min = Infinity;
+    for(var k in dists){ if(dists[k] < min){ min = dists[k]; edge = k; } }
+    var off = (edge==='top'||edge==='bottom') ? r.left : r.top;
+    return { edge: edge, offset: off };
+  }
+  function _wirePickerDrag(wrap, grip){
+    var dragging = false, sx=0, sy=0, ox=0, oy=0, pid=null;
+    grip.addEventListener('pointerdown', function(e){
+      dragging = true; pid = e.pointerId;
+      try{ grip.setPointerCapture(pid); }catch(_){}
+      var r = wrap.getBoundingClientRect();
+      sx = e.clientX; sy = e.clientY; ox = r.left; oy = r.top;
+      wrap.style.transition = 'none';
+      wrap.style.top = oy+'px'; wrap.style.left = ox+'px';
+      wrap.style.right = 'auto'; wrap.style.bottom = 'auto';
+      wrap.style.userSelect = 'none';
+      grip.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+    grip.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      wrap.style.left = (ox + e.clientX - sx)+'px';
+      wrap.style.top  = (oy + e.clientY - sy)+'px';
+    });
+    function end(e){
+      if(!dragging) return;
+      dragging = false;
+      try{ grip.releasePointerCapture(pid); }catch(_){}
+      grip.style.cursor = 'grab';
+      wrap.style.userSelect = '';
+      var pos = _snapPickerEdge(wrap);
+      wrap.style.transition = 'top .18s ease, left .18s ease, right .18s ease, bottom .18s ease';
+      _applyPickerEdge(wrap, pos);
+      _savePickerPos(pos);
+    }
+    grip.addEventListener('pointerup', end);
+    grip.addEventListener('pointercancel', end);
+  }
   async function bootModelPicker(){
     var models = [], def = null, configured = {};
     try{
@@ -1792,7 +1938,18 @@ function lineSeed(){
     var old = document.getElementById('dl-ai-ctrl'); if(old) old.remove();   // idempotent re-render
     var wrap = document.createElement('div');
     wrap.id = 'dl-ai-ctrl';
-    wrap.style.cssText = 'position:fixed;top:8px;right:10px;z-index:9999;font:12px/1.2 system-ui,sans-serif;display:flex;gap:6px;align-items:center;';
+    // NO hardcoded top/right — position is applied from saved pos (or default) below,
+    // and the widget can be dragged to any edge (see _wirePickerDrag / _snapPickerEdge).
+    wrap.style.cssText = 'position:fixed;z-index:9999;font:12px/1.2 system-ui,sans-serif;display:flex;gap:6px;align-items:center;background:transparent;';
+
+    // Drag grip — dragging by the select would clash with click-to-open, so give
+    // the picker its own hit target. cursor:grab telegraphs the affordance.
+    var grip = document.createElement('span');
+    grip.setAttribute('aria-label','Drag to reposition');
+    grip.title = 'Drag to reposition — snaps to the nearest edge';
+    grip.textContent = '⋮⋮';
+    grip.style.cssText = 'cursor:grab;color:#6b716d;background:#121614;border:1px solid #2a302c;border-radius:7px;padding:4px 6px;user-select:none;touch-action:none;font-size:14px;line-height:1;';
+    wrap.appendChild(grip);
 
     if(models.length){
       var sel = document.createElement('select');
@@ -1861,6 +2018,18 @@ function lineSeed(){
     };
 
     document.body.appendChild(wrap);
+
+    // Apply saved position (default: top-right, offset 8px from the top), wire
+    // drag on the grip, and re-clamp on window resize so it never slides off screen.
+    var savedPos = _loadPickerPos() || { edge: 'right', offset: 8 };
+    _applyPickerEdge(wrap, savedPos);
+    _wirePickerDrag(wrap, grip);
+    if(!wrap.__dlResizeBound){
+      wrap.__dlResizeBound = true;
+      window.addEventListener('resize', function(){
+        _applyPickerEdge(wrap, _loadPickerPos() || savedPos);
+      });
+    }
   }
   bootModelPicker();
 

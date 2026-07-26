@@ -89,9 +89,27 @@ def _maybe_start_daemon() -> None:
     _daemon_thread.start()
 
 
+def _write_token_file(token: str) -> None:
+    """Mirror the write token into the data dir so the local CLI can discover it.
+    Best-effort — repo_root's .atlas-write-token stays authoritative; this copy
+    just lets `droplist drop "..."` find the same secret without env vars."""
+    try:
+        storage.ensure_data_dir()
+        p = os.path.join(storage.DATA_DIR, "write_token.txt")
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(token)
+        try:
+            os.chmod(p, 0o600)
+        except OSError:
+            pass
+    except OSError:
+        pass
+
+
 @asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    auth.load_or_create_token()  # resolve/persist the shared write secret at startup
+    tok = auth.load_or_create_token()  # resolve/persist the shared write secret at startup
+    _write_token_file(tok)
     keys.load_into_env()  # apply any UI-saved provider keys (real env vars still win)
     _maybe_start_daemon()
     yield
@@ -425,8 +443,13 @@ def get_dag(dag_id: str) -> dict:
 
 @app.get("/api/dags")
 def list_dags(
-    limit: int = 50, domain: Optional[str] = None, status: Optional[str] = None
+    limit: int = 50, domain: Optional[str] = None, status: Optional[str] = None,
+    executor: Optional[str] = None,
 ) -> dict:
+    """List DAG summaries. ``executor`` filter values: ``human`` | ``ai``. DAGs
+    with no persisted ``executor`` field (older entries) are classified
+    on-the-fly so the UI tabs never lose historic work."""
+    from . import graph_engine
     pkts = _packets_by_drop()
     out = []
     for p in sorted(_dag_dir().glob("*.json")):
@@ -437,12 +460,18 @@ def list_dags(
             continue
         if status and d.get("status") != status:
             continue
+        exec_val = d.get("executor") or graph_engine.classify_executor(
+            d.get("goal", ""), d.get("domain", "")
+        )
+        if executor and exec_val != executor:
+            continue
         out.append({
             "dag_id": d["dag_id"],
             "goal": d.get("goal", ""),
             "domain": d.get("domain", ""),
             "type": d.get("type", ""),
             "status": d.get("status", ""),
+            "executor": exec_val,
             "node_count": len(d.get("nodes", [])),
             "source_drop": d.get("source_drop", ""),
             "created_at": pkts.get(d.get("source_drop"), {}).get(
@@ -450,6 +479,32 @@ def list_dags(
             ),
         })
     return {"dags": out[:limit]}
+
+
+@app.post(
+    "/api/dag/{dag_id}/executor",
+    dependencies=[Depends(auth.require_write_token)],
+)
+async def set_dag_executor(dag_id: str, request: Request) -> Response:
+    """Flip a DAG between human and AI. Body: ``{"executor":"human"|"ai"}``.
+    Write-token guarded; the field is a UI classifier, not a security surface,
+    but it persists to the file so an unauthenticated flip would rewrite state."""
+    body = await request.json()
+    val = (body.get("executor") or "").strip().lower()
+    if val not in ("human", "ai"):
+        return Response(
+            content=json.dumps({"error": "executor must be 'human' or 'ai'"}).encode(),
+            status_code=400, media_type="application/json",
+        )
+    d = storage.load_dag(dag_id)
+    if d is None:
+        return Response(
+            content=json.dumps({"error": f"dag {dag_id} not found"}).encode(),
+            status_code=404, media_type="application/json",
+        )
+    d["executor"] = val
+    storage.save_dag(d)
+    return {"ok": True, "dag_id": dag_id, "executor": val}
 
 
 @app.get("/api/packets")
@@ -472,6 +527,79 @@ def get_state() -> dict:
         "recurring": state.list_recurring(),
         "due_today": state.due_recurring(),
         "locked_refs": state.locked_refs(),
+    }
+
+
+@app.get("/api/summary")
+def llm_summary(open_only: bool = True, top: int = 10) -> dict:
+    """Single-call state snapshot — the front door for an LLM (or a CLI) that
+    wants to know what's happening right now. Read-only, no auth. Combines the
+    counts an LLM cares about (executor split, status split) with the top N
+    open items so a model can name specifics without hitting five endpoints.
+
+    Query params:
+      open_only=1  (default) — restrict the "top" list to non-complete DAGs
+      top=10       (default) — how many DAG summaries to include (max 50)
+    """
+    from . import graph_engine
+    top = max(1, min(int(top), 50))
+    pkts = _packets_by_drop()
+    dags: list[dict] = []
+    for p in sorted(_dag_dir().glob("*.json"), key=lambda pp: pp.stat().st_mtime, reverse=True):
+        d = storage.load_dag(p.stem)
+        if not d:
+            continue
+        exec_val = d.get("executor") or graph_engine.classify_executor(
+            d.get("goal", ""), d.get("domain", "")
+        )
+        nodes = d.get("nodes", [])
+        next_node = next((n for n in nodes if n.get("status") not in ("done", "skipped")), None)
+        dags.append({
+            "dag_id": d["dag_id"],
+            "goal": d.get("goal", ""),
+            "domain": d.get("domain", ""),
+            "status": d.get("status", ""),
+            "executor": exec_val,
+            "node_count": len(nodes),
+            "next_move": (next_node or {}).get("title", "") if next_node else "",
+            "created_at": pkts.get(d.get("source_drop"), {}).get(
+                "created_at", d.get("created_at", "")
+            ),
+        })
+    open_dags = [d for d in dags if d["status"] != "complete"]
+    counts = {
+        "total": len(dags),
+        "open": len(open_dags),
+        "complete": len(dags) - len(open_dags),
+        "by_executor": {
+            "human": sum(1 for d in dags if d["executor"] == "human"),
+            "ai": sum(1 for d in dags if d["executor"] == "ai"),
+        },
+        "by_status": {},
+    }
+    for d in dags:
+        counts["by_status"][d["status"]] = counts["by_status"].get(d["status"], 0) + 1
+    source = open_dags if open_only else dags
+    return {
+        "time": clock.now_iso(),
+        "counts": counts,
+        "top_dags": source[:top],
+        "ai": {
+            "available_models": llm.available_models(),
+            "default_model": llm.default_model(),
+            "keys_configured": keys.configured(),
+        },
+        "hints": {
+            "docs": "/docs",
+            "openapi": "/openapi.json",
+            "endpoints_of_interest": [
+                "GET /api/dags?executor=human|ai",
+                "GET /api/dag/{id}",
+                "POST /api/drop  {raw: '...'}",
+                "POST /api/dag/{id}/executor  {executor: 'human'|'ai'}",
+                "POST /api/ai/complete  {model, messages, ...}",
+            ],
+        },
     }
 
 
@@ -732,6 +860,20 @@ async def reopen_node(dag_id: str, node_id: str) -> dict:
     }
 
 
+def _write_port_file(port: int) -> None:
+    """Publish the live port to data/port.txt so the CLI can discover any
+    running instance without env vars or process scans. Best-effort — if the
+    write fails the server still boots; the CLI falls through to DROPLIST_PORT
+    and its default of 3073."""
+    try:
+        storage.ensure_data_dir()
+        p = os.path.join(storage.DATA_DIR, "port.txt")
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(str(port))
+    except OSError:
+        pass
+
+
 def run(port: int | None = None, host: str = "127.0.0.1") -> None:
     import uvicorn
     # Port 3073: 3071 is owned by memory-hub (.claude/launch.json). Two FastAPI
@@ -742,6 +884,7 @@ def run(port: int | None = None, host: str = "127.0.0.1") -> None:
     # See ~/.claude/rules/common/code-as-furniture.md — no broken code left in place.
     if port is None:
         port = int(os.environ.get("DROPLIST_PORT", "3073"))
+    _write_port_file(port)
     uvicorn.run(app, host=host, port=port)
 
 

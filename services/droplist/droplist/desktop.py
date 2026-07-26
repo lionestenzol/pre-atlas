@@ -16,10 +16,66 @@ Package to a single file (run from services/droplist):
 """
 from __future__ import annotations
 
+import os
+import shutil
 import socket
+import sys
 import threading
 import time
 import urllib.request
+from pathlib import Path
+
+
+def _stable_data_dir() -> Path:
+    """Per-user data location. Same path across every launch, so a double-click of the
+    exe from any folder — Desktop shortcut, dist/, wherever — always sees the same DAGs,
+    packets, keys, and llm_calls log. Windows: %LOCALAPPDATA%\\DropList\\data.
+    POSIX: $XDG_DATA_HOME/DropList/data (default ~/.local/share/DropList/data)."""
+    if os.name == "nt":
+        base = Path(os.environ.get("LOCALAPPDATA") or (Path.home() / "AppData" / "Local"))
+    else:
+        base = Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local" / "share"))
+    return base / "DropList" / "data"
+
+
+def _seed_from(src: Path, dst: Path) -> None:
+    """One-time migration: if the stable data dir is empty but a source dir has state,
+    copy it over. Idempotent — never overwrites an already-populated stable dir."""
+    if not src.is_dir():
+        return
+    if dst.exists() and any(dst.iterdir()):
+        return
+    dst.mkdir(parents=True, exist_ok=True)
+    for child in src.iterdir():
+        target = dst / child.name
+        try:
+            if child.is_dir():
+                shutil.copytree(child, target, dirs_exist_ok=True)
+            else:
+                shutil.copy2(child, target)
+        except OSError:
+            pass  # best-effort; the server will still boot on a partial copy
+
+
+def _prepare_data_dir() -> Path:
+    """Resolve, create, and seed the data dir; export DROPLIST_DATA so storage.py sees it.
+    Must run BEFORE ``from droplist import server`` — storage.DATA_DIR reads the env at import."""
+    if os.environ.get("DROPLIST_DATA"):
+        return Path(os.environ["DROPLIST_DATA"])
+    dst = _stable_data_dir()
+    dst.mkdir(parents=True, exist_ok=True)
+    # Candidate source dirs for the one-time seed: the packaged exe next to a legacy
+    # data/ folder, or a source checkout at ../services/droplist/data.
+    for candidate in (
+        Path(getattr(sys, "_MEIPASS", "")) / "data" if getattr(sys, "frozen", False) else None,
+        Path(os.getcwd()) / "data",
+        Path(__file__).resolve().parent.parent / "data",
+    ):
+        if candidate and candidate.is_dir():
+            _seed_from(candidate, dst)
+            break
+    os.environ["DROPLIST_DATA"] = str(dst)
+    return dst
 
 
 def _free_port() -> int:
@@ -47,6 +103,10 @@ def _wait_for_server(port: int, timeout: float = 15.0) -> bool:
 
 def main() -> None:
     import webview  # imported here so CLI users without the [desktop] extra still import the module
+
+    # Resolve + seed the per-user data dir BEFORE importing server (which imports
+    # storage, which snapshots DROPLIST_DATA into a module constant at import time).
+    _prepare_data_dir()
 
     # Absolute, NOT `from . import server`: as a PyInstaller --onefile entry script
     # this module runs as __main__ with no package parent, so a relative import

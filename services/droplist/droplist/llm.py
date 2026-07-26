@@ -12,7 +12,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
+import subprocess
 import time
+import urllib.error
+import urllib.request
 import uuid
 from typing import Any
 
@@ -48,13 +52,67 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "models": ["openrouter/auto", "deepseek/deepseek-chat"],
     },
     "ollama": {
-        # Local — no key. Only offered when OLLAMA_BASE_URL is set so we never
-        # advertise models against a daemon that isn't running.
+        # Local — no key. Auto-detected: if a daemon answers on localhost:11434 the
+        # provider lights up with whatever models are ACTUALLY pulled (queried via
+        # /api/tags), not a hardcoded list. OLLAMA_BASE_URL still overrides the host.
         "key_env": None,
         "base_env": "OLLAMA_BASE_URL",
-        "models": ["llama3", "qwen2.5", "mistral"],
+        "default_base": "http://localhost:11434",
+        "models": [],  # populated dynamically from /api/tags
+        "dynamic": "ollama",
+    },
+    "claude-cli": {
+        # Uses the local `claude` binary's existing Max-subscription auth. No API
+        # key, no per-token billing. Auto-detected: appears when `claude` is on
+        # PATH. Model ids: claude-cli/sonnet | claude-cli/opus | claude-cli/haiku.
+        "key_env": None,
+        "detect": "claude-cli",
+        "models": ["sonnet", "opus", "haiku"],
     },
 }
+
+
+# ---------------------------------------------------------------------------
+# Local-provider probes (Ollama + Claude CLI). Cached with a short TTL so
+# available_models() stays fast when the picker polls it.
+# ---------------------------------------------------------------------------
+_PROBE_TTL_S = 15.0
+_probe_cache: dict[str, tuple[float, Any]] = {}
+
+
+def _cached(key: str, ttl: float, fn):
+    now = time.time()
+    hit = _probe_cache.get(key)
+    if hit and (now - hit[0]) < ttl:
+        return hit[1]
+    val = fn()
+    _probe_cache[key] = (now, val)
+    return val
+
+
+def _ollama_base() -> str:
+    return os.environ.get("OLLAMA_BASE_URL") or PROVIDERS["ollama"]["default_base"]
+
+
+def _ollama_models() -> list[str]:
+    """Query the local Ollama daemon for actually-pulled models. Empty on any failure."""
+    def probe() -> list[str]:
+        base = _ollama_base().rstrip("/")
+        try:
+            req = urllib.request.Request(f"{base}/api/tags", headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=1.5) as resp:  # noqa: S310 — local http only
+                data = json.loads(resp.read().decode("utf-8"))
+        except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError):
+            return []
+        return [m.get("name") for m in data.get("models", []) if m.get("name")]
+    return _cached("ollama_models", _PROBE_TTL_S, probe)
+
+
+def _claude_cli_available() -> bool:
+    """True if the `claude` binary is on PATH. Doesn't verify login (that surfaces at call time)."""
+    def probe() -> bool:
+        return shutil.which("claude") is not None
+    return _cached("claude_cli_available", _PROBE_TTL_S, probe)
 
 
 def _model_id(provider: str, model: str) -> str:
@@ -66,17 +124,30 @@ def available_models() -> list[dict[str, str]]:
     """Providers the server can actually use right now (key present, or local).
 
     The picker is built from this, so a user can only choose a model the server
-    has credentials for — no silent 401s.
+    has credentials for — no silent 401s. Local providers are probed:
+    Ollama's models come from ``/api/tags`` on the running daemon; Claude CLI
+    lights up when the `claude` binary is on PATH.
     """
     out: list[dict[str, str]] = []
     for prov, cfg in PROVIDERS.items():
+        dynamic = cfg.get("dynamic")
+        detect = cfg.get("detect")
         key_env = cfg.get("key_env")
-        if key_env:
+        models: list[str] = list(cfg.get("models", []))
+        if dynamic == "ollama":
+            models = _ollama_models()
+            if not models:
+                continue  # daemon unreachable or nothing pulled
+        elif detect == "claude-cli":
+            if not _claude_cli_available():
+                continue
+        elif key_env:
             if not os.environ.get(key_env):
                 continue
-        elif not os.environ.get(cfg.get("base_env", "")):
-            continue  # local provider needs its base URL configured
-        for m in cfg["models"]:
+        elif cfg.get("base_env"):
+            if not os.environ.get(cfg["base_env"]):
+                continue  # non-ollama local provider needs its base URL
+        for m in models:
             out.append({"provider": prov, "model": m, "id": _model_id(prov, m)})
     return out
 
@@ -129,6 +200,77 @@ def _usage_cost(model: str, in_tok: int, out_tok: int) -> float:
     return (in_tok or 0) / 1e6 * rin + (out_tok or 0) / 1e6 * rout
 
 
+# ---------------------------------------------------------------------------
+# Claude CLI subprocess adapter. `claude -p` is non-interactive and uses the
+# user's already-authenticated Max session, so no API key changes hands and
+# spend is covered by the subscription. We flatten the message list into a
+# single prompt and shape the reply into the Anthropic content format the UI
+# already parses. Any non-zero exit surfaces as an exception the caller maps
+# to a 502. Timeout is generous because first-boot of the CLI can be slow.
+# ---------------------------------------------------------------------------
+_CLAUDE_CLI_TIMEOUT_S = 120.0
+
+
+def _flatten_messages(messages: list[dict[str, Any]], system: str | None) -> str:
+    """Turn the OpenAI-style message list into a single prompt string for `claude -p`."""
+    parts: list[str] = []
+    if system:
+        parts.append(f"[system]\n{system}\n")
+    for msg in messages:
+        role = str(msg.get("role", "user"))
+        content = msg.get("content", "")
+        if isinstance(content, list):
+            content = "".join(
+                (b.get("text", "") if isinstance(b, dict) else str(b)) for b in content
+            )
+        parts.append(f"[{role}]\n{content}\n")
+    return "\n".join(parts).strip()
+
+
+def _complete_claude_cli(
+    model: str,
+    messages: list[dict[str, Any]],
+    system: str | None,
+    max_tokens: int,  # noqa: ARG001 — CLI has no --max-tokens equivalent
+    purpose: str,
+) -> dict[str, Any]:
+    t0 = time.time()
+    binary = shutil.which("claude")
+    prompt = _flatten_messages(messages, system)
+    input_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16]
+    user_preview = json.dumps(messages)[:200]
+    if not binary:
+        log_call(purpose, model, input_hash, user_preview, "ERROR: claude binary not on PATH",
+                 int((time.time() - t0) * 1000), "error")
+        raise RuntimeError("claude binary not found on PATH")
+    # model tail (e.g. "claude-cli/sonnet" -> "sonnet"); claude accepts short aliases
+    tail = model.split("/", 1)[1] if "/" in model else model
+    cmd = [binary, "-p", "--model", tail, prompt]
+    try:
+        result = subprocess.run(  # noqa: S603 — cmd list, no shell
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=_CLAUDE_CLI_TIMEOUT_S,
+            check=False,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except subprocess.TimeoutExpired as e:
+        log_call(purpose, model, input_hash, user_preview, f"ERROR: timeout after {_CLAUDE_CLI_TIMEOUT_S}s",
+                 int((time.time() - t0) * 1000), "error")
+        raise RuntimeError(f"claude cli timed out after {_CLAUDE_CLI_TIMEOUT_S}s") from e
+    if result.returncode != 0:
+        err = (result.stderr or "").strip()[:400] or "non-zero exit"
+        log_call(purpose, model, input_hash, user_preview, f"ERROR: {err}",
+                 int((time.time() - t0) * 1000), "error")
+        raise RuntimeError(f"claude cli failed (exit {result.returncode}): {err}")
+    text = (result.stdout or "").strip()
+    log_call(purpose, model, input_hash, user_preview, text,
+             int((time.time() - t0) * 1000), "success", 0.0)
+    return {"content": [{"type": "text", "text": text}], "model": model, "estimated_cost": 0.0}
+
+
 def complete(
     model: str,
     messages: list[dict[str, Any]],
@@ -143,6 +285,12 @@ def complete(
     which provider actually answered. Every call is logged to llm_calls.jsonl with
     litellm's per-model cost. Raises on failure (the caller maps it to an HTTP code).
     """
+    # ---- claude-cli branch: uses the local `claude` binary's subscription auth.
+    # Bypasses litellm entirely; cost is $0 (covered by the Max plan). Latency is
+    # higher than an SDK call because a subprocess is spawned per completion.
+    if model.startswith("claude-cli/"):
+        return _complete_claude_cli(model, messages, system, max_tokens, purpose)
+
     import litellm
 
     litellm.drop_params = True  # silently drop kwargs a given provider doesn't support
@@ -153,9 +301,9 @@ def complete(
     msgs.extend(messages)
     kwargs: dict[str, Any] = {"model": model, "messages": msgs, "max_tokens": max_tokens}
     if model.startswith("ollama/"):
-        base = os.environ.get("OLLAMA_BASE_URL")
-        if base:
-            kwargs["api_base"] = base
+        # honor OLLAMA_BASE_URL if set, otherwise localhost:11434 (matches the
+        # auto-detect in available_models so the picker and the call agree)
+        kwargs["api_base"] = _ollama_base()
     input_hash = hashlib.sha256(json.dumps(msgs, sort_keys=True).encode()).hexdigest()[:16]
     user_preview = json.dumps(messages)[:200]
     try:

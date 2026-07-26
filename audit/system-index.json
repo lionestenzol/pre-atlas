@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-07-25",
+  "generated_at": "2026-07-26",
   "repo_root": "C:\\Users\\bruke\\Pre Atlas",
-  "subsystem_count": 60,
+  "subsystem_count": 64,
   "autostart_count": 11,
   "entries": [
     {
@@ -37,8 +37,8 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 39,
-      "total_loc": 7049,
+      "file_count": 40,
+      "total_loc": 7318,
       "port": 3072,
       "in_autostart": true
     },
@@ -156,7 +156,7 @@
         "src/api/server.ts"
       ],
       "file_count": 124,
-      "total_loc": 38712,
+      "total_loc": 38716,
       "port": 3001,
       "in_autostart": true
     },
@@ -194,8 +194,8 @@
       "framework": "fastapi",
       "deps": [],
       "entry_points": [],
-      "file_count": 109,
-      "total_loc": 13603,
+      "file_count": 102,
+      "total_loc": 14618,
       "port": null,
       "in_autostart": false
     },
@@ -265,6 +265,19 @@
       "in_autostart": false
     },
     {
+      "path": "services/sourcegraph-scip",
+      "name": "sourcegraph-scip",
+      "group": "services",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 4,
+      "total_loc": 424,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "services/triangulation",
       "name": "triangulation",
       "group": "services",
@@ -313,6 +326,21 @@
       "file_count": 5,
       "total_loc": 122,
       "port": 3011,
+      "in_autostart": false
+    },
+    {
+      "path": "apps/atlas-tray",
+      "name": "atlas-tray",
+      "group": "apps",
+      "language": "rs",
+      "framework": "unknown",
+      "deps": [
+        "@tauri-apps/cli"
+      ],
+      "entry_points": [],
+      "file_count": 10,
+      "total_loc": 64,
+      "port": null,
       "in_autostart": false
     },
     {
@@ -595,6 +623,32 @@
       "in_autostart": false
     },
     {
+      "path": "tools/lolbas-enrich",
+      "name": "lolbas-enrich",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 2,
+      "total_loc": 121,
+      "port": null,
+      "in_autostart": false
+    },
+    {
+      "path": "tools/mcp-portable",
+      "name": "mcp-portable",
+      "group": "tools",
+      "language": "py",
+      "framework": "unknown",
+      "deps": [],
+      "entry_points": [],
+      "file_count": 7,
+      "total_loc": 600,
+      "port": null,
+      "in_autostart": false
+    },
+    {
       "path": "tools/mini-ship",
       "name": "mini-ship",
       "group": "tools",
@@ -745,7 +799,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 54,
+      "file_count": 56,
       "total_loc": 15643,
       "port": null,
       "in_autostart": false
@@ -784,7 +838,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 72,
+      "file_count": 73,
       "total_loc": 0,
       "port": null,
       "in_autostart": false
@@ -862,8 +916,8 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 16,
-      "total_loc": 2934,
+      "file_count": 24,
+      "total_loc": 3793,
       "port": null,
       "in_autostart": false
     },
@@ -888,8 +942,8 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 33,
-      "total_loc": 4476,
+      "file_count": 35,
+      "total_loc": 4758,
       "port": null,
       "in_autostart": false
     }

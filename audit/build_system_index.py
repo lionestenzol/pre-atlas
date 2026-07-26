@@ -21,6 +21,11 @@ EXCLUDE_DIRS = {
     ".git", ".next", "target", "__pycache__", ".pytest_cache",
     ".mypy_cache", ".ruff_cache", "coverage", ".turbo",
     "_retired", "anatomy-research",  # Wave 2.1: vendored/retired blobs excluded from canonical count
+    # Nested upstream reference clones — own .git, evaluated/adapted, never
+    # run as a Pre Atlas subsystem. Including them made Mission Control
+    # red-flag e.g. rag-blueprint on :3000 forever. Add new upstream
+    # reference checkouts here as they land.
+    "rag-blueprint",
 }
 SOURCE_EXT = {
     ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",

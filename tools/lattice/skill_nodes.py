@@ -75,8 +75,13 @@ async def invoke_skill(
 
     from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
 
+    # `skills=[skill]` dropped 2026-07-26: claude-agent-sdk 0.2.120 forwards it as
+    # a `--skills` CLI flag that Claude Code CLI 2.1.219 rejects with `unknown option`.
+    # Per the SDK docstring it's only a context filter (hides/rejects other skills from
+    # the listing), never an enforcement -- the prompt itself must still ask for the
+    # skill's work. So invocation is prompt-driven, exactly like the memory already noted.
+    # See ~/.claude/rules/common/code-as-furniture.md.
     options = ClaudeAgentOptions(
-        skills=[skill],
         setting_sources=["user", "project"],
         output_format={"type": "json_schema", "schema": SKILL_SCHEMAS[skill]},
         max_turns=max_turns,

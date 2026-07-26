@@ -22,13 +22,17 @@ from . import launcher
 
 DELTA_KERNEL = "http://127.0.0.1:3001"
 
-# /status runs two ~3s PowerShell subprocess calls plus a delta-kernel probe.
+# /status runs two PowerShell subprocess calls plus a delta-kernel probe.
 # Mission Control polls /status every 2s — without a cache each poll respawns
-# them and requests stack. TTL is short so live changes still surface within
-# one poll cycle.
+# them and requests stack. TTLs differ per collector: orphan scans (~3s clean,
+# up to 30s+ under IO pressure) rarely change, so we cache them much longer,
+# while services/daemon/scheduled-tasks stay near-live.
 _STATUS_TTL_S = 2.0
+_ORPHANS_TTL_S = 60.0
 _status_cache: dict[str, Any] = {"at": 0.0, "value": None}
+_orphans_cache: dict[str, Any] = {"at": 0.0, "value": None}
 _status_lock = asyncio.Lock()
+_orphans_lock = asyncio.Lock()
 _PS_TASK_FILTER = (
     "$_.TaskName -match '^(Atlas|PreAtlas)' -or $_.TaskName -eq 'Optogon Audit'"
 )
@@ -130,12 +134,28 @@ def collect_orphans(repo_root: Path) -> dict[str, Any]:
     }
 
 
+async def _get_orphans(snap) -> dict[str, Any]:
+    """Orphan scan wrapped in a long-TTL cache: it can take 100s+ under IO
+    pressure and its output almost never changes on the poll cadence."""
+    now = time.monotonic()
+    if _orphans_cache["value"] is not None and now - _orphans_cache["at"] < _ORPHANS_TTL_S:
+        return _orphans_cache["value"]
+    async with _orphans_lock:
+        now = time.monotonic()
+        if _orphans_cache["value"] is not None and now - _orphans_cache["at"] < _ORPHANS_TTL_S:
+            return _orphans_cache["value"]
+        value = await asyncio.to_thread(collect_orphans, snap.repo_root)
+        _orphans_cache["value"] = value
+        _orphans_cache["at"] = time.monotonic()
+        return value
+
+
 async def unified_status(snap) -> dict[str, Any]:
     """The single view: services + scheduled tasks + daemon heartbeat + orphans.
 
-    Fan-out is concurrent (the two PowerShell probes each take ~3s serially)
-    and cached for _STATUS_TTL_S so Mission Control's 2s poll doesn't stack
-    subprocess spawns.
+    Fan-out is concurrent. The whole response is cached for _STATUS_TTL_S so
+    Mission Control's 2s poll doesn't stack subprocess spawns; orphans are
+    cached separately for _ORPHANS_TTL_S because that probe is the slow one.
     """
     now = time.monotonic()
     if _status_cache["value"] is not None and now - _status_cache["at"] < _STATUS_TTL_S:
@@ -147,7 +167,7 @@ async def unified_status(snap) -> dict[str, Any]:
         services = collect_services(snap)
         sched, orphans, daemon = await asyncio.gather(
             asyncio.to_thread(collect_scheduled_tasks),
-            asyncio.to_thread(collect_orphans, snap.repo_root),
+            _get_orphans(snap),
             collect_daemon(),
         )
         value = {

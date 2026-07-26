@@ -6,3 +6,6 @@ START-HERE.txt
 react-map.json
 out.json
 result.json
+
+# The flue: rendered Markdown drops for the Chainer/droplist — artifacts.
+flue-out/

@@ -80,6 +80,7 @@ const EXT_LANGUAGE: Record<string, string> = {
   kt: 'kotlin',
   sql: 'sql',
   sh: 'shell',
+  html: 'html',
   md: 'markdown',
   json: 'json',
   yaml: 'yaml',
@@ -147,11 +148,57 @@ export function extractSymbols(content: string, language: string): SymbolEntry[]
   return symbols;
 }
 
+export type Extractor = 'regex' | 'treesitter';
+
+// Assemble the CompressedState from already-built symbolic nodes. Shared by the
+// sync (regex) and async (tree-sitter) compressors so the stats/body contract is
+// defined once. compressed_tokens_est is measured against the serialized map
+// minus the stats block (which depends on this number), so the body is built first.
+function assemble(
+  repo: string,
+  generatedAt: string,
+  filesScanned: number,
+  symbolicNodes: SymbolicNode[],
+  languages: Record<string, number>,
+  bytes: number,
+  rawTokens: number,
+): CompressedState {
+  const body = {
+    protocol: 'DELTA_SCP' as const,
+    version: PROTOCOL_VERSION,
+    status: 'compressed' as const,
+    repo,
+    generated_at: generatedAt,
+    languages,
+    symbolic_nodes: symbolicNodes,
+  };
+  const compressedTokens = estimateTokens(JSON.stringify(body));
+  const rawTokensSafe = rawTokens;
+  const ratio = rawTokensSafe > 0
+    ? Math.round((compressedTokens / rawTokensSafe) * 10000) / 10000
+    : 0;
+  return {
+    ...body,
+    stats: {
+      files_scanned: filesScanned,
+      files_included: symbolicNodes.length,
+      bytes,
+      raw_tokens_est: rawTokensSafe,
+      compressed_tokens_est: compressedTokens,
+      token_yield: rawTokensSafe - compressedTokens,
+      compression_ratio: ratio,
+    },
+  };
+}
+
 /**
  * Pure compression: given the source files of a repo, produce the symbolic map.
  * No I/O — fully deterministic and unit-testable. generatedAt is injected (not
  * read from the clock) so identical repo+files inputs always produce identical
  * output; the I/O boundary (compressRepository) supplies the real timestamp.
+ *
+ * This is the regex extractor — cheap, sync, and the fallback. For higher-fidelity
+ * symbols on legacy languages the regex misses (C/C++/C#/...), see compressTreeAsync.
  */
 export function compressTree(
   repo: string,
@@ -181,33 +228,61 @@ export function compressTree(
     });
   }
 
-  // compressed_tokens_est is measured against the serialized symbolic map minus
-  // the stats block (which depends on this number), so we build the body first.
-  const body = {
-    protocol: 'DELTA_SCP' as const,
-    version: PROTOCOL_VERSION,
-    status: 'compressed' as const,
-    repo,
-    generated_at: generatedAt,
-    languages,
-    symbolic_nodes: symbolicNodes,
-  };
-  const compressedTokens = estimateTokens(JSON.stringify(body));
-  const tokenYield = rawTokens - compressedTokens;
-  const ratio = rawTokens > 0
-    ? Math.round((compressedTokens / rawTokens) * 10000) / 10000
-    : 0;
+  return assemble(repo, generatedAt, files.length, symbolicNodes, languages, bytes, rawTokens);
+}
 
-  return {
-    ...body,
-    stats: {
-      files_scanned: files.length,
-      files_included: symbolicNodes.length,
-      bytes,
-      raw_tokens_est: rawTokens,
-      compressed_tokens_est: compressedTokens,
-      token_yield: tokenYield,
-      compression_ratio: ratio,
-    },
-  };
+/**
+ * Same contract as compressTree, but with a selectable extractor. With
+ * extractor='treesitter' it parses supported languages with a real AST
+ * (tree-sitter) — extracting symbols the regex has no pattern for (C structs/
+ * funcs, etc.) — and falls back to the regex extractor per-file on any parse
+ * error or for unsupported languages. extractor='regex' delegates to compressTree
+ * unchanged. Additive and opt-in (config.extractor / SCP_EXTRACTOR); the WASM
+ * runtime is loaded lazily so the regex path never pays for it.
+ */
+export async function compressTreeAsync(
+  repo: string,
+  files: SourceFile[],
+  generatedAt = '1970-01-01T00:00:00.000Z',
+  extractor: Extractor = 'regex',
+): Promise<CompressedState> {
+  if (extractor !== 'treesitter') {
+    return compressTree(repo, files, generatedAt);
+  }
+  const { extractSymbolsAst, supportsAst } = await import('./treesitter.js');
+
+  const symbolicNodes: SymbolicNode[] = [];
+  const languages: Record<string, number> = {};
+  let bytes = 0;
+  let rawTokens = 0;
+  const sorted = [...files].sort((a, b) => a.path.localeCompare(b.path));
+
+  for (const file of sorted) {
+    const language = languageForPath(file.path);
+    const fileBytes = Buffer.byteLength(file.content, 'utf8');
+    bytes += fileBytes;
+    rawTokens += estimateTokens(file.content);
+    languages[language] = (languages[language] ?? 0) + 1;
+
+    let symbols: SymbolEntry[];
+    if (supportsAst(language)) {
+      try {
+        symbols = await extractSymbolsAst(file.content, language);
+      } catch {
+        symbols = extractSymbols(file.content, language); // fail-soft to regex
+      }
+    } else {
+      symbols = extractSymbols(file.content, language);
+    }
+
+    symbolicNodes.push({
+      path: file.path,
+      language,
+      bytes: fileBytes,
+      tokens_est: estimateTokens(file.content),
+      symbols,
+    });
+  }
+
+  return assemble(repo, generatedAt, files.length, symbolicNodes, languages, bytes, rawTokens);
 }

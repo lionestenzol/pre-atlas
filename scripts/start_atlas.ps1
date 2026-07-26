@@ -1,6 +1,18 @@
 # Atlas — bring up every standalone service.
-# Hidden windows · logs in .atlas-logs\ · browser opens to inPACT when ready.
-# Usage: .\scripts\start_atlas.ps1   (or double-click start_atlas.bat at repo root)
+# Hidden windows · logs in .atlas-logs\ · browser opens to inPACT ONLY when explicitly asked.
+# Usage:
+#   .\scripts\start_atlas.ps1                    # start services, do NOT open Chrome
+#   .\scripts\start_atlas.ps1 -OpenDashboards    # start services and open the dashboards
+#   (or double-click start_atlas.bat at repo root)
+#
+# The browser-open block used to run every task fire, which spammed Chrome every 15 min
+# (Atlas-Autostart cron). Now it only opens when either (a) -OpenDashboards is passed
+# on the CLI, OR (b) .atlas-settings.json at repo root has openDashboardsOnCron:true.
+# Toggle via atlas-mission-control.html or by editing .atlas-settings.json directly.
+
+param(
+    [switch]$OpenDashboards
+)
 
 $ErrorActionPreference = "Continue"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
@@ -101,8 +113,33 @@ Write-Host "  Stop:    stop_atlas.bat" -ForegroundColor DarkGray
 Write-Host "  Status:  .\scripts\status_atlas.ps1" -ForegroundColor DarkGray
 Write-Host ""
 
-# Open the two dashboards as pinned Chrome tabs (inPACT + atlas substrate).
+# Open the dashboards as pinned Chrome tabs — GATED.
+# Two gates, either one opens:
+#   1. -OpenDashboards was passed on the CLI (interactive intent)
+#   2. .atlas-settings.json has openDashboardsOnCron:true (cron opt-in)
+# Default is OFF so the 15-min Atlas-Autostart cron does not spam Chrome tabs.
+# Toggle via atlas-mission-control.html or edit .atlas-settings.json directly.
+$settingsFile = Join-Path $RepoRoot ".atlas-settings.json"
+$cronOptIn = $false
 $dashUrls = @("http://127.0.0.1:3006", "http://127.0.0.1:8887")
+if (Test-Path $settingsFile) {
+    try {
+        $settings = Get-Content $settingsFile -Raw | ConvertFrom-Json
+        if ($settings.openDashboardsOnCron -eq $true) { $cronOptIn = $true }
+        if ($settings.dashboardUrls -and $settings.dashboardUrls.Count -gt 0) {
+            $dashUrls = @($settings.dashboardUrls)
+        }
+    } catch {
+        Write-Host "  [warn] .atlas-settings.json unreadable: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+}
+
+if (-not ($OpenDashboards -or $cronOptIn)) {
+    Write-Host "  Dashboards not opened (openDashboardsOnCron:false and -OpenDashboards not set)." -ForegroundColor DarkGray
+    Write-Host "  Toggle in atlas-mission-control.html, or run: .\scripts\start_atlas.ps1 -OpenDashboards" -ForegroundColor DarkGray
+    exit 0
+}
+
 try {
     Start-Process chrome.exe -ArgumentList $dashUrls -ErrorAction Stop
 } catch {

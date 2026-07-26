@@ -37,7 +37,7 @@ spine_loop:
   note: Seams are reads or signal-writes. cortex/optogon act only behind default-off env flags.
 runtime_ports:
   backends: {mosaic-dashboard: 3000, delta-api: 3001, aegis-api: 3002, openclaw: 3004, mosaic-orch: 3005, code-converter: 3007, uasc: 3008, cortex: 3009, optogon: 3010, ws-gateway: 3013, delta-scp-demo: 3012,
-    blueprint-generator: 3030, canvas-engine: 3050, search-stack: 3070, memory-hub: 3071, atlas-map-api: 3072, droplist: 3073, triangulation: 3075, strudel: 4321, ai-exec-pipeline: 5000, delta-web: 5173,
+    blueprint-generator: 3030, canvas-engine: 3050, search-stack: 3070, memory-hub: 3071, atlas-map-api: 3072, droplist: 3073, triangulation: 3074, strudel: 4321, ai-exec-pipeline: 5000, delta-web: 5173,
     delta-scp-web: 5174, triage-server: 8765, hydra-engine: 8899}
   static_shell_servers: {inpact: 3006, lattice: 3011, atlas-shell: 8888, cycleboard: 8889, aegis-landing: 8890, cortex-dashboard: 8891, inpact-site-legacy: 8892, thread-cards: 8893, anatomy: 8894, tour-test: 8895,
     anatomy-calibration: 8896, audit-map: 8897, c110-trace: 8901, hydra: 8898, anatomy-saas-example: 8911}
@@ -251,7 +251,7 @@ systems:
     consumes: [28 external providers (web/code/github/academic/social/legal/data/...)]
   triangulation:
     class: {role: spoke, lifecycle: stub}
-    props: {lang: py, framework: fastapi, port: 3075, loc: 1294, files: 17}
+    props: {lang: py, framework: fastapi, port: 3074, loc: 1294, files: 17}
     purpose: Phase B stub
     provides: [GET /healthz, POST /library/add, GET /library/stats, POST /verify]
   uasc-executor:

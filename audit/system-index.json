@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20",
+  "generated_at": "2026-07-25",
   "repo_root": "C:\\Users\\bruke\\Pre Atlas",
   "subsystem_count": 60,
   "autostart_count": 11,
@@ -155,8 +155,8 @@
       "entry_points": [
         "src/api/server.ts"
       ],
-      "file_count": 120,
-      "total_loc": 37756,
+      "file_count": 124,
+      "total_loc": 38712,
       "port": 3001,
       "in_autostart": true
     },
@@ -745,7 +745,7 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 50,
+      "file_count": 54,
       "total_loc": 15643,
       "port": null,
       "in_autostart": false
@@ -862,8 +862,8 @@
       "framework": "unknown",
       "deps": [],
       "entry_points": [],
-      "file_count": 15,
-      "total_loc": 2411,
+      "file_count": 16,
+      "total_loc": 2934,
       "port": null,
       "in_autostart": false
     },
@@ -889,7 +889,7 @@
       "deps": [],
       "entry_points": [],
       "file_count": 33,
-      "total_loc": 5082,
+      "total_loc": 4476,
       "port": null,
       "in_autostart": false
     }

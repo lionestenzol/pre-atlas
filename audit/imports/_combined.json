@@ -389,22 +389,23 @@
     ".mcp.json": [],
     "ATLAS_CONSOLIDATION_PRESEARCH.md": [],
     "ATLAS_CONSOLIDATION_RUNBOOK.md": [],
+    "ATLAS_END_TO_END_DIAGNOSTIC.md": [],
     "ATLAS_HEADLESS_MAP.md": [],
     "ATLAS_MASTER_PLAN.md": [],
     "CAPSULES.md": [],
     "CLAUDE.md": [],
     "CLAUDE_INVENTORY.md": [],
-    "COMPONENT_GRAPH.json": [],
-    "DATAFLOW_GRAPH.json": [],
+    "FEEDBACK_ON_ME.md": [],
     "ONBOARDING.md": [],
-    "Pre_Atlas_System_Debrief.json": [],
+    "PROFILE_ON_ME.md": [],
+    "PROJECTS_ON_ME.md": [],
     "README.md": [],
     "REPO_RUNDOWN.md": [],
-    "SYSTEM_MANIFEST.json": [],
     "TRUST_BOUNDARY.md": [],
     "atlas-consolidation.workflow.js": [],
     "atlas-manifest.yaml": [],
     "atlas-map.json": [],
+    "atlas-mission-control.html": [],
     "atlas-setup.html": [],
     "atlas_boot.html": [],
     "cc-session-index.json": [],
@@ -453,7 +454,6 @@
       "shutil",
       "sys"
     ],
-    "system-map.html": [],
     "system-tour.html": [],
     "vercel.json": []
   },
@@ -1334,6 +1334,8 @@
     "SESSION_2_KICKOFF.md": [],
     "SESSION_3_KICKOFF.md": [],
     "atlas-whitepaper.html": [],
+    "atlas_live.json": [],
+    "atlas_live.md": [],
     "build_atlas_manifest.py": [
       "__future__.annotations",
       "datetime",
@@ -1428,6 +1430,8 @@
     "reinvention-surface.json": [],
     "retired-services-autopsy.md": [],
     "reuse-map.md": [],
+    "scan_atlas_dask_2026-07-25.json": [],
+    "scan_atlas_dask_2026-07-25.md": [],
     "swap-backlog.md": [],
     "swap-candidates.json": [],
     "system-index.json": [],
@@ -1446,6 +1450,7 @@
       "agents/agent-adapter.js",
       "agents/agent-registry.js",
       "api.js",
+      "api/itinerary",
       "app",
       "approval/approval-queue.js",
       "asset-extract.js",
@@ -1537,6 +1542,7 @@
       "image-to-clone.js",
       "image-to-envelope.js",
       "input",
+      "itinerary.js",
       "kernel-client.js",
       "lattice_resume.js",
       "lib/clipboard.js",
@@ -4723,6 +4729,9 @@
     "specs/v0-routing.md": [],
     "specs/v0-schemas.md": [],
     "specs/v0-task-lifecycle.md": [],
+    "src/api/itinerary.ts": [
+      "core/types-core"
+    ],
     "src/api/server.ts": [
       "atlas/close-signal.js",
       "atlas/directive.js",
@@ -4739,7 +4748,8 @@
       "core/timeline-logger.js",
       "core/types-core",
       "core/work-controller",
-      "governance/governance_daemon"
+      "governance/governance_daemon",
+      "itinerary.js"
     ],
     "src/atlas/close-signal.ts": [
       "preferences-store.js"
@@ -4876,8 +4886,10 @@
       "notify.js",
       "timeline-logger.js"
     ],
+    "src/governance/closure_daemon.ts": [],
     "src/governance/governance_daemon.ts": [
       "cli/sqlite-storage",
+      "closure_daemon.js",
       "core/closure-engine.js",
       "core/cockpit.js",
       "core/delta",
@@ -4893,10 +4905,17 @@
     "src/governance/lattice_resume.ts": [],
     "src/tests/api-tests.ts": [],
     "src/tests/atlas-artifact-schema-tests.ts": [],
+    "src/tests/closure-smoke.ts": [
+      "governance/closure_daemon.js"
+    ],
     "src/tests/governance-daemon-shared-workcontroller-tests.ts": [
       "cli/sqlite-storage.js",
       "core/work-controller.js",
       "governance/governance_daemon.js"
+    ],
+    "src/tests/itinerary-smoke.ts": [
+      "api/itinerary",
+      "core/types-core"
     ],
     "src/tests/lattice-projection-droplist-tests.ts": [
       "atlas/lattice-projection.js",
@@ -7264,6 +7283,25 @@
     "renumber_tasks.py": [
       "re",
       "subprocess"
+    ],
+    "scan_atlas_dask.py": [
+      "__future__.annotations",
+      "argparse",
+      "base64",
+      "dask.compute",
+      "dask.delayed",
+      "dask.distributed.Client",
+      "dask.distributed.LocalCluster",
+      "datetime.datetime",
+      "datetime.timezone",
+      "json",
+      "os",
+      "pathlib.Path",
+      "re",
+      "subprocess",
+      "sys",
+      "time",
+      "typing.Any"
     ],
     "update_morning_refresh.py": [
       "json",
